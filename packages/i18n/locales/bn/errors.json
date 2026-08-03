@@ -1,0 +1,48 @@
+{
+  "validation": {
+    "required": "এই ক্ষেত্রটি আবশ্যক",
+    "invalidEmail": "একটি বৈধ ইমেইল ঠিকানা দিন",
+    "invalidPassword": "পাসওয়ার্ড প্রয়োজনীয়তা পূরণ করে না",
+    "passwordMismatch": "পাসওয়ার্ড মিলছে না",
+    "invalidAmount": "একটি বৈধ পরিমাণ দিন",
+    "amountZero": "পরিমাণ শূন্যের বেশি হতে হবে",
+    "amountTooLarge": "পরিমাণ সর্বোচ্চ সীমা অতিক্রম করেছে",
+    "invalidDate": "একটি বৈধ তারিখ দিন",
+    "futureDate": "তারিখ ভবিষ্যতে হতে পারে না",
+    "nameTooLong": "নাম {{max}} অক্ষরের মধ্যে হতে হবে",
+    "nameTooShort": "নাম কমপক্ষে {{min}} অক্ষরের হতে হবে",
+    "duplicateName": "এই নামটি ইতিমধ্যে ব্যবহৃত",
+    "invalidCurrency": "অবৈধ মুদ্রা কোড"
+  },
+  "auth": {
+    "invalidCredentials": "ভুল ইমেইল বা পাসওয়ার্ড",
+    "emailNotVerified": "প্রথমে আপনার ইমেইল যাচাই করুন",
+    "accountLocked": "অ্যাকাউন্ট সাময়িকভাবে লক করা হয়েছে",
+    "sessionExpired": "আপনার সেশনের মেয়াদ শেষ হয়েছে",
+    "tooManyAttempts": "অনেক বেশি চেষ্টা। {{minutes}} মিনিট পরে চেষ্টা করুন"
+  },
+  "workspace": {
+    "notMember": "আপনি এই ওয়ার্কস্পেসের সদস্য নন",
+    "insufficientRole": "এই কাজের জন্য আপনার অনুমতি নেই",
+    "cannotRemoveOwner": "ওয়ার্কস্পেসের মালিককে সরানো যায় না",
+    "invitationExpired": "এই আমন্ত্রণের মেয়াদ শেষ",
+    "alreadyMember": "এই ব্যবহারকারী ইতিমধ্যে সদস্য"
+  },
+  "transaction": {
+    "imbalanced": "লেনদেন ভারসাম্যপূর্ণ হতে হবে",
+    "duplicateDetected": "একটি অনুরূপ লেনদেন ইতিমধ্যে আছে",
+    "cannotEditPosted": "পোস্ট করা লেনদেন সম্পাদনা করা যায় না",
+    "cannotVoidDraft": "খসড়া লেনদেন বাতিল করা যায় না",
+    "versionConflict": "এই রেকর্ডটি অন্য ডিভাইসে পরিবর্তিত হয়েছে"
+  },
+  "account": {
+    "cannotDeleteWithTransactions": "লেনদেন সহ অ্যাকাউন্ট মুছা যায় না",
+    "currencyMismatch": "মুদ্রা ওয়ার্কস্পেসের সাথে মেলে না"
+  },
+  "server": {
+    "internalError": "একটি অপ্রত্যাশিত ত্রুটি ঘটেছে",
+    "serviceUnavailable": "সেবা সাময়িকভাবে অনুপলব্ধ",
+    "rateLimited": "অনেক বেশি অনুরোধ। ধীরে করুন",
+    "maintenanceMode": "সিস্টেম রক্ষণাবেক্ষণে আছে"
+  }
+}

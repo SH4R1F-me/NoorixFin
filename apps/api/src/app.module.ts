@@ -1,0 +1,90 @@
+/**
+ * MyFin API — Root Application Module
+ * Blueprint §7.1: Modular monolith structure
+ *
+ * Wires together all domain modules, global guards, filters, and middleware.
+ */
+import { Module, MiddlewareConsumer, NestModule } from '@nestjs/common';
+import { APP_GUARD, APP_FILTER } from '@nestjs/core';
+import { ConfigModule } from '@nestjs/config';
+import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
+
+// Infrastructure modules
+import { SupabaseModule } from './supabase/supabase.module';
+import { AuthModule } from './auth/auth.module';
+import { SupabaseAuthGuard } from './auth/guards/supabase-auth.guard';
+
+// Domain modules
+import { HealthModule } from './health/health.module';
+import { ProfilesModule } from './profiles/profiles.module';
+import { WorkspacesModule } from './workspaces/workspaces.module';
+import { AccountsModule } from './accounts/accounts.module';
+import { TransactionsModule } from './transactions/transactions.module';
+import { CategoriesModule } from './categories/categories.module';
+
+// Middleware & Filters
+import { RequestIdMiddleware } from './common/middleware/request-id.middleware';
+import { GlobalHttpExceptionFilter } from './common/filters/http-exception.filter';
+
+@Module({
+  imports: [
+    // ─── Configuration ──────────────────────────────────
+    ConfigModule.forRoot({
+      isGlobal: true,
+      envFilePath: ['.env.local', '.env'],
+    }),
+
+    // ─── Rate Limiting (Blueprint §16.2) ────────────────
+    ThrottlerModule.forRoot([
+      {
+        name: 'short',
+        ttl: 1000, // 1 second
+        limit: 10, // 10 requests per second
+      },
+      {
+        name: 'medium',
+        ttl: 60000, // 1 minute
+        limit: 100, // 100 requests per minute
+      },
+      {
+        name: 'long',
+        ttl: 3600000, // 1 hour
+        limit: 1000, // 1000 requests per hour
+      },
+    ]),
+
+    // ─── Infrastructure ─────────────────────────────────
+    SupabaseModule,
+    AuthModule,
+
+    // ─── Domain Modules ─────────────────────────────────
+    HealthModule,
+    ProfilesModule,
+    WorkspacesModule,
+    AccountsModule,
+    TransactionsModule,
+    CategoriesModule,
+  ],
+  providers: [
+    // Global auth guard (skip with @Public())
+    {
+      provide: APP_GUARD,
+      useClass: SupabaseAuthGuard,
+    },
+    // Global rate limiting
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
+    },
+    // Global exception filter
+    {
+      provide: APP_FILTER,
+      useClass: GlobalHttpExceptionFilter,
+    },
+  ],
+})
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(RequestIdMiddleware).forRoutes('*');
+  }
+}
