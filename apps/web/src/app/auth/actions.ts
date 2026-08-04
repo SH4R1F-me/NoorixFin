@@ -50,6 +50,27 @@ export async function signUp(email: string, password: string): Promise<AuthResul
   return { ok: true };
 }
 
+/**
+ * Send a password-reset email.
+ *
+ * Always reports success, even for an address with no account: telling the
+ * caller whether an email exists is a user-enumeration oracle, and a password
+ * reset form is the easiest place to probe one.
+ *
+ * Locally the mail is caught by Mailpit at http://localhost:54324 rather than
+ * being delivered.
+ */
+export async function requestPasswordReset(email: string): Promise<AuthResult> {
+  const supabase = await createClient();
+
+  const origin = process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000';
+  await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: `${origin}/auth/callback?next=/dashboard`,
+  });
+
+  return { ok: true };
+}
+
 export async function signOut(): Promise<never> {
   const supabase = await createClient();
   // Global scope revokes every refresh token for this user, not just this
