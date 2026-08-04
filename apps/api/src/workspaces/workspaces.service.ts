@@ -92,6 +92,31 @@ export class WorkspacesService {
   }
 
   /**
+   * Dashboard summary — DEC-011.
+   *
+   * One RPC round trip instead of fetching accounts + every posting and summing
+   * client-side. The function is SECURITY INVOKER, so RLS applies and a caller
+   * can only ever aggregate their own workspace.
+   */
+  async getSummary(workspaceId: string, accessToken: string) {
+    const client = this.supabaseService.getUserClient(accessToken);
+
+    const { data, error } = await client.rpc('workspace_summary', {
+      p_workspace_id: workspaceId,
+    });
+
+    if (error) {
+      this.logger.error(`Failed to build summary: ${error.message}`);
+      throw new BadRequestException({
+        code: 'SUMMARY_FAILED',
+        message: 'Failed to build workspace summary',
+      });
+    }
+
+    return data;
+  }
+
+  /**
    * List all workspaces the user is a member of.
    */
   async listWorkspaces(userId: string, accessToken: string) {

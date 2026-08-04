@@ -1,6 +1,6 @@
 # NoorixFin — TEST RESULTS
 
-**Last updated:** 2026-08-04 (Session 16 — API + dashboard on real data; 3 more outage-class bugs fixed)
+**Last updated:** 2026-08-04 (Session 17 — dashboard summary on real data via server-side aggregation)
 
 ---
 
@@ -406,3 +406,41 @@ Diagnosed by the asymmetry: a plain INSERT returned 201 while the same INSERT wi
 | Web e2e | ✅ 16 passed |
 
 Running total: **five for five** — every layer, on first real execution, contained a defect.
+
+
+---
+
+## TEST-012: Dashboard Summary on Real Data — 2026-08-04
+
+Migration `00011_workspace_summary.sql` adds a single Postgres aggregation, per DEC-011 rule 6
+("aggregate server-side, return one payload") — deferred from W7 because there was nothing to
+aggregate. There is now.
+
+**`SECURITY INVOKER`, stated explicitly in the function.** It runs with the caller's rights, so RLS
+applies. A `SECURITY DEFINER` version would silently become a cross-tenant read of every user's
+finances — the exact bypass SEC-01 exists to prevent.
+
+| Check | Result |
+|---|---|
+| Arithmetic — user's 4 expenses sum correctly | ✅ 12500+450000+89000+23000 = 574500 |
+| Month boundaries computed in the **workspace** timezone, not the server's (TIME-01) | ✅ Asia/Dhaka |
+| **SEC-01 at the function level** — super admin calling summary on another user's workspace | ✅ all zeros, not their real figures |
+| SEC-01 at the API level — `GET /workspaces/:other/summary` | ✅ 403 |
+| Balances derived from postings, so a reversal is reflected with no cached number to drift | ✅ by construction |
+
+### Fabricated percentages removed
+
+The mock dashboard hardcoded change badges like `+12.5%`. Real month-over-month deltas are now
+computed — and when the prior month is zero the badge is **omitted entirely** rather than showing
+`+100%`. With no prior data the change is undefined, and inventing one on a finance dashboard is worse
+than showing nothing. Asserted in e2e.
+
+### Test-timing bug in my own spec
+
+The first version of `dashboard-data.spec.ts` asserted on `innerText` immediately after
+`waitForURL(/\/dashboard/)`. The dashboard is a server component behind a Suspense boundary, so the
+`loading.tsx` skeleton paints first and the assertion raced the stream — one test passed, one failed,
+for the same page. Fixed with auto-retrying `toBeVisible` assertions plus an explicit wait for the
+skeleton to disappear. **A passing snapshot assertion against streamed RSC output is luck, not proof.**
+
+Web e2e total: **19 passed**.

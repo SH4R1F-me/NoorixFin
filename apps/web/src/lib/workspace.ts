@@ -113,6 +113,30 @@ export async function getTransactions(workspaceId: string, limit = 50) {
   return result.items ?? [];
 }
 
+export interface WorkspaceSummary {
+  visible: boolean;
+  net_worth: number;
+  income: number;
+  expense: number;
+  net: number;
+  prev_income: number;
+  prev_expense: number;
+  prev_net: number;
+  account_count: number;
+  timezone?: string;
+  month_start?: string;
+}
+
+/**
+ * Dashboard aggregation — one round trip (DEC-011).
+ *
+ * Returns null on failure rather than throwing: a dashboard that cannot reach
+ * the API should render zeros and its empty states, not a 500.
+ */
+export function apiSummary(workspaceId: string) {
+  return safeFetch<WorkspaceSummary | null>(`/workspaces/${workspaceId}/summary`, null);
+}
+
 /** Display name for a category: user-supplied wins, else the translation key (DEC-015). */
 export function categoryLabel(category: CategoryRow, translate?: (key: string) => string): string {
   if (category.custom_name) return category.custom_name;
