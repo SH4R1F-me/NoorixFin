@@ -224,7 +224,11 @@ export class TransactionsService {
       .from('journal_entries')
       // Explicit columns, never `*`, on a list path (DEC-011). Single literal —
       // supabase-js infers the row type from it.
-      .select('id, workspace_id, entry_type, occurred_at, local_date, payee, note, status, source, reverses_entry_id, created_by, posted_at, created_at, updated_at, version')
+      //
+      // Postings are embedded rather than fetched per row: the amount belongs to
+      // the postings, not the entry (DEC-006), and a second round trip per entry
+      // would be an N+1 on the hottest list in the app.
+      .select('id, workspace_id, entry_type, occurred_at, local_date, payee, note, status, source, reverses_entry_id, created_by, posted_at, created_at, updated_at, version, journal_postings(debit_minor, credit_minor, currency_code)')
       .eq('workspace_id', workspaceId)
       .order('occurred_at', { ascending: false })
       .order('id', { ascending: false })
@@ -242,7 +246,24 @@ export class TransactionsService {
       throw new BadRequestException('Failed to list transactions');
     }
 
-    const entries = data || [];
+    // Each balanced entry has equal debits and credits, so the transaction's
+    // magnitude is either side — summing both and halving avoids caring which.
+    const withAmounts = (data || []).map((entry) => {
+      const postings =
+        (entry as unknown as {
+          journal_postings?: { debit_minor: number; credit_minor: number; currency_code: string }[];
+        }).journal_postings ?? [];
+
+      const total = postings.reduce((sum, p) => sum + p.debit_minor + p.credit_minor, 0);
+
+      return {
+        ...entry,
+        amount_minor: Math.round(total / 2),
+        currency_code: postings[0]?.currency_code ?? null,
+      };
+    });
+
+    const entries = withAmounts;
     const hasMore = entries.length > limit;
     const items = hasMore ? entries.slice(0, limit) : entries;
     const nextCursor = hasMore

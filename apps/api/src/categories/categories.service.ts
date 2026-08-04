@@ -61,6 +61,11 @@ const SYSTEM_CATEGORIES: ReadonlyArray<{
   { translation_key: 'cat.other_income', kind: 'INCOME', icon: '💵', color: '#84cc16', fallbackName: 'Other Income' },
 ];
 
+/** Postgres unique-violation. Benign here: a concurrent seeder got there first. */
+function isUniqueViolation(error: { code?: string }): boolean {
+  return error?.code === '23505';
+}
+
 @Injectable()
 export class CategoriesService {
   private readonly logger = new Logger(CategoriesService.name);
@@ -101,36 +106,57 @@ export class CategoriesService {
 
     const currencyCode = workspace?.base_currency ?? 'BDT';
 
-    const accountRows = missing.map((cat) => ({
-      id: randomUUID(),
-      workspace_id: workspaceId,
-      name: cat.fallbackName,
-      class: cat.kind,
-      subtype: 'CATEGORY',
-      currency_code: currencyCode,
-      normal_balance: ACCOUNT_CLASS_NORMAL_BALANCE[cat.kind],
-      include_in_budget: cat.kind === 'EXPENSE',
-      include_in_net_worth: false,
-      created_by: userId,
-    }));
+    // NOTE: plain INSERT, not upsert. The uniqueness guarantees from migration
+    // 00006 are PARTIAL indexes (`WHERE subtype = 'CATEGORY'` and
+    // `WHERE translation_key IS NOT NULL`), and PostgreSQL will not accept a
+    // partial index as an ON CONFLICT target unless the statement repeats the
+    // predicate — which PostgREST's `on_conflict` parameter cannot express.
+    // Using upsert here failed with:
+    //   "there is no unique or exclusion constraint matching the ON CONFLICT
+    //    specification"
+    // Instead: insert only what is missing and treat a unique violation (23505)
+    // as a concurrent seeder having won the race, which is benign.
 
-    const { error: accountError } = await client
+    // Some accounts may already exist from a partially-completed earlier run.
+    const { data: existingAccounts } = await client
       .from('ledger_accounts')
-      .upsert(accountRows, {
-        onConflict: 'workspace_id,name',
-        ignoreDuplicates: true,
-      });
+      .select('id, name')
+      .eq('workspace_id', workspaceId)
+      .eq('subtype', 'CATEGORY')
+      .in('name', missing.map((c) => c.fallbackName));
 
-    if (accountError) {
-      this.logger.error(`Failed to seed category accounts: ${accountError.message}`);
-      throw new BadRequestException({
-        code: 'CATEGORY_SEED_FAILED',
-        message: 'Failed to prepare category accounts',
-      });
+    const haveAccount = new Set((existingAccounts ?? []).map((a: { name: string }) => a.name));
+    const accountRows = missing
+      .filter((cat) => !haveAccount.has(cat.fallbackName))
+      .map((cat) => ({
+        id: randomUUID(),
+        workspace_id: workspaceId,
+        name: cat.fallbackName,
+        class: cat.kind,
+        subtype: 'CATEGORY',
+        currency_code: currencyCode,
+        normal_balance: ACCOUNT_CLASS_NORMAL_BALANCE[cat.kind],
+        include_in_budget: cat.kind === 'EXPENSE',
+        include_in_net_worth: false,
+        created_by: userId,
+      }));
+
+    if (accountRows.length > 0) {
+      const { error: accountError } = await client
+        .from('ledger_accounts')
+        .insert(accountRows);
+
+      if (accountError && !isUniqueViolation(accountError)) {
+        this.logger.error(`Failed to seed category accounts: ${accountError.message}`);
+        throw new BadRequestException({
+          code: 'CATEGORY_SEED_FAILED',
+          message: 'Failed to prepare category accounts',
+        });
+      }
     }
 
-    // Read back — upsert with ignoreDuplicates does not return skipped rows,
-    // and a concurrent request may have created some of them.
+    // Read back — covers both the rows just inserted and any a concurrent
+    // request created first.
     const { data: accounts } = await client
       .from('ledger_accounts')
       .select('id, name')
@@ -158,12 +184,9 @@ export class CategoriesService {
 
     if (categoryRows.length === 0) return;
 
-    const { error } = await client.from('categories').upsert(categoryRows, {
-      onConflict: 'workspace_id,translation_key',
-      ignoreDuplicates: true,
-    });
+    const { error } = await client.from('categories').insert(categoryRows);
 
-    if (error) {
+    if (error && !isUniqueViolation(error)) {
       this.logger.error(`Failed to seed system categories: ${error.message}`);
       throw new BadRequestException({
         code: 'CATEGORY_SEED_FAILED',

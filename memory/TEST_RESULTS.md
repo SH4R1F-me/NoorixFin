@@ -1,6 +1,6 @@
 # NoorixFin — TEST RESULTS
 
-**Last updated:** 2026-08-04 (Session 13 — web app executed via Playwright; all four layers now run)
+**Last updated:** 2026-08-04 (Session 16 — API + dashboard on real data; 3 more outage-class bugs fixed)
 
 ---
 
@@ -11,6 +11,7 @@
 | SEC-01 | User A cannot access User B personal workspace | ✅ **PASS (live)** | Bob (plain USER) sees 0 of Alice's workspaces, 0 memberships, 0 ledger rows; sees exactly 1 workspace (his own) |
 | SEC-02 | **(re-scoped, DEC-014)** (a) non-owner blocked via direct PostgREST; (b) `USER` cannot perform `SUPER_ADMIN` actions; (c) `SUPER_ADMIN` cannot read another user's ledger | ✅ **(a) and (c) PASS (live)** | (a) Bob's INSERT into Alice's workspace → RLS violation. (c) Alice (SUPER_ADMIN) sees **0** journal_entries, **0** journal_postings, **0** ledger_accounts of Bob's while still seeing workspace metadata — DEC-013's core requirement, confirmed. (b) needs API-layer tests |
 | SEC-03 | Service key absent from clients | ⬜ Not tested | Needs a bundle grep after a production build |
+| — | **Table privileges present for `authenticated`** | ✅ **PASS (live)** | Added by migration 00008 after a total-outage 42501 was found |
 | FIN-01 | Every posted journal balanced | ✅ **PASS (live)** | `chk_posting_sides` rejects debit+credit both positive; `chk_posting_nonzero` rejects zero-only. Plus 44/44 `validateBalance` unit tests |
 | FIN-02 | Retry cannot duplicate — **incl. mobile queue replay after app kill** (DEC-010) | ✅ **PASS (mobile side)** | Same key twice → 1 server entry; enqueue dedupes; **reclaimed after kill cannot double-post**. API-side cross-request dedup still needs `supabase start` |
 | FIN-03 | Correction preserves history | ⬜ Not tested | Schema supports `reverses_entry_id` |
@@ -280,3 +281,128 @@ That is a genuine result, not an absence of looking: the same session that wrote
 Everything requiring a session — sign-in, sign-up, dashboard content, sign-out, token refresh — and the
 `Secure`/`httpOnly`/`SameSite` cookie flags themselves, which need a real cookie to inspect. All blocked
 on `supabase start`.
+
+
+---
+
+## TEST-010: First Run Against Real Supabase — 2026-08-04
+
+`supabase start` (Docker group fix applied). All 8 migrations applied to genuine Supabase
+PostgreSQL 17 via the CLI's own runner.
+
+### 🔴 Total API outage found: no table privileges were ever granted
+
+Every PostgREST request returned:
+
+```
+42501: permission denied for table <name>
+```
+
+Migrations 00001–00007 create tables, enable RLS, and write policies — but issue **no `GRANT`**.
+These are two separate permission systems: `GRANT` decides whether a role may touch a table at all;
+RLS decides which rows once it may. PostgreSQL checks `GRANT` first, so **the RLS policies were never
+evaluated** and every authenticated read and write failed. Not degraded — dead.
+
+**Why every earlier test missed it.** `supabase/tests/_local_shim.sql` contained
+`ALTER DEFAULT PRIVILEGES ... TO authenticated`, so the local suite granted the privileges the real
+migrations forgot. The shim was compensating for the bug it existed to expose. That line has been
+removed; the shim now carries a comment saying a 42501 means the migration is wrong, not the shim.
+
+Fixed in **`00008_grant_table_privileges.sql`**, which also sets `ALTER DEFAULT PRIVILEGES` so the next
+migration that forgets cannot reproduce the outage. `anon` is deliberately granted nothing.
+
+### Verified live against real Supabase
+
+| Check | Result |
+|---|---|
+| All 8 migrations apply via the Supabase CLI runner | ✅ |
+| Operator created through GoTrue admin API; `create_super_admin.sql` Path A promotes | ✅ |
+| Real password-grant sign-in issues an access token | ✅ |
+| **SEC-02(c)** — super admin sees 1 workspace + 1 profile, **0** ledger_accounts / journal_entries / journal_postings | ✅ |
+| Audit row written for the grant | ✅ |
+| `GET /dashboard` unauthenticated → 307 → `/auth/login?next=%2Fdashboard` | ✅ |
+
+### Signed-in E2E (previously blocked, now passing) — `e2e/signed-in.spec.ts`
+
+| Check | Result |
+|---|---|
+| Sign-in via the UI reaches `/dashboard` | ✅ |
+| `sb-*` cookies are `httpOnly` **and** `SameSite=Lax` | ✅ |
+| Token unreachable from `document.cookie` and `localStorage` | ✅ |
+| Session survives a full page reload (proxy.ts refreshes) | ✅ |
+
+**DEC-009's central claim is now demonstrated with a real session**, not inferred from an empty page.
+
+Web e2e total: **16 passed**. The signed-in specs self-skip when `E2E_EMAIL`/`E2E_PASSWORD` are unset,
+so the suite stays green without Docker.
+
+### Note on the login selector
+The bilingual form defaults to Bangla, so `getByRole('button', {name: /sign in/i})` never matched.
+Tests now target `form button[type="submit"]` — locale-independent.
+
+
+---
+
+## TEST-011: API Running + Dashboard on Real Data — 2026-08-04
+
+Starting the NestJS API against live Supabase and wiring the dashboard to it surfaced **three more
+outage-class defects**, all in code paths that had never executed.
+
+### 🔴 1. Category seeding used ON CONFLICT against a PARTIAL index
+
+```
+there is no unique or exclusion constraint matching the ON CONFLICT specification
+```
+
+Migration 00006 created the uniqueness guarantees as **partial** indexes
+(`WHERE subtype = 'CATEGORY'`, `WHERE translation_key IS NOT NULL`). PostgreSQL will not accept a
+partial index as an `ON CONFLICT` target unless the statement repeats the predicate — which PostgREST's
+`on_conflict` parameter cannot express. My own DEC-015 seeder used `upsert`, so it could never run.
+
+Rewritten as insert-only, treating unique violation (23505) as a concurrent seeder winning the race.
+Verified: 16 categories + 16 backing accounts seeded, and a second call adds nothing.
+
+### 🔴 2. Five tables had RLS enabled with no write policy (migration 00009)
+
+`audit_events`, `categories`, `journal_postings`, `tags`, `journal_entry_tags`. RLS denies by default,
+so enabling it without an INSERT policy makes a table permanently read-only.
+
+**`journal_postings` was the severe one:** a transaction is an entry PLUS its balancing postings
+(DEC-006). The entry insert succeeded and the postings insert was denied — so recording a transaction,
+the product's core action, could never work.
+
+Why every earlier test missed it: `run-local.sh` seeds through `postgres` (which bypasses RLS) and
+asserted only on SELECT isolation. It proved nobody could read another tenant's rows; it never proved
+the owner could write their own.
+
+### 🔴 3. Workspace creation blocked by its own SELECT policy (migration 00010)
+
+```
+42501: new row violates row-level security policy for table "workspaces"
+```
+
+The INSERT policy was fine — `created_by = auth.uid()` evaluated true. The failure was the RETURNING
+clause: `INSERT ... RETURNING` also applies SELECT policies to the new row, and the only SELECT policy
+required an active `workspace_members` row — which the service inserts *after* the workspace. The
+creator could not read back the row they had just written.
+
+Diagnosed by the asymmetry: a plain INSERT returned 201 while the same INSERT with
+`Prefer: return=representation` returned 42501. Fixed by letting a creator see their own workspace
+(under DEC-007 the creator IS the sole owner, so this grants nothing extra).
+
+### Verified working end-to-end
+
+| Check | Result |
+|---|---|
+| API boots with local JWKS verification | ✅ |
+| `GET /v1/me`, `/v1/workspaces` with a real JWT | ✅ |
+| Category seeding — 16 categories + 16 backing accounts, idempotent | ✅ |
+| Account creation | ✅ |
+| **Transaction creation: entry + balancing postings** | ✅ debits 23500 = credits 23500 |
+| Signup → workspace → categories → accounts → transactions for a brand-new user | ✅ |
+| **SEC-01 live through the API** — USER requesting the operator's workspace | ✅ 403 |
+| `listTransactions` returns `amount_minor` derived from embedded postings (no N+1) | ✅ |
+| Dashboard accounts / transactions / categories render from the database | ✅ |
+| Web e2e | ✅ 16 passed |
+
+Running total: **five for five** — every layer, on first real execution, contained a defect.

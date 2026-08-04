@@ -67,8 +67,9 @@ enforces the two-role model at the database level.
 
 | Risk | Phase | Mitigation |
 |------|-------|-----------|
-| Signed-in web flows untested (sign-in/up/out, refresh, cookie flags) | Phase 2 | Playwright suite exists and covers the unauthenticated paths; session flows need `supabase start` |
-| **`supabase start` unavailable — user not in the `docker` group** | Phase 2 gate | Docker daemon runs but the socket is permission-denied. Blocks PostgREST-level tests: FIN-02 cross-request idempotency, SYNC-02 409, SYNC-01 mobile round trip, RLS-through-the-API. Workaround in place: DB layer via `supabase/tests/run-local.sh` (local PostgreSQL), API logic via Jest with a mocked client. Fix: add the user to `docker`, or run against a hosted Supabase project |
+
+| ~~`supabase start` unavailable~~ | — | **RESOLVED 2026-08-04.** Docker group applied; local stack runs. First run found a total API outage (missing GRANTs, fixed in 00008) and unblocked signed-in E2E |
+| Signed-in web flows | — | **RESOLVED 2026-08-04.** `e2e/signed-in.spec.ts` verifies sign-in, httpOnly+SameSite cookie flags, JS-unreachability, and reload survival |
 | Supabase Free Tier limits (Realtime connections, egress, 7-day project pause) | Phase 2+ | Now an explicit design constraint, not a risk — see DEC-011 optimization rules (plan §1.14) |
 | ~~Acceptance matrix never run live~~ | — | **PARTIALLY RESOLVED 2026-08-04.** DB layer now verified via `./supabase/tests/run-local.sh` (local PostgreSQL, no Docker). It immediately found a total-outage 42P17 recursion on `workspace_members`, fixed in 00007. API/Auth/Realtime/client layers still unverified |
 | Mobile app is still an Expo scaffold | Phase 2 | W4 (plan §1.15) builds the real app on the offline-first stack |

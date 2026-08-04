@@ -29,6 +29,7 @@ DO $$ BEGIN
 EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
 GRANT USAGE ON SCHEMA public, auth TO anon, authenticated, service_role;
-ALTER DEFAULT PRIVILEGES IN SCHEMA public
-  GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO authenticated;
-ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT USAGE ON SEQUENCES TO authenticated;
+-- NOTE: table privileges are deliberately NOT granted here. They belong in
+-- migration 00008, and this shim previously granted them — which masked their
+-- absence from the real migrations and let a total API outage ship undetected.
+-- If a test fails with 42501, the migration is wrong, not the shim.
