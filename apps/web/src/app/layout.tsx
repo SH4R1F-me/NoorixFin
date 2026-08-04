@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { Providers } from "./providers";
 
 export const metadata: Metadata = {
-  title: "MyFin — Personal & Family Finance",
+  title: "NoorixFin — Personal Finance",
   description:
-    "Track income, expenses, budgets, goals and debts across personal and family workspaces. Bangla-first, privacy-safe finance management.",
-  keywords: "finance, budget, expense tracker, bangla, family finance",
+    "Track income, expenses, budgets, goals and debts in one private workspace. Bangla-first, privacy-safe finance management.",
+  keywords: "finance, budget, expense tracker, bangla, personal finance",
 };
 
 export default function RootLayout({
@@ -15,7 +16,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="bn" suppressHydrationWarning>
-      <body>{children}</body>
+      <body>
+        <Providers>{children}</Providers>
+      </body>
     </html>
   );
 }

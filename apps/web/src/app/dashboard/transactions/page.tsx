@@ -5,6 +5,7 @@ import {
   Plus, Search, ArrowDownLeft, ArrowUpRight, ArrowLeftRight,
   X, TrendingUp, TrendingDown, Repeat,
 } from 'lucide-react';
+import { formatAmount, getCurrency } from '@noorixfin/money';
 
 const MOCK_TXS = [
   { id: '1', type: 'EXPENSE', payee: 'Agora Supermarket', amount: 235000, cat: 'Food & Dining', catIcon: '🍕', account: 'bKash', date: '2026-08-02', note: 'Groceries' },
@@ -19,7 +20,11 @@ const MOCK_TXS = [
 
 const CATEGORIES = ['All', 'Food & Dining', 'Transport', 'Salary', 'Utilities', 'Entertainment', 'Healthcare', 'Freelance'];
 
-function fmt(minor: number) { return '৳' + (minor / 100).toLocaleString('en-BD', { minimumFractionDigits: 2 }); }
+// See accounts/page.tsx — symbol + formatAmount keeps the ৳ glyph while applying
+// the currency's real exponent instead of a hardcoded /100.
+function fmt(minor: number, currency = 'BDT') {
+  return getCurrency(currency).symbol + formatAmount(minor, currency, 'en-BD');
+}
 function fmtDate(d: string) { const dt = new Date(d); return `${dt.getDate()} ${['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][dt.getMonth()]}`; }
 
 export default function TransactionsPage() {

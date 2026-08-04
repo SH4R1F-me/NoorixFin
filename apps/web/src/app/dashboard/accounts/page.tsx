@@ -5,6 +5,7 @@ import {
   Plus, Landmark, CreditCard, Wallet, Banknote, Building2,
   TrendingUp, X, Eye, EyeOff, MoreHorizontal,
 } from 'lucide-react';
+import { formatAmount, getCurrency } from '@noorixfin/money';
 
 const MOCK_ACCOUNTS = [
   { id: '1', name: 'bKash', class: 'ASSET', subtype: 'WALLET', balance: 1245000, currency: 'BDT', icon: '📱', color: '#e2136e' },
@@ -16,7 +17,12 @@ const MOCK_ACCOUNTS = [
   { id: '7', name: 'Home Loan', class: 'LIABILITY', subtype: 'LOAN', balance: -180000000, currency: 'BDT', icon: '🏠', color: '#ef4444' },
 ];
 
-function fmt(minor: number) { return '৳' + Math.abs(minor / 100).toLocaleString('en-BD', { minimumFractionDigits: 2 }); }
+// Symbol + formatAmount rather than formatMoney: Intl renders BDT as "BDT 1,000.00",
+// and the design uses the ৳ glyph. formatAmount still applies the currency's real
+// exponent, so JPY (0) and KWD (3) no longer render through a hardcoded /100.
+function fmt(minor: number, currency = 'BDT') {
+  return getCurrency(currency).symbol + formatAmount(Math.abs(minor), currency, 'en-BD');
+}
 
 const SUBTYPES: Record<string, { label: string; icon: React.ElementType }> = {
   CASH: { label: 'Cash', icon: Banknote },
@@ -124,7 +130,7 @@ export default function AccountsPage() {
                   <div style={s.cardSubtype}>{SUBTYPES[acc.subtype]?.label || acc.subtype}</div>
                 </div>
               </div>
-              <div style={{ ...s.cardBalance, color: '#10b981' }}>{mask(fmt(acc.balance))}</div>
+              <div style={{ ...s.cardBalance, color: '#10b981' }}>{mask(fmt(acc.balance, acc.currency))}</div>
             </div>
           ))}
         </div>
@@ -144,7 +150,7 @@ export default function AccountsPage() {
                     <div style={s.cardSubtype}>{SUBTYPES[acc.subtype]?.label || acc.subtype}</div>
                   </div>
                 </div>
-                <div style={{ ...s.cardBalance, color: '#ef4444' }}>{mask(fmt(Math.abs(acc.balance)))}</div>
+                <div style={{ ...s.cardBalance, color: '#ef4444' }}>{mask(fmt(acc.balance, acc.currency))}</div>
               </div>
             ))}
           </div>

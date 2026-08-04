@@ -1,6 +1,6 @@
 /* ====================================================
-   MyFin — Global Design System
-   Blueprint §5.5, Design Tokens from @myfin/design-tokens
+   NoorixFin — Global Design System
+   Blueprint §5.5, Design Tokens from @noorixfin/design-tokens
    ====================================================
 
    Color System: Emerald primary (financial trust), 
@@ -371,5 +371,21 @@ input::placeholder {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+  }
+}
+
+/* ── Skeleton shimmer (DEC-012) ──────────────────────────────────────────── */
+@keyframes nf-shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* A5.5 / A11Y-01: honour reduced-motion — a continuous shimmer is exactly the
+   kind of animation that triggers vestibular discomfort. The skeleton still
+   conveys "loading" through its shape. */
+@media (prefers-reduced-motion: reduce) {
+  [data-testid='skeleton'] {
+    animation: none !important;
+    background-position: 0 0 !important;
   }
 }

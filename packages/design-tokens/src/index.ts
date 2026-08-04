@@ -1,5 +1,5 @@
 /**
- * @myfin/design-tokens — Shared design system tokens
+ * @noorixfin/design-tokens — Shared design system tokens
  * Used by both Next.js Web and Expo Mobile apps.
  */
 

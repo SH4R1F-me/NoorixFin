@@ -1,5 +1,5 @@
 {
-  "name": "@myfin/test-fixtures",
+  "name": "@noorixfin/test-fixtures",
   "version": "0.1.0",
   "private": true,
   "main": "./src/index.ts",
@@ -8,7 +8,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@myfin/domain": "workspace:*"
+    "@noorixfin/domain": "workspace:*"
   },
   "devDependencies": {
     "typescript": "^5.8.0"

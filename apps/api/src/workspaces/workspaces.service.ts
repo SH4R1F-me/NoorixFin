@@ -12,7 +12,7 @@ import {
 } from '@nestjs/common';
 import { SupabaseService } from '../supabase/supabase.service';
 import { CreateWorkspaceDto } from './dto/workspace.dto';
-import { v4 as uuidv4 } from 'uuid';
+import { randomUUID } from 'crypto';
 
 @Injectable()
 export class WorkspacesService {
@@ -47,7 +47,7 @@ export class WorkspacesService {
       });
     }
 
-    const workspaceId = uuidv4();
+    const workspaceId = randomUUID();
 
     // Create workspace (always PERSONAL)
     const { data: workspace, error: wsError } = await client
@@ -70,15 +70,19 @@ export class WorkspacesService {
     }
 
     // Add creator as OWNER
-    const { error: memberError } = await client.from('workspace_members').insert({
-      workspace_id: workspaceId,
-      user_id: userId,
-      role: 'OWNER',
-      status: 'ACTIVE',
-    });
+    const { error: memberError } = await client
+      .from('workspace_members')
+      .insert({
+        workspace_id: workspaceId,
+        user_id: userId,
+        role: 'OWNER',
+        status: 'ACTIVE',
+      });
 
     if (memberError) {
-      this.logger.error(`Failed to add owner membership: ${memberError.message}`);
+      this.logger.error(
+        `Failed to add owner membership: ${memberError.message}`,
+      );
       // Workspace created but membership failed — clean up
       await client.from('workspaces').delete().eq('id', workspaceId);
       throw new BadRequestException('Failed to create workspace membership');

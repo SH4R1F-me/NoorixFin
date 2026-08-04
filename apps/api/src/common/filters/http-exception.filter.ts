@@ -59,7 +59,10 @@ export class GlobalHttpExceptionFilter implements ExceptionFilter {
     }
 
     // Ensure code is set from status if not already
-    if (code === 'INTERNAL_ERROR' && status !== HttpStatus.INTERNAL_SERVER_ERROR) {
+    if (
+      code === 'INTERNAL_ERROR' &&
+      status !== HttpStatus.INTERNAL_SERVER_ERROR
+    ) {
       code = this.statusToCode(status);
     }
 

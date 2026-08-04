@@ -12,15 +12,20 @@ import {
   ConflictException,
 } from '@nestjs/common';
 import { SupabaseService } from '../supabase/supabase.service';
+import { CategoriesService } from '../categories/categories.service';
 import { CreateTransactionDto } from './dto/transaction.dto';
-import { v4 as uuidv4 } from 'uuid';
+import { randomUUID } from 'crypto';
 import { createHash } from 'crypto';
+import { parseMinorUnits } from '@noorixfin/money';
 
 @Injectable()
 export class TransactionsService {
   private readonly logger = new Logger(TransactionsService.name);
 
-  constructor(private readonly supabaseService: SupabaseService) {}
+  constructor(
+    private readonly supabaseService: SupabaseService,
+    private readonly categoriesService: CategoriesService,
+  ) {}
 
   /**
    * Create a transaction as a balanced journal entry.
@@ -33,12 +38,24 @@ export class TransactionsService {
     dto: CreateTransactionDto,
   ) {
     const client = this.supabaseService.getUserClient(accessToken);
-    const amount = parseInt(dto.amount, 10);
 
-    if (isNaN(amount) || amount <= 0) {
+    // Blueprint §8.1 / DEC-004: amounts arrive as minor-unit decimal strings.
+    // parseMinorUnits rejects floats, NaN, and empty strings — parseInt would
+    // silently truncate ("12.7" → 12) and accept trailing garbage ("10abc" → 10).
+    let amount: number;
+    try {
+      amount = parseMinorUnits(dto.amount);
+    } catch {
       throw new BadRequestException({
         code: 'INVALID_AMOUNT',
-        message: 'Amount must be a positive integer in minor units',
+        message: 'Amount must be an integer string in minor units',
+      });
+    }
+
+    if (amount <= 0) {
+      throw new BadRequestException({
+        code: 'INVALID_AMOUNT',
+        message: 'Amount must be greater than zero',
       });
     }
 
@@ -70,7 +87,7 @@ export class TransactionsService {
     const occurredAt = dto.occurred_at || new Date().toISOString();
     const localDate = occurredAt.split('T')[0];
 
-    const entryId = uuidv4();
+    const entryId = randomUUID();
 
     // Create journal entry
     const { data: entry, error: entryError } = await client
@@ -94,7 +111,9 @@ export class TransactionsService {
       .single();
 
     if (entryError) {
-      this.logger.error(`Failed to create journal entry: ${entryError.message}`);
+      this.logger.error(
+        `Failed to create journal entry: ${entryError.message}`,
+      );
       throw new BadRequestException('Failed to create transaction');
     }
 
@@ -107,13 +126,26 @@ export class TransactionsService {
 
     const currencyCode = account?.currency_code || 'BDT';
 
+    // A posting references the category's BACKING ledger account, never the
+    // category id — they are different tables and journal_postings has an FK to
+    // ledger_accounts (DEC-015). Passing the category id here made every
+    // income/expense insert violate that FK.
+    let categoryAccountId: string | undefined;
+    if (dto.category_id) {
+      categoryAccountId = await this.categoriesService.resolveLedgerAccountId(
+        dto.category_id,
+        workspaceId,
+        accessToken,
+      );
+    }
+
     // Create balanced postings based on transaction type (§8.2)
     const postings = this.buildPostings(
       entryId,
       dto.type,
       amount,
       dto.account_id,
-      dto.category_id,
+      categoryAccountId,
       dto.transfer_to_account_id,
       currencyCode,
     );
@@ -130,35 +162,45 @@ export class TransactionsService {
       throw new BadRequestException('Failed to create transaction postings');
     }
 
-    // Handle tags
+    // Handle tags — three round trips total, regardless of tag count (DEC-011).
+    // This was previously a loop doing up to 3 queries *per tag*.
     if (dto.tags && dto.tags.length > 0) {
-      for (const tagName of dto.tags) {
-        // Get or create tag
-        let { data: tag } = await client
-          .from('tags')
-          .select('id')
-          .eq('workspace_id', workspaceId)
-          .eq('name', tagName)
-          .single();
+      const tagNames = [...new Set(dto.tags)];
 
-        if (!tag) {
-          const { data: newTag } = await client
-            .from('tags')
-            .insert({
-              id: uuidv4(),
-              workspace_id: workspaceId,
-              name: tagName,
-            })
-            .select()
-            .single();
-          tag = newTag;
-        }
+      // 1. Upsert every tag in one statement. `tags` has UNIQUE (workspace_id,
+      //    name), so existing tags are left alone and new ones are created.
+      const { error: tagUpsertError } = await client.from('tags').upsert(
+        tagNames.map((name) => ({
+          id: randomUUID(),
+          workspace_id: workspaceId,
+          name,
+        })),
+        { onConflict: 'workspace_id,name', ignoreDuplicates: true },
+      );
 
-        if (tag) {
-          await client.from('journal_entry_tags').insert({
+      if (tagUpsertError) {
+        this.logger.error(`Failed to upsert tags: ${tagUpsertError.message}`);
+      }
+
+      // 2. Read back the ids (the upsert above cannot return rows it skipped).
+      const { data: tagRows } = await client
+        .from('tags')
+        .select('id, name')
+        .eq('workspace_id', workspaceId)
+        .in('name', tagNames);
+
+      // 3. Link them all at once. workspace_id is filled by the
+      //    derive_workspace_from_entry() trigger (migration 00005).
+      if (tagRows && tagRows.length > 0) {
+        const { error: linkError } = await client.from('journal_entry_tags').insert(
+          tagRows.map((tag) => ({
             journal_entry_id: entryId,
             tag_id: tag.id,
-          });
+          })),
+        );
+
+        if (linkError) {
+          this.logger.error(`Failed to link tags: ${linkError.message}`);
         }
       }
     }
@@ -180,7 +222,9 @@ export class TransactionsService {
 
     let query = client
       .from('journal_entries')
-      .select('*')
+      // Explicit columns, never `*`, on a list path (DEC-011). Single literal —
+      // supabase-js infers the row type from it.
+      .select('id, workspace_id, entry_type, occurred_at, local_date, payee, note, status, source, reverses_entry_id, created_by, posted_at, created_at, updated_at, version')
       .eq('workspace_id', workspaceId)
       .order('occurred_at', { ascending: false })
       .order('id', { ascending: false })
@@ -215,13 +259,18 @@ export class TransactionsService {
   /**
    * Get a single transaction with its postings.
    */
-  async getTransaction(transactionId: string, accessToken: string) {
+  async getTransaction(
+    transactionId: string,
+    workspaceId: string,
+    accessToken: string,
+  ) {
     const client = this.supabaseService.getUserClient(accessToken);
 
     const { data: entry, error } = await client
       .from('journal_entries')
       .select('*')
       .eq('id', transactionId)
+      .eq('workspace_id', workspaceId)
       .single();
 
     if (error || !entry) {
@@ -245,6 +294,7 @@ export class TransactionsService {
    */
   async reverseTransaction(
     transactionId: string,
+    workspaceId: string,
     userId: string,
     accessToken: string,
   ) {
@@ -255,6 +305,7 @@ export class TransactionsService {
       .from('journal_entries')
       .select('*')
       .eq('id', transactionId)
+      .eq('workspace_id', workspaceId)
       .single();
 
     if (error || !original) {
@@ -284,7 +335,7 @@ export class TransactionsService {
       });
     }
 
-    const reversalId = uuidv4();
+    const reversalId = randomUUID();
 
     // Create reversal entry
     const { data: reversalEntry, error: reversalError } = await client
@@ -298,7 +349,7 @@ export class TransactionsService {
         note: `Reversal of ${original.id}`,
         status: 'POSTED',
         source: 'MANUAL',
-        client_entry_id: uuidv4(),
+        client_entry_id: randomUUID(),
         reverses_entry_id: transactionId,
         created_by: userId,
         posted_at: new Date().toISOString(),
@@ -313,7 +364,7 @@ export class TransactionsService {
 
     // Create reversed postings (swap debit/credit)
     const reversedPostings = originalPostings.map((p) => ({
-      id: uuidv4(),
+      id: randomUUID(),
       journal_entry_id: reversalId,
       ledger_account_id: p.ledger_account_id,
       debit_minor: p.credit_minor,
@@ -346,7 +397,8 @@ export class TransactionsService {
     type: string,
     amount: number,
     accountId: string,
-    categoryId?: string,
+    /** Backing ledger account of the chosen category — NOT the category id. */
+    categoryAccountId?: string,
     transferToId?: string,
     currencyCode = 'BDT',
   ) {
@@ -354,7 +406,7 @@ export class TransactionsService {
 
     switch (type) {
       case 'EXPENSE':
-        if (!categoryId) {
+        if (!categoryAccountId) {
           throw new BadRequestException({
             code: 'CATEGORY_REQUIRED',
             message: 'Category is required for expense transactions',
@@ -362,7 +414,7 @@ export class TransactionsService {
         }
         // Asset account credit (money goes out)
         postings.push({
-          id: uuidv4(),
+          id: randomUUID(),
           journal_entry_id: entryId,
           ledger_account_id: accountId,
           debit_minor: 0,
@@ -372,9 +424,9 @@ export class TransactionsService {
         });
         // Expense category debit (expense increases)
         postings.push({
-          id: uuidv4(),
+          id: randomUUID(),
           journal_entry_id: entryId,
-          ledger_account_id: categoryId,
+          ledger_account_id: categoryAccountId,
           debit_minor: amount,
           credit_minor: 0,
           currency_code: currencyCode,
@@ -383,7 +435,7 @@ export class TransactionsService {
         break;
 
       case 'INCOME':
-        if (!categoryId) {
+        if (!categoryAccountId) {
           throw new BadRequestException({
             code: 'CATEGORY_REQUIRED',
             message: 'Category is required for income transactions',
@@ -391,7 +443,7 @@ export class TransactionsService {
         }
         // Asset account debit (money comes in)
         postings.push({
-          id: uuidv4(),
+          id: randomUUID(),
           journal_entry_id: entryId,
           ledger_account_id: accountId,
           debit_minor: amount,
@@ -401,9 +453,9 @@ export class TransactionsService {
         });
         // Income category credit (income increases)
         postings.push({
-          id: uuidv4(),
+          id: randomUUID(),
           journal_entry_id: entryId,
-          ledger_account_id: categoryId,
+          ledger_account_id: categoryAccountId,
           debit_minor: 0,
           credit_minor: amount,
           currency_code: currencyCode,
@@ -420,7 +472,7 @@ export class TransactionsService {
         }
         // Source account credit (money leaves)
         postings.push({
-          id: uuidv4(),
+          id: randomUUID(),
           journal_entry_id: entryId,
           ledger_account_id: accountId,
           debit_minor: 0,
@@ -430,7 +482,7 @@ export class TransactionsService {
         });
         // Destination account debit (money arrives)
         postings.push({
-          id: uuidv4(),
+          id: randomUUID(),
           journal_entry_id: entryId,
           ledger_account_id: transferToId,
           debit_minor: amount,

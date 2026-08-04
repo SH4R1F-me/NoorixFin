@@ -1,6 +1,6 @@
 {
   "app": {
-    "name": "MyFin",
+    "name": "NoorixFin",
     "tagline": "আপনার ব্যক্তিগত অর্থ সহযোগী",
     "loading": "লোড হচ্ছে...",
     "error": "কিছু ভুল হয়েছে",
@@ -29,7 +29,6 @@
     "calendar": "ক্যালেন্ডার ও বিল",
     "goals": "লক্ষ্য ও ঋণ",
     "reports": "রিপোর্ট",
-    "family": "পরিবার/ওয়ার্কস্পেস",
     "settings": "সেটিংস",
     "more": "আরও"
   },
@@ -52,16 +51,15 @@
     "signOutAll": "সব ডিভাইস থেকে সাইন আউট"
   },
   "onboarding": {
-    "welcome": "MyFin-এ স্বাগতম",
+    "welcome": "NoorixFin-এ স্বাগতম",
     "selectLanguage": "আপনার ভাষা নির্বাচন করুন",
     "selectCountry": "আপনার দেশ নির্বাচন করুন",
     "selectTimezone": "আপনার টাইমজোন নির্বাচন করুন",
     "selectCurrency": "আপনার মূল মুদ্রা নির্বাচন করুন",
     "selectWeekStart": "সপ্তাহ শুরু হয়",
-    "selectPersona": "আপনি MyFin কিভাবে ব্যবহার করবেন?",
+    "selectPersona": "আপনি NoorixFin কিভাবে ব্যবহার করবেন?",
     "personaIndividual": "ব্যক্তিগত",
     "personaStudent": "শিক্ষার্থী",
-    "personaFamily": "পরিবার",
     "personaFreelancer": "ফ্রিল্যান্সার",
     "createWorkspace": "আপনার ওয়ার্কস্পেস তৈরি হচ্ছে...",
     "addFirstAccount": "আপনার প্রথম অ্যাকাউন্ট যোগ করুন",
@@ -70,9 +68,7 @@
   },
   "workspace": {
     "personal": "ব্যক্তিগত",
-    "family": "পরিবার",
     "switchWorkspace": "ওয়ার্কস্পেস পরিবর্তন",
-    "createFamily": "পারিবারিক ওয়ার্কস্পেস তৈরি",
     "inviteMember": "সদস্য আমন্ত্রণ",
     "members": "সদস্য",
     "roles": {
@@ -202,5 +198,23 @@
     "thursday": "বৃহস্পতিবার",
     "friday": "শুক্রবার",
     "saturday": "শনিবার"
+  },
+  "cat": {
+    "food_dining": "খাবার ও ডাইনিং",
+    "transport": "যাতায়াত",
+    "housing": "বাসস্থান",
+    "utilities": "ইউটিলিটি",
+    "healthcare": "স্বাস্থ্যসেবা",
+    "education": "শিক্ষা",
+    "entertainment": "বিনোদন",
+    "shopping": "কেনাকাটা",
+    "personal_care": "ব্যক্তিগত যত্ন",
+    "gifts_donations": "উপহার ও দান",
+    "other_expense": "অন্যান্য খরচ",
+    "salary": "বেতন",
+    "business": "ব্যবসা",
+    "freelance": "ফ্রিল্যান্স",
+    "investment": "বিনিয়োগ",
+    "other_income": "অন্যান্য আয়"
   }
 }

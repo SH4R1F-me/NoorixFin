@@ -1,12 +1,13 @@
 /**
  * Auth Module — Blueprint §7.2
- * JWT verification and authentication guard.
+ * Local JWT verification (DEC-011) and authentication guard.
  */
 import { Module } from '@nestjs/common';
 import { SupabaseAuthGuard } from './guards/supabase-auth.guard';
+import { JwtVerifierService } from './jwt-verifier.service';
 
 @Module({
-  providers: [SupabaseAuthGuard],
-  exports: [SupabaseAuthGuard],
+  providers: [JwtVerifierService, SupabaseAuthGuard],
+  exports: [JwtVerifierService, SupabaseAuthGuard],
 })
 export class AuthModule {}

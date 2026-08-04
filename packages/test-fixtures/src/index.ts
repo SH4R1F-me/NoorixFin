@@ -1,10 +1,10 @@
 /**
- * @myfin/test-fixtures — Reusable test data
+ * @noorixfin/test-fixtures — Reusable test data
  * Based on Blueprint §9 canonical data model
  * Updated for simplified 2-role system (DEC-007)
  */
 
-import type { Profile, Workspace, WorkspaceMember } from '@myfin/domain';
+import type { Profile, Workspace, WorkspaceMember } from '@noorixfin/domain';
 
 // ─── Users ───────────────────────────────────────────────────────────
 

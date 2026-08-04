@@ -1,5 +1,5 @@
 /**
- * @myfin/money — Minor-unit integer arithmetic and currency utilities
+ * @noorixfin/money — Minor-unit integer arithmetic and currency utilities
  *
  * Blueprint §8.1: No floating-point money arithmetic.
  * All amounts stored as minor-unit integers (bigint in DB, number in JS for amounts < Number.MAX_SAFE_INTEGER).
@@ -75,7 +75,13 @@ export function toMajorUnits(minorAmount: number, currencyCode: string): number 
  * Blueprint §8.1: API amount is decimal string like "1025".
  */
 export function parseMinorUnits(decimalString: string): number {
-  if (decimalString.trim() === '') {
+  // Strict digits-only. Number() is far too permissive for a money primitive:
+  // it accepts hex ("0x10" -> 16), scientific notation ("1e3" -> 1000),
+  // surrounding whitespace, a leading "+", and "1.0" -> 1. A client sending any
+  // of those would have had a silently different amount recorded.
+  // Blueprint §8.1 / DEC-004: the wire format is a plain minor-unit integer
+  // string such as "1025".
+  if (!/^-?\d+$/.test(decimalString)) {
     throw new Error(`Invalid minor-unit amount: "${decimalString}" — must be an integer string`);
   }
   const parsed = Number(decimalString);

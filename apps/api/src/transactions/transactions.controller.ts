@@ -43,7 +43,9 @@ export class TransactionsController {
 
   @Post('workspaces/:workspaceId/transactions')
   @UseGuards(WorkspaceMemberGuard)
-  @ApiOperation({ summary: 'Create a new transaction (income/expense/transfer)' })
+  @ApiOperation({
+    summary: 'Create a new transaction (income/expense/transfer)',
+  })
   @ApiParam({ name: 'workspaceId', type: 'string' })
   @ApiCreatedResponse({ type: TransactionResponseDto })
   async create(
@@ -81,31 +83,41 @@ export class TransactionsController {
     );
   }
 
-  @Get('transactions/:id')
+  @Get('workspaces/:workspaceId/transactions/:id')
+  @UseGuards(WorkspaceMemberGuard)
   @ApiOperation({ summary: 'Get transaction detail with postings' })
+  @ApiParam({ name: 'workspaceId', type: 'string' })
   @ApiParam({ name: 'id', type: 'string' })
   @ApiOkResponse({ type: TransactionResponseDto })
   async getOne(
+    @Param('workspaceId') workspaceId: string,
     @Param('id') transactionId: string,
     @Req() req: Request & { accessToken: string },
   ) {
     return this.transactionsService.getTransaction(
       transactionId,
+      workspaceId,
       req.accessToken,
     );
   }
 
-  @Post('transactions/:id/reverse')
+  // Reversal MUTATES the ledger and previously ran with no workspace guard at
+  // all — the most exposed of the three unguarded routes (DEC-005).
+  @Post('workspaces/:workspaceId/transactions/:id/reverse')
+  @UseGuards(WorkspaceMemberGuard)
   @ApiOperation({ summary: 'Reverse a posted transaction' })
+  @ApiParam({ name: 'workspaceId', type: 'string' })
   @ApiParam({ name: 'id', type: 'string' })
   @ApiCreatedResponse({ type: TransactionResponseDto })
   async reverse(
+    @Param('workspaceId') workspaceId: string,
     @Param('id') transactionId: string,
     @CurrentUser() user: AuthenticatedUser,
     @Req() req: Request & { accessToken: string },
   ) {
     return this.transactionsService.reverseTransaction(
       transactionId,
+      workspaceId,
       user.id,
       req.accessToken,
     );

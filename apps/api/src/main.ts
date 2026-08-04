@@ -1,5 +1,5 @@
 /**
- * MyFin NestJS API — Bootstrap
+ * NoorixFin NestJS API — Bootstrap
  * Blueprint §7.1, §11.1, §16.2
  */
 import { NestFactory } from '@nestjs/core';
@@ -51,7 +51,7 @@ async function bootstrap() {
 
   // ─── OpenAPI / Swagger (§11.1) ─────────────────────────
   const swaggerConfig = new DocumentBuilder()
-    .setTitle('MyFin API')
+    .setTitle('NoorixFin API')
     .setDescription(
       'Personal and household finance management API. ' +
         'All financial amounts are minor-unit decimal strings. ' +
@@ -79,7 +79,7 @@ async function bootstrap() {
   // ─── Start ─────────────────────────────────────────────
   const port = process.env.API_PORT || 3000;
   await app.listen(port);
-  console.log(`🚀 MyFin API running on http://localhost:${port}`);
+  console.log(`🚀 NoorixFin API running on http://localhost:${port}`);
   console.log(`📚 Swagger UI: http://localhost:${port}/api/docs`);
 }
 bootstrap();

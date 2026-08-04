@@ -1,6 +1,6 @@
 {
   "app": {
-    "name": "MyFin",
+    "name": "NoorixFin",
     "tagline": "Your personal finance companion",
     "loading": "Loading...",
     "error": "Something went wrong",
@@ -29,7 +29,6 @@
     "calendar": "Calendar & Bills",
     "goals": "Goals & Debts",
     "reports": "Reports",
-    "family": "Family/Workspace",
     "settings": "Settings",
     "more": "More"
   },
@@ -52,16 +51,15 @@
     "signOutAll": "Sign Out All Devices"
   },
   "onboarding": {
-    "welcome": "Welcome to MyFin",
+    "welcome": "Welcome to NoorixFin",
     "selectLanguage": "Select your language",
     "selectCountry": "Select your country",
     "selectTimezone": "Select your timezone",
     "selectCurrency": "Select your base currency",
     "selectWeekStart": "Week starts on",
-    "selectPersona": "How will you use MyFin?",
+    "selectPersona": "How will you use NoorixFin?",
     "personaIndividual": "Individual",
     "personaStudent": "Student",
-    "personaFamily": "Family",
     "personaFreelancer": "Freelancer",
     "createWorkspace": "Creating your workspace...",
     "addFirstAccount": "Add your first account",
@@ -70,9 +68,7 @@
   },
   "workspace": {
     "personal": "Personal",
-    "family": "Family",
     "switchWorkspace": "Switch Workspace",
-    "createFamily": "Create Family Workspace",
     "inviteMember": "Invite Member",
     "members": "Members",
     "roles": {
@@ -202,5 +198,23 @@
     "thursday": "Thursday",
     "friday": "Friday",
     "saturday": "Saturday"
+  },
+  "cat": {
+    "food_dining": "Food & Dining",
+    "transport": "Transport",
+    "housing": "Housing",
+    "utilities": "Utilities",
+    "healthcare": "Healthcare",
+    "education": "Education",
+    "entertainment": "Entertainment",
+    "shopping": "Shopping",
+    "personal_care": "Personal Care",
+    "gifts_donations": "Gifts & Donations",
+    "other_expense": "Other Expense",
+    "salary": "Salary",
+    "business": "Business",
+    "freelance": "Freelance",
+    "investment": "Investment",
+    "other_income": "Other Income"
   }
 }

@@ -1,5 +1,5 @@
 /**
- * @myfin/api-client — OpenAPI-generated API client
+ * @noorixfin/api-client — OpenAPI-generated API client
  * This will be auto-generated from the NestJS API's OpenAPI spec.
  * For now, placeholder exports.
  */

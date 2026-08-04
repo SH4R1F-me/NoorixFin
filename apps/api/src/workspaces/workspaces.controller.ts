@@ -6,13 +6,7 @@
  *
  * Invitation and member management endpoints removed (2-role system).
  */
-import {
-  Controller,
-  Get,
-  Post,
-  Body,
-  Req,
-} from '@nestjs/common';
+import { Controller, Get, Post, Body, Req } from '@nestjs/common';
 import {
   ApiBearerAuth,
   ApiTags,
@@ -22,10 +16,7 @@ import {
 } from '@nestjs/swagger';
 import { Request } from 'express';
 import { WorkspacesService } from './workspaces.service';
-import {
-  CreateWorkspaceDto,
-  WorkspaceResponseDto,
-} from './dto/workspace.dto';
+import { CreateWorkspaceDto, WorkspaceResponseDto } from './dto/workspace.dto';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import type { AuthenticatedUser } from '../common/decorators/current-user.decorator';
 
@@ -43,7 +34,11 @@ export class WorkspacesController {
     @Req() req: Request & { accessToken: string },
     @Body() dto: CreateWorkspaceDto,
   ) {
-    return this.workspacesService.createWorkspace(user.id, req.accessToken, dto);
+    return this.workspacesService.createWorkspace(
+      user.id,
+      req.accessToken,
+      dto,
+    );
   }
 
   @Get()

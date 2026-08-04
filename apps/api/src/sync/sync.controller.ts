@@ -1,0 +1,47 @@
+/**
+ * Sync Controller — DEC-010, DEC-011
+ *
+ * GET /v1/workspaces/:workspaceId/sync?since=<iso>&limit=<n>
+ *
+ * One round trip returns every change across the workspace. This is the mobile
+ * app's pull path; Supabase Realtime only tells the client *that* something
+ * changed, never what (payload-free hints keep financial data off the Realtime
+ * transport and egress down).
+ */
+import { Controller, Get, Param, Query, Req, UseGuards } from '@nestjs/common';
+import {
+  ApiBearerAuth,
+  ApiTags,
+  ApiOperation,
+  ApiOkResponse,
+  ApiParam,
+} from '@nestjs/swagger';
+import { Request } from 'express';
+import { SyncService } from './sync.service';
+import { SyncQueryDto, SyncResponseDto } from './dto/sync.dto';
+import { WorkspaceMemberGuard } from '../auth/guards/workspace-member.guard';
+
+@ApiTags('Sync')
+@ApiBearerAuth('supabase-auth')
+@Controller()
+export class SyncController {
+  constructor(private readonly syncService: SyncService) {}
+
+  @Get('workspaces/:workspaceId/sync')
+  @UseGuards(WorkspaceMemberGuard)
+  @ApiOperation({
+    summary: 'Delta sync — all rows changed since the given cursor',
+    description:
+      'Omit `since` for a full initial pull. Delivery is at-least-once: boundary rows may repeat, ' +
+      'so the client must upsert by primary key. Advance your stored cursor only when `has_more` is false.',
+  })
+  @ApiParam({ name: 'workspaceId', type: 'string' })
+  @ApiOkResponse({ type: SyncResponseDto })
+  async delta(
+    @Param('workspaceId') workspaceId: string,
+    @Req() req: Request & { accessToken: string },
+    @Query() query: SyncQueryDto,
+  ) {
+    return this.syncService.getDelta(workspaceId, req.accessToken, query);
+  }
+}

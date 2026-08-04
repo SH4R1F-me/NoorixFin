@@ -1,0 +1,48 @@
+{
+  "validation": {
+    "required": "This field is required",
+    "invalidEmail": "Enter a valid email address",
+    "invalidPassword": "Password does not meet the requirements",
+    "passwordMismatch": "Passwords do not match",
+    "invalidAmount": "Enter a valid amount",
+    "amountZero": "Amount must be greater than zero",
+    "amountTooLarge": "Amount exceeds the maximum limit",
+    "invalidDate": "Enter a valid date",
+    "futureDate": "Date cannot be in the future",
+    "nameTooLong": "Name must be {{max}} characters or fewer",
+    "nameTooShort": "Name must be at least {{min}} characters",
+    "duplicateName": "This name is already in use",
+    "invalidCurrency": "Invalid currency code"
+  },
+  "auth": {
+    "invalidCredentials": "Incorrect email or password",
+    "emailNotVerified": "Please verify your email first",
+    "accountLocked": "Account temporarily locked",
+    "sessionExpired": "Your session has expired",
+    "tooManyAttempts": "Too many attempts. Try again in {{minutes}} minutes"
+  },
+  "workspace": {
+    "notMember": "You are not a member of this workspace",
+    "insufficientRole": "You do not have permission for this action",
+    "cannotRemoveOwner": "The workspace owner cannot be removed",
+    "invitationExpired": "This invitation has expired",
+    "alreadyMember": "This user is already a member"
+  },
+  "transaction": {
+    "imbalanced": "The transaction must be balanced",
+    "duplicateDetected": "A similar transaction already exists",
+    "cannotEditPosted": "A posted transaction cannot be edited",
+    "cannotVoidDraft": "A draft transaction cannot be voided",
+    "versionConflict": "This record was changed on another device"
+  },
+  "account": {
+    "cannotDeleteWithTransactions": "An account with transactions cannot be deleted",
+    "currencyMismatch": "Currency does not match the workspace"
+  },
+  "server": {
+    "internalError": "An unexpected error occurred",
+    "serviceUnavailable": "Service temporarily unavailable",
+    "rateLimited": "Too many requests. Please slow down",
+    "maintenanceMode": "The system is under maintenance"
+  }
+}

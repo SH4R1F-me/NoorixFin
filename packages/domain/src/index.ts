@@ -1,6 +1,6 @@
 /**
- * @myfin/domain — Shared domain types and constants
- * Based on MyFin Production Blueprint §9 (Canonical Data Model)
+ * @noorixfin/domain — Shared domain types and constants
+ * Based on NoorixFin Production Blueprint §9 (Canonical Data Model)
  */
 
 // ─── Enums ───────────────────────────────────────────────────────────

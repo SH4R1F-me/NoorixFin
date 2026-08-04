@@ -20,8 +20,10 @@ export class SupabaseService {
 
   constructor(private readonly configService: ConfigService) {
     this.supabaseUrl = this.configService.getOrThrow<string>('SUPABASE_URL');
-    this.supabaseAnonKey = this.configService.getOrThrow<string>('SUPABASE_ANON_KEY');
-    this.supabaseServiceKey = this.configService.get<string>('SUPABASE_SERVICE_ROLE_KEY') || '';
+    this.supabaseAnonKey =
+      this.configService.getOrThrow<string>('SUPABASE_ANON_KEY');
+    this.supabaseServiceKey =
+      this.configService.get<string>('SUPABASE_SERVICE_ROLE_KEY') || '';
   }
 
   /**

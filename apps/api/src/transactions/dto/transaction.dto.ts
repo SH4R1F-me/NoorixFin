@@ -27,7 +27,8 @@ export class CreateTransactionDto {
 
   @ApiProperty({
     example: '125000',
-    description: 'Amount in minor units as decimal string (e.g., "125000" = ৳1,250.00)',
+    description:
+      'Amount in minor units as decimal string (e.g., "125000" = ৳1,250.00)',
   })
   @IsString()
   amount!: string;
@@ -40,7 +41,8 @@ export class CreateTransactionDto {
   account_id!: string;
 
   @ApiPropertyOptional({
-    description: 'Category account ID (for income/expense) or destination account (for transfer)',
+    description:
+      'Category account ID (for income/expense) or destination account (for transfer)',
   })
   @IsOptional()
   @IsUUID()

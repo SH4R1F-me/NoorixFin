@@ -1,8 +1,6 @@
 'use client';
 
 import { useEffect, useState, useRef } from 'react';
-import { useRouter } from 'next/navigation';
-import { createClient } from '../lib/supabase/client';
 import './landing.css';
 import {
   Wallet,
@@ -69,7 +67,6 @@ function useCounter(end: number, duration: number, start: boolean) {
    MAIN LANDING PAGE COMPONENT
    ═══════════════════════════════════════════════════════════ */
 export default function Home() {
-  const router = useRouter();
   const [locale, setLocale] = useState<'bn' | 'en'>('bn');
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   const [scrollY, setScrollY] = useState(0);
@@ -87,14 +84,8 @@ export default function Home() {
   const txnCount = useCounter(500, 2000, statsRef.isInView);
   const securityCount = useCounter(99, 1800, statsRef.isInView);
 
-  useEffect(() => {
-    const checkAuth = async () => {
-      const supabase = createClient();
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) router.push('/dashboard');
-    };
-    checkAuth();
-  }, [router]);
+  // Session redirect happens in proxy.ts, not here — with httpOnly cookies the
+  // browser cannot read the session (DEC-009).
 
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
@@ -166,7 +157,7 @@ export default function Home() {
         subtitle: 'সুন্দর ড্যাশবোর্ডে আপনার সম্পূর্ণ আর্থিক চিত্র',
       },
       benefits: {
-        title: 'কেন MyFin বেছে নেবেন?',
+        title: 'কেন NoorixFin বেছে নেবেন?',
         items: [
           { icon: 'zap', text: 'লাইটনিং ফাস্ট পারফরম্যান্স' },
           { icon: 'globe', text: 'বাংলা ও ইংরেজি সাপোর্ট' },
@@ -183,7 +174,7 @@ export default function Home() {
       },
       footer: {
         tagline: 'আপনার ব্যক্তিগত অর্থ সহযোগী',
-        copyright: '© ২০২৬ MyFin. সর্বস্বত্ব সংরক্ষিত।',
+        copyright: '© ২০২৬ NoorixFin. সর্বস্বত্ব সংরক্ষিত।',
       },
     },
     en: {
@@ -242,7 +233,7 @@ export default function Home() {
         subtitle: 'Your complete financial picture in a beautiful dashboard',
       },
       benefits: {
-        title: 'Why Choose MyFin?',
+        title: 'Why Choose NoorixFin?',
         items: [
           { icon: 'zap', text: 'Lightning Fast Performance' },
           { icon: 'globe', text: 'Bangla & English Support' },
@@ -259,7 +250,7 @@ export default function Home() {
       },
       footer: {
         tagline: 'Your Personal Finance Companion',
-        copyright: '© 2026 MyFin. All rights reserved.',
+        copyright: '© 2026 NoorixFin. All rights reserved.',
       },
     },
   };
@@ -316,7 +307,7 @@ export default function Home() {
             <div className="landing-nav-logo-icon">
               <Wallet size={20} color="white" />
             </div>
-            <span className="landing-nav-logo-text">MyFin</span>
+            <span className="landing-nav-logo-text">NoorixFin</span>
           </a>
 
           <div className="landing-nav-links">
@@ -473,7 +464,7 @@ export default function Home() {
             </div>
             <img
               src="/images/dashboard-preview.png"
-              alt="MyFin Dashboard Preview"
+              alt="NoorixFin Dashboard Preview"
               className="landing-preview-img"
             />
           </div>
@@ -533,7 +524,7 @@ export default function Home() {
             <div className="landing-nav-logo-icon">
               <Wallet size={18} color="white" />
             </div>
-            <span className="landing-nav-logo-text" style={{ fontSize: '1.125rem' }}>MyFin</span>
+            <span className="landing-nav-logo-text" style={{ fontSize: '1.125rem' }}>NoorixFin</span>
           </div>
           <p className="landing-footer-tagline">{text.footer.tagline}</p>
           <p className="landing-footer-copy">{text.footer.copyright}</p>

@@ -1,5 +1,5 @@
 /**
- * @myfin/i18n — Shared i18n configuration and locale catalogs
+ * @noorixfin/i18n — Shared i18n configuration and locale catalogs
  * Blueprint §13: i18next + react-i18next + Expo Localization
  */
 

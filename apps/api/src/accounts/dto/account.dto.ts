@@ -27,10 +27,28 @@ export class CreateAccountDto {
 
   @ApiProperty({
     example: 'CASH',
-    enum: ['CASH', 'BANK', 'MOBILE_WALLET', 'CREDIT_CARD', 'LOAN', 'SAVINGS', 'CATEGORY', 'SYSTEM'],
+    enum: [
+      'CASH',
+      'BANK',
+      'MOBILE_WALLET',
+      'CREDIT_CARD',
+      'LOAN',
+      'SAVINGS',
+      'CATEGORY',
+      'SYSTEM',
+    ],
   })
   @IsString()
-  @IsIn(['CASH', 'BANK', 'MOBILE_WALLET', 'CREDIT_CARD', 'LOAN', 'SAVINGS', 'CATEGORY', 'SYSTEM'])
+  @IsIn([
+    'CASH',
+    'BANK',
+    'MOBILE_WALLET',
+    'CREDIT_CARD',
+    'LOAN',
+    'SAVINGS',
+    'CATEGORY',
+    'SYSTEM',
+  ])
   subtype!: string;
 
   @ApiPropertyOptional({ example: 'BDT' })
@@ -62,7 +80,8 @@ export class CreateAccountDto {
 
   @ApiPropertyOptional({
     example: '50000',
-    description: 'Opening balance as minor-unit decimal string (e.g., "50000" = 500.00 BDT)',
+    description:
+      'Opening balance as minor-unit decimal string (e.g., "50000" = 500.00 BDT)',
   })
   @IsOptional()
   @IsString()

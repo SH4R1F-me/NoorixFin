@@ -1,5 +1,5 @@
 /**
- * MyFin API — Root Application Module
+ * NoorixFin API — Root Application Module
  * Blueprint §7.1: Modular monolith structure
  *
  * Wires together all domain modules, global guards, filters, and middleware.
@@ -12,6 +12,7 @@ import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 // Infrastructure modules
 import { SupabaseModule } from './supabase/supabase.module';
 import { AuthModule } from './auth/auth.module';
+import { SyncModule } from './sync/sync.module';
 import { SupabaseAuthGuard } from './auth/guards/supabase-auth.guard';
 
 // Domain modules
@@ -56,6 +57,7 @@ import { GlobalHttpExceptionFilter } from './common/filters/http-exception.filte
     // ─── Infrastructure ─────────────────────────────────
     SupabaseModule,
     AuthModule,
+    SyncModule,
 
     // ─── Domain Modules ─────────────────────────────────
     HealthModule,

@@ -1,4 +1,4 @@
--- MyFin Seed Data — for local development/testing only
+-- NoorixFin Seed Data — for local development/testing only
 -- Never use production data for dev/test (Blueprint §17.3)
 
 -- NOTE: This seed file runs AFTER migrations.

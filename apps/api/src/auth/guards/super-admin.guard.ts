@@ -25,9 +25,9 @@ export class SuperAdminGuard implements CanActivate {
   constructor(private readonly supabaseService: SupabaseService) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    const request = context.switchToHttp().getRequest<
-      Request & { user: AuthenticatedUser; accessToken: string }
-    >();
+    const request = context
+      .switchToHttp()
+      .getRequest<Request & { user: AuthenticatedUser; accessToken: string }>();
 
     const user = request.user;
     if (!user) {

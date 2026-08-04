@@ -1,4 +1,4 @@
-# MyFin — Production System Blueprint
+# NoorixFin — Production System Blueprint
 
 **Document version:** 1.0  
 **Research cutoff:** 1 August 2026  
@@ -12,15 +12,17 @@
 এই নথিতে চার ধরনের statement ব্যবহার করা হয়েছে:
 
 - **Verified fact:** official documentation বা live product source দিয়ে যাচাই করা তথ্য।
-- **Architecture decision:** MyFin-এর জন্য এই blueprint-এ নির্বাচিত design।
+- **Architecture decision:** NoorixFin-এর জন্য এই blueprint-এ নির্বাচিত design।
 - **Recommendation:** বাস্তবায়নের সময় অনুসরণযোগ্য engineering পরামর্শ।
 - **Open decision:** owner/legal/product team-এর সিদ্ধান্ত ছাড়া final করা যাবে না।
 
-### 1.1 গুরুত্বপূর্ণ naming warning
+### 1.1 Naming — collision resolved, clearance still open
 
-`MyFin` নামটি বাজারে unique নয়। বর্তমানে `MyFin` নামে একটি Bulgarian digital wallet, `MyFin Budget` নামে personal-finance product, এবং App Store/Google Play-এ আরও expense-tracker app পাওয়া যায়। তাই এই blueprint-এ **MyFin একটি working product name**। Public launch-এর আগে target country অনুযায়ী trademark lawyer দিয়ে clearance, domain check, social handle check এবং App Store/Google Play listing check করতে হবে। শুধু web search trademark ownership প্রমাণ বা অস্বীকার করে না।
+**RESOLVED 2026-08-04 (DEC-008):** এই blueprint-এর original working name ছিল `MyFin`, যা বাজারে unique ছিল না — `MyFin` নামে একটি Bulgarian digital wallet, `MyFin Budget` নামে personal-finance product, এবং App Store/Google Play-এ আরও expense-tracker app বিদ্যমান। সেই collision এড়াতে product-টি **`NoorixFin`** নামে rename করা হয়েছে; পুরো monorepo, npm scope (`@noorixfin/*`), UI text এবং store identifier এখন এই নামে।
 
-Sources: [MyFin digital wallet](https://www.myfin.bg/), [MyFin on Google Play](https://play.google.com/store/apps/details?id=bg.myfin.myfin), [MyFin Budget](https://myfinbudget.com/), [MyFin expense tracker on App Store](https://apps.apple.com/us/app/myfin-expense-tracker/id1616732749)
+Original collision sources (historical record — এগুলো **অন্য** product, NoorixFin নয়): [MyFin digital wallet](https://www.myfin.bg/), [MyFin on Google Play](https://play.google.com/store/apps/details?id=bg.myfin.myfin), [MyFin Budget](https://myfinbudget.com/), [MyFin expense tracker on App Store](https://apps.apple.com/us/app/myfin-expense-tracker/id1616732749)
+
+> **এখনও open:** rename দিয়ে known collision-টি সরানো হয়েছে, কিন্তু **trademark clearance হয়নি**। Public launch-এর আগে target country অনুযায়ী trademark lawyer দিয়ে clearance, domain check, social handle check এবং App Store/Google Play listing check করতে হবে। শুধু web search বা rename trademark ownership প্রমাণ বা অস্বীকার করে না। — Phase 6 owner action (DEC-008)।
 
 ---
 
@@ -28,7 +30,7 @@ Sources: [MyFin digital wallet](https://www.myfin.bg/), [MyFin on Google Play](h
 
 ### 2.1 Product definition
 
-MyFin হবে একটি **non-custodial personal and household finance-management system**। ব্যবহারকারী Web ও Mobile—দুই জায়গায় একই account দিয়ে login করে একই canonical data দেখবে। এটি শুরুতে money transfer, banking, lending, investment execution বা financial advice দেবে না; ব্যবহারকারীর আয়, খরচ, বাজেট, সঞ্চয়, দেনা, recurring bill এবং financial calendar পরিচালনা করবে।
+NoorixFin হবে একটি **non-custodial personal and household finance-management system**। ব্যবহারকারী Web ও Mobile—দুই জায়গায় একই account দিয়ে login করে একই canonical data দেখবে। এটি শুরুতে money transfer, banking, lending, investment execution বা financial advice দেবে না; ব্যবহারকারীর আয়, খরচ, বাজেট, সঞ্চয়, দেনা, recurring bill এবং financial calendar পরিচালনা করবে।
 
 ### 2.2 Target users
 
@@ -97,13 +99,13 @@ Supabase প্রতি project-এ full PostgreSQL database দেয়; Auth, S
 
 Current personal-finance products থেকে তিনটি useful pattern দেখা যায়:
 
-1. **Plan, শুধু track নয়:** Goodbudget category/envelope-ভিত্তিক spending allocation ব্যবহার করে। MyFin-এ budget setup ও remaining-to-spend প্রথম-class feature হবে।
-2. **Cross-device and shared access:** YNAB Web/Mobile sync এবং separate-login family sharing দেয়; MyFin-এ shared password নয়, প্রত্যেক member-এর নিজস্ব identity থাকবে।
-3. **Goals + collaboration:** Monarch accounts, goals ও partner/professional collaboration এক view-তে আনে; MyFin family workspace-এ role-scoped collaboration রাখবে।
+1. **Plan, শুধু track নয়:** Goodbudget category/envelope-ভিত্তিক spending allocation ব্যবহার করে। NoorixFin-এ budget setup ও remaining-to-spend প্রথম-class feature হবে।
+2. **Cross-device and shared access:** YNAB Web/Mobile sync এবং separate-login family sharing দেয়; NoorixFin-এ shared password নয়, প্রত্যেক member-এর নিজস্ব identity থাকবে।
+3. **Goals + collaboration:** Monarch accounts, goals ও partner/professional collaboration এক view-তে আনে; NoorixFin family workspace-এ role-scoped collaboration রাখবে।
 
 Sources: [Goodbudget envelope model](https://goodbudget.com/what-you-get/), [YNAB features](https://www.ynab.com/features), [Monarch collaboration](https://www.monarchmoney.com/for-employers)
 
-### 4.1 MyFin differentiation
+### 4.1 NoorixFin differentiation
 
 - Bangla-first, English-complete এবং Arabic/RTL-ready foundation।
 - Student, bachelor ও family—persona templates; কিন্তু underlying data model এক।
@@ -342,7 +344,7 @@ Realtime event canonical data নয়; এটি client-কে সংশ্লি
 ### 7.5 Monorepo layout
 
 ```text
-myfin/
+noorixfin/
 ├── apps/
 │   ├── web/                 # Next.js
 │   ├── mobile/              # Expo React Native
@@ -783,7 +785,7 @@ Expo Notifications push token পাওয়া এবং notifications receive/re
 ### 14.2 Privacy defaults
 
 - Lock-screen push-এ amount, account name বা merchant defaultভাবে দেখানো হবে না।
-- Default text: “MyFin-এ একটি bill reminder আছে।”
+- Default text: “NoorixFin-এ একটি bill reminder আছে।”
 - User explicit setting দিয়ে details enable করতে পারবে।
 - Quiet hours, timezone, per-event preference এবং one-click unsubscribe যেখানে প্রযোজ্য।
 
@@ -904,7 +906,7 @@ Critical threats:
 
 ### 16.3 Security verification baseline
 
-- Web/API: OWASP ASVS control set tailored to MyFin risk
+- Web/API: OWASP ASVS control set tailored to NoorixFin risk
 - Mobile: OWASP MASVS/MASTG checklist
 - Threat model updated for every major feature
 - Independent penetration test before public production and after material auth/payment/bank change
@@ -1241,7 +1243,7 @@ Possible model:
 - Family: multiple members, advanced roles/shared goals
 - Optional regional bank-sync add-on reflecting provider cost
 
-User financial data বিক্রি, ad targeting-এর জন্য transaction contents ব্যবহার বা paid plan cancellation কঠিন করা MyFin-এর trust model-এর সঙ্গে অসামঞ্জস্যপূর্ণ।
+User financial data বিক্রি, ad targeting-এর জন্য transaction contents ব্যবহার বা paid plan cancellation কঠিন করা NoorixFin-এর trust model-এর সঙ্গে অসামঞ্জস্যপূর্ণ।
 
 ---
 
@@ -1249,17 +1251,17 @@ User financial data বিক্রি, ad targeting-এর জন্য transac
 
 Build শুরু করার আগে এগুলো লিখিতভাবে final করতে হবে:
 
-1. `MyFin` শুধু working name, নাকি legal clearance-এর পরে final name?
+1. ~~`NoorixFin` শুধু working name, নাকি legal clearance-এর পরে final name?~~ — **CLOSED (DEC-008):** name settled as `NoorixFin`; legal trademark clearance still an open Phase 6 owner action (§1.1).
 2. Initial launch countries: Bangladesh, Saudi Arabia, both, নাকি global?
 3. MVP users strictly 18+?
 4. Email/password, magic link, Google, Apple—কোন login methods launch-এ?
-5. Family role matrix-এর Admin export/member permissions।
+5. ~~Family role matrix-এর Admin export/member permissions।~~ — **CLOSED (DEC-007):** family workspaces dropped; two roles only (`SUPER_ADMIN`, `USER`), so no workspace-level permission matrix exists.
 6. Budget model: simple category limit, envelope allocation, নাকি দুটো selectable?
 7. MVP-তে multi-currency display, নাকি one workspace = one currency?
 8. Receipt upload MVP নাকি Version 1?
 9. Free vs paid product business model।
 10. Data retention: deleted account, audit, export, receipts, backups।
-11. Production hosting region and data-residency needs।
+11. ~~Production hosting region and data-residency needs।~~ — **CLOSED (DEC-011):** Supabase Free Tier is the design constraint; specific region still an owner choice at Phase 5.
 12. Support staff-এর finance-data access সম্পূর্ণ নিষিদ্ধ, নাকি audited consent-based break-glass?
 
 এই decisions না হলে foundation build করা যাবে, কিন্তু public production acceptance final করা যাবে না।
@@ -1268,7 +1270,7 @@ Build শুরু করার আগে এগুলো লিখিতভা�
 
 ## 27. Definition of Done
 
-MyFin production-ready বলা যাবে শুধু যখন:
+NoorixFin production-ready বলা যাবে শুধু যখন:
 
 - Product scope ও non-goals approved।
 - Brand/domain/store/trademark clearance documented।
@@ -1288,7 +1290,7 @@ Code existence, successful build বা UI screenshot alone production readiness
 
 ## 28. Final recommendation
 
-MyFin-এর জন্য সবচেয়ে balanced architecture হলো:
+NoorixFin-এর জন্য সবচেয়ে balanced architecture হলো:
 
 > **Next.js Web + Expo React Native Mobile + NestJS modular backend + Supabase PostgreSQL/Auth/Storage, একটি TypeScript monorepo-তে।**
 

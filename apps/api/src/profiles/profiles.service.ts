@@ -51,7 +51,9 @@ export class ProfilesService {
         .single();
 
       if (createError) {
-        this.logger.error(`Failed to create profile for ${userId}: ${createError.message}`);
+        this.logger.error(
+          `Failed to create profile for ${userId}: ${createError.message}`,
+        );
         throw new Error('Failed to create profile');
       }
 
@@ -59,7 +61,9 @@ export class ProfilesService {
     }
 
     if (error) {
-      this.logger.error(`Failed to get profile for ${userId}: ${error.message}`);
+      this.logger.error(
+        `Failed to get profile for ${userId}: ${error.message}`,
+      );
       throw new NotFoundException('Profile not found');
     }
 
@@ -80,11 +84,14 @@ export class ProfilesService {
     const updatePayload: Record<string, unknown> = {};
     if (dto.locale !== undefined) updatePayload.locale = dto.locale;
     if (dto.timezone !== undefined) updatePayload.timezone = dto.timezone;
-    if (dto.base_currency !== undefined) updatePayload.base_currency = dto.base_currency;
-    if (dto.week_starts_on !== undefined) updatePayload.week_starts_on = dto.week_starts_on;
+    if (dto.base_currency !== undefined)
+      updatePayload.base_currency = dto.base_currency;
+    if (dto.week_starts_on !== undefined)
+      updatePayload.week_starts_on = dto.week_starts_on;
     if (dto.amount_privacy_default !== undefined)
       updatePayload.amount_privacy_default = dto.amount_privacy_default;
-    if (dto.display_name !== undefined) updatePayload.display_name = dto.display_name;
+    if (dto.display_name !== undefined)
+      updatePayload.display_name = dto.display_name;
 
     if (Object.keys(updatePayload).length === 0) {
       return this.getOrCreateProfile(userId, '', accessToken);
@@ -100,7 +107,9 @@ export class ProfilesService {
       .single();
 
     if (error) {
-      this.logger.error(`Failed to update profile for ${userId}: ${error.message}`);
+      this.logger.error(
+        `Failed to update profile for ${userId}: ${error.message}`,
+      );
       throw new Error('Failed to update profile');
     }
 

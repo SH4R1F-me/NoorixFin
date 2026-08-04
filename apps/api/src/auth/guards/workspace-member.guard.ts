@@ -4,10 +4,13 @@
  * Verifies the authenticated user is an active member of the workspace
  * referenced in the route parameter `:workspaceId`.
  * With the simplified 2-role system, all workspace members are OWNER.
- * SUPER_ADMIN users bypass workspace membership checks.
+ *
+ * SUPER_ADMIN does NOT bypass this guard. Platform operators get metadata
+ * access through dedicated admin endpoints behind SuperAdminGuard — never
+ * ambient access to a user's ledger (DEC-002 #12, DEC-007, DEC-013).
  *
  * Usage:
- *   @UseGuards(WorkspaceMemberGuard)           // any active member or super admin
+ *   @UseGuards(WorkspaceMemberGuard)           // active member of :workspaceId only
  */
 import {
   CanActivate,
@@ -39,10 +42,19 @@ export class WorkspaceMemberGuard implements CanActivate {
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest<
-      Request & { user: AuthenticatedUser; accessToken: string; workspace?: WorkspaceMembership }
+      Request & {
+        user: AuthenticatedUser;
+        accessToken: string;
+        workspace?: WorkspaceMembership;
+      }
     >();
 
-    const workspaceId = request.params.workspaceId || request.params.id;
+    // Express 5 types route params as `string | string[]` (wildcard segments can
+    // repeat). Workspace ids are always single-valued, so collapse to the first.
+    const rawWorkspaceId = request.params.workspaceId ?? request.params.id;
+    const workspaceId = Array.isArray(rawWorkspaceId)
+      ? rawWorkspaceId[0]
+      : rawWorkspaceId;
 
     if (!workspaceId) {
       throw new NotFoundException({
@@ -59,26 +71,9 @@ export class WorkspaceMemberGuard implements CanActivate {
       });
     }
 
-    // Check if user is SUPER_ADMIN — bypass workspace membership
-    const adminClient = this.supabaseService.getUserClient(request.accessToken);
-    const { data: profile } = await adminClient
-      .from('profiles')
-      .select('is_super_admin')
-      .eq('id', user.id)
-      .single();
-
-    if (profile?.is_super_admin) {
-      // Super admin gets full access — attach synthetic membership
-      request.workspace = {
-        workspaceId,
-        userId: user.id,
-        role: 'OWNER',
-        status: 'ACTIVE',
-      };
-      return true;
-    }
-
-    // Regular user — query membership using user's token (RLS-enforced)
+    // NOTE: there is deliberately no SUPER_ADMIN bypass here. Membership is the
+    // only way through this guard. Removing the bypass also removes a `profiles`
+    // lookup that previously ran on every workspace-scoped request (DEC-011).
     const client = this.supabaseService.getUserClient(request.accessToken);
     const { data: membership, error } = await client
       .from('workspace_members')

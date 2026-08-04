@@ -1,5 +1,5 @@
 {
-  "name": "@myfin/i18n",
+  "name": "@noorixfin/i18n",
   "version": "0.1.0",
   "private": true,
   "main": "./dist/index.js",
@@ -7,7 +7,7 @@
   "scripts": {
     "build": "tsc",
     "dev": "tsc --watch",
-    "test": "vitest run",
+    "test": "vitest run --passWithNoTests",
     "typecheck": "tsc --noEmit",
     "clean": "rm -rf dist",
     "check:keys": "node scripts/check-keys.mjs"

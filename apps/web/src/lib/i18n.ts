@@ -8,14 +8,9 @@ import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
 import LanguageDetector from 'i18next-browser-languagedetector';
 
-// Import translation catalogs
-import enCommon from './locales/en/common.json';
-import bnCommon from './locales/bn/common.json';
-
-const resources = {
-  en: { common: enCommon },
-  bn: { common: bnCommon },
-};
+// Catalogs come from the shared package — do not re-copy them into this app.
+// `resources` carries both the `common` and `errors` namespaces for bn + en.
+import { resources, defaultNS, fallbackLng, supportedLngs } from '@noorixfin/i18n';
 
 if (!i18n.isInitialized) {
   i18n
@@ -23,9 +18,9 @@ if (!i18n.isInitialized) {
     .use(initReactI18next)
     .init({
       resources,
-      defaultNS: 'common',
-      fallbackLng: 'en',
-      supportedLngs: ['bn', 'en'],
+      defaultNS,
+      fallbackLng,
+      supportedLngs: [...supportedLngs],
       interpolation: {
         escapeValue: false,
       },

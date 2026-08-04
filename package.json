@@ -1,8 +1,8 @@
 {
-  "name": "myfin",
+  "name": "noorixfin",
   "version": "0.1.0",
   "private": true,
-  "description": "MyFin — Personal and household finance management system",
+  "description": "NoorixFin — Personal finance management system",
   "engines": {
     "node": ">=20.0.0",
     "pnpm": ">=9.0.0"

@@ -2,7 +2,14 @@
  * Profiles DTOs — Blueprint §9.2
  */
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsString, IsOptional, IsBoolean, IsIn, Length, Matches } from 'class-validator';
+import {
+  IsString,
+  IsOptional,
+  IsBoolean,
+  IsIn,
+  Length,
+  Matches,
+} from 'class-validator';
 
 export class UpdatePreferencesDto {
   @ApiPropertyOptional({ example: 'bn', description: 'User locale: bn or en' })
@@ -11,19 +18,28 @@ export class UpdatePreferencesDto {
   @IsIn(['bn', 'en'])
   locale?: string;
 
-  @ApiPropertyOptional({ example: 'Asia/Dhaka', description: 'IANA timezone name' })
+  @ApiPropertyOptional({
+    example: 'Asia/Dhaka',
+    description: 'IANA timezone name',
+  })
   @IsOptional()
   @IsString()
   @Matches(/^[A-Za-z_/]+$/, { message: 'Invalid timezone format' })
   timezone?: string;
 
-  @ApiPropertyOptional({ example: 'BDT', description: 'ISO 4217 currency code' })
+  @ApiPropertyOptional({
+    example: 'BDT',
+    description: 'ISO 4217 currency code',
+  })
   @IsOptional()
   @IsString()
   @Length(3, 3)
   base_currency?: string;
 
-  @ApiPropertyOptional({ example: 0, description: 'Week start day: 0=Sun, 1=Mon, ..., 6=Sat' })
+  @ApiPropertyOptional({
+    example: 0,
+    description: 'Week start day: 0=Sun, 1=Mon, ..., 6=Sat',
+  })
   @IsOptional()
   week_starts_on?: number;
 

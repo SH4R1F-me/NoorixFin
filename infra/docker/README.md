@@ -1,4 +1,4 @@
-# MyFin Infrastructure
+# NoorixFin Infrastructure
 
 ## Docker
 - `Dockerfile.api` — NestJS API production image

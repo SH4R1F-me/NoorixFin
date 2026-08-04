@@ -1,4 +1,4 @@
--- MyFin Migration: Simplify Role System (4 → 2)
+-- NoorixFin Migration: Simplify Role System (4 → 2)
 -- SUPER_ADMIN (system-level) + USER (personal finance)
 -- DEC-007: Each user owns their own PERSONAL workspace as OWNER.
 -- SUPER_ADMIN flag lives on profiles (system-level, not workspace-level).

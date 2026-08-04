@@ -1,40 +1,64 @@
 /**
- * Categories Service — Blueprint §9.3
+ * Categories Service — Blueprint §9.3, DEC-015
  *
- * System categories with translation_key (immutable).
- * Custom categories per workspace with parent/child hierarchy.
+ * Rewritten: the previous implementation targeted a schema that does not exist
+ * (`is_system`, `name`, `type`) and never supplied the NOT NULL
+ * `ledger_account_id`, so every insert and the list query failed at runtime.
+ *
+ * The model (DEC-015):
+ *   - Every category is workspace-scoped. `workspace_id` is nullable in the
+ *     schema, but a category MUST reference a ledger account and ledger accounts
+ *     are workspace-scoped — so a global category could not be posted against.
+ *   - "System" is not a column: a category is system-provided iff
+ *     `translation_key IS NOT NULL`. Display name is
+ *     `custom_name ?? t(translation_key)`, resolved by the client.
+ *   - Each category owns a backing `ledger_accounts` row of subtype CATEGORY.
+ *     Postings reference THAT account, never the category id.
  */
 import {
   Injectable,
   Logger,
   BadRequestException,
   NotFoundException,
-  ForbiddenException,
 } from '@nestjs/common';
 import { SupabaseService } from '../supabase/supabase.service';
 import { CreateCategoryDto, UpdateCategoryDto } from './dto/category.dto';
-import { v4 as uuidv4 } from 'uuid';
+import { randomUUID } from 'crypto';
+import { ACCOUNT_CLASS_NORMAL_BALANCE } from '@noorixfin/domain';
 
-/** Default system categories seeded per workspace */
-const SYSTEM_CATEGORIES = [
-  // Expense categories
-  { name: 'Food & Dining', type: 'EXPENSE', icon: '🍕', color: '#f59e0b', translation_key: 'cat.food_dining' },
-  { name: 'Transport', type: 'EXPENSE', icon: '🚗', color: '#3b82f6', translation_key: 'cat.transport' },
-  { name: 'Housing', type: 'EXPENSE', icon: '🏠', color: '#8b5cf6', translation_key: 'cat.housing' },
-  { name: 'Utilities', type: 'EXPENSE', icon: '💡', color: '#06b6d4', translation_key: 'cat.utilities' },
-  { name: 'Healthcare', type: 'EXPENSE', icon: '🏥', color: '#ef4444', translation_key: 'cat.healthcare' },
-  { name: 'Education', type: 'EXPENSE', icon: '📚', color: '#6366f1', translation_key: 'cat.education' },
-  { name: 'Entertainment', type: 'EXPENSE', icon: '🎮', color: '#ec4899', translation_key: 'cat.entertainment' },
-  { name: 'Shopping', type: 'EXPENSE', icon: '🛍️', color: '#f97316', translation_key: 'cat.shopping' },
-  { name: 'Personal Care', type: 'EXPENSE', icon: '💈', color: '#14b8a6', translation_key: 'cat.personal_care' },
-  { name: 'Gifts & Donations', type: 'EXPENSE', icon: '🎁', color: '#a855f7', translation_key: 'cat.gifts_donations' },
-  { name: 'Other Expense', type: 'EXPENSE', icon: '📦', color: '#64748b', translation_key: 'cat.other_expense' },
-  // Income categories
-  { name: 'Salary', type: 'INCOME', icon: '💰', color: '#10b981', translation_key: 'cat.salary' },
-  { name: 'Business', type: 'INCOME', icon: '💼', color: '#059669', translation_key: 'cat.business' },
-  { name: 'Freelance', type: 'INCOME', icon: '💻', color: '#0ea5e9', translation_key: 'cat.freelance' },
-  { name: 'Investment', type: 'INCOME', icon: '📈', color: '#22c55e', translation_key: 'cat.investment' },
-  { name: 'Other Income', type: 'INCOME', icon: '💵', color: '#84cc16', translation_key: 'cat.other_income' },
+/** Columns actually present on `categories` (migration 00002 + 00005). */
+const CATEGORY_COLUMNS =
+  'id, workspace_id, ledger_account_id, kind, parent_id, translation_key, custom_name, icon, color, sort_order, archived_at, deleted_at, created_at, updated_at';
+
+/**
+ * System category catalogue. `translation_key` is the identity — it is what
+ * makes seeding idempotent and what the client translates for display.
+ * `fallbackName` names the backing ledger account (accounts need a name) and is
+ * never shown to the user.
+ */
+const SYSTEM_CATEGORIES: ReadonlyArray<{
+  translation_key: string;
+  kind: 'INCOME' | 'EXPENSE';
+  icon: string;
+  color: string;
+  fallbackName: string;
+}> = [
+  { translation_key: 'cat.food_dining', kind: 'EXPENSE', icon: '🍕', color: '#f59e0b', fallbackName: 'Food & Dining' },
+  { translation_key: 'cat.transport', kind: 'EXPENSE', icon: '🚗', color: '#3b82f6', fallbackName: 'Transport' },
+  { translation_key: 'cat.housing', kind: 'EXPENSE', icon: '🏠', color: '#8b5cf6', fallbackName: 'Housing' },
+  { translation_key: 'cat.utilities', kind: 'EXPENSE', icon: '💡', color: '#06b6d4', fallbackName: 'Utilities' },
+  { translation_key: 'cat.healthcare', kind: 'EXPENSE', icon: '🏥', color: '#ef4444', fallbackName: 'Healthcare' },
+  { translation_key: 'cat.education', kind: 'EXPENSE', icon: '📚', color: '#6366f1', fallbackName: 'Education' },
+  { translation_key: 'cat.entertainment', kind: 'EXPENSE', icon: '🎮', color: '#ec4899', fallbackName: 'Entertainment' },
+  { translation_key: 'cat.shopping', kind: 'EXPENSE', icon: '🛍️', color: '#f97316', fallbackName: 'Shopping' },
+  { translation_key: 'cat.personal_care', kind: 'EXPENSE', icon: '💇', color: '#14b8a6', fallbackName: 'Personal Care' },
+  { translation_key: 'cat.gifts_donations', kind: 'EXPENSE', icon: '🎁', color: '#a855f7', fallbackName: 'Gifts & Donations' },
+  { translation_key: 'cat.other_expense', kind: 'EXPENSE', icon: '📦', color: '#6b7785', fallbackName: 'Other Expense' },
+  { translation_key: 'cat.salary', kind: 'INCOME', icon: '💰', color: '#10b981', fallbackName: 'Salary' },
+  { translation_key: 'cat.business', kind: 'INCOME', icon: '🏢', color: '#059669', fallbackName: 'Business' },
+  { translation_key: 'cat.freelance', kind: 'INCOME', icon: '💻', color: '#0ea5e9', fallbackName: 'Freelance' },
+  { translation_key: 'cat.investment', kind: 'INCOME', icon: '📈', color: '#22c55e', fallbackName: 'Investment' },
+  { translation_key: 'cat.other_income', kind: 'INCOME', icon: '💵', color: '#84cc16', fallbackName: 'Other Income' },
 ];
 
 @Injectable()
@@ -44,67 +68,136 @@ export class CategoriesService {
   constructor(private readonly supabaseService: SupabaseService) {}
 
   /**
-   * Seed system categories for a workspace (called on first list or workspace creation).
+   * Seed the system catalogue into a workspace. Idempotent: relies on the
+   * partial unique indexes from migration 00006, so two concurrent first
+   * requests cannot double-seed.
    */
   async seedSystemCategories(
     workspaceId: string,
+    userId: string,
     accessToken: string,
   ): Promise<void> {
     const client = this.supabaseService.getUserClient(accessToken);
 
-    // Check if system categories already exist
     const { data: existing } = await client
       .from('categories')
-      .select('id')
+      .select('translation_key')
       .eq('workspace_id', workspaceId)
-      .eq('is_system', true)
-      .limit(1);
+      .not('translation_key', 'is', null);
 
-    if (existing && existing.length > 0) return;
+    const seeded = new Set(
+      (existing ?? []).map((row: { translation_key: string | null }) => row.translation_key),
+    );
+    const missing = SYSTEM_CATEGORIES.filter((c) => !seeded.has(c.translation_key));
+    if (missing.length === 0) return;
 
-    const systemRows = SYSTEM_CATEGORIES.map((cat, idx) => ({
-      id: uuidv4(),
+    // Categories post into ledger accounts, so each one needs a backing account
+    // in this workspace, in the workspace's currency.
+    const { data: workspace } = await client
+      .from('workspaces')
+      .select('base_currency')
+      .eq('id', workspaceId)
+      .single();
+
+    const currencyCode = workspace?.base_currency ?? 'BDT';
+
+    const accountRows = missing.map((cat) => ({
+      id: randomUUID(),
       workspace_id: workspaceId,
-      name: cat.name,
-      type: cat.type,
-      icon: cat.icon,
-      color: cat.color,
-      translation_key: cat.translation_key,
-      is_system: true,
-      sort_order: idx,
+      name: cat.fallbackName,
+      class: cat.kind,
+      subtype: 'CATEGORY',
+      currency_code: currencyCode,
+      normal_balance: ACCOUNT_CLASS_NORMAL_BALANCE[cat.kind],
+      include_in_budget: cat.kind === 'EXPENSE',
+      include_in_net_worth: false,
+      created_by: userId,
     }));
 
-    const { error } = await client.from('categories').insert(systemRows);
+    const { error: accountError } = await client
+      .from('ledger_accounts')
+      .upsert(accountRows, {
+        onConflict: 'workspace_id,name',
+        ignoreDuplicates: true,
+      });
+
+    if (accountError) {
+      this.logger.error(`Failed to seed category accounts: ${accountError.message}`);
+      throw new BadRequestException({
+        code: 'CATEGORY_SEED_FAILED',
+        message: 'Failed to prepare category accounts',
+      });
+    }
+
+    // Read back — upsert with ignoreDuplicates does not return skipped rows,
+    // and a concurrent request may have created some of them.
+    const { data: accounts } = await client
+      .from('ledger_accounts')
+      .select('id, name')
+      .eq('workspace_id', workspaceId)
+      .eq('subtype', 'CATEGORY')
+      .in('name', missing.map((c) => c.fallbackName));
+
+    const accountByName = new Map(
+      (accounts ?? []).map((a: { id: string; name: string }) => [a.name, a.id]),
+    );
+
+    const categoryRows = missing
+      .filter((cat) => accountByName.has(cat.fallbackName))
+      .map((cat, idx) => ({
+        id: randomUUID(),
+        workspace_id: workspaceId,
+        ledger_account_id: accountByName.get(cat.fallbackName)!,
+        kind: cat.kind,
+        translation_key: cat.translation_key,
+        custom_name: null,
+        icon: cat.icon,
+        color: cat.color,
+        sort_order: idx,
+      }));
+
+    if (categoryRows.length === 0) return;
+
+    const { error } = await client.from('categories').upsert(categoryRows, {
+      onConflict: 'workspace_id,translation_key',
+      ignoreDuplicates: true,
+    });
 
     if (error) {
-      this.logger.warn(`Failed to seed system categories: ${error.message}`);
+      this.logger.error(`Failed to seed system categories: ${error.message}`);
+      throw new BadRequestException({
+        code: 'CATEGORY_SEED_FAILED',
+        message: 'Failed to seed system categories',
+      });
     }
   }
 
   /**
-   * List categories for a workspace. Seeds system categories on first call.
+   * List a workspace's categories, seeding the system catalogue on first call.
    */
   async listCategories(
     workspaceId: string,
+    userId: string,
     accessToken: string,
-    type?: string,
+    kind?: string,
   ) {
-    // Ensure system categories exist
-    await this.seedSystemCategories(workspaceId, accessToken);
+    await this.seedSystemCategories(workspaceId, userId, accessToken);
 
     const client = this.supabaseService.getUserClient(accessToken);
 
     let query = client
       .from('categories')
-      .select('*')
+      .select(CATEGORY_COLUMNS)
       .eq('workspace_id', workspaceId)
       .is('archived_at', null)
-      .order('is_system', { ascending: false })
-      .order('sort_order')
-      .order('name');
+      .is('deleted_at', null)
+      // No `name` column to sort by — display name is resolved client-side from
+      // custom_name / translation_key, so ordering is by sort_order.
+      .order('kind', { ascending: true })
+      .order('sort_order', { ascending: true });
 
-    if (type) {
-      query = query.eq('type', type);
+    if (kind) {
+      query = query.eq('kind', kind);
     }
 
     const { data, error } = await query;
@@ -114,116 +207,153 @@ export class CategoriesService {
       throw new BadRequestException('Failed to list categories');
     }
 
-    return data || [];
+    return data ?? [];
   }
 
   /**
-   * Create a custom category.
+   * Create a custom (user-defined) category and its backing ledger account.
    */
   async createCategory(
     workspaceId: string,
+    userId: string,
     accessToken: string,
     dto: CreateCategoryDto,
   ) {
     const client = this.supabaseService.getUserClient(accessToken);
 
-    // Validate parent exists if specified
     if (dto.parent_id) {
       const { data: parent, error: parentError } = await client
         .from('categories')
-        .select('id, type')
+        .select('id, kind')
         .eq('id', dto.parent_id)
         .eq('workspace_id', workspaceId)
         .single();
 
       if (parentError || !parent) {
-        throw new BadRequestException({
-          code: 'INVALID_PARENT',
-          message: 'Parent category not found',
+        throw new NotFoundException({
+          code: 'PARENT_CATEGORY_NOT_FOUND',
+          message: 'Parent category not found in this workspace',
         });
       }
 
-      // Parent must match type
-      if (parent.type !== dto.type) {
+      if (parent.kind !== dto.kind) {
         throw new BadRequestException({
-          code: 'TYPE_MISMATCH',
-          message: 'Child category must have same type as parent',
+          code: 'CATEGORY_KIND_MISMATCH',
+          message: 'A child category must have the same kind as its parent',
         });
       }
     }
 
-    const categoryId = uuidv4();
+    const { data: workspace } = await client
+      .from('workspaces')
+      .select('base_currency')
+      .eq('id', workspaceId)
+      .single();
+
+    const accountId = randomUUID();
+    const { error: accountError } = await client.from('ledger_accounts').insert({
+      id: accountId,
+      workspace_id: workspaceId,
+      name: dto.name,
+      class: dto.kind,
+      subtype: 'CATEGORY',
+      currency_code: workspace?.base_currency ?? 'BDT',
+      normal_balance: ACCOUNT_CLASS_NORMAL_BALANCE[dto.kind as 'INCOME' | 'EXPENSE'],
+      include_in_budget: dto.kind === 'EXPENSE',
+      include_in_net_worth: false,
+      created_by: userId,
+    });
+
+    if (accountError) {
+      this.logger.error(`Failed to create category account: ${accountError.message}`);
+      throw new BadRequestException({
+        code: 'CATEGORY_CREATE_FAILED',
+        message: 'Failed to create the category ledger account',
+      });
+    }
+
     const { data, error } = await client
       .from('categories')
       .insert({
-        id: categoryId,
+        id: randomUUID(),
         workspace_id: workspaceId,
-        name: dto.name,
-        type: dto.type,
-        icon: dto.icon || '📁',
-        color: dto.color || '#64748b',
-        parent_id: dto.parent_id || null,
-        is_system: false,
-        sort_order: dto.sort_order ?? 999,
+        ledger_account_id: accountId,
+        kind: dto.kind,
+        parent_id: dto.parent_id ?? null,
+        // User-created categories carry a literal name, not a translation key.
+        translation_key: null,
+        custom_name: dto.name,
+        icon: dto.icon ?? '📦',
+        color: dto.color ?? '#6B7785',
+        sort_order: dto.sort_order ?? 0,
       })
-      .select()
+      .select(CATEGORY_COLUMNS)
       .single();
 
     if (error) {
       this.logger.error(`Failed to create category: ${error.message}`);
-      throw new BadRequestException('Failed to create category');
+      // Roll back the orphaned account so a retry does not hit the unique index.
+      await client.from('ledger_accounts').delete().eq('id', accountId);
+      throw new BadRequestException({
+        code: 'CATEGORY_CREATE_FAILED',
+        message: 'Failed to create category',
+      });
     }
 
     return data;
   }
 
   /**
-   * Update a custom category. System categories cannot be modified.
+   * Update a category. `kind` and `ledger_account_id` are immutable — changing
+   * either would reinterpret every posting already made against it.
    */
   async updateCategory(
     categoryId: string,
+    workspaceId: string,
     accessToken: string,
     dto: UpdateCategoryDto,
   ) {
     const client = this.supabaseService.getUserClient(accessToken);
 
-    // Fetch existing
-    const { data: existing, error: fetchError } = await client
+    const { data: existing, error: findError } = await client
       .from('categories')
-      .select('*')
+      .select('id, translation_key')
       .eq('id', categoryId)
+      .eq('workspace_id', workspaceId)
       .single();
 
-    if (fetchError || !existing) {
+    if (findError || !existing) {
       throw new NotFoundException({
         code: 'CATEGORY_NOT_FOUND',
-        message: 'Category not found',
+        message: 'Category not found in this workspace',
       });
     }
 
-    if (existing.is_system) {
-      throw new ForbiddenException({
-        code: 'SYSTEM_CATEGORY',
-        message: 'System categories cannot be modified',
-      });
+    const patch: Record<string, unknown> = {};
+    // Renaming a system category sets custom_name, which overrides the
+    // translation. translation_key is kept so the row stays identifiable.
+    if (dto.name !== undefined) patch.custom_name = dto.name;
+    if (dto.icon !== undefined) patch.icon = dto.icon;
+    if (dto.color !== undefined) patch.color = dto.color;
+    if (dto.parent_id !== undefined) patch.parent_id = dto.parent_id;
+    if (dto.sort_order !== undefined) patch.sort_order = dto.sort_order;
+    if (dto.archived !== undefined) {
+      patch.archived_at = dto.archived ? new Date().toISOString() : null;
     }
 
-    const updatePayload: Record<string, unknown> = {};
-    if (dto.name !== undefined) updatePayload.name = dto.name;
-    if (dto.icon !== undefined) updatePayload.icon = dto.icon;
-    if (dto.color !== undefined) updatePayload.color = dto.color;
-    if (dto.parent_id !== undefined) updatePayload.parent_id = dto.parent_id;
-    if (dto.sort_order !== undefined) updatePayload.sort_order = dto.sort_order;
-    if (dto.archived === true) updatePayload.archived_at = new Date().toISOString();
-    if (dto.archived === false) updatePayload.archived_at = null;
-
-    updatePayload.updated_at = new Date().toISOString();
+    if (Object.keys(patch).length === 0) {
+      throw new BadRequestException({
+        code: 'NO_CHANGES',
+        message: 'No updatable fields were provided',
+      });
+    }
 
     const { data, error } = await client
       .from('categories')
-      .update(updatePayload)
+      .update(patch)
       .eq('id', categoryId)
-      .select()
+      .eq('workspace_id', workspaceId)
+      .select(CATEGORY_COLUMNS)
       .single();
 
     if (error) {
@@ -232,5 +362,34 @@ export class CategoriesService {
     }
 
     return data;
+  }
+
+  /**
+   * Resolve a category to the ledger account postings must reference.
+   * Blueprint §8.2: a posting's ledger_account_id is the category's BACKING
+   * account, never the category id — they are different tables.
+   */
+  async resolveLedgerAccountId(
+    categoryId: string,
+    workspaceId: string,
+    accessToken: string,
+  ): Promise<string> {
+    const client = this.supabaseService.getUserClient(accessToken);
+
+    const { data, error } = await client
+      .from('categories')
+      .select('ledger_account_id')
+      .eq('id', categoryId)
+      .eq('workspace_id', workspaceId)
+      .single();
+
+    if (error || !data?.ledger_account_id) {
+      throw new NotFoundException({
+        code: 'CATEGORY_NOT_FOUND',
+        message: 'Category not found in this workspace',
+      });
+    }
+
+    return data.ledger_account_id;
   }
 }

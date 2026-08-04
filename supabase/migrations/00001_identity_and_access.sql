@@ -1,4 +1,4 @@
--- MyFin Initial Schema Migration: Identity & Access
+-- NoorixFin Initial Schema Migration: Identity & Access
 -- Blueprint §9.2: profiles, workspaces, workspace_members
 
 -- Enable required extensions

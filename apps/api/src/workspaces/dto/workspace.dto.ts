@@ -3,12 +3,7 @@
  * Only PERSONAL workspaces, no invitations or member management.
  */
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import {
-  IsString,
-  IsOptional,
-  Length,
-  Matches,
-} from 'class-validator';
+import { IsString, IsOptional, Length, Matches } from 'class-validator';
 
 // ─── Create Workspace ────────────────────────────────────
 export class CreateWorkspaceDto {

@@ -13,22 +13,24 @@ import {
 
 // ─── Create ─────────────────────────────────────────────
 export class CreateCategoryDto {
-  @ApiProperty({ description: 'Category name', example: 'Food & Dining' })
+  @ApiProperty({
+    description: 'Display name. Stored as `custom_name`; also names the backing ledger account.',
+    example: 'Food & Dining',
+  })
   @IsString()
   @Length(1, 100)
   name!: string;
 
   @ApiProperty({
-    description: 'Category type',
+    description: 'Category kind — matches the backing ledger account class',
     enum: ['INCOME', 'EXPENSE'],
   })
   @IsIn(['INCOME', 'EXPENSE'])
-  type!: string;
+  kind!: 'INCOME' | 'EXPENSE';
 
-  @ApiPropertyOptional({ description: 'Translation key for system categories' })
-  @IsOptional()
-  @IsString()
-  translation_key?: string;
+  // `translation_key` is deliberately NOT accepted from clients: it identifies a
+  // system catalogue entry (DEC-015) and is assigned only by seeding. A
+  // user-created category carries `custom_name` instead.
 
   @ApiPropertyOptional({ description: 'Emoji icon', example: '🍕' })
   @IsOptional()
@@ -92,16 +94,35 @@ export class UpdateCategoryDto {
 }
 
 // ─── Response ───────────────────────────────────────────
+// Mirrors the real `categories` columns. Note what is NOT here:
+//   `name`      — display name is `custom_name ?? t(translation_key)`, resolved
+//                 by the client so the same row renders in bn or en
+//   `is_system` — a category is system-provided iff `translation_key` is set
+//   `type`      — the column is `kind`
 export class CategoryResponseDto {
   @ApiProperty() id!: string;
   @ApiProperty() workspace_id!: string;
-  @ApiProperty() name!: string;
-  @ApiProperty() type!: string;
-  @ApiPropertyOptional() translation_key?: string;
-  @ApiPropertyOptional() icon?: string;
-  @ApiPropertyOptional() color?: string;
-  @ApiPropertyOptional() parent_id?: string;
-  @ApiProperty() is_system!: boolean;
+
+  @ApiProperty({ description: 'Backing ledger account. Postings reference THIS, not `id`.' })
+  ledger_account_id!: string;
+
+  @ApiProperty({ enum: ['INCOME', 'EXPENSE'] }) kind!: string;
+
+  @ApiPropertyOptional({
+    description: 'Set for system categories. Translate it for display; also marks the row as system-provided.',
+    example: 'cat.food_dining',
+  })
+  translation_key?: string | null;
+
+  @ApiPropertyOptional({ description: 'User-supplied name. Overrides translation_key when present.' })
+  custom_name?: string | null;
+
+  @ApiPropertyOptional() parent_id?: string | null;
+  @ApiProperty() icon!: string;
+  @ApiProperty() color!: string;
   @ApiProperty() sort_order!: number;
+  @ApiPropertyOptional() archived_at?: string | null;
+  @ApiPropertyOptional() deleted_at?: string | null;
   @ApiProperty() created_at!: string;
+  @ApiProperty() updated_at!: string;
 }

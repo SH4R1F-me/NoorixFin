@@ -10,7 +10,7 @@ import {
 } from '@nestjs/common';
 import { SupabaseService } from '../supabase/supabase.service';
 import { CreateAccountDto, UpdateAccountDto } from './dto/account.dto';
-import { v4 as uuidv4 } from 'uuid';
+import { randomUUID } from 'crypto';
 
 /** Default normal balance by account class */
 const DEFAULT_NORMAL_BALANCE: Record<string, string> = {
@@ -50,8 +50,9 @@ export class AccountsService {
       currencyCode = (workspace?.base_currency as string) || 'BDT';
     }
 
-    const accountId = uuidv4();
-    const normalBalance = dto.normal_balance || DEFAULT_NORMAL_BALANCE[dto.class] || 'DEBIT';
+    const accountId = randomUUID();
+    const normalBalance =
+      dto.normal_balance || DEFAULT_NORMAL_BALANCE[dto.class] || 'DEBIT';
 
     const { data: account, error } = await client
       .from('ledger_accounts')
@@ -65,7 +66,8 @@ export class AccountsService {
         normal_balance: normalBalance,
         include_in_budget: dto.include_in_budget ?? true,
         include_in_net_worth: dto.include_in_net_worth ?? true,
-        opening_date: dto.opening_date || new Date().toISOString().split('T')[0],
+        opening_date:
+          dto.opening_date || new Date().toISOString().split('T')[0],
         created_by: userId,
         version: 1,
       })
@@ -102,9 +104,13 @@ export class AccountsService {
 
     const { data: accounts, error } = await client
       .from('ledger_accounts')
-      .select('*')
+      // Explicit columns, never `*`, on a list path (DEC-011 — egress counts).
+      // Must be a single string literal: supabase-js infers row types from it,
+      // and a concatenated expression degrades to GenericStringError.
+      .select('id, workspace_id, name, class, subtype, currency_code, normal_balance, include_in_budget, include_in_net_worth, opening_date, archived_at, created_at, updated_at, version')
       .eq('workspace_id', workspaceId)
       .is('archived_at', null)
+      .is('deleted_at', null)
       .order('name');
 
     if (error) {
@@ -147,6 +153,7 @@ export class AccountsService {
    */
   async updateAccount(
     accountId: string,
+    workspaceId: string,
     userId: string,
     accessToken: string,
     dto: UpdateAccountDto,
@@ -155,10 +162,12 @@ export class AccountsService {
 
     const updatePayload: Record<string, unknown> = {};
     if (dto.name !== undefined) updatePayload.name = dto.name;
-    if (dto.include_in_budget !== undefined) updatePayload.include_in_budget = dto.include_in_budget;
+    if (dto.include_in_budget !== undefined)
+      updatePayload.include_in_budget = dto.include_in_budget;
     if (dto.include_in_net_worth !== undefined)
       updatePayload.include_in_net_worth = dto.include_in_net_worth;
-    if (dto.archived === true) updatePayload.archived_at = new Date().toISOString();
+    if (dto.archived === true)
+      updatePayload.archived_at = new Date().toISOString();
     if (dto.archived === false) updatePayload.archived_at = null;
 
     updatePayload.updated_at = new Date().toISOString();
@@ -167,6 +176,9 @@ export class AccountsService {
       .from('ledger_accounts')
       .update(updatePayload)
       .eq('id', accountId)
+      // Scope the write to the guarded workspace so an id from another tenant
+      // matches zero rows rather than relying on RLS to reject it.
+      .eq('workspace_id', workspaceId)
       .select()
       .single();
 
@@ -194,7 +206,7 @@ export class AccountsService {
   ) {
     if (amount === 0) return;
 
-    const entryId = uuidv4();
+    const entryId = randomUUID();
     const idempotencyKey = `opening-${accountId}`;
 
     // Create the journal entry
@@ -207,14 +219,16 @@ export class AccountsService {
       note: 'Opening balance',
       status: 'POSTED',
       source: 'SYSTEM',
-      client_entry_id: uuidv4(),
+      client_entry_id: randomUUID(),
       created_by: userId,
       posted_at: new Date().toISOString(),
       version: 1,
     });
 
     if (entryError) {
-      this.logger.error(`Failed to create opening balance entry: ${entryError.message}`);
+      this.logger.error(
+        `Failed to create opening balance entry: ${entryError.message}`,
+      );
       return; // Don't fail account creation for opening balance
     }
 
@@ -229,7 +243,7 @@ export class AccountsService {
       .single();
 
     if (!equityAccount) {
-      const equityId = uuidv4();
+      const equityId = randomUUID();
       const { data: created } = await client
         .from('ledger_accounts')
         .insert({
@@ -258,7 +272,7 @@ export class AccountsService {
     // For CREDIT-normal accounts (LIABILITY, INCOME): credit the account, debit equity
     const postings = [
       {
-        id: uuidv4(),
+        id: randomUUID(),
         journal_entry_id: entryId,
         ledger_account_id: accountId,
         debit_minor: normalBalance === 'DEBIT' ? absAmount : 0,
@@ -267,7 +281,7 @@ export class AccountsService {
         base_amount_minor: absAmount,
       },
       {
-        id: uuidv4(),
+        id: randomUUID(),
         journal_entry_id: entryId,
         ledger_account_id: equityAccount.id,
         debit_minor: normalBalance === 'CREDIT' ? absAmount : 0,
@@ -282,7 +296,9 @@ export class AccountsService {
       .insert(postings);
 
     if (postingError) {
-      this.logger.error(`Failed to create opening balance postings: ${postingError.message}`);
+      this.logger.error(
+        `Failed to create opening balance postings: ${postingError.message}`,
+      );
     }
   }
 }

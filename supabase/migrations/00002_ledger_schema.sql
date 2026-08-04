@@ -1,4 +1,4 @@
--- MyFin Ledger Schema Migration
+-- NoorixFin Ledger Schema Migration
 -- Blueprint §9.3: ledger_accounts, categories, journal_entries, journal_postings
 
 -- ============================================================

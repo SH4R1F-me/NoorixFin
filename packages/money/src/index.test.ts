@@ -13,7 +13,7 @@ import {
   getCurrency,
 } from './index';
 
-describe('@myfin/money', () => {
+describe('@noorixfin/money', () => {
   // ─── Currency Registry ─────────────────────────────────────────
   describe('getCurrency', () => {
     it('returns metadata for known currencies', () => {
@@ -100,6 +100,26 @@ describe('@myfin/money', () => {
 
     it('rejects empty string', () => {
       expect(() => parseMinorUnits('')).toThrow('must be an integer string');
+    });
+  });
+
+  describe('parseMinorUnits — strict format (regression)', () => {
+    // Number() accepted all of these before the strict regex landed, so a client
+    // could have had a silently different amount recorded than it sent.
+    it.each(['1e3', '0x10', ' 100 ', '100\n', '+100', '1.0', '1_000', 'Infinity', '-0x1'])(
+      'rejects %p',
+      (input) => {
+        expect(() => parseMinorUnits(input)).toThrow();
+      },
+    );
+
+    it.each([
+      ['0', 0],
+      ['1025', 1025],
+      ['-1025', -1025],
+      ['999999999999', 999999999999],
+    ])('accepts %p', (input, expected) => {
+      expect(parseMinorUnits(input as string)).toBe(expected);
     });
   });
 

@@ -71,11 +71,17 @@ export class AccountsController {
     return this.accountsService.listAccounts(workspaceId, req.accessToken);
   }
 
-  @Patch('accounts/:id')
+  // Workspace-scoped so WorkspaceMemberGuard can run. The previous route was
+  // `PATCH /accounts/:id` with no guard, leaving RLS as the only barrier —
+  // DEC-005 makes NestJS the primary authorization layer.
+  @Patch('workspaces/:workspaceId/accounts/:id')
+  @UseGuards(WorkspaceMemberGuard)
   @ApiOperation({ summary: 'Update an account (name, flags, archive)' })
+  @ApiParam({ name: 'workspaceId', type: 'string' })
   @ApiParam({ name: 'id', type: 'string' })
   @ApiOkResponse({ type: AccountResponseDto })
   async update(
+    @Param('workspaceId') workspaceId: string,
     @Param('id') accountId: string,
     @CurrentUser() user: AuthenticatedUser,
     @Req() req: Request & { accessToken: string },
@@ -83,6 +89,7 @@ export class AccountsController {
   ) {
     return this.accountsService.updateAccount(
       accountId,
+      workspaceId,
       user.id,
       req.accessToken,
       dto,
