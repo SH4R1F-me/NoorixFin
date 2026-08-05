@@ -12,7 +12,11 @@ import {
 } from '@nestjs/swagger';
 import { Request } from 'express';
 import { ProfilesService } from './profiles.service';
-import { UpdatePreferencesDto, ProfileResponseDto } from './dto/profile.dto';
+import {
+  UpdatePreferencesDto,
+  UpdateOnboardingDto,
+  ProfileResponseDto,
+} from './dto/profile.dto';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import type { AuthenticatedUser } from '../common/decorators/current-user.decorator';
 
@@ -49,5 +53,22 @@ export class ProfilesController {
       req.accessToken,
       dto,
     );
+  }
+
+  @Patch('onboarding')
+  @ApiOperation({
+    summary: 'Advance the §5.2 onboarding state machine',
+    description:
+      'Separate from /me/preferences: preferences are freely editable, this is ' +
+      'a monotonic progression. Moving backwards is silently ignored so a ' +
+      'reloaded step cannot drag a finished user back into onboarding.',
+  })
+  @ApiOkResponse({ type: ProfileResponseDto })
+  async updateOnboarding(
+    @CurrentUser() user: AuthenticatedUser,
+    @Req() req: Request & { accessToken: string },
+    @Body() dto: UpdateOnboardingDto,
+  ) {
+    return this.profilesService.updateOnboarding(user.id, req.accessToken, dto);
   }
 }

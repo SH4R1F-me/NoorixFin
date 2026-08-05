@@ -33,6 +33,17 @@ async function signInEnglish(page: Page) {
 }
 
 test.describe('ledger CRUD', () => {
+  /**
+   * Serial, deliberately.
+   *
+   * These tests all write into ONE workspace, and the transaction test asserts
+   * that the account and category dropdowns hold the rows the earlier tests
+   * created. Run in parallel they race each other's writes, so the dropdown
+   * assertion fails intermittently for a reason that has nothing to do with the
+   * product.
+   */
+  test.describe.configure({ mode: 'serial' });
+
   test.skip(!LIVE, 'needs E2E_LIVE=1 with supabase and the API running');
 
   test.beforeAll(async () => {

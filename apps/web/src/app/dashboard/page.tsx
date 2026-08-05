@@ -8,9 +8,11 @@
  * DEC-012: these figures are derived from the ledger and are NEVER rendered
  * optimistically. They arrive server-side or they show a skeleton (loading.tsx).
  */
+import { redirect } from 'next/navigation';
 import { formatAmount, getCurrency } from '@noorixfin/money';
 import { intlLocale, type SupportedLanguage } from '@noorixfin/i18n';
 import { getLocale } from '../../lib/i18n/locale';
+import { getSessionContext } from '../../lib/session';
 import {
   getActiveWorkspace,
   getTransactions,
@@ -85,6 +87,26 @@ export default async function DashboardPage() {
     getCalendarOverview(workspace.id, 14),
     getGoalsOverview(workspace.id),
   ]);
+
+  // ── First-run gate (§5.2) ─────────────────────────────────────────────────
+  //
+  // Two conditions, both required. `onboarding_status` alone is not enough:
+  // nothing has ever written that column, so EVERY existing user still reads
+  // ACCOUNT_CREATED and gating on it would drag people with years of data
+  // through a setup wizard. Requiring an empty workspace as well means only a
+  // genuinely new account is redirected.
+  //
+  // Placed here rather than in the layout so it costs no extra round trip —
+  // `account_count` is already in the summary payload — and so a user deep in
+  // the app is never yanked out of the page they asked for.
+  const { profile } = await getSessionContext();
+  if (
+    profile &&
+    profile.onboarding_status !== 'COMPLETED' &&
+    (summary?.account_count ?? 0) === 0
+  ) {
+    redirect('/onboarding');
+  }
 
   const currency = workspace.base_currency ?? 'BDT';
   const s: WorkspaceSummary = summary ?? {

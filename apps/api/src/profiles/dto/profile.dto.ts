@@ -55,6 +55,57 @@ export class UpdatePreferencesDto {
   display_name?: string;
 }
 
+/**
+ * Advance the onboarding state machine — Blueprint §5.2.
+ *
+ * `profiles.onboarding_status` has had a 7-state CHECK constraint since
+ * migration 00001 and **nothing has ever written to it**: every user in the
+ * system is stuck at ACCOUNT_CREATED forever. This is the endpoint that moves
+ * it, and it is separate from `PATCH /me/preferences` on purpose — preferences
+ * are edited freely at any time, whereas this is a monotonic progression whose
+ * legal transitions the service enforces.
+ */
+export class UpdateOnboardingDto {
+  @ApiPropertyOptional({
+    example: 'PERSONA_SELECTED',
+    enum: [
+      'LANGUAGE_SELECTED',
+      'PREFERENCES_SET',
+      'PERSONA_SELECTED',
+      'WORKSPACE_CREATED',
+      'FIRST_ACCOUNT_ADDED',
+      'COMPLETED',
+    ],
+    description:
+      'The step just finished. ACCOUNT_CREATED is absent because it is the ' +
+      'initial state — a client asking to move BACK to it is a bug, not a step.',
+  })
+  @IsOptional()
+  @IsString()
+  @IsIn([
+    'LANGUAGE_SELECTED',
+    'PREFERENCES_SET',
+    'PERSONA_SELECTED',
+    'WORKSPACE_CREATED',
+    'FIRST_ACCOUNT_ADDED',
+    'COMPLETED',
+  ])
+  onboarding_status?: string;
+
+  @ApiPropertyOptional({
+    example: 'INDIVIDUAL',
+    enum: ['INDIVIDUAL', 'STUDENT', 'FREELANCER'],
+    description:
+      'Blueprint §5.2 step 4. FAMILY is deliberately absent — DEC-007 dropped ' +
+      'family workspaces, and offering a persona the product cannot honour ' +
+      'would be the blueprint outvoting a later decision.',
+  })
+  @IsOptional()
+  @IsString()
+  @IsIn(['INDIVIDUAL', 'STUDENT', 'FREELANCER'])
+  persona?: string;
+}
+
 export class ProfileResponseDto {
   @ApiProperty({ example: '550e8400-e29b-41d4-a716-446655440000' })
   id!: string;
@@ -80,8 +131,15 @@ export class ProfileResponseDto {
   @ApiProperty({ example: false })
   amount_privacy_default!: boolean;
 
-  @ApiProperty({ example: 'COMPLETE' })
+  @ApiProperty({ example: 'COMPLETED' })
   onboarding_status!: string;
+
+  @ApiPropertyOptional({
+    example: 'INDIVIDUAL',
+    enum: ['INDIVIDUAL', 'STUDENT', 'FREELANCER'],
+    description: 'Null until the user reaches §5.2 step 4.',
+  })
+  persona?: string | null;
 
   @ApiProperty({
     example: false,
