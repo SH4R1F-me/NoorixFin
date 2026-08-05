@@ -23,6 +23,7 @@ import { WorkspacesModule } from './workspaces/workspaces.module';
 import { AccountsModule } from './accounts/accounts.module';
 import { TransactionsModule } from './transactions/transactions.module';
 import { CategoriesModule } from './categories/categories.module';
+import { PlanningModule } from './planning/planning.module';
 import { AdminModule } from './admin/admin.module';
 import { AccountModule } from './account/account.module';
 
@@ -71,6 +72,9 @@ import { RequestTelemetryInterceptor } from './common/interceptors/logging.inter
     AccountsModule,
     TransactionsModule,
     CategoriesModule,
+    // Budgets, goals, debts, calendar and recurring rules (§9.4). Ships as one
+    // module because they are one product surface — see planning.module.ts.
+    PlanningModule,
 
     // ─── Platform / Admin (DEC-016, DEC-017) ────────────
     AdminModule,
