@@ -163,6 +163,33 @@ export async function getTransactions(
   return result.items ?? [];
 }
 
+export interface RecurringRuleRow {
+  id: string;
+  name: string;
+  entry_type: 'INCOME' | 'EXPENSE' | 'TRANSFER';
+  amount_minor: number;
+  currency_code: string;
+  account_id: string | null;
+  category_id: string | null;
+  payee: string | null;
+  frequency: 'DAILY' | 'WEEKLY' | 'MONTHLY' | 'YEARLY';
+  interval_count: number;
+  next_occurrence: string;
+  ends_at: string | null;
+  /**
+   * `REMIND_ONLY` or `AUTO_CREATE_DRAFT`. Neither posts anything — §9.4 is
+   * explicit that nothing auto-posts an entry the user has not confirmed, and
+   * the stronger option still only produces a DRAFT.
+   */
+  behavior: 'REMIND_ONLY' | 'AUTO_CREATE_DRAFT';
+  status: 'ACTIVE' | 'PAUSED' | 'ENDED';
+}
+
+/** Recurring rules for a workspace (§2.3). */
+export async function getRecurringRules(workspaceId: string) {
+  return safeFetch<RecurringRuleRow[]>(`/workspaces/${workspaceId}/recurring`, []);
+}
+
 export interface WorkspaceSummary {
   visible: boolean;
   net_worth: number;

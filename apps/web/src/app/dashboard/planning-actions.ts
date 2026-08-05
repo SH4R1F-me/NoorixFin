@@ -292,3 +292,92 @@ export async function deleteCalendarEvent(
     return fail(error);
   }
 }
+
+// ── Recurring rules (§2.3) ──────────────────────────────────────────────────
+
+/**
+ * Create a recurring rule.
+ *
+ * ── WHAT A RULE IS, AND IS NOT ──────────────────────────────────────────────
+ * A template held as DATA, never as a draft journal entry. §9.4 is explicit
+ * that nothing auto-posts an entry the user has not confirmed, and the schema
+ * enforces it: the strongest `behavior` available is `AUTO_CREATE_DRAFT`, and a
+ * DRAFT is excluded from every aggregation in this database.
+ *
+ * That constraint is the reason the UI says "reminder" rather than "automatic
+ * payment". A user who believes their rent is being paid automatically, because
+ * an app implied it, finds out at the wrong moment.
+ */
+export async function createRecurringRule(input: {
+  workspaceId: string;
+  name: string;
+  entryType: 'INCOME' | 'EXPENSE' | 'TRANSFER';
+  amount: string;
+  currency: string;
+  accountId?: string;
+  categoryId?: string;
+  payee?: string;
+  frequency: 'DAILY' | 'WEEKLY' | 'MONTHLY' | 'YEARLY';
+  intervalCount?: number;
+  nextOccurrence: string;
+  endsAt?: string;
+  behavior?: 'REMIND_ONLY' | 'AUTO_CREATE_DRAFT';
+}): Promise<PlanningResult> {
+  const minor = toMinor(input.amount, input.currency);
+  if (!minor.ok) return minor;
+  if (!input.name.trim()) return { ok: false, message: 'Give the rule a name.' };
+  if (!input.nextOccurrence) return { ok: false, message: 'Choose the next date.' };
+
+  // Caught here rather than left to a CHECK violation: `ends_at` before
+  // `next_occurrence` describes a rule that can never fire, and "violates
+  // constraint chk_recurring_window" is not a sentence anyone can act on.
+  if (input.endsAt && input.endsAt < input.nextOccurrence) {
+    return { ok: false, message: 'The end date cannot be before the next occurrence.' };
+  }
+
+  try {
+    await apiFetch(`/workspaces/${input.workspaceId}/recurring`, {
+      method: 'POST',
+      body: {
+        name: input.name.trim(),
+        entry_type: input.entryType,
+        amount_minor: minor.value,
+        currency_code: input.currency,
+        ...(input.accountId ? { account_id: input.accountId } : {}),
+        ...(input.categoryId ? { category_id: input.categoryId } : {}),
+        ...(input.payee?.trim() ? { payee: input.payee.trim() } : {}),
+        frequency: input.frequency,
+        ...(input.intervalCount ? { interval_count: input.intervalCount } : {}),
+        next_occurrence: input.nextOccurrence,
+        ...(input.endsAt ? { ends_at: input.endsAt } : {}),
+        ...(input.behavior ? { behavior: input.behavior } : {}),
+      },
+    });
+    revalidatePlanning();
+    return { ok: true };
+  } catch (error) {
+    return fail(error);
+  }
+}
+
+/**
+ * Delete a recurring rule.
+ *
+ * Removes a TEMPLATE. Any entry it already produced is an ordinary journal
+ * entry and is untouched — deleting the rule that suggested a payment must
+ * never unmake the payment.
+ */
+export async function deleteRecurringRule(
+  workspaceId: string,
+  ruleId: string,
+): Promise<PlanningResult> {
+  try {
+    await apiFetch(`/workspaces/${workspaceId}/recurring/${ruleId}`, {
+      method: 'DELETE',
+    });
+    revalidatePlanning();
+    return { ok: true };
+  } catch (error) {
+    return fail(error);
+  }
+}

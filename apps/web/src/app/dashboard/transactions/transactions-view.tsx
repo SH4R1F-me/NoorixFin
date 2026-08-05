@@ -497,7 +497,15 @@ export default function TransactionsView({
             >
               <div style={{...s.icon,background:isE?'rgba(239,68,68,0.1)':isI?'rgba(16,185,129,0.1)':'rgba(59,130,246,0.1)'}}><span style={{fontSize:'1.25rem'}}>{tx.catIcon}</span></div>
               <div style={s.det}>
-                <div style={{...s.payee, textDecoration: isCorrected ? 'line-through' : 'none'}}>
+                <div
+                  // A stable hook for the E2E suite. Reading payees out of the
+                  // whole page's innerText was flaky: mid-navigation it can
+                  // return empty, so a test comparing "the payees before and
+                  // after" compared two empty strings and passed, or one empty
+                  // string and failed, for reasons unrelated to the ledger.
+                  data-testid="tx-payee"
+                  style={{...s.payee, textDecoration: isCorrected ? 'line-through' : 'none'}}
+                >
                   {tx.payee}
                 </div>
                 <div style={s.meta}>

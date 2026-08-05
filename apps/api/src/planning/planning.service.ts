@@ -73,6 +73,31 @@ export class PlanningService {
    * and unhelpful: RLS hid the row, so it is a 400 about the request, not a
    * fault in the server.
    */
+  /**
+   * The row count is the only way to tell "deleted" from "not yours".
+   *
+   * ── THE BUG THIS EXISTS TO STOP ─────────────────────────────────────────
+   * All four planning deletes returned `{ deleted: true }` unconditionally.
+   * RLS does not raise on a row you cannot see — it filters it out, so a
+   * DELETE against another workspace's row succeeds and affects nothing.
+   * Measured: deleting another user's recurring rule returned **200** while
+   * the rule survived.
+   *
+   * The tenant boundary held; the REPORT was wrong, which is its own kind of
+   * failure. A user told a thing is gone stops looking for it, and an
+   * operator debugging "the delete does not work" has been handed a success.
+   *
+   * `.select('id')` makes the affected rows observable, and zero is a 404.
+   */
+  private assertDeleted(rows: { id: string }[] | null, what: string): void {
+    if (!rows || rows.length === 0) {
+      throw new NotFoundException({
+        code: 'NOT_FOUND',
+        message: `That ${what.toLowerCase()} does not exist in this workspace.`,
+      });
+    }
+  }
+
   private fail(error: PostgrestError, what: string): never {
     if (error.code === FK_VIOLATION) {
       throw new BadRequestException({
@@ -232,12 +257,14 @@ export class PlanningService {
     accessToken: string,
     budgetId: string,
   ) {
-    const { error } = await this.client(accessToken)
+    const { data, error } = await this.client(accessToken)
       .from('budgets')
       .delete()
       .eq('id', budgetId)
-      .eq('workspace_id', workspaceId);
+      .eq('workspace_id', workspaceId)
+      .select('id');
     if (error) this.fail(error, 'Budget');
+    this.assertDeleted(data, 'Budget');
     return { deleted: true };
   }
 
@@ -317,12 +344,14 @@ export class PlanningService {
   }
 
   async deleteGoal(workspaceId: string, accessToken: string, goalId: string) {
-    const { error } = await this.client(accessToken)
+    const { data, error } = await this.client(accessToken)
       .from('savings_goals')
       .delete()
       .eq('id', goalId)
-      .eq('workspace_id', workspaceId);
+      .eq('workspace_id', workspaceId)
+      .select('id');
     if (error) this.fail(error, 'Goal');
+    this.assertDeleted(data, 'Goal');
     return { deleted: true };
   }
 
@@ -490,12 +519,14 @@ export class PlanningService {
     accessToken: string,
     eventId: string,
   ) {
-    const { error } = await this.client(accessToken)
+    const { data, error } = await this.client(accessToken)
       .from('calendar_events')
       .delete()
       .eq('id', eventId)
-      .eq('workspace_id', workspaceId);
+      .eq('workspace_id', workspaceId)
+      .select('id');
     if (error) this.fail(error, 'Calendar event');
+    this.assertDeleted(data, 'Calendar event');
     return { deleted: true };
   }
 
@@ -558,12 +589,14 @@ export class PlanningService {
     accessToken: string,
     ruleId: string,
   ) {
-    const { error } = await this.client(accessToken)
+    const { data, error } = await this.client(accessToken)
       .from('recurring_rules')
       .delete()
       .eq('id', ruleId)
-      .eq('workspace_id', workspaceId);
+      .eq('workspace_id', workspaceId)
+      .select('id');
     if (error) this.fail(error, 'Recurring rule');
+    this.assertDeleted(data, 'Recurring rule');
     return { deleted: true };
   }
 

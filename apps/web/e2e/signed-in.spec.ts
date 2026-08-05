@@ -8,7 +8,7 @@
  * every CI run. It creates its own account now, like every other live spec.
  */
 import { test, expect } from '@playwright/test';
-import { LIVE, createUser, PASSWORD, type Fixture } from './support/fixture';
+import { LIVE, seedWorkspace, type Fixture } from './support/fixture';
 
 let user: Pick<Fixture, 'email' | 'password'>;
 
@@ -16,10 +16,13 @@ test.describe('sign-in against live Supabase', () => {
   test.skip(!LIVE, 'needs E2E_LIVE=1 with supabase running');
 
   test.beforeAll(async () => {
-    // `createUser`, not `seedWorkspace`: these tests assert on cookies and
-    // navigation, so a ledger would be setup that proves nothing.
-    const created = await createUser('session');
-    user = { email: created.email, password: PASSWORD };
+    // An ESTABLISHED user, deliberately. A bare `createUser` has no workspace,
+    // and the onboarding gate correctly redirects such a user to /onboarding —
+    // so "the session survived a reload" failed on a page that proved the
+    // session had survived perfectly well. The subject here is the COOKIE, and
+    // a redirect belonging to another feature must not decide the result.
+    const created = await seedWorkspace('session');
+    user = { email: created.email, password: created.password };
   });
 
   test('signing in reaches the dashboard and sets an httpOnly session cookie', async ({ page, context }) => {
