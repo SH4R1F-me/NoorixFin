@@ -13,19 +13,22 @@
  * needs the API genuinely STOPPED, so it is gated on `E2E_API_DOWN=1`:
  *
  *   # stop the API first, then
- *   E2E_API_DOWN=1 E2E_EMAIL=... E2E_PASSWORD=... npx playwright test resilience
+ *   E2E_API_DOWN=1 E2E_ACCOUNT=someone@example.test npx playwright test resilience
+ *
+ * ── WHY THE ACCOUNT ARRIVES IN AN ENVIRONMENT VARIABLE ──────────────────────
+ * Every other live spec builds its own fixture through the API. This one
+ * cannot: the condition under test is that the API is DOWN, so there is
+ * nothing to build it with. The account is therefore created by the CI step
+ * BEFORE the API stops, and passed in. That is a real dependency, not the
+ * "nobody sets E2E_EMAIL" pattern that quietly disabled these tests — see the
+ * `e2e-degraded` job in .github/workflows/ci.yml, which now runs it.
  */
 import { test, expect } from '@playwright/test';
+import { PASSWORD as FIXTURE_PASSWORD } from './support/fixture';
 
-/**
- * Set when the API is deliberately STOPPED. The signed-in half of this spec
- * asserts behaviour with nothing listening, so it cannot pass while the API is
- * up — gating on credentials alone made it fail for the wrong reason on every
- * normal run.
- */
 const API_DOWN = process.env.E2E_API_DOWN === '1';
-const EMAIL = process.env.E2E_EMAIL;
-const PASSWORD = process.env.E2E_PASSWORD;
+const EMAIL = process.env.E2E_ACCOUNT;
+const PASSWORD = process.env.E2E_ACCOUNT_PASSWORD ?? FIXTURE_PASSWORD;
 
 test('an unmatched URL renders the branded 404, not a framework page', async ({ page }) => {
   const response = await page.goto('/this-route-does-not-exist');
@@ -59,8 +62,8 @@ test('the login page survives an unreachable API', async ({ page }) => {
 
 test.describe('signed-in degraded mode', () => {
   test.skip(
-    !API_DOWN || !EMAIL || !PASSWORD,
-    'run with E2E_API_DOWN=1 and the API stopped — that is the condition under test',
+    !API_DOWN || !EMAIL,
+    'run with E2E_API_DOWN=1, E2E_ACCOUNT set and the API stopped — that is the condition under test',
   );
 
   test('dashboard routes render 200 and explain themselves with the API down', async ({

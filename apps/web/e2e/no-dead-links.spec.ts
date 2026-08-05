@@ -9,9 +9,9 @@
  * nav entry without its page fails here instead of in someone's browser.
  */
 import { test, expect } from '@playwright/test';
+import { LIVE, seedWorkspace, type Fixture } from './support/fixture';
 
-const EMAIL = process.env.E2E_EMAIL;
-const PASSWORD = process.env.E2E_PASSWORD;
+let user: Fixture;
 
 test('public auth routes resolve', async ({ page }) => {
   for (const path of ['/', '/auth/login', '/auth/forgot-password']) {
@@ -30,12 +30,19 @@ test('the login page\'s forgot-password link is not dead', async ({ page }) => {
 });
 
 test.describe('authenticated navigation', () => {
-  test.skip(!EMAIL || !PASSWORD, 'needs supabase + API running');
+  test.skip(!LIVE, 'needs E2E_LIVE=1 with supabase and the API running');
+
+  // Seeded rather than bare: several of these pages render differently with no
+  // data, and an empty state is not what "the link resolves" should be
+  // measuring.
+  test.beforeAll(async () => {
+    user = await seedWorkspace('nav');
+  });
 
   test('every sidebar link resolves without a 404', async ({ page }) => {
     await page.goto('/auth/login');
-    await page.getByPlaceholder('name@example.com').fill(EMAIL!);
-    await page.locator('input[type="password"]').first().fill(PASSWORD!);
+    await page.getByPlaceholder('name@example.com').fill(user.email);
+    await page.locator('input[type="password"]').first().fill(user.password);
     await page.locator('form button[type="submit"]').click();
     await page.waitForURL(/\/dashboard/, { timeout: 20_000 });
 

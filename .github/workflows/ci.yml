@@ -45,6 +45,9 @@ concurrency:
 env:
   NODE_VERSION: '20'
   PNPM_VERSION: '11.18.0'
+  # The published Supabase local default. Not a secret — it is in every
+  # Supabase quickstart, and RLS is what protects the data.
+  LOCAL_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0'
 
 jobs:
   # ───────────────────────────────────────────────────────────────────────────
@@ -215,6 +218,40 @@ jobs:
         run: pnpm --filter @noorixfin/web test:e2e
         env:
           E2E_LIVE: '1'
+
+      # ── The API-DOWN half of the resilience suite ─────────────────────────
+      # Audit finding C was that a REFUSED CONNECTION took every dashboard
+      # route down with a 500, while an HTTP error degraded gracefully. That
+      # can only be tested with nothing listening, so it cannot share a run
+      # with the specs above — and while it could not, it never ran at all.
+      #
+      # The account is created BEFORE the API stops, because afterwards there
+      # is nothing left to create it with.
+      - name: Create an account for the degraded-mode run
+        id: degraded-account
+        run: |
+          EMAIL="ci-degraded-$(date +%s)@noorixfin.test"
+          curl -sf -X POST "http://127.0.0.1:54321/auth/v1/signup" \
+            -H "apikey: ${{ env.LOCAL_ANON_KEY }}" \
+            -H "Content-Type: application/json" \
+            -d "{\"email\":\"$EMAIL\",\"password\":\"E2E-Password-1234\"}" > /dev/null
+          echo "email=$EMAIL" >> "$GITHUB_OUTPUT"
+
+      - name: Stop the API
+        run: |
+          pkill -f 'node dist/main.js' || true
+          # Confirm it is actually gone. A test asserting "graceful with the API
+          # down" that runs against a live API passes for the wrong reason.
+          sleep 2
+          if curl -sf --max-time 2 http://localhost:8080/v1/health > /dev/null; then
+            echo "API is still up — the degraded run would prove nothing"; exit 1
+          fi
+
+      - name: E2E (degraded — API unreachable)
+        run: pnpm --filter @noorixfin/web exec playwright test resilience
+        env:
+          E2E_API_DOWN: '1'
+          E2E_ACCOUNT: ${{ steps.degraded-account.outputs.email }}
 
       - uses: actions/upload-artifact@v4
         if: failure()
