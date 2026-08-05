@@ -160,7 +160,14 @@ site_url = "http://127.0.0.1:3000"
 # The public URL that Auth serves on. Defaults to the API external URL with `/auth/v1` appended.
 # external_url = ""
 # A list of *exact* URLs that auth providers are permitted to redirect to post authentication.
-additional_redirect_urls = ["https://127.0.0.1:3000"]
+additional_redirect_urls = [
+  "https://127.0.0.1:3000",
+  # The OAuth and email-link landing route. Supabase only redirects to URLs on
+  # this exact list, so a missing entry here surfaces as a silent bounce back to
+  # the login page with no error.
+  "http://localhost:3000/auth/callback",
+  "http://127.0.0.1:3000/auth/callback",
+]
 # How long tokens are valid for, in seconds. Defaults to 3600 (1 hour), maximum 604,800 (1 week).
 jwt_expiry = 3600
 # JWT issuer URL. If not set, defaults to auth.external_url.
@@ -176,8 +183,10 @@ refresh_token_reuse_interval = 10
 enable_signup = true
 # Allow/disallow anonymous sign-ins to your project.
 enable_anonymous_sign_ins = false
-# Allow/disallow testing manual linking of accounts
-enable_manual_linking = false
+# Required for "Connect Google" in Profile Settings. Without it, GoTrue rejects
+# auth.linkIdentity() — which is the failure that looks like OAuth creating a
+# duplicate account instead of linking to the existing one.
+enable_manual_linking = true
 # Passwords shorter than this value will be rejected as weak. Minimum 6, recommended 8 or more.
 minimum_password_length = 6
 # Passwords that do not meet the following requirements will be rejected as weak. Supported values
@@ -224,8 +233,11 @@ enable_signup = true
 double_confirm_changes = true
 # If enabled, users need to confirm their email address before signing in.
 enable_confirmations = false
-# If enabled, users will need to reauthenticate or have logged in recently to change their password.
-secure_password_change = false
+# Requires a recent sign-in before a password can be changed. The settings page
+# also verifies the current password explicitly (app/auth/actions.ts), so this is
+# the server-side half of the same rule — defence in depth against someone at an
+# unlocked browser taking the account permanently.
+secure_password_change = true
 # Controls the minimum amount of time that must pass before sending another signup confirmation or password reset email.
 max_frequency = "1s"
 # Number of characters used in the email OTP.
@@ -319,6 +331,31 @@ max_frequency = "5s"
 # Use an external OAuth provider. The full list of providers are: `apple`, `azure`, `bitbucket`,
 # `discord`, `facebook`, `github`, `gitlab`, `google`, `keycloak`, `linkedin_oidc`, `notion`, `twitch`,
 # `twitter`, `x`, `slack`, `spotify`, `workos`, `zoom`.
+# ── Google ──────────────────────────────────────────────────────────────────
+# Credentials come from a Google Cloud OAuth 2.0 Client (type: Web application)
+# with this authorised redirect URI:
+#     http://127.0.0.1:54321/auth/v1/callback      (local)
+#     https://<project-ref>.supabase.co/auth/v1/callback   (hosted)
+#
+# Set these in your shell or apps/*/.env.local — NEVER commit them:
+#     SUPABASE_AUTH_EXTERNAL_GOOGLE_CLIENT_ID
+#     SUPABASE_AUTH_EXTERNAL_GOOGLE_SECRET
+# and flip NEXT_PUBLIC_GOOGLE_AUTH_ENABLED=true in apps/web/.env.local so the UI
+# offers the button. With the flag false the app renders an explicit
+# "not configured" state instead of a button that would fail at the provider.
+#
+# `enabled = true` with empty credentials is harmless — GoTrue simply rejects the
+# authorize call — but the web flag is what users actually see.
+[auth.external.google]
+enabled = true
+client_id = "env(SUPABASE_AUTH_EXTERNAL_GOOGLE_CLIENT_ID)"
+secret = "env(SUPABASE_AUTH_EXTERNAL_GOOGLE_SECRET)"
+redirect_uri = ""
+url = ""
+# Required for local sign-in with Google: the nonce check fails against a
+# non-HTTPS origin. Leave FALSE in production.
+skip_nonce_check = true
+
 [auth.external.apple]
 enabled = false
 client_id = ""

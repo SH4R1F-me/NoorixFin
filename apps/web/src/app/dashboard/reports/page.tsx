@@ -4,8 +4,7 @@ import { NotYetAvailable } from '../../../components/not-yet-available';
 export default function ReportsPage() {
   return (
     <NotYetAvailable
-      title="রিপোর্ট"
-      titleEn="Reports"
+      titleKey="nav.reports"
       icon={<BarChart3 size={30} color="#10b981" />}
       summary="Reporting is Phase 3. The dashboard already shows a real server-side aggregation of net worth and this month's cash flow; reports extend that with history and drill-down."
       planned={[

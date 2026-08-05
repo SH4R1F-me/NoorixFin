@@ -1,6 +1,6 @@
 # NoorixFin — TEST RESULTS
 
-**Last updated:** 2026-08-04 (Session 17 — dashboard summary on real data via server-side aggregation)
+**Last updated:** 2026-08-04 (Session 18 — Enterprise Admin System: console, account lifecycle, observability)
 
 ---
 
@@ -9,7 +9,7 @@
 | ID | Requirement | Status | Evidence |
 |---|---|---|---|
 | SEC-01 | User A cannot access User B personal workspace | ✅ **PASS (live)** | Bob (plain USER) sees 0 of Alice's workspaces, 0 memberships, 0 ledger rows; sees exactly 1 workspace (his own) |
-| SEC-02 | **(re-scoped, DEC-014)** (a) non-owner blocked via direct PostgREST; (b) `USER` cannot perform `SUPER_ADMIN` actions; (c) `SUPER_ADMIN` cannot read another user's ledger | ✅ **(a) and (c) PASS (live)** | (a) Bob's INSERT into Alice's workspace → RLS violation. (c) Alice (SUPER_ADMIN) sees **0** journal_entries, **0** journal_postings, **0** ledger_accounts of Bob's while still seeing workspace metadata — DEC-013's core requirement, confirmed. (b) needs API-layer tests |
+| SEC-02 | **(re-scoped, DEC-014)** (a) non-owner blocked via direct PostgREST; (b) `USER` cannot perform `SUPER_ADMIN` actions; (c) `SUPER_ADMIN` cannot read another user's ledger | ✅ **(a), (b) and (c) PASS (live)** | (a) Bob's INSERT into Alice's workspace → RLS violation. (b) **NEW (S18):** plain USER gets 403 on every `/v1/admin/*` route, 404 on every `/admin` web route, and `admin_*()` RPCs raise 42501; escalation `UPDATE ... is_super_admin` denied (DEC-019). (c) Operator sees **0** journal_entries/postings/ledger_accounts of another user, at both the API (403) and RLS layers, and **no admin response contains a seeded payee, note or amount** |
 | SEC-03 | Service key absent from clients | ⬜ Not tested | Needs a bundle grep after a production build |
 | — | **Table privileges present for `authenticated`** | ✅ **PASS (live)** | Added by migration 00008 after a total-outage 42501 was found |
 | FIN-01 | Every posted journal balanced | ✅ **PASS (live)** | `chk_posting_sides` rejects debit+credit both positive; `chk_posting_nonzero` rejects zero-only. Plus 44/44 `validateBalance` unit tests |
@@ -20,7 +20,7 @@
 | I18N-01 | Bangla and English complete | 🟡 Partial | Parity 186/186 verified by script each session; still no CI check |
 | TIME-01 | Timezone boundary correct | ⬜ Not tested | All timestamps are `TIMESTAMPTZ` |
 | DATA-01 | Export complete and scoped | ⬜ Not tested | |
-| DATA-02 | Deletion flow works | ⬜ Not tested | |
+| DATA-02 | Deletion flow works | 🟡 **Partial (live)** | **NEW (S18, DEC-017):** `purge_expired_deletions()` verified to skip accounts still in grace and to remove ledger→workspace→profile in FK order once expired, leaving the `ACCOUNT_PURGED` audit row. The `PENDING_DELETION`-without-deadline CHECK is enforced. Not yet exercised end-to-end through the UI against a real 30-day expiry (no scheduler — purge is an operator action) |
 | BACKUP-01 | Restore is usable | ⬜ Not tested | |
 | STORE-01 | Store privacy declarations accurate | ⬜ Not tested | Must be filed under the new name `NoorixFin` (DEC-008) |
 | A11Y-01 | Core flow accessible | ⬜ Not tested | |
@@ -444,3 +444,76 @@ for the same page. Fixed with auto-retrying `toBeVisible` assertions plus an exp
 skeleton to disappear. **A passing snapshot assertion against streamed RSC output is luck, not proof.**
 
 Web e2e total: **19 passed**.
+
+---
+
+## Session 18 — Enterprise Admin System (2026-08-04)
+
+**Stack under test:** local Supabase (14 migrations applied from a clean `db reset`), NestJS API on
+:8080, Next.js production build on :3100. Two accounts: `ops@` (SUPER_ADMIN) and `user@` (plain USER)
+with a real 4-transaction ledger (574,500 minor units) whose payees and notes were deliberately
+distinctive so a leak would be greppable.
+
+### Automated
+
+| Suite | Result |
+|---|---|
+| API unit (`jest`) | **55 passed** / 5 suites |
+| SQL acceptance (`run-local.sh`) | all pre-existing + **16 new ADMIN/DEC cases** pass |
+| Web E2E (`playwright`) | **32 passed** (10 new) |
+| `tsc --noEmit` — api & web | clean |
+| `next build` | clean; all 6 admin routes registered |
+
+### The privacy guarantee, verified three ways
+
+1. **API:** operator → `GET /workspaces/{victim}/transactions|accounts|summary|categories` = **403** ×4.
+2. **RLS (direct SQL as the operator's JWT):** `journal_postings` 0, `journal_entries` 0,
+   `ledger_accounts` 0, user `categories` 0 — while `profiles` 2, `workspaces` 2, `system_events` 4.
+3. **Response grep:** the union of `/admin/overview`, `/admin/users`, `/admin/users?search=`,
+   `/admin/audit`, `/admin/events` contains none of `SECRET PAYEE`, `CONFIDENTIAL NOTE`, the seeded
+   amounts, `debit_minor`, or `credit_minor`.
+
+### Behaviour verified live in a browser
+
+| Flow | Result |
+|---|---|
+| Operator sees the System Admin switch; normal user's markup has no trace of it | ✅ |
+| Normal user → all 6 `/admin` routes return **404** (not a redirect) | ✅ |
+| SSE stream: **403** for a normal user, `text/event-stream` **200** for an operator | ✅ |
+| Operator switches to `/admin` and back to their **own** dashboard | ✅ |
+| Broadcast: draft invisible → publish → visible to user **in their own locale (bn)** → dismiss → still gone after reload | ✅ |
+| Live monitoring feed reaches `LIVE` and streams real events | ✅ |
+| Suspend → sign-in blocked with `user_banned`; reinstate → sign-in restored | ✅ |
+| Self-suspend and last-operator-suspend both refused | ✅ |
+| Preferences save and survive a reload (page was previously 100% fake state) | ✅ |
+| Deletion confirm button stays disabled until the exact email is typed | ✅ |
+| Google sign-in renders an explicit "Not configured" state, not a broken button | ✅ |
+
+### Defects found by running it (all fixed)
+
+1. **Privilege escalation (DEC-019).** Any user could `UPDATE profiles SET is_super_admin = true` on
+   their own row. Pre-existing and latent; closed with column-level grants in 00012.
+2. **`service_role` had no table privileges (DEC-020).** Every service-role write 42501'd — the 00008 bug
+   for the other role. Fixed in 00014.
+3. **42501 misreported as "not a super admin".** A missing grant told an operator they lacked privileges.
+   Now distinguished; a missing grant reports 503 pointing at migration 00014.
+4. **SSE polluted its own feed.** The telemetry interceptor treated the long-lived stream as a "slow
+   request", emitting a WARN per frame with an ever-growing duration — 181 bogus entries within minutes,
+   burying real signal. Exempted `@Sse()` handlers.
+   *Follow-on:* the first fix used a guessed metadata key (`'sse'`) and silently never matched; the real
+   constant is `'__sse__'`. Now imported from `@nestjs/common/constants`, and the unit test uses a real
+   `@Sse()` decorator + real `Reflector` — confirmed to **fail** when reverted to the guessed key.
+5. **`onboarding_status: 'PENDING'`** in `ProfilesService` violated the CHECK constraint; that insert
+   could only ever have failed. Now `ACCOUNT_CREATED`.
+
+### Known gaps
+
+- **Google OAuth round-trip is UNVERIFIED.** Everything up to the provider redirect is wired and
+  exercised; no Google credentials were supplied, so the actual sign-in/link with Google has not been
+  executed. Owner action: fill `SUPABASE_AUTH_EXTERNAL_GOOGLE_*`, set
+  `NEXT_PUBLIC_GOOGLE_AUTH_ENABLED=true`, restart Supabase.
+- **No scheduler** for `purge_expired_deletions()` / `prune_system_events()` — both are operator actions
+  today, ready to attach to pg_cron.
+- **Lint:** 18 `no-unsafe-*` errors remain in the new API files, the same class as the ~170 pre-existing
+  ones (untyped Supabase client responses). Fixing properly means generating Supabase schema types
+  repo-wide — out of scope here.

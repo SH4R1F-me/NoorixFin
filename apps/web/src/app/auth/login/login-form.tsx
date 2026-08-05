@@ -1,7 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import { signIn, signUp } from '../actions';
+import { signIn, signUp, signInWithGoogle } from '../actions';
+import { GOOGLE_AUTH_ENABLED } from '../../../lib/auth-config';
+import { useLocale } from '../../../lib/i18n/locale-provider';
 import {
   LogIn,
   Mail,
@@ -14,6 +16,14 @@ import {
   Loader2,
 } from 'lucide-react';
 
+/** Marketing bullets on the sign-in page, from the shared catalog. */
+const FEATURE_KEYS = [
+  'transactions.title',
+  'nav.budgets',
+  'nav.goals',
+  'app.free',
+] as const;
+
 export default function LoginForm({ next }: { next?: string }) {
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
@@ -23,59 +33,16 @@ export default function LoginForm({ next }: { next?: string }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
-  const [locale, setLocale] = useState<'bn' | 'en'>('bn');
   // `next` comes from the server page via searchParams — using useSearchParams()
   // here would force this whole tree out of prerendering and fail the build.
   //
   // No client-side "already logged in?" check is needed — proxy.ts redirects an
   // authenticated user away from /auth/login before this component ever renders.
 
-  const t = {
-    bn: {
-      title: 'NoorixFin',
-      tagline: 'আপনার ব্যক্তিগত অর্থ সহযোগী',
-      login: 'লগইন',
-      register: 'অ্যাকাউন্ট তৈরি করুন',
-      email: 'ইমেইল',
-      password: 'পাসওয়ার্ড',
-      confirmPassword: 'পাসওয়ার্ড নিশ্চিত করুন',
-      submitLogin: 'লগইন করুন',
-      submitRegister: 'অ্যাকাউন্ট তৈরি করুন',
-      switchToRegister: 'নতুন অ্যাকাউন্ট তৈরি করুন',
-      switchToLogin: 'আমার অ্যাকাউন্ট আছে',
-      forgotPassword: 'পাসওয়ার্ড ভুলে গেছেন?',
-      or: 'অথবা',
-      googleLogin: 'Google দিয়ে লগইন',
-      features: ['আয়-ব্যয় ট্র্যাকিং', 'বাজেট পরিকল্পনা', 'লক্ষ্য ও ঋণ ট্র্যাকিং', 'সুরক্ষিত ও প্রাইভেট'],
-      passwordMismatch: 'পাসওয়ার্ড মিলছে না',
-      invalidCredentials: 'ভুল ইমেইল বা পাসওয়ার্ড',
-      registerSuccess: 'অ্যাকাউন্ট তৈরি হয়েছে! ইমেইল যাচাই করুন।',
-      errorGeneric: 'কিছু ভুল হয়েছে। আবার চেষ্টা করুন।',
-    },
-    en: {
-      title: 'NoorixFin',
-      tagline: 'Your personal finance companion',
-      login: 'Sign In',
-      register: 'Create Account',
-      email: 'Email',
-      password: 'Password',
-      confirmPassword: 'Confirm Password',
-      submitLogin: 'Sign In',
-      submitRegister: 'Create Account',
-      switchToRegister: 'Create a new account',
-      switchToLogin: 'I have an account',
-      forgotPassword: 'Forgot password?',
-      or: 'or',
-      googleLogin: 'Sign in with Google',
-      features: ['Income & Expense Tracking', 'Budget Planning', 'Goals & Debt Tracking', 'Secure & Private'],
-      passwordMismatch: 'Passwords do not match',
-      invalidCredentials: 'Incorrect email or password',
-      registerSuccess: 'Account created! Please verify your email.',
-      errorGeneric: 'Something went wrong. Please try again.',
-    },
-  };
-
-  const text = t[locale];
+  // Strings come from the shared catalog now. This component used to carry its
+  // own bn/en dictionary AND its own locale state, so a visitor who picked
+  // English here saw Bangla again on the very next screen (DEC-021).
+  const { t, locale, toggleLocale, otherLanguageName } = useLocale();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -83,7 +50,7 @@ export default function LoginForm({ next }: { next?: string }) {
     setSuccess('');
 
     if (!isLogin && password !== confirmPassword) {
-      setError(text.passwordMismatch);
+      setError(t('auth.passwordsDoNotMatch'));
       return;
     }
 
@@ -98,9 +65,9 @@ export default function LoginForm({ next }: { next?: string }) {
         : await signUp(email, password);
 
       if (result && !result.ok) {
-        setError(result.code === 'invalidCredentials' ? text.invalidCredentials : text.errorGeneric);
+        setError(result.code === 'invalidCredentials' ? t('auth.invalidCredentials') : t('server.internalError'));
       } else if (!isLogin) {
-        setSuccess(text.registerSuccess);
+        setSuccess(t('auth.verifyEmailSent', { email }));
       }
     } finally {
       setLoading(false);
@@ -114,12 +81,12 @@ export default function LoginForm({ next }: { next?: string }) {
 
       {/* Language switcher */}
       <button
-        onClick={() => setLocale(locale === 'bn' ? 'en' : 'bn')}
+        onClick={toggleLocale}
         style={styles.langSwitcher}
         aria-label="Switch language"
       >
         <Globe size={16} />
-        {locale === 'bn' ? 'English' : 'বাংলা'}
+        {otherLanguageName}
       </button>
 
       <div style={styles.content}>
@@ -129,12 +96,12 @@ export default function LoginForm({ next }: { next?: string }) {
             <div style={styles.logoIcon}>
               <Wallet size={28} color="white" />
             </div>
-            <h1 style={styles.logoText}>{text.title}</h1>
+            <h1 style={styles.logoText}>{t('app.name')}</h1>
           </div>
-          <p style={styles.tagline}>{text.tagline}</p>
+          <p style={styles.tagline}>{t('app.tagline')}</p>
 
           <div style={styles.features}>
-            {text.features.map((feature, i) => (
+            {FEATURE_KEYS.map((feature, i) => (
               <div
                 key={i}
                 style={{
@@ -143,7 +110,7 @@ export default function LoginForm({ next }: { next?: string }) {
                 }}
               >
                 <div style={styles.featureDot} />
-                <span>{feature}</span>
+                <span>{t(feature)}</span>
               </div>
             ))}
           </div>
@@ -161,7 +128,7 @@ export default function LoginForm({ next }: { next?: string }) {
                   ...(isLogin ? styles.tabActive : {}),
                 }}
               >
-                {text.login}
+                {t('auth.signIn')}
               </button>
               <button
                 onClick={() => { setIsLogin(false); setError(''); setSuccess(''); }}
@@ -170,14 +137,14 @@ export default function LoginForm({ next }: { next?: string }) {
                   ...(!isLogin ? styles.tabActive : {}),
                 }}
               >
-                {text.register}
+                {t('auth.signUp')}
               </button>
             </div>
 
             <form onSubmit={handleSubmit} style={styles.form}>
               {/* Email */}
               <div style={styles.inputGroup}>
-                <label htmlFor="email" style={styles.label}>{text.email}</label>
+                <label htmlFor="email" style={styles.label}>{t('auth.email')}</label>
                 <div style={styles.inputWrapper}>
                   <Mail size={18} style={styles.inputIcon} />
                   <input
@@ -195,7 +162,7 @@ export default function LoginForm({ next }: { next?: string }) {
 
               {/* Password */}
               <div style={styles.inputGroup}>
-                <label htmlFor="password" style={styles.label}>{text.password}</label>
+                <label htmlFor="password" style={styles.label}>{t('auth.password')}</label>
                 <div style={styles.inputWrapper}>
                   <Lock size={18} style={styles.inputIcon} />
                   <input
@@ -224,7 +191,7 @@ export default function LoginForm({ next }: { next?: string }) {
               {!isLogin && (
                 <div style={styles.inputGroup}>
                   <label htmlFor="confirmPassword" style={styles.label}>
-                    {text.confirmPassword}
+                    {t('auth.confirmPassword')}
                   </label>
                   <div style={styles.inputWrapper}>
                     <Lock size={18} style={styles.inputIcon} />
@@ -257,7 +224,7 @@ export default function LoginForm({ next }: { next?: string }) {
                   <Loader2 size={18} style={{ animation: 'spin 0.6s linear infinite' }} />
                 ) : (
                   <>
-                    {isLogin ? text.submitLogin : text.submitRegister}
+                    {isLogin ? t('auth.signIn') : t('auth.signUp')}
                     <ArrowRight size={18} />
                   </>
                 )}
@@ -266,8 +233,41 @@ export default function LoginForm({ next }: { next?: string }) {
               {/* Forgot password */}
               {isLogin && (
                 <div style={styles.forgotLink}>
-                  <a href="/auth/forgot-password">{text.forgotPassword}</a>
+                  <a href="/auth/forgot-password">{t('auth.forgotPassword')}</a>
                 </div>
+              )}
+
+              {/* Google — only offered when the provider is actually
+                  configured. Rendering it unconditionally would send users to a
+                  provider error page and look like the app is broken. */}
+              {GOOGLE_AUTH_ENABLED && (
+                <>
+                  <div style={styles.divider}>
+                    <span style={styles.dividerLine} />
+                    <span style={styles.dividerText}>{t('auth.or')}</span>
+                    <span style={styles.dividerLine} />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setError('');
+                      setLoading(true);
+                      // Resolves by redirecting to Google; it only returns here
+                      // when the provider could not be reached at all.
+                      void signInWithGoogle(next).then((result) => {
+                        if (result && !result.ok) {
+                          setError(t('server.internalError'));
+                          setLoading(false);
+                        }
+                      });
+                    }}
+                    disabled={loading}
+                    style={styles.googleBtn}
+                  >
+                    <GoogleMark />
+                    {t('auth.googleSignIn')}
+                  </button>
+                </>
               )}
 
               {/* Toggle mode */}
@@ -281,7 +281,7 @@ export default function LoginForm({ next }: { next?: string }) {
                   }}
                   style={styles.toggleBtn}
                 >
-                  {isLogin ? text.switchToRegister : text.switchToLogin}
+                  {isLogin ? t('auth.noAccount') : t('auth.hasAccount')}
                 </button>
               </div>
             </form>
@@ -292,8 +292,52 @@ export default function LoginForm({ next }: { next?: string }) {
   );
 }
 
+/** Inline SVG so the button needs no remote asset. */
+function GoogleMark() {
+  return (
+    <svg width="17" height="17" viewBox="0 0 48 48" aria-hidden="true">
+      <path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9 3.6l6.7-6.7C35.6 2.6 30.2.5 24 .5 14.6.5 6.5 5.8 2.6 13.5l7.8 6c1.9-5.6 7.1-10 13.6-10z" />
+      <path fill="#4285F4" d="M46.6 24.6c0-1.6-.15-3.2-.44-4.6H24v9.1h12.7c-.55 3-2.2 5.5-4.7 7.2l7.3 5.6c4.3-4 6.8-9.9 6.8-17.3z" />
+      <path fill="#FBBC05" d="M10.4 28.5c-.5-1.4-.8-2.9-.8-4.5s.3-3.1.8-4.5l-7.8-6C1 16.6 0 20.2 0 24s1 7.4 2.6 10.5l7.8-6z" />
+      <path fill="#34A853" d="M24 47.5c6.2 0 11.5-2 15.3-5.6l-7.3-5.6c-2 1.4-4.7 2.3-8 2.3-6.5 0-11.7-4.4-13.6-10l-7.8 6C6.5 42.2 14.6 47.5 24 47.5z" />
+    </svg>
+  );
+}
+
 // ─── Inline Styles (Premium Dark Theme) ──────────────────
 const styles: Record<string, React.CSSProperties> = {
+  divider: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.75rem',
+    margin: '0.25rem 0',
+  },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+    background: 'rgba(255,255,255,0.08)',
+  },
+  dividerText: {
+    fontSize: '0.75rem',
+    color: '#475569',
+  },
+  googleBtn: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: '0.6rem',
+    width: '100%',
+    padding: '0.7rem 1.5rem',
+    background: 'rgba(255,255,255,0.06)',
+    border: '1px solid rgba(255,255,255,0.14)',
+    borderRadius: '0.75rem',
+    color: '#e2e8f0',
+    fontSize: '0.875rem',
+    fontWeight: 600,
+    cursor: 'pointer',
+    fontFamily: 'inherit',
+    transition: 'all 150ms',
+  },
   container: {
     minHeight: '100vh',
     display: 'flex',

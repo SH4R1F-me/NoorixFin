@@ -1,4 +1,7 @@
+'use client';
+
 import type { CSSProperties, ReactNode } from 'react';
+import { useLocale } from '../lib/i18n/locale-provider';
 
 /**
  * Honest placeholder for a navigable-but-unbuilt feature.
@@ -12,26 +15,26 @@ import type { CSSProperties, ReactNode } from 'react';
  * of the design (Blueprint §5.1); the page states what is missing and why.
  */
 export function NotYetAvailable({
-  title,
-  titleEn,
+  titleKey,
   icon,
   summary,
   planned,
   blockedBy,
 }: {
-  title: string;
-  titleEn: string;
+  /** Catalog key for the feature name — the same key the sidebar uses. */
+  titleKey: string;
   icon: ReactNode;
   summary: string;
   planned: string[];
   blockedBy: string;
 }) {
+  const { t } = useLocale();
   return (
     <div>
       <div style={styles.header}>
         <div>
-          <h1 style={styles.title}>{title}</h1>
-          <p style={styles.subtitle}>{titleEn}</p>
+          <h1 style={styles.title}>{t(titleKey)}</h1>
+          <p style={styles.subtitle}>{t('app.comingSoon')}</p>
         </div>
       </div>
 

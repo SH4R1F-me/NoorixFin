@@ -1,17 +1,49 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useTransition } from 'react';
+import { useRouter } from 'next/navigation';
 import { Plus, X, Edit3, Grid, List } from 'lucide-react';
+import { useLocale } from '../../../lib/i18n/locale-provider';
+import { createCategory } from '../ledger-actions';
 
 export interface CategoryItem { id: string; name: string; kind: string; icon: string; color: string; isSystem: boolean }
 
-export default function CategoriesView({ categories }: { categories: CategoryItem[] }) {
-  const SYSTEM_CATEGORIES = categories;
+export default function CategoriesView({
+  categories,
+  workspaceId,
+}: {
+  categories: CategoryItem[];
+  workspaceId: string;
+}) {
+  const { t } = useLocale();
+  const router = useRouter();
+  const [pending, startTransition] = useTransition();
   const [filter, setFilter] = useState<'ALL' | 'EXPENSE' | 'INCOME'>('ALL');
   const [showCreate, setShowCreate] = useState(false);
   const [view, setView] = useState<'grid' | 'list'>('grid');
 
-  const filtered = SYSTEM_CATEGORIES.filter(c => filter === 'ALL' || c.kind === filter);
+  // ── create-category form (previously uncontrolled + a dead button) ────────
+  const [name, setName] = useState('');
+  const [kind, setKind] = useState<'EXPENSE' | 'INCOME'>('EXPENSE');
+  const [icon, setIcon] = useState('🛒');
+  const [colour, setColour] = useState('#10b981');
+  const [formError, setFormError] = useState<string | null>(null);
+
+  function submit() {
+    setFormError(null);
+    startTransition(async () => {
+      const result = await createCategory({ workspaceId, name, kind, icon, color: colour });
+      if (result.ok) {
+        setName('');
+        setShowCreate(false);
+        router.refresh();
+      } else {
+        setFormError(result.message);
+      }
+    });
+  }
+
+  const filtered = categories.filter(c => filter === 'ALL' || c.kind === filter);
   const expense = filtered.filter(c => c.kind === 'EXPENSE');
   const income = filtered.filter(c => c.kind === 'INCOME');
 
@@ -44,7 +76,7 @@ export default function CategoriesView({ categories }: { categories: CategoryIte
     listBadge: { fontSize: '0.6875rem', padding: '0.125rem 0.5rem', borderRadius: '0.25rem', color: '#94a3b8' },
   };
 
-  const renderCategory = (c: typeof SYSTEM_CATEGORIES[0]) => {
+  const renderCategory = (c: CategoryItem) => {
     if (view === 'grid') {
       return (
         <div key={c.id} style={s.card}>
@@ -69,14 +101,14 @@ export default function CategoriesView({ categories }: { categories: CategoryIte
   return (
     <div>
       <div style={s.hdr}>
-        <div><h1 style={s.title}>ক্যাটাগরি</h1><p style={s.sub}>Categories</p></div>
+        <div><h1 style={s.title}>{t('categories.title')}</h1></div>
         <div style={s.btns}>
           <button onClick={() => setView(view === 'grid' ? 'list' : 'grid')} style={s.viewBtn}>
             {view === 'grid' ? <List size={16} /> : <Grid size={16} />}
           </button>
           <button onClick={() => setShowCreate(!showCreate)} style={s.addBtn}>
             {showCreate ? <X size={18} /> : <Plus size={18} />}
-            <span>{showCreate ? 'Close' : 'New Category'}</span>
+            <span>{showCreate ? t('app.close') : t('categories.createCategory')}</span>
           </button>
         </div>
       </div>
@@ -84,27 +116,58 @@ export default function CategoriesView({ categories }: { categories: CategoryIte
       {showCreate && (
         <div style={s.createBox}>
           <div style={s.formGrid}>
-            <div style={s.fg}><label style={s.lbl}>Name</label><input type="text" placeholder="e.g. Groceries" style={s.inp} /></div>
-            <div style={s.fg}><label style={s.lbl}>Type</label><select style={s.inp}><option>EXPENSE</option><option>INCOME</option></select></div>
-            <div style={s.fg}><label style={s.lbl}>Icon (Emoji)</label><input type="text" placeholder="🛒" style={s.inp} /></div>
-            <div style={s.fg}><label style={s.lbl}>Color</label><input type="color" defaultValue="#10b981" style={{ ...s.inp, padding: '0.25rem' }} /></div>
-            <div style={s.fg}><label style={s.lbl}>Parent Category</label><select style={s.inp}><option value="">None (Top Level)</option>{SYSTEM_CATEGORIES.filter(c => !c.isSystem).map(c => <option key={c.id} value={c.id}>{c.name}</option>)}</select></div>
+            <div style={s.fg}>
+              <label style={s.lbl} htmlFor="cat-name">{t('categories.categoryName')}</label>
+              <input id="cat-name" type="text" placeholder={t('categories.namePlaceholder')}
+                     value={name} onChange={e=>setName(e.target.value)} style={s.inp} />
+            </div>
+            <div style={s.fg}>
+              <label style={s.lbl} htmlFor="cat-kind">{t('categories.kind')}</label>
+              <select id="cat-kind" value={kind}
+                      onChange={e=>setKind(e.target.value as 'EXPENSE' | 'INCOME')} style={s.inp}>
+                <option value="EXPENSE">{t('transactions.expense')}</option>
+                <option value="INCOME">{t('transactions.income')}</option>
+              </select>
+            </div>
+            <div style={s.fg}>
+              <label style={s.lbl} htmlFor="cat-icon">{t('categories.icon')}</label>
+              <input id="cat-icon" type="text" maxLength={4} placeholder="🛒"
+                     value={icon} onChange={e=>setIcon(e.target.value)} style={s.inp} />
+            </div>
+            <div style={s.fg}>
+              <label style={s.lbl} htmlFor="cat-color">{t('categories.color')}</label>
+              <input id="cat-color" type="color" value={colour}
+                     onChange={e=>setColour(e.target.value)} style={{ ...s.inp, padding: '0.25rem' }} />
+            </div>
+            {/* "Parent category" was offered but `parent_id` is not sent by this
+                form and sub-category rendering does not exist — an input that
+                changes nothing is worse than an absent one. */}
           </div>
-          <div style={{ display: 'flex', justifyContent: 'flex-end' }}><button style={s.saveBtn}>Create Category</button></div>
+
+          {formError && (
+            <p role="alert" style={{color:'#fca5a5',fontSize:'0.8125rem',marginBottom:'0.75rem'}}>{formError}</p>
+          )}
+
+          <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+            <button onClick={submit} disabled={pending || !name.trim()}
+                    style={{...s.saveBtn, opacity: pending||!name.trim() ? 0.55 : 1}}>
+              {t('categories.createCategory')}
+            </button>
+          </div>
         </div>
       )}
 
       <div style={s.filters}>
         {(['ALL', 'EXPENSE', 'INCOME'] as const).map(f => (
           <button key={f} onClick={() => setFilter(f)} style={{ ...s.chip, ...(filter === f ? s.chipA : {}) }}>
-            {f === 'ALL' ? 'All' : f.charAt(0) + f.slice(1).toLowerCase()}
+            {f === 'ALL' ? t('app.all') : f === 'EXPENSE' ? t('transactions.expense') : t('transactions.income')}
           </button>
         ))}
       </div>
 
       {(filter === 'ALL' || filter === 'EXPENSE') && expense.length > 0 && (
         <div style={s.section}>
-          <div style={s.sectionTitle}>Expense Categories ({expense.length})</div>
+          <div style={s.sectionTitle}>{t('transactions.expense')} ({expense.length})</div>
           {view === 'grid' ? (
             <div style={s.grid}>{expense.map(renderCategory)}</div>
           ) : (
@@ -117,7 +180,7 @@ export default function CategoriesView({ categories }: { categories: CategoryIte
 
       {(filter === 'ALL' || filter === 'INCOME') && income.length > 0 && (
         <div style={s.section}>
-          <div style={s.sectionTitle}>Income Categories ({income.length})</div>
+          <div style={s.sectionTitle}>{t('transactions.income')} ({income.length})</div>
           {view === 'grid' ? (
             <div style={s.grid}>{income.map(renderCategory)}</div>
           ) : (

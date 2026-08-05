@@ -9,6 +9,8 @@
  * optimistically. They arrive server-side or they show a skeleton (loading.tsx).
  */
 import { formatAmount, getCurrency } from '@noorixfin/money';
+import { intlLocale, type SupportedLanguage } from '@noorixfin/i18n';
+import { getLocale } from '../../lib/i18n/locale';
 import {
   getActiveWorkspace,
   getTransactions,
@@ -31,12 +33,19 @@ function changeLabel(current: number, previous: number): { text: string | null; 
   return { text: `${sign}${delta.toFixed(1)}%`, positive: delta >= 0 };
 }
 
-function money(minor: number, currency: string): string {
-  return `${getCurrency(currency).symbol} ${formatAmount(minor, currency, 'en-BD')}`;
+/**
+ * Format an amount in the reader's language.
+ *
+ * Was hardcoded to `'en-BD'`, so a Bangla UI still rendered Latin digits and
+ * Western grouping. `intlLocale` maps bn → `bn-BD`, which yields Bengali digits
+ * and the lakh/crore grouping a Bangladeshi reader expects (৳ ১,২৫,৪৮০.০০).
+ */
+function money(minor: number, currency: string, locale: SupportedLanguage): string {
+  return `${getCurrency(currency).symbol} ${formatAmount(minor, currency, intlLocale[locale])}`;
 }
 
 export default async function DashboardPage() {
-  const workspace = await getActiveWorkspace();
+  const [workspace, locale] = await Promise.all([getActiveWorkspace(), getLocale()]);
 
   if (!workspace) {
     return <DashboardView summaryCards={[]} recentTransactions={[]} upcomingBills={[]} />;
@@ -61,30 +70,30 @@ export default async function DashboardPage() {
 
   const summaryCards: SummaryCard[] = [
     {
-      title: 'মোট ব্যালেন্স', titleEn: 'Total Balance',
-      amount: money(s.net_worth, currency),
+      titleKey: 'dashboard.totalBalance',
+      amount: money(s.net_worth, currency, locale),
       change: null, // net worth is a stock, not a flow — a MoM % is meaningless
       positive: s.net_worth >= 0,
       iconKey: 'wallet',
       gradient: 'linear-gradient(135deg, #059669, #10b981)',
     },
     {
-      title: 'এই মাসের আয়', titleEn: 'This Month Income',
-      amount: money(s.income, currency),
+      titleKey: 'dashboard.thisMonthIncome',
+      amount: money(s.income, currency, locale),
       change: incomeChange.text, positive: incomeChange.positive,
       iconKey: 'up',
       gradient: 'linear-gradient(135deg, #0284c7, #38bdf8)',
     },
     {
-      title: 'এই মাসের খরচ', titleEn: 'This Month Expense',
-      amount: money(s.expense, currency),
+      titleKey: 'dashboard.thisMonthExpense',
+      amount: money(s.expense, currency, locale),
       change: expenseChange.text, positive: !expenseChange.positive,
       iconKey: 'down',
       gradient: 'linear-gradient(135deg, #dc2626, #f87171)',
     },
     {
-      title: 'নিট ক্যাশ ফ্লো', titleEn: 'Net Cash Flow',
-      amount: money(s.net, currency),
+      titleKey: 'dashboard.netCashFlow',
+      amount: money(s.net, currency, locale),
       change: netChange.text, positive: s.net >= 0,
       iconKey: 'flow',
       gradient: 'linear-gradient(135deg, #7c3aed, #a78bfa)',
@@ -102,6 +111,7 @@ export default async function DashboardPage() {
 
   return (
     <DashboardView
+      currencySymbol={getCurrency(currency).symbol}
       summaryCards={summaryCards}
       recentTransactions={recentTransactions}
       // Bills need the calendar/recurring modules (Phase 3), which have no API

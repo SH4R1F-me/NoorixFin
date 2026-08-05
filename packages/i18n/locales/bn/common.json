@@ -18,7 +18,28 @@
     "search": "অনুসন্ধান",
     "noResults": "কোনো ফলাফল পাওয়া যায়নি",
     "required": "আবশ্যক",
-    "optional": "ঐচ্ছিক"
+    "optional": "ঐচ্ছিক",
+    "saving": "সংরক্ষণ হচ্ছে...",
+    "saved": "সংরক্ষিত",
+    "create": "তৈরি করুন",
+    "update": "হালনাগাদ",
+    "none": "কোনোটি নয়",
+    "all": "সব",
+    "filter": "ফিল্টার",
+    "clear": "মুছুন",
+    "notConfigured": "কনফিগার করা হয়নি",
+    "comingSoon": "শীঘ্রই আসছে",
+    "comingSoonBody": "এই অংশটি এখনও তৈরি হয়নি। পরিকল্পনায় আছে — ভুয়া তথ্য দিয়ে ভরার বদলে ইচ্ছাকৃতভাবে খালি রাখা হয়েছে।",
+    "couldNotLoad": "পেজটি লোড করা যায়নি",
+    "couldNotLoadBody": "আমাদের দিকে কিছু ভুল হয়েছে। আপনার তথ্য নিরাপদ আছে।",
+    "tryAgain": "আবার চেষ্টা করুন",
+    "goToDashboard": "ড্যাশবোর্ডে যান",
+    "notFound": "পেজ পাওয়া যায়নি",
+    "notFoundBody": "এই পেজটি নেই। ঠিকানা দেখে নিন অথবা ড্যাশবোর্ডে ফিরে যান।",
+    "offline": "সার্ভারে পৌঁছানো যাচ্ছে না",
+    "offlineBody": "NoorixFin এখন তার API-তে সংযোগ করতে পারছে না। কিছুই হারায়নি — একটু পরে আবার চেষ্টা করুন।",
+    "free": "বিনামূল্যে ও অনুদান-ভিত্তিক",
+    "supportUs": "NoorixFin-কে সহায়তা করুন"
   },
   "nav": {
     "home": "হোম",
@@ -30,7 +51,9 @@
     "goals": "লক্ষ্য ও ঋণ",
     "reports": "রিপোর্ট",
     "settings": "সেটিংস",
-    "more": "আরও"
+    "more": "আরও",
+    "admin": "সিস্টেম অ্যাডমিন",
+    "backToFinances": "আমার হিসাবে ফিরে যান"
   },
   "auth": {
     "signIn": "সাইন ইন",
@@ -48,7 +71,10 @@
     "noAccount": "অ্যাকাউন্ট নেই?",
     "hasAccount": "ইতিমধ্যে অ্যাকাউন্ট আছে?",
     "passwordRequirements": "পাসওয়ার্ড কমপক্ষে ৮ অক্ষরের হতে হবে",
-    "signOutAll": "সব ডিভাইস থেকে সাইন আউট"
+    "signOutAll": "সব ডিভাইস থেকে সাইন আউট",
+    "passwordsDoNotMatch": "পাসওয়ার্ড মিলছে না",
+    "invalidCredentials": "ভুল ইমেইল বা পাসওয়ার্ড",
+    "googleSignIn": "Google দিয়ে লগইন"
   },
   "onboarding": {
     "welcome": "NoorixFin-এ স্বাগতম",
@@ -93,7 +119,16 @@
     "balance": "ব্যালেন্স",
     "includeInBudget": "বাজেটে অন্তর্ভুক্ত",
     "includeInNetWorth": "নেট ওয়ার্থে অন্তর্ভুক্ত",
-    "archived": "আর্কাইভ করা"
+    "archived": "আর্কাইভ করা",
+    "createAccount": "অ্যাকাউন্ট তৈরি করুন",
+    "subtype": "ধরন",
+    "currency": "মুদ্রা",
+    "noAccounts": "এখনও কোনো অ্যাকাউন্ট নেই",
+    "noAccountsBody": "ট্র্যাকিং শুরু করতে নগদ, ব্যাংক বা কার্ড যোগ করুন।",
+    "added": "অ্যাকাউন্ট তৈরি হয়েছে",
+    "namePlaceholder": "যেমন বিকাশ",
+    "asset": "সম্পদ",
+    "liability": "দায়"
   },
   "transactions": {
     "title": "লেনদেন",
@@ -116,7 +151,17 @@
     "posted": "পোস্ট করা",
     "voided": "বাতিল করা",
     "reverse": "লেনদেন বিপরীত",
-    "noTransactions": "এখনো কোনো লেনদেন নেই"
+    "noTransactions": "এখনো কোনো লেনদেন নেই",
+    "saveTransaction": "লেনদেন সংরক্ষণ করুন",
+    "toAccount": "যে অ্যাকাউন্টে",
+    "payeePlaceholder": "কাকে পরিশোধ করেছেন?",
+    "amountPlaceholder": "০.০০",
+    "tagsPlaceholder": "যেমন জরুরি, মাসিক",
+    "noTransactionsBody": "প্রথম লেনদেন যোগ করলে এখানে দেখা যাবে।",
+    "added": "লেনদেন যোগ হয়েছে",
+    "selectAccount": "অ্যাকাউন্ট বাছুন",
+    "selectCategory": "ক্যাটাগরি বাছুন",
+    "needAccount": "আগে একটি অ্যাকাউন্ট তৈরি করুন — লেনদেনের জন্য উৎস প্রয়োজন।"
   },
   "budgets": {
     "title": "বাজেট",
@@ -172,7 +217,16 @@
     "debtSummary": "ঋণ সারাংশ",
     "recentTransactions": "সাম্প্রতিক লেনদেন",
     "hideAmounts": "পরিমাণ লুকান",
-    "showAmounts": "পরিমাণ দেখান"
+    "showAmounts": "পরিমাণ দেখান",
+    "greeting": "আসসালামু আলাইকুম!",
+    "subtitle": "আপনার আর্থিক সারসংক্ষেপ দেখুন",
+    "viewAll": "সব দেখুন",
+    "details": "বিস্তারিত",
+    "totalBalance": "মোট ব্যালেন্স",
+    "thisMonthIncome": "এই মাসের আয়",
+    "thisMonthExpense": "এই মাসের খরচ",
+    "noRecent": "এখনও কোনো লেনদেন নেই",
+    "maintenance": "সিস্টেম রক্ষণাবেক্ষণ চলছে। কিছু ফিচার সাময়িকভাবে অনুপলব্ধ থাকতে পারে।"
   },
   "settings": {
     "title": "সেটিংস",
@@ -188,7 +242,31 @@
     "exportData": "ডাটা রপ্তানি",
     "deleteAccount": "অ্যাকাউন্ট মুছুন",
     "devices": "ডিভাইস ও সেশন",
-    "about": "সম্পর্কে"
+    "about": "সম্পর্কে",
+    "preferences": "পছন্দসমূহ",
+    "appearance": "চেহারা",
+    "signInMethods": "সাইন-ইন পদ্ধতি",
+    "dangerZone": "বিপদজনক এলাকা",
+    "changePassword": "পাসওয়ার্ড পরিবর্তন",
+    "currentPassword": "বর্তমান পাসওয়ার্ড",
+    "newPassword": "নতুন পাসওয়ার্ড",
+    "confirmNewPassword": "নতুন পাসওয়ার্ড নিশ্চিত করুন",
+    "updatePassword": "পাসওয়ার্ড হালনাগাদ",
+    "signOutAll": "সব ডিভাইস থেকে সাইন আউট",
+    "signOutAllBody": "এই ডিভাইসসহ সব ডিভাইসের সেশন শেষ হবে",
+    "connectGoogle": "Google যুক্ত করুন",
+    "disconnect": "সংযোগ বিচ্ছিন্ন",
+    "onlySignInMethod": "একমাত্র সাইন-ইন পদ্ধতি",
+    "hideAmountsDefault": "ডিফল্টভাবে পরিমাণ লুকান",
+    "hideAmountsDefaultBody": "প্রতিবার শুরুতে ব্যালেন্স লুকানো থাকবে",
+    "saveChanges": "পরিবর্তন সংরক্ষণ করুন",
+    "preferencesSaved": "পছন্দ সংরক্ষিত হয়েছে।",
+    "deleteAccountBody": "আপনার অ্যাকাউন্ট সঙ্গে সঙ্গে বন্ধ হবে এবং ৩০ দিন পর সবকিছু স্থায়ীভাবে মুছে যাবে।",
+    "deleteConfirmPrompt": "নিশ্চিত করতে {{email}} লিখুন",
+    "confirmDeletion": "মুছে ফেলা নিশ্চিত করুন",
+    "reasonOptional": "কারণ (ঐচ্ছিক)",
+    "emailChangeUnavailable": "ইমেইল পরিবর্তন এখনও উপলব্ধ নয়।",
+    "displayNamePlaceholder": "আপনার নাম"
   },
   "time": {
     "sunday": "রবিবার",
@@ -216,5 +294,27 @@
     "freelance": "ফ্রিল্যান্স",
     "investment": "বিনিয়োগ",
     "other_income": "অন্যান্য আয়"
+  },
+  "categories": {
+    "title": "ক্যাটাগরি",
+    "createCategory": "ক্যাটাগরি তৈরি করুন",
+    "categoryName": "ক্যাটাগরির নাম",
+    "icon": "আইকন",
+    "color": "রঙ",
+    "kind": "ধরন",
+    "noCategories": "এখনও কোনো ক্যাটাগরি নেই",
+    "added": "ক্যাটাগরি তৈরি হয়েছে",
+    "namePlaceholder": "যেমন বাজার"
+  },
+  "admin": {
+    "title": "সিস্টেম অ্যাডমিন",
+    "operatorMode": "অপারেটর মোড — প্ল্যাটফর্ম প্রশাসন। এটি আপনার নিজের হিসাব নয়।",
+    "overview": "ওভারভিউ",
+    "monitoring": "মনিটরিং",
+    "audit": "অডিট ট্রেইল",
+    "users": "ব্যবহারকারী",
+    "broadcasts": "ব্রডকাস্ট",
+    "globalSettings": "গ্লোবাল সেটিংস",
+    "superAdmin": "সুপার অ্যাডমিন"
   }
 }

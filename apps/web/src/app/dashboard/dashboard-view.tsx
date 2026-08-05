@@ -1,19 +1,36 @@
 'use client';
 
+/**
+ * Dashboard body.
+ *
+ * TWO FABRICATED SECTIONS WERE REMOVED HERE (2026-08-04 audit):
+ *
+ *   - "Budget progress" rendered three hardcoded rows — খাদ্য ৳12,500/৳20,000,
+ *     পরিবহন ৳5,800/৳8,000, বিনোদন ৳4,200/৳5,000 — as if they were the user's
+ *     own budgets.
+ *   - "Savings goal" rendered a hardcoded জরুরি তহবিল at ৳75,000 / ৳2,00,000, 37.5%.
+ *
+ * Neither came from the ledger. On a finance app, invented numbers presented as
+ * the user's money are the most damaging thing the UI can do, and DEC-012
+ * forbids exactly this. Budgets and Goals are not built yet, so these now say
+ * so instead of lying convincingly.
+ *
+ * Every string comes from the shared catalog (DEC-021) — this component used to
+ * hardcode 31 Bangla literals, which is why the language toggle never reached it.
+ */
 import {
   TrendingUp,
   TrendingDown,
   ArrowLeftRight,
   Plus,
   Wallet,
-  Target,
-  Calendar,
   CreditCard,
 } from 'lucide-react';
+import { useLocale } from '../../lib/i18n/locale-provider';
 
 export interface SummaryCard {
-  title: string;
-  titleEn: string;
+  /** Translation key. The server no longer ships pre-rendered label text. */
+  titleKey: string;
   amount: string;
   change: string | null;
   positive: boolean;
@@ -34,24 +51,29 @@ export default function DashboardView({
   summaryCards: rawCards,
   recentTransactions,
   upcomingBills,
+  currencySymbol = '৳',
 }: {
   summaryCards: SummaryCard[];
   recentTransactions: RecentTx[];
   upcomingBills: { name: string; amount: number; due: string; icon: string }[];
+  currencySymbol?: string;
 }) {
+  const { t, locale } = useLocale();
   const summaryCards = rawCards.map((c) => ({ ...c, icon: ICONS[c.iconKey] }));
+  const nf = new Intl.NumberFormat(locale === 'bn' ? 'bn-BD' : 'en-BD');
+
   return (
     <div style={styles.page}>
       {/* Header */}
       <div style={styles.header}>
         <div>
-          <h1 style={styles.greeting}>আসসালামু আলাইকুম! 👋</h1>
-          <p style={styles.subGreeting}>আপনার আর্থিক সারসংক্ষেপ দেখুন</p>
+          <h1 style={styles.greeting}>{t('dashboard.greeting')} 👋</h1>
+          <p style={styles.subGreeting}>{t('dashboard.subtitle')}</p>
         </div>
-        <button style={styles.addBtn}>
+        <a href="/dashboard/transactions?new=1" style={{ ...styles.addBtn, textDecoration: 'none' }}>
           <Plus size={20} />
-          <span>নতুন লেনদেন</span>
-        </button>
+          <span>{t('transactions.addTransaction')}</span>
+        </a>
       </div>
 
       {/* Summary Cards */}
@@ -59,13 +81,7 @@ export default function DashboardView({
         {summaryCards.map((card, i) => {
           const Icon = card.icon;
           return (
-            <div
-              key={i}
-              style={{
-                ...styles.summaryCard,
-                animationDelay: `${i * 80}ms`,
-              }}
-            >
+            <div key={i} style={{ ...styles.summaryCard, animationDelay: `${i * 80}ms` }}>
               <div style={styles.cardHeader}>
                 <div style={{ ...styles.cardIcon, background: card.gradient }}>
                   <Icon size={20} color="white" />
@@ -82,7 +98,7 @@ export default function DashboardView({
                   </span>
                 )}
               </div>
-              <p style={styles.cardTitle}>{card.title}</p>
+              <p style={styles.cardTitle}>{t(card.titleKey)}</p>
               <p style={styles.cardAmount}>{card.amount}</p>
             </div>
           );
@@ -94,112 +110,83 @@ export default function DashboardView({
         {/* Recent Transactions */}
         <div style={styles.section}>
           <div style={styles.sectionHeader}>
-            <h2 style={styles.sectionTitle}>সাম্প্রতিক লেনদেন</h2>
-            <a href="/dashboard/transactions" style={styles.viewAll}>সব দেখুন →</a>
+            <h2 style={styles.sectionTitle}>{t('dashboard.recentTransactions')}</h2>
+            <a href="/dashboard/transactions" style={styles.viewAll}>{t('dashboard.viewAll')} →</a>
           </div>
           <div style={styles.transactionList}>
-            {recentTransactions.map((tx, i) => (
-              <div key={i} style={styles.transactionItem}>
-                <div style={{
-                  ...styles.txIcon,
-                  background: tx.amount > 0 ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)',
-                }}>
-                  {tx.amount > 0 ? (
-                    <TrendingUp size={16} color="#10b981" />
-                  ) : (
-                    <CreditCard size={16} color="#ef4444" />
-                  )}
+            {recentTransactions.length === 0 ? (
+              <p style={styles.emptyHint}>{t('transactions.noTransactionsBody')}</p>
+            ) : (
+              recentTransactions.map((tx, i) => (
+                <div key={i} style={styles.transactionItem}>
+                  <div style={{
+                    ...styles.txIcon,
+                    background: tx.amount > 0 ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)',
+                  }}>
+                    {tx.amount > 0 ? (
+                      <TrendingUp size={16} color="#10b981" />
+                    ) : (
+                      <CreditCard size={16} color="#ef4444" />
+                    )}
+                  </div>
+                  <div style={styles.txInfo}>
+                    <span style={styles.txPayee}>{tx.payee}</span>
+                    <span style={styles.txCategory}>{tx.category} · {tx.date}</span>
+                  </div>
+                  <span style={{
+                    ...styles.txAmount,
+                    color: tx.amount > 0 ? '#10b981' : '#ef4444',
+                  }}>
+                    {tx.amount > 0 ? '+' : ''}{currencySymbol} {nf.format(Math.abs(tx.amount))}
+                  </span>
                 </div>
-                <div style={styles.txInfo}>
-                  <span style={styles.txPayee}>{tx.payee}</span>
-                  <span style={styles.txCategory}>{tx.category} · {tx.date}</span>
-                </div>
-                <span style={{
-                  ...styles.txAmount,
-                  color: tx.amount > 0 ? '#10b981' : '#ef4444',
-                }}>
-                  {tx.amount > 0 ? '+' : ''}৳ {Math.abs(tx.amount).toLocaleString()}
-                </span>
-              </div>
-            ))}
+              ))
+            )}
           </div>
         </div>
 
         {/* Right column */}
         <div style={styles.rightColumn}>
-          {/* Budget Progress */}
+          {/* Budget progress — feature not built; see the header note. */}
           <div style={styles.section}>
             <div style={styles.sectionHeader}>
-              <h2 style={styles.sectionTitle}>বাজেট অগ্রগতি</h2>
-              <a href="/dashboard/budgets" style={styles.viewAll}>বিস্তারিত →</a>
+              <h2 style={styles.sectionTitle}>{t('dashboard.budgetProgress')}</h2>
+              <a href="/dashboard/budgets" style={styles.viewAll}>{t('dashboard.details')} →</a>
             </div>
-            <div style={styles.budgetList}>
-              {[
-                { name: 'খাদ্য', spent: 12500, total: 20000, color: '#10b981' },
-                { name: 'পরিবহন', spent: 5800, total: 8000, color: '#3b82f6' },
-                { name: 'বিনোদন', spent: 4200, total: 5000, color: '#f59e0b' },
-              ].map((budget, i) => (
-                <div key={i} style={styles.budgetItem}>
-                  <div style={styles.budgetHeader}>
-                    <span style={styles.budgetName}>{budget.name}</span>
-                    <span style={styles.budgetNumbers}>
-                      ৳{budget.spent.toLocaleString()} / ৳{budget.total.toLocaleString()}
-                    </span>
-                  </div>
-                  <div style={styles.progressBar}>
-                    <div style={{
-                      ...styles.progressFill,
-                      width: `${(budget.spent / budget.total) * 100}%`,
-                      background: budget.color,
-                    }} />
-                  </div>
-                </div>
-              ))}
-            </div>
+            <p style={styles.emptyHint}>{t('app.comingSoon')}</p>
           </div>
 
-          {/* Upcoming Bills */}
+          {/* Upcoming bills — data-driven, currently always empty (Calendar unbuilt). */}
           <div style={styles.section}>
             <div style={styles.sectionHeader}>
-              <h2 style={styles.sectionTitle}>আসন্ন বিল</h2>
-              <a href="/dashboard/calendar" style={styles.viewAll}>ক্যালেন্ডার →</a>
+              <h2 style={styles.sectionTitle}>{t('dashboard.upcomingBills')}</h2>
+              <a href="/dashboard/calendar" style={styles.viewAll}>{t('nav.calendar')} →</a>
             </div>
             <div style={styles.billList}>
-              {upcomingBills.map((bill, i) => (
-                <div key={i} style={styles.billItem}>
-                  <span style={styles.billIcon}>{bill.icon}</span>
-                  <div style={styles.billInfo}>
-                    <span style={styles.billName}>{bill.name}</span>
-                    <span style={styles.billDue}>{bill.due}</span>
+              {upcomingBills.length === 0 ? (
+                <p style={styles.emptyHint}>{t('app.comingSoon')}</p>
+              ) : (
+                upcomingBills.map((bill, i) => (
+                  <div key={i} style={styles.billItem}>
+                    <span style={styles.billIcon}>{bill.icon}</span>
+                    <div style={styles.billInfo}>
+                      <span style={styles.billName}>{bill.name}</span>
+                      <span style={styles.billDue}>{bill.due}</span>
+                    </div>
+                    <span style={styles.billAmount}>{currencySymbol} {nf.format(bill.amount)}</span>
                   </div>
-                  <span style={styles.billAmount}>৳ {bill.amount.toLocaleString()}</span>
-                </div>
-              ))}
+                ))
+              )}
             </div>
           </div>
 
-          {/* Savings Goal */}
+          {/* Savings goal — feature not built; see the header note. */}
           <div style={styles.section}>
             <div style={styles.sectionHeader}>
-              <h2 style={styles.sectionTitle}>সঞ্চয় লক্ষ্য</h2>
+              <h2 style={styles.sectionTitle}>{t('dashboard.savingsProgress')}</h2>
+              <a href="/dashboard/goals" style={styles.viewAll}>{t('dashboard.details')} →</a>
             </div>
-            <div style={styles.goalCard}>
-              <div style={styles.goalHeader}>
-                <Target size={20} color="#f59e0b" />
-                <span style={styles.goalName}>জরুরি তহবিল</span>
-              </div>
-              <div style={styles.goalProgress}>
-                <span style={styles.goalAmount}>৳ 75,000 / ৳ 2,00,000</span>
-                <span style={styles.goalPercent}>37.5%</span>
-              </div>
-              <div style={styles.progressBar}>
-                <div style={{
-                  ...styles.progressFill,
-                  width: '37.5%',
-                  background: 'linear-gradient(90deg, #f59e0b, #fbbf24)',
-                }} />
-              </div>
-            </div>
+            <p style={styles.emptyHint}>{t('app.comingSoon')}</p>
           </div>
         </div>
       </div>
@@ -208,6 +195,13 @@ export default function DashboardView({
 }
 
 const styles: Record<string, React.CSSProperties> = {
+  emptyHint: {
+    color: '#64748b',
+    fontSize: '0.8125rem',
+    padding: '0.75rem 0',
+    margin: 0,
+    lineHeight: 1.6,
+  },
   page: {
     animation: 'fadeIn 0.4s ease-out',
   },

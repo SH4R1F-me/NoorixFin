@@ -5,7 +5,7 @@
  * Wires together all domain modules, global guards, filters, and middleware.
  */
 import { Module, MiddlewareConsumer, NestModule } from '@nestjs/common';
-import { APP_GUARD, APP_FILTER } from '@nestjs/core';
+import { APP_GUARD, APP_FILTER, APP_INTERCEPTOR } from '@nestjs/core';
 import { ConfigModule } from '@nestjs/config';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 
@@ -13,6 +13,7 @@ import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { SupabaseModule } from './supabase/supabase.module';
 import { AuthModule } from './auth/auth.module';
 import { SyncModule } from './sync/sync.module';
+import { ObservabilityModule } from './observability/observability.module';
 import { SupabaseAuthGuard } from './auth/guards/supabase-auth.guard';
 
 // Domain modules
@@ -22,10 +23,13 @@ import { WorkspacesModule } from './workspaces/workspaces.module';
 import { AccountsModule } from './accounts/accounts.module';
 import { TransactionsModule } from './transactions/transactions.module';
 import { CategoriesModule } from './categories/categories.module';
+import { AdminModule } from './admin/admin.module';
+import { AccountModule } from './account/account.module';
 
-// Middleware & Filters
+// Middleware, Filters & Interceptors
 import { RequestIdMiddleware } from './common/middleware/request-id.middleware';
 import { GlobalHttpExceptionFilter } from './common/filters/http-exception.filter';
+import { RequestTelemetryInterceptor } from './common/interceptors/logging.interceptor';
 
 @Module({
   imports: [
@@ -58,6 +62,7 @@ import { GlobalHttpExceptionFilter } from './common/filters/http-exception.filte
     SupabaseModule,
     AuthModule,
     SyncModule,
+    ObservabilityModule,
 
     // ─── Domain Modules ─────────────────────────────────
     HealthModule,
@@ -66,6 +71,10 @@ import { GlobalHttpExceptionFilter } from './common/filters/http-exception.filte
     AccountsModule,
     TransactionsModule,
     CategoriesModule,
+
+    // ─── Platform / Admin (DEC-016, DEC-017) ────────────
+    AdminModule,
+    AccountModule,
   ],
   providers: [
     // Global auth guard (skip with @Public())
@@ -78,10 +87,15 @@ import { GlobalHttpExceptionFilter } from './common/filters/http-exception.filte
       provide: APP_GUARD,
       useClass: ThrottlerGuard,
     },
-    // Global exception filter
+    // Global exception filter — also feeds system_events (DEC-018)
     {
       provide: APP_FILTER,
       useClass: GlobalHttpExceptionFilter,
+    },
+    // Request telemetry — slow-request detection for the monitoring feed
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: RequestTelemetryInterceptor,
     },
   ],
 })

@@ -41,7 +41,12 @@ export class ProfilesService {
         base_currency: 'BDT',
         week_starts_on: 0,
         amount_privacy_default: false,
-        onboarding_status: 'PENDING',
+        // Was 'PENDING', which is not in profiles_onboarding_status_check —
+        // this insert could only ever have failed with a 23514. It is reachable
+        // when handle_new_user() did not run (a user row created outside the
+        // signup path, e.g. the bootstrap script), which is exactly the case
+        // the admin console surfaces.
+        onboarding_status: 'ACCOUNT_CREATED',
       };
 
       const { data: created, error: createError } = await client

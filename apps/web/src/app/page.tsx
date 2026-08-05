@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState, useRef } from 'react';
+import { useLocale } from '../lib/i18n/locale-provider';
 import './landing.css';
 import {
   Wallet,
@@ -67,7 +68,9 @@ function useCounter(end: number, duration: number, start: boolean) {
    MAIN LANDING PAGE COMPONENT
    ═══════════════════════════════════════════════════════════ */
 export default function Home() {
-  const [locale, setLocale] = useState<'bn' | 'en'>('bn');
+  // Shared locale (DEC-021). This was a private useState, so choosing English
+  // here was silently discarded the moment the visitor reached /auth/login.
+  const { locale, setLocale } = useLocale();
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   const [scrollY, setScrollY] = useState(0);
 

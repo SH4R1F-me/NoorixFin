@@ -18,7 +18,28 @@
     "search": "Search",
     "noResults": "No results found",
     "required": "Required",
-    "optional": "Optional"
+    "optional": "Optional",
+    "saving": "Saving...",
+    "saved": "Saved",
+    "create": "Create",
+    "update": "Update",
+    "none": "None",
+    "all": "All",
+    "filter": "Filter",
+    "clear": "Clear",
+    "notConfigured": "Not configured",
+    "comingSoon": "Coming soon",
+    "comingSoonBody": "This section is not built yet. It is planned and intentionally left empty rather than filled with placeholder data.",
+    "couldNotLoad": "This page could not load",
+    "couldNotLoadBody": "Something went wrong on our side. Your data is safe.",
+    "tryAgain": "Try again",
+    "goToDashboard": "Go to dashboard",
+    "notFound": "Page not found",
+    "notFoundBody": "That page does not exist. Check the address or head back to your dashboard.",
+    "offline": "Cannot reach the server",
+    "offlineBody": "NoorixFin cannot contact its API right now. Nothing has been lost — try again in a moment.",
+    "free": "Free and donation-funded",
+    "supportUs": "Support NoorixFin"
   },
   "nav": {
     "home": "Home",
@@ -30,7 +51,9 @@
     "goals": "Goals & Debts",
     "reports": "Reports",
     "settings": "Settings",
-    "more": "More"
+    "more": "More",
+    "admin": "System Admin",
+    "backToFinances": "Back to my finances"
   },
   "auth": {
     "signIn": "Sign In",
@@ -48,7 +71,10 @@
     "noAccount": "Don't have an account?",
     "hasAccount": "Already have an account?",
     "passwordRequirements": "Password must be at least 8 characters",
-    "signOutAll": "Sign Out All Devices"
+    "signOutAll": "Sign Out All Devices",
+    "passwordsDoNotMatch": "Passwords do not match",
+    "invalidCredentials": "Incorrect email or password",
+    "googleSignIn": "Sign in with Google"
   },
   "onboarding": {
     "welcome": "Welcome to NoorixFin",
@@ -93,7 +119,16 @@
     "balance": "Balance",
     "includeInBudget": "Include in Budget",
     "includeInNetWorth": "Include in Net Worth",
-    "archived": "Archived"
+    "archived": "Archived",
+    "createAccount": "Create Account",
+    "subtype": "Subtype",
+    "currency": "Currency",
+    "noAccounts": "No accounts yet",
+    "noAccountsBody": "Add a cash wallet, bank account or card to start tracking.",
+    "added": "Account created",
+    "namePlaceholder": "e.g. bKash",
+    "asset": "Asset",
+    "liability": "Liability"
   },
   "transactions": {
     "title": "Transactions",
@@ -116,7 +151,17 @@
     "posted": "Posted",
     "voided": "Voided",
     "reverse": "Reverse Transaction",
-    "noTransactions": "No transactions yet"
+    "noTransactions": "No transactions yet",
+    "saveTransaction": "Save Transaction",
+    "toAccount": "To Account",
+    "payeePlaceholder": "Who did you pay?",
+    "amountPlaceholder": "0.00",
+    "tagsPlaceholder": "e.g. urgent, monthly",
+    "noTransactionsBody": "Add your first transaction to see it here.",
+    "added": "Transaction added",
+    "selectAccount": "Select an account",
+    "selectCategory": "Select a category",
+    "needAccount": "Create an account first — a transaction needs somewhere to come from."
   },
   "budgets": {
     "title": "Budgets",
@@ -172,7 +217,16 @@
     "debtSummary": "Debt Summary",
     "recentTransactions": "Recent Transactions",
     "hideAmounts": "Hide Amounts",
-    "showAmounts": "Show Amounts"
+    "showAmounts": "Show Amounts",
+    "greeting": "Assalamu Alaikum!",
+    "subtitle": "Here is your financial summary",
+    "viewAll": "View all",
+    "details": "Details",
+    "totalBalance": "Total Balance",
+    "thisMonthIncome": "This Month Income",
+    "thisMonthExpense": "This Month Expense",
+    "noRecent": "No transactions yet",
+    "maintenance": "Scheduled maintenance in progress. Some features may be temporarily unavailable."
   },
   "settings": {
     "title": "Settings",
@@ -188,7 +242,31 @@
     "exportData": "Export Data",
     "deleteAccount": "Delete Account",
     "devices": "Devices & Sessions",
-    "about": "About"
+    "about": "About",
+    "preferences": "Preferences",
+    "appearance": "Appearance",
+    "signInMethods": "Sign-in methods",
+    "dangerZone": "Danger Zone",
+    "changePassword": "Change Password",
+    "currentPassword": "Current password",
+    "newPassword": "New password",
+    "confirmNewPassword": "Confirm new password",
+    "updatePassword": "Update password",
+    "signOutAll": "Sign out everywhere",
+    "signOutAllBody": "Ends every session on every device, including this one",
+    "connectGoogle": "Connect Google",
+    "disconnect": "Disconnect",
+    "onlySignInMethod": "Only sign-in method",
+    "hideAmountsDefault": "Hide amounts by default",
+    "hideAmountsDefaultBody": "Start each session with balances masked",
+    "saveChanges": "Save changes",
+    "preferencesSaved": "Preferences saved.",
+    "deleteAccountBody": "Your account is locked immediately and everything is permanently erased after 30 days.",
+    "deleteConfirmPrompt": "Type {{email}} to confirm",
+    "confirmDeletion": "Confirm deletion",
+    "reasonOptional": "Reason (optional)",
+    "emailChangeUnavailable": "Changing your email is not available yet.",
+    "displayNamePlaceholder": "Your name"
   },
   "time": {
     "sunday": "Sunday",
@@ -216,5 +294,27 @@
     "freelance": "Freelance",
     "investment": "Investment",
     "other_income": "Other Income"
+  },
+  "categories": {
+    "title": "Categories",
+    "createCategory": "Create Category",
+    "categoryName": "Category Name",
+    "icon": "Icon",
+    "color": "Colour",
+    "kind": "Kind",
+    "noCategories": "No categories yet",
+    "added": "Category created",
+    "namePlaceholder": "e.g. Groceries"
+  },
+  "admin": {
+    "title": "System Admin",
+    "operatorMode": "OPERATOR MODE — platform administration. You are not looking at your own finances.",
+    "overview": "Overview",
+    "monitoring": "Monitoring",
+    "audit": "Audit Trail",
+    "users": "Users",
+    "broadcasts": "Broadcasts",
+    "globalSettings": "Global Settings",
+    "superAdmin": "SUPER ADMIN"
   }
 }

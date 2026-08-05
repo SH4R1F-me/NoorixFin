@@ -18,35 +18,62 @@ import {
   ChevronRight,
   Wallet,
   Menu,
-  X,
   Globe,
   Eye,
   EyeOff,
+  ShieldAlert,
+  Heart,
+  Wrench,
 } from 'lucide-react';
+import BroadcastBanner from '../../components/broadcast-banner';
+import { useLocale } from '../../lib/i18n/locale-provider';
+import type { Broadcast } from '../../lib/session';
 
+/**
+ * Nav entries carry a translation KEY, not a pair of hardcoded strings.
+ *
+ * The old shape (`label` + `labelEn`) is why adding a third language would have
+ * meant editing every component, and why the catalogs sat unused: the strings
+ * lived in the components instead.
+ */
 const NAV_ITEMS = [
-  { id: 'dashboard', label: 'ড্যাশবোর্ড', labelEn: 'Dashboard', icon: LayoutDashboard, href: '/dashboard' },
-  { id: 'transactions', label: 'লেনদেন', labelEn: 'Transactions', icon: ArrowLeftRight, href: '/dashboard/transactions' },
-  { id: 'accounts', label: 'অ্যাকাউন্ট', labelEn: 'Accounts', icon: Landmark, href: '/dashboard/accounts' },
-  { id: 'categories', label: 'ক্যাটাগরি', labelEn: 'Categories', icon: Tags, href: '/dashboard/categories' },
-  { id: 'budgets', label: 'বাজেট', labelEn: 'Budgets', icon: PiggyBank, href: '/dashboard/budgets' },
-  { id: 'calendar', label: 'ক্যালেন্ডার ও বিল', labelEn: 'Calendar & Bills', icon: Calendar, href: '/dashboard/calendar' },
-  { id: 'goals', label: 'লক্ষ্য ও ঋণ', labelEn: 'Goals & Debts', icon: Target, href: '/dashboard/goals' },
-  { id: 'reports', label: 'রিপোর্ট', labelEn: 'Reports', icon: BarChart3, href: '/dashboard/reports' },
-  { id: 'settings', label: 'সেটিংস', labelEn: 'Settings', icon: Settings, href: '/dashboard/settings' },
-];
+  { id: 'dashboard', key: 'nav.dashboard', icon: LayoutDashboard, href: '/dashboard' },
+  { id: 'transactions', key: 'nav.transactions', icon: ArrowLeftRight, href: '/dashboard/transactions' },
+  { id: 'accounts', key: 'nav.accounts', icon: Landmark, href: '/dashboard/accounts' },
+  { id: 'categories', key: 'categories.title', icon: Tags, href: '/dashboard/categories' },
+  { id: 'budgets', key: 'nav.budgets', icon: PiggyBank, href: '/dashboard/budgets' },
+  { id: 'calendar', key: 'nav.calendar', icon: Calendar, href: '/dashboard/calendar' },
+  { id: 'goals', key: 'nav.goals', icon: Target, href: '/dashboard/goals' },
+  { id: 'reports', key: 'nav.reports', icon: BarChart3, href: '/dashboard/reports' },
+  { id: 'settings', key: 'nav.settings', icon: Settings, href: '/dashboard/settings' },
+] as const;
 
 export default function DashboardShell({
   children,
   userEmail,
+  displayName = '',
+  isSuperAdmin = false,
+  broadcasts = [],
+  maintenance = null,
+  donationUrl = '',
+  appVersion = '',
 }: {
   children: React.ReactNode;
   userEmail: string;
+  displayName?: string;
+  /** Resolved server-side from the API. Never from client state (DEC-016). */
+  isSuperAdmin?: boolean;
+  broadcasts?: Broadcast[];
+  maintenance?: { enabled: boolean; message_en: string; message_bn: string } | null;
+  donationUrl?: string;
+  appVersion?: string;
 }) {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [locale, setLocale] = useState<'bn' | 'en'>('bn');
   const [privacyMode, setPrivacyMode] = useState(false);
+  // Shared locale (DEC-021). This used to be a private useState, so switching
+  // here changed the sidebar and nothing else, and did not survive a reload.
+  const { locale, toggleLocale, otherLanguageName, t } = useLocale();
   const pathname = usePathname();
   const router = useRouter();
 
@@ -112,7 +139,7 @@ export default function DashboardShell({
                   ...styles.navItem,
                   ...(isActive ? styles.navItemActive : {}),
                 }}
-                title={collapsed ? (locale === 'bn' ? item.label : item.labelEn) : undefined}
+                title={collapsed ? t(item.key) : undefined}
               >
                 <Icon
                   size={20}
@@ -126,7 +153,7 @@ export default function DashboardShell({
                     ...styles.navLabel,
                     color: isActive ? '#f8fafc' : '#94a3b8',
                   }}>
-                    {locale === 'bn' ? item.label : item.labelEn}
+                    {t(item.key)}
                   </span>
                 )}
                 {isActive && <div style={styles.activeIndicator} />}
@@ -137,41 +164,79 @@ export default function DashboardShell({
 
         {/* Bottom section */}
         <div style={styles.sidebarFooter}>
+          {/*
+            The System Admin switch — the other half of the dual-role design
+            (DEC-016). Rendered only for operators: a normal user's page contains
+            no trace of it, so it cannot be revealed by editing the DOM. Even if
+            it were, /admin returns 404 for them, and the API and database refuse
+            independently.
+
+            Styled amber to match the console it leads to, so crossing between
+            personal finances and platform administration is a visibly
+            deliberate act rather than another sidebar link.
+          */}
+          {isSuperAdmin && (
+            <a
+              href="/admin"
+              onClick={(e) => {
+                e.preventDefault();
+                router.push('/admin');
+              }}
+              style={styles.adminSwitch}
+              title="Switch to the System Admin control panel"
+            >
+              <ShieldAlert size={18} style={{ flexShrink: 0 }} />
+              {!collapsed && (
+                <span style={styles.adminSwitchLabel}>{t('nav.admin')}</span>
+              )}
+            </a>
+          )}
+
+          {donationUrl && !collapsed && (
+            <a
+              href={donationUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ ...styles.footerBtn, color: '#f472b6', textDecoration: 'none' }}
+            >
+              <Heart size={18} />
+              <span style={styles.footerBtnLabel}>{t('app.supportUs')}</span>
+            </a>
+          )}
+
           {/* Privacy toggle */}
           <button
             onClick={() => setPrivacyMode(!privacyMode)}
             style={styles.footerBtn}
-            title={privacyMode ? 'Show amounts' : 'Hide amounts'}
+            title={t(privacyMode ? 'dashboard.showAmounts' : 'dashboard.hideAmounts')}
           >
             {privacyMode ? <EyeOff size={18} /> : <Eye size={18} />}
             {!collapsed && (
               <span style={styles.footerBtnLabel}>
-                {locale === 'bn' ? (privacyMode ? 'পরিমাণ দেখান' : 'পরিমাণ লুকান') : (privacyMode ? 'Show' : 'Hide')}
+                {t(privacyMode ? 'dashboard.showAmounts' : 'dashboard.hideAmounts')}
               </span>
             )}
           </button>
 
           {/* Language */}
           <button
-            onClick={() => setLocale(locale === 'bn' ? 'en' : 'bn')}
+            onClick={toggleLocale}
             style={styles.footerBtn}
           >
             <Globe size={18} />
             {!collapsed && (
-              <span style={styles.footerBtnLabel}>
-                {locale === 'bn' ? 'English' : 'বাংলা'}
-              </span>
+              <span style={styles.footerBtnLabel}>{otherLanguageName}</span>
             )}
           </button>
 
           {/* User & Logout */}
           <div style={styles.userSection}>
             <div style={styles.avatar}>
-              {userEmail?.charAt(0).toUpperCase() || 'U'}
+              {(displayName || userEmail)?.charAt(0).toUpperCase() || 'U'}
             </div>
             {!collapsed && (
               <div style={styles.userInfo}>
-                <span style={styles.userName}>{userEmail?.split('@')[0]}</span>
+                <span style={styles.userName}>{displayName || userEmail?.split('@')[0]}</span>
                 <span style={styles.userEmail}>{userEmail}</span>
               </div>
             )}
@@ -209,7 +274,27 @@ export default function DashboardShell({
 
         {/* Page content */}
         <div style={styles.pageContent}>
+          {/* Operator-set maintenance notice. Above broadcasts because it is
+              about the service being degraded right now. */}
+          {maintenance?.enabled && (
+            <div style={styles.maintenanceBanner} role="status">
+              <Wrench size={17} style={{ flexShrink: 0 }} />
+              <span>
+                {(locale === 'bn' ? maintenance.message_bn : maintenance.message_en) ||
+                  t('dashboard.maintenance')}
+              </span>
+            </div>
+          )}
+
+          <BroadcastBanner broadcasts={broadcasts} />
+
           {children}
+
+          {appVersion && (
+            <div style={styles.versionFooter}>
+              NoorixFin v{appVersion} · {t('app.free')}
+            </div>
+          )}
         </div>
       </main>
     </div>
@@ -350,6 +435,44 @@ const styles: Record<string, React.CSSProperties> = {
   },
   footerBtnLabel: {
     whiteSpace: 'nowrap',
+  },
+  adminSwitch: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.75rem',
+    padding: '0.625rem 0.75rem',
+    background: 'rgba(245, 158, 11, 0.1)',
+    border: '1px solid rgba(245, 158, 11, 0.28)',
+    borderRadius: '0.625rem',
+    color: '#fbbf24',
+    cursor: 'pointer',
+    fontSize: '0.8125rem',
+    fontWeight: 600,
+    textDecoration: 'none',
+    minHeight: 40,
+    marginBottom: '0.35rem',
+  },
+  adminSwitchLabel: {
+    whiteSpace: 'nowrap',
+  },
+  maintenanceBanner: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.7rem',
+    padding: '0.85rem 1rem',
+    background: 'rgba(245,158,11,0.1)',
+    border: '1px solid rgba(245,158,11,0.32)',
+    borderRadius: '0.75rem',
+    color: '#fbbf24',
+    fontSize: '0.875rem',
+    marginBottom: '1rem',
+  },
+  versionFooter: {
+    marginTop: '3rem',
+    paddingTop: '1rem',
+    borderTop: '1px solid #1e293b',
+    color: '#475569',
+    fontSize: '0.75rem',
   },
   userSection: {
     display: 'flex',

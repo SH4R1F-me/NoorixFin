@@ -1,18 +1,17 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useTransition } from 'react';
+import { useRouter } from 'next/navigation';
 import {
   Plus, Search, ArrowDownLeft, ArrowUpRight, ArrowLeftRight,
-  X, TrendingUp, TrendingDown, Repeat,
+  X, TrendingUp, TrendingDown, Repeat, Loader2,
 } from 'lucide-react';
 import { formatAmount, getCurrency } from '@noorixfin/money';
+import { intlLocale } from '@noorixfin/i18n';
+import { useLocale } from '../../../lib/i18n/locale-provider';
+import { createTransaction } from '../ledger-actions';
 
-// See accounts/page.tsx — symbol + formatAmount keeps the ৳ glyph while applying
-// the currency's real exponent instead of a hardcoded /100.
-function fmt(minor: number, currency = 'BDT') {
-  return getCurrency(currency).symbol + formatAmount(minor, currency, 'en-BD');
-}
-function fmtDate(d: string) { const dt = new Date(d); return `${dt.getDate()} ${['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][dt.getMonth()]}`; }
+export interface Option { id: string; label: string; kind?: string }
 
 export interface TxItem {
   id: string;
@@ -29,27 +28,80 @@ export interface TxItem {
 export default function TransactionsView({
   transactions,
   categories,
+  accounts,
+  workspaceId,
+  currency,
 }: {
   transactions: TxItem[];
-  categories: string[];
+  categories: Option[];
+  accounts: Option[];
+  workspaceId: string;
+  currency: string;
 }) {
-  const MOCK_TXS = transactions;
-  const CATEGORIES = categories;
+  const { t: tr, locale } = useLocale();
+  const router = useRouter();
+  const [pending, startTransition] = useTransition();
+
+  const fmt = (minor: number) =>
+    getCurrency(currency).symbol + formatAmount(minor, currency, intlLocale[locale]);
+  const fmtDate = (d: string) =>
+    new Date(d).toLocaleDateString(intlLocale[locale], { day: 'numeric', month: 'short' });
+
   const [search, setSearch] = useState('');
   const [showAdd, setShowAdd] = useState(false);
   const [filterType, setFilterType] = useState('ALL');
-  const [selCat, setSelCat] = useState('All');
+  const [selCat, setSelCat] = useState('');
   const [addType, setAddType] = useState<'EXPENSE'|'INCOME'|'TRANSFER'>('EXPENSE');
 
-  const filtered = MOCK_TXS.filter(t => {
-    if (filterType !== 'ALL' && t.type !== filterType) return false;
-    if (selCat !== 'All' && t.cat !== selCat) return false;
-    if (search && !t.payee.toLowerCase().includes(search.toLowerCase())) return false;
+  // ── add-transaction form state ────────────────────────────────────────────
+  // These inputs were UNCONTROLLED and the save button had no handler, so the
+  // form could never have submitted anything.
+  const [amount, setAmount] = useState('');
+  const [accountId, setAccountId] = useState('');
+  const [categoryId, setCategoryId] = useState('');
+  const [toAccountId, setToAccountId] = useState('');
+  const [payee, setPayee] = useState('');
+  const [occurredAt, setOccurredAt] = useState(new Date().toISOString().split('T')[0]);
+  const [formError, setFormError] = useState<string | null>(null);
+
+  const selectableCategories = categories.filter(
+    (c) => !c.kind || c.kind === (addType === 'INCOME' ? 'INCOME' : 'EXPENSE'),
+  );
+
+  function submit() {
+    setFormError(null);
+    startTransition(async () => {
+      const result = await createTransaction({
+        workspaceId,
+        type: addType,
+        amount,
+        currency,
+        accountId,
+        categoryId: addType === 'TRANSFER' ? undefined : categoryId,
+        transferToAccountId: addType === 'TRANSFER' ? toAccountId : undefined,
+        payee,
+        occurredAt,
+      });
+      if (result.ok) {
+        setAmount(''); setPayee(''); setCategoryId(''); setToAccountId('');
+        setShowAdd(false);
+        // The list is server-rendered; refresh so the new entry appears.
+        router.refresh();
+      } else {
+        setFormError(result.message);
+      }
+    });
+  }
+
+  const filtered = transactions.filter(row => {
+    if (filterType !== 'ALL' && row.type !== filterType) return false;
+    if (selCat && row.cat !== selCat) return false;
+    if (search && !row.payee.toLowerCase().includes(search.toLowerCase())) return false;
     return true;
   });
 
-  const totIn = MOCK_TXS.filter(t => t.type === 'INCOME').reduce((s, t) => s + t.amount, 0);
-  const totEx = MOCK_TXS.filter(t => t.type === 'EXPENSE').reduce((s, t) => s + t.amount, 0);
+  const totIn = transactions.filter(row => row.type === 'INCOME').reduce((sum, row) => sum + row.amount, 0);
+  const totEx = transactions.filter(row => row.type === 'EXPENSE').reduce((sum, row) => sum + row.amount, 0);
 
   const s: Record<string, React.CSSProperties> = {
     hdr: { display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:'1.5rem', flexWrap:'wrap', gap:'1rem' },
@@ -89,54 +141,108 @@ export default function TransactionsView({
   return (
     <div>
       <div style={s.hdr}>
-        <div><h1 style={s.title}>লেনদেন</h1><p style={s.sub}>Transactions</p></div>
+        <div><h1 style={s.title}>{tr('transactions.title')}</h1></div>
         <button onClick={() => setShowAdd(!showAdd)} style={s.addBtn}>
           {showAdd ? <X size={18}/> : <Plus size={18}/>}
-          <span>{showAdd ? 'Close' : 'Add Transaction'}</span>
+          <span>{showAdd ? tr('app.close') : tr('transactions.addTransaction')}</span>
         </button>
       </div>
 
       {showAdd && (
         <div style={s.qaBox}>
           <div style={s.typeSel}>
-            {([['EXPENSE','Expense','#ef4444'],['INCOME','Income','#10b981'],['TRANSFER','Transfer','#3b82f6']] as const).map(([t,l,c]) => (
-              <button key={t} onClick={() => setAddType(t as any)} style={{...s.typeBtn, ...(addType===t ? {background:c+'18',borderColor:c,color:c} : {})}}>
-                {t==='EXPENSE'?<ArrowUpRight size={16}/>:t==='INCOME'?<ArrowDownLeft size={16}/>:<ArrowLeftRight size={16}/>} {l}
+            {([['EXPENSE','transactions.expense','#ef4444'],['INCOME','transactions.income','#10b981'],['TRANSFER','transactions.transfer','#3b82f6']] as const).map(([kind,labelKey,colour]) => (
+              <button key={kind} onClick={() => { setAddType(kind); setCategoryId(''); }} style={{...s.typeBtn, ...(addType===kind ? {background:colour+'18',borderColor:colour,color:colour} : {})}}>
+                {kind==='EXPENSE'?<ArrowUpRight size={16}/>:kind==='INCOME'?<ArrowDownLeft size={16}/>:<ArrowLeftRight size={16}/>} {tr(labelKey)}
               </button>
             ))}
           </div>
           <div style={s.grid}>
-            <div style={s.fg}><label style={s.lbl}>Amount (৳)</label><input type="number" placeholder="0.00" style={s.inp}/></div>
-            <div style={s.fg}><label style={s.lbl}>Account</label><select style={s.inp}><option>bKash</option><option>DBBL Bank</option><option>Cash</option><option>Nagad</option></select></div>
+            <div style={s.fg}>
+              <label style={s.lbl} htmlFor="tx-amount">{tr('transactions.amount')} ({getCurrency(currency).symbol})</label>
+              <input id="tx-amount" type="number" inputMode="decimal" min="0" step="0.01"
+                     placeholder="0.00" value={amount}
+                     onChange={e=>setAmount(e.target.value)} style={s.inp}/>
+            </div>
+
+            <div style={s.fg}>
+              <label style={s.lbl} htmlFor="tx-account">{tr('transactions.account')}</label>
+              {/* Real accounts, from the ledger. This was a hardcoded
+                  bKash/DBBL/Cash/Nagad list that referenced nothing. */}
+              <select id="tx-account" value={accountId} onChange={e=>setAccountId(e.target.value)} style={s.inp}>
+                <option value="">{tr('transactions.selectAccount')}</option>
+                {accounts.map(a=><option key={a.id} value={a.id}>{a.label}</option>)}
+              </select>
+            </div>
+
             {addType!=='TRANSFER' ? (
-              <div style={s.fg}><label style={s.lbl}>Category</label><select style={s.inp}>{CATEGORIES.filter(c=>c!=='All').map(c=><option key={c}>{c}</option>)}</select></div>
+              <div style={s.fg}>
+                <label style={s.lbl} htmlFor="tx-category">{tr('transactions.category')}</label>
+                <select id="tx-category" value={categoryId} onChange={e=>setCategoryId(e.target.value)} style={s.inp}>
+                  <option value="">{tr('transactions.selectCategory')}</option>
+                  {selectableCategories.map(c=><option key={c.id} value={c.id}>{c.label}</option>)}
+                </select>
+              </div>
             ) : (
-              <div style={s.fg}><label style={s.lbl}>To Account</label><select style={s.inp}><option>Cash</option><option>DBBL Bank</option></select></div>
+              <div style={s.fg}>
+                <label style={s.lbl} htmlFor="tx-to">{tr('transactions.toAccount')}</label>
+                <select id="tx-to" value={toAccountId} onChange={e=>setToAccountId(e.target.value)} style={s.inp}>
+                  <option value="">{tr('transactions.selectAccount')}</option>
+                  {accounts.filter(a=>a.id!==accountId).map(a=><option key={a.id} value={a.id}>{a.label}</option>)}
+                </select>
+              </div>
             )}
-            <div style={s.fg}><label style={s.lbl}>Payee / Note</label><input type="text" placeholder="Who did you pay?" style={s.inp}/></div>
-            <div style={s.fg}><label style={s.lbl}>Date</label><input type="date" defaultValue={new Date().toISOString().split('T')[0]} style={s.inp}/></div>
-            <div style={s.fg}><label style={s.lbl}>Tags</label><input type="text" placeholder="e.g. urgent, monthly" style={s.inp}/></div>
+
+            <div style={s.fg}>
+              <label style={s.lbl} htmlFor="tx-payee">{tr('transactions.payee')}</label>
+              <input id="tx-payee" type="text" placeholder={tr('transactions.payeePlaceholder')}
+                     value={payee} onChange={e=>setPayee(e.target.value)} style={s.inp}/>
+            </div>
+
+            <div style={s.fg}>
+              <label style={s.lbl} htmlFor="tx-date">{tr('transactions.date')}</label>
+              <input id="tx-date" type="date" value={occurredAt}
+                     onChange={e=>setOccurredAt(e.target.value)} style={s.inp}/>
+            </div>
           </div>
-          <div style={{display:'flex',justifyContent:'flex-end'}}><button style={s.saveBtn}>Save Transaction</button></div>
+
+          {accounts.length===0 && (
+            <p style={{color:'#fbbf24',fontSize:'0.8125rem',marginBottom:'0.75rem'}}>
+              {tr('transactions.needAccount')}
+            </p>
+          )}
+          {formError && (
+            <p role="alert" style={{color:'#fca5a5',fontSize:'0.8125rem',marginBottom:'0.75rem'}}>{formError}</p>
+          )}
+
+          <div style={{display:'flex',justifyContent:'flex-end'}}>
+            <button onClick={submit} disabled={pending || accounts.length===0}
+                    style={{...s.saveBtn, opacity: pending||accounts.length===0 ? 0.55 : 1}}>
+              {pending ? <Loader2 size={16}/> : null} {tr('transactions.saveTransaction')}
+            </button>
+          </div>
         </div>
       )}
 
       <div style={s.strip}>
-        <div style={s.si}><TrendingUp size={16} style={{color:'#10b981'}}/><span style={{color:'#94a3b8',fontSize:'0.8125rem'}}>Income</span><span style={{color:'#10b981',fontWeight:600,fontSize:'0.9375rem'}}>{fmt(totIn)}</span></div>
+        <div style={s.si}><TrendingUp size={16} style={{color:'#10b981'}}/><span style={{color:'#94a3b8',fontSize:'0.8125rem'}}>{tr('transactions.income')}</span><span style={{color:'#10b981',fontWeight:600,fontSize:'0.9375rem'}}>{fmt(totIn)}</span></div>
         <div style={s.sd}/>
-        <div style={s.si}><TrendingDown size={16} style={{color:'#ef4444'}}/><span style={{color:'#94a3b8',fontSize:'0.8125rem'}}>Expense</span><span style={{color:'#ef4444',fontWeight:600,fontSize:'0.9375rem'}}>{fmt(totEx)}</span></div>
+        <div style={s.si}><TrendingDown size={16} style={{color:'#ef4444'}}/><span style={{color:'#94a3b8',fontSize:'0.8125rem'}}>{tr('transactions.expense')}</span><span style={{color:'#ef4444',fontWeight:600,fontSize:'0.9375rem'}}>{fmt(totEx)}</span></div>
         <div style={s.sd}/>
-        <div style={s.si}><Repeat size={16} style={{color:'#3b82f6'}}/><span style={{color:'#94a3b8',fontSize:'0.8125rem'}}>Net</span><span style={{color:totIn-totEx>=0?'#10b981':'#ef4444',fontWeight:600,fontSize:'0.9375rem'}}>{fmt(totIn-totEx)}</span></div>
+        <div style={s.si}><Repeat size={16} style={{color:'#3b82f6'}}/><span style={{color:'#94a3b8',fontSize:'0.8125rem'}}>{tr('dashboard.netCashFlow')}</span><span style={{color:totIn-totEx>=0?'#10b981':'#ef4444',fontWeight:600,fontSize:'0.9375rem'}}>{fmt(totIn-totEx)}</span></div>
       </div>
 
       <div style={s.filters}>
-        <div style={s.srchC}><Search size={16} style={{color:'#64748b',flexShrink:0}}/><input type="text" placeholder="Search transactions..." value={search} onChange={e=>setSearch(e.target.value)} style={s.srchI}/></div>
+        <div style={s.srchC}><Search size={16} style={{color:'#64748b',flexShrink:0}}/><input type="text" placeholder={tr('app.search')} value={search} onChange={e=>setSearch(e.target.value)} style={s.srchI}/></div>
         <div style={s.fgr}>
-          {['ALL','EXPENSE','INCOME','TRANSFER'].map(t=>(
-            <button key={t} onClick={()=>setFilterType(t)} style={{...s.chip,...(filterType===t?s.chipA:{})}}>{t==='ALL'?'All':t.charAt(0)+t.slice(1).toLowerCase()}</button>
+          {([['ALL','app.all'],['EXPENSE','transactions.expense'],['INCOME','transactions.income'],['TRANSFER','transactions.transfer']] as const).map(([value,labelKey])=>(
+            <button key={value} onClick={()=>setFilterType(value)} style={{...s.chip,...(filterType===value?s.chipA:{})}}>{tr(labelKey)}</button>
           ))}
         </div>
-        <select value={selCat} onChange={e=>setSelCat(e.target.value)} style={s.selF}>{CATEGORIES.map(c=><option key={c}>{c}</option>)}</select>
+        <select value={selCat} onChange={e=>setSelCat(e.target.value)} style={s.selF} aria-label={tr('transactions.category')}>
+          <option value="">{tr('app.all')}</option>
+          {categories.map(c=><option key={c.id} value={c.label}>{c.label}</option>)}
+        </select>
       </div>
 
       <div style={s.list}>
@@ -155,7 +261,7 @@ export default function TransactionsView({
             </div>
           );
         })}
-        {filtered.length===0&&<div style={s.empty}><Search size={40} style={{color:'#334155',marginBottom:12}}/><p style={{color:'#64748b'}}>No transactions found</p></div>}
+        {filtered.length===0&&<div style={s.empty}><Search size={40} style={{color:'#334155',marginBottom:12}}/><p style={{color:'#64748b'}}>{transactions.length===0?tr('transactions.noTransactions'):tr('app.filter')}</p></div>}
       </div>
     </div>
   );

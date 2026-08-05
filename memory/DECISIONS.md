@@ -408,3 +408,163 @@ cross-workspace writes were stopped by RLS alone. Now `PATCH /workspaces/:worksp
 with the guard, per DEC-005 (NestJS primary, RLS defence-in-depth).
 
 **Status:** Confirmed — supersedes the `workspace_id nullable` reading of Blueprint §9.3
+
+---
+
+## DEC-016: Enterprise Admin Console — Metadata Only, with One Audited Aperture
+
+**Decision:** Reverse the deferral of the admin console (DEC-013 shipped only the SQL bootstrap) and
+build it, under a hard constraint: **SUPER_ADMIN remains a platform/metadata role with no access to any
+user's financial rows.**
+
+`SUPER_ADMIN` is a *dual role*, not a separate account type. The same person uses `/dashboard` for their
+own finances exactly like any other user, and switches to `/admin` for platform operations. The two
+modes are deliberately unmistakable — emerald user shell vs amber operator shell with a persistent
+"OPERATOR MODE" band — because the entire risk of a dual-role account is acting in one mode while
+believing you are in the other.
+
+**The aperture, and why it is not a bypass:**
+The console needs to answer "how many accounts does this user have?", which requires touching ledger
+tables RLS forbids the operator to read. Three options existed:
+
+| Option | Verdict |
+|---|---|
+| Super-admin RLS policy on the ledger | **Rejected** — hands over every amount, payee and note |
+| No numbers at all | Rejected — makes User Management useless for support |
+| A fixed, auditable `SECURITY DEFINER` projection | **Chosen** |
+
+`admin_platform_stats()` and `admin_user_overview()` are `SECURITY DEFINER`, gated internally on
+`is_super_admin()`, and **return only `bigint` counts, timestamps, and profile fields the user chose
+themselves**. The return type IS the security boundary: no parameter combination can make either emit a
+monetary value. Acceptance test `ADMIN-05c` asserts the signature contains no money-shaped column;
+`ADMIN-06` asserts no ledger table has gained a super-admin policy.
+
+**Verified live (2026-08-04):** an operator hitting another user's `/transactions`, `/accounts`,
+`/summary`, `/categories` gets 403; direct RLS reads of `journal_postings`, `journal_entries`,
+`ledger_accounts` return 0 rows; and no admin API response contains a seeded payee, note or amount.
+
+**Three independent gates**, none load-bearing alone: `SuperAdminGuard` (API) · RLS + in-function checks
+(database) · `notFound()` in `app/admin/layout.tsx` (web — a 404, not a redirect, so the console's
+existence is not disclosed).
+
+**Not editable from the console:** `is_super_admin`. Promotion stays a service-role SQL operation
+(DEC-013) so granting platform access always leaves a psql-shaped footprint.
+
+**Status:** Confirmed — implemented and verified 2026-08-04. Supersedes the deferral noted in DEC-013.
+
+---
+
+## DEC-017: Account Deletion — 30-Day Grace, Not Immediate Erasure
+
+**Decision:** "Delete my account" schedules deletion; it does not perform one. The account is banned via
+Supabase Auth `banned_until`, marked `PENDING_DELETION`, and given a `deletion_scheduled_for` 30 days
+out. **No row is removed during the grace period.** `purge_expired_deletions()` then deletes in foreign-key
+dependency order and returns the purged ids so the caller can remove the auth user.
+
+**Rationale:** a finance app that irreversibly destroys years of records on one click is not one people
+should trust with years of records. The grace period makes the action recoverable by an operator
+(`POST /v1/admin/users/:id/reinstate`, which also cancels the schedule).
+
+**Enforcement is the auth server, not a column.** `banned_until` means GoTrue refuses to issue or
+refresh tokens, so no per-request database check is needed on the hot path (DEC-011). *Honest
+limitation:* an access token already issued stays valid until it expires (`jwt_expiry`, 1h by default)
+because the API verifies JWTs locally. Refresh is blocked immediately, so continued access is capped at
+one token lifetime.
+
+**Deliberately NOT done — do not "fix" this:** `workspaces.created_by`, `ledger_accounts.created_by`,
+`journal_entries.created_by` and `idempotency_records.actor_user_id` were left as `RESTRICT`, not
+changed to `CASCADE`. Cascading would let a single `auth.admin.deleteUser()` — or a mis-click in the
+Supabase dashboard — silently erase an entire ledger. Leaving them RESTRICT means such a call fails
+loudly, and the only path that destroys a ledger is the purge function, after 30 days. Only
+`audit_events.actor_id`/`workspace_id` became `ON DELETE SET NULL`, so the audit trail outlives the
+account it documents.
+
+**No scheduler exists in this stack yet.** The purge is exposed as an explicit operator action
+("Run purge") and the function is ready to attach to pg_cron or an Edge scheduled function.
+
+**Status:** Confirmed — implemented 2026-08-04. Owner decision recorded in session 18.
+
+---
+
+## DEC-018: Observability — API-Written `system_events`, Bounded by Design
+
+**Decision:** Add `system_events` as an operational log written by the NestJS API with the service role,
+kept separate from `audit_events`.
+
+| | `audit_events` | `system_events` |
+|---|---|---|
+| Answers | WHO did WHAT to WHICH resource | HOW the system behaved |
+| Nature | Security/business record | Operational telemetry |
+| Retention | Indefinite; survives account deletion | Pruned on a retention window |
+
+Conflating them would force a choice between dropping audit history on a retention sweep and paying to
+keep every 500 forever.
+
+**Free Tier is the constraint (DEC-011).** Writes are buffered in a bounded ring (500 rows) and flushed
+every 2s, so an error storm costs one batched INSERT per interval rather than one per event. A full
+buffer drops the **oldest** and emits a `TELEMETRY_BUFFER_OVERFLOW` record — silent truncation would read
+as "nothing else happened". `record()` is synchronous, returns void, and swallows everything: telemetry
+that can 500 the endpoint it observes is worse than no telemetry.
+
+**Never recorded:** request bodies and query strings. On this API they carry amounts, payees and notes,
+which an operator has no right to (DEC-002 #12). Route templates only. Ordinary 400/404/409 are not
+recorded either — they are the bulk of all failures and would bury the signal; 5xx is ERROR, and
+401/403/429 are WARN because that shape is what credential-stuffing looks like.
+
+**The live feed is SSE from NestJS, not Supabase Realtime** — Free Tier caps concurrent Realtime
+connections, and this feed has at most a handful of operator viewers. One indexed query every 3s is the
+cheaper trade. The browser holds no token (DEC-009), so `EventSource` talks to a Next route handler that
+attaches the server-held token and pipes the upstream stream.
+
+**Status:** Confirmed — implemented and verified 2026-08-04.
+
+---
+
+## DEC-019: Privilege Escalation Closed via Column-Level Grants
+
+**Found while building DEC-016.** Migration 00008 granted `UPDATE ON public.profiles TO authenticated`
+(every column) and 00001's policy allowed a user to update their own row with no column restriction.
+Composed, **any authenticated user could run `UPDATE profiles SET is_super_admin = true WHERE id =
+auth.uid()` and promote themselves to platform operator.** RLS restricts *rows*, never *columns*; the row
+being their own was the only check, and it passed.
+
+Nothing in the app did this, so it was latent — and it stops being latent the moment `is_super_admin`
+gates an admin console.
+
+**Fix (00012):** revoke the blanket UPDATE and re-grant only the columns a user legitimately edits about
+themselves. `is_super_admin`, `status`, `suspended_*` and `deletion_*` are writable exclusively by the
+service role, i.e. only through an endpoint that has already passed `SuperAdminGuard`. The INSERT policy
+was also tightened to require `is_super_admin = FALSE`.
+
+**Verified:** acceptance tests assert the escalation UPDATE is denied, that a suspended user cannot clear
+their own status, and — as a positive control — that an ordinary display-name/locale update still works.
+
+**Status:** Confirmed — closed 2026-08-04.
+
+---
+
+## DEC-020: `service_role` Table Privileges (the 00008 bug, one role across)
+
+**Found on the first run of the admin API.** Every service-role write failed with
+`42501: permission denied for table system_events`. `service_role` had **no INSERT/SELECT/UPDATE/DELETE
+on a single table in this schema** — 00008 discovered and fixed exactly this class of bug for
+`authenticated`, and fixed only `authenticated`.
+
+Nothing noticed until now because until the admin console there was no service-role write path in the
+product: `getServiceClient()` existed and was documented, but every handler used `getUserClient()`.
+
+**Fix (00014):** explicit per-table grants for the six tables the API actually writes with that role.
+
+**Deliberately no `ALTER DEFAULT PRIVILEGES` for `service_role`** — unlike the equivalent line 00008 added
+for `authenticated`. `service_role` has `BYPASSRLS`: for `authenticated` a too-broad grant is still fenced
+by row policies, but for `service_role` **the grant is the entire boundary**. A blanket default would
+silently hand the API's admin identity full read access to every future ledger table. Every service-role
+grant is therefore explicit and reviewable.
+
+**Second defect fixed alongside:** `AdminService.translate()` mapped *any* `42501` to
+`403 NOT_SUPER_ADMIN`. But 42501 arrives from two unrelated causes — our RPC's super-admin gate, and a
+missing grant. Collapsing them told an operator who *was* a super admin that they were not one, which is
+how a misconfigured deployment spends an afternoon looking like a permissions puzzle. They are now
+distinguished by message, and a missing grant reports 503 with a pointer to migration 00014.
+
+**Status:** Confirmed — closed 2026-08-04.

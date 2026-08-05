@@ -22,6 +22,19 @@ export async function GET(request: NextRequest) {
   const code = searchParams.get('code');
   const next = safeNext(searchParams.get('next'));
 
+  // OAuth providers report failure by redirecting back with `error`, not by
+  // omitting the code. Without this branch a user who cancels at Google's
+  // consent screen lands on "missing_code", which describes our symptom rather
+  // than what they did.
+  const oauthError = searchParams.get('error');
+  if (oauthError) {
+    const reason =
+      oauthError === 'access_denied' ? 'oauth_cancelled' : 'oauth_failed';
+    // The provider's description is attacker-influenceable and goes into a URL
+    // we render — pass a fixed code, not the raw text.
+    return NextResponse.redirect(`${origin}/auth/login?error=${reason}`);
+  }
+
   if (!code) {
     return NextResponse.redirect(`${origin}/auth/login?error=missing_code`);
   }

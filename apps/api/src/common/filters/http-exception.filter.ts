@@ -12,6 +12,9 @@ import {
   Logger,
 } from '@nestjs/common';
 import { Request, Response } from 'express';
+import { SystemEventsService } from '../../observability/system-events.service';
+import { AuthenticatedUser } from '../decorators/current-user.decorator';
+import { scrubPath } from '../interceptors/logging.interceptor';
 
 interface ErrorResponse {
   statusCode: number;
@@ -27,12 +30,17 @@ interface ErrorResponse {
 export class GlobalHttpExceptionFilter implements ExceptionFilter {
   private readonly logger = new Logger(GlobalHttpExceptionFilter.name);
 
+  constructor(private readonly systemEvents: SystemEventsService) {}
+
   catch(exception: unknown, host: ArgumentsHost) {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse<Response>();
-    const request = ctx.getRequest<Request>();
+    const request = ctx.getRequest<Request & { user?: AuthenticatedUser }>();
 
-    let status = HttpStatus.INTERNAL_SERVER_ERROR;
+    // Typed as `number`, not inferred as HttpStatus: it is reassigned from
+    // exception.getStatus(), which returns a plain number, and the comparisons
+    // below (`status >= 500`) are numeric rather than enum-membership checks.
+    let status: number = HttpStatus.INTERNAL_SERVER_ERROR;
     let code = 'INTERNAL_ERROR';
     let message = 'An unexpected error occurred';
     let fieldErrors: Record<string, string[]> | undefined;
@@ -61,7 +69,7 @@ export class GlobalHttpExceptionFilter implements ExceptionFilter {
     // Ensure code is set from status if not already
     if (
       code === 'INTERNAL_ERROR' &&
-      status !== HttpStatus.INTERNAL_SERVER_ERROR
+      status !== Number(HttpStatus.INTERNAL_SERVER_ERROR)
     ) {
       code = this.statusToCode(status);
     }
@@ -85,7 +93,52 @@ export class GlobalHttpExceptionFilter implements ExceptionFilter {
       status >= 500 && exception instanceof Error ? exception.stack : undefined,
     );
 
+    this.recordSystemEvent(status, code, message, request, exception);
+
     response.status(status).json(errorResponse);
+  }
+
+  /**
+   * Feed the operator's monitoring log (DEC-018).
+   *
+   * 5xx is ERROR — the system misbehaved. 401/403/429 are WARN — they are the
+   * shape of a credential-stuffing or scraping attempt and an operator wants to
+   * see the pattern. Ordinary 400/404/409 are NOT recorded: they are a client
+   * using the API wrongly, they are the bulk of all failures, and logging them
+   * would bury the signal in noise (and spend the free-tier row budget on it).
+   *
+   * Never recorded: request bodies and query strings. On this API they carry
+   * amounts, payees and notes, which an operator has no right to (DEC-002 #12).
+   */
+  private recordSystemEvent(
+    status: number,
+    code: string,
+    message: string,
+    request: Request & { user?: AuthenticatedUser },
+    exception: unknown,
+  ): void {
+    const isServerError = status >= 500;
+    const isSecuritySignal = [401, 403, 429].includes(status);
+    if (!isServerError && !isSecuritySignal) return;
+
+    this.systemEvents.record({
+      level: isServerError ? 'ERROR' : 'WARN',
+      eventCode: code,
+      message,
+      requestId: request.headers['x-request-id'] as string | undefined,
+      actorId: request.user?.id,
+      route: scrubPath(request.url),
+      method: request.method,
+      statusCode: status,
+      metadata: {
+        // A stack is the whole point of a 5xx entry; it is our own code, not
+        // user data. Bounded so one exception cannot dominate a batch.
+        stack:
+          isServerError && exception instanceof Error
+            ? exception.stack?.slice(0, 4000)
+            : undefined,
+      },
+    });
   }
 
   private statusToCode(status: number): string {

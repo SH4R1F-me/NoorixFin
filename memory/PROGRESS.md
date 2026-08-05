@@ -375,3 +375,41 @@ Resolved; the acceptance matrix now carries the DEC-014 wording for SEC-02, FIN-
 The repository directory is still `~/Runing_Project/MyFin/`. Renaming it to `NoorixFin/` is cosmetic
 but would break the current session's working directory and any absolute paths in local tooling —
 left for you to decide and do outside a session.
+
+---
+
+## Session 18 — Enterprise Admin System (2026-08-04)
+
+**Reverses the DEC-013 deferral.** `SUPER_ADMIN` previously existed as a flag, a guard, four RLS
+policies and a bootstrap script that **nothing consumed** — an operator and a normal user saw
+byte-identical dashboards. That is now a real dual-role system.
+
+### Shipped
+
+| Area | Delivered |
+|---|---|
+| **Migrations** | `00012_account_lifecycle` (profile status + deletion grace + FK repair + purge + the privilege-escalation fix), `00013_admin_platform` (app_settings, broadcasts, broadcast_receipts, system_events, 2 admin RPCs, prune), `00014_service_role_grants` |
+| **API** | `admin/` (17 routes incl. SSE live feed), `account/` (deletion lifecycle, broadcasts, public settings), `observability/` (buffered system-events writer + audit service), request-telemetry interceptor, `SuperAdminGuard` status check, `/v1/me` extended |
+| **Web** | `/admin` route group with its own amber operator shell + 6 pages + skeletons, SSE proxy route handler, System Admin switch in the user sidebar, broadcast banner + maintenance banner, **rewritten Profile Settings** (was 100% fake `useState`), Google OAuth wiring |
+| **Config** | Google provider block, manual identity linking, `secure_password_change`, callback redirect URLs, `.env.example` |
+| **Tests** | 55 API unit (5 suites), 16 new SQL acceptance cases, 10 new E2E — all green |
+| **Docs** | DEC-016 … DEC-020, TEST_RESULTS session 18 |
+
+### Decisions recorded
+
+- **DEC-016** — console is metadata-only; the two `SECURITY DEFINER` count functions are the single
+  audited aperture, and the return type is the security boundary.
+- **DEC-017** — 30-day deletion grace; FK constraints deliberately left `RESTRICT` so only the purge
+  function can destroy a ledger.
+- **DEC-018** — `system_events` separate from `audit_events`; bounded buffered writer; SSE not Realtime.
+- **DEC-019** — privilege escalation via blanket `UPDATE ON profiles` closed with column-level grants.
+- **DEC-020** — `service_role` had no table privileges at all; the 00008 bug for the other role.
+
+### Next
+
+1. **Google OAuth live verification** — owner supplies credentials; everything else is wired.
+2. **Scheduler** for `purge_expired_deletions()` and `prune_system_events()` (pg_cron or an Edge
+   scheduled function). Both are operator-triggered today.
+3. **W8 — Live acceptance verification** remains the Phase 2 gate; SEC-02(b) and DATA-02 moved forward
+   this session (see TEST_RESULTS).
+4. Optional: generate Supabase schema types to retire the `no-unsafe-*` lint class repo-wide.

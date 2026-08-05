@@ -1,26 +1,29 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useTransition } from 'react';
+import { useRouter } from 'next/navigation';
 import {
   Plus, Landmark, CreditCard, Wallet, Banknote, Building2,
   TrendingUp, X, Eye, EyeOff, MoreHorizontal,
 } from 'lucide-react';
 import { formatAmount, getCurrency } from '@noorixfin/money';
+import { intlLocale } from '@noorixfin/i18n';
+import { useLocale } from '../../../lib/i18n/locale-provider';
+import { createAccount } from '../ledger-actions';
 
-// Symbol + formatAmount rather than formatMoney: Intl renders BDT as "BDT 1,000.00",
-// and the design uses the ৳ glyph. formatAmount still applies the currency's real
-// exponent, so JPY (0) and KWD (3) no longer render through a hardcoded /100.
-function fmt(minor: number, currency = 'BDT') {
-  return getCurrency(currency).symbol + formatAmount(Math.abs(minor), currency, 'en-BD');
-}
-
-const SUBTYPES: Record<string, { label: string; icon: React.ElementType }> = {
-  CASH: { label: 'Cash', icon: Banknote },
-  BANK: { label: 'Bank', icon: Building2 },
-  WALLET: { label: 'Wallet', icon: Wallet },
-  CARD: { label: 'Card', icon: CreditCard },
-  LOAN: { label: 'Loan', icon: Landmark },
-};
+/**
+ * Subtypes offered when creating an account, keyed to catalog entries.
+ * The values match the API's CreateAccountDto enum exactly — the old form
+ * offered `WALLET`/`CARD`, which the API does not accept.
+ */
+const SUBTYPES = [
+  { value: 'CASH', key: 'accounts.cash', icon: Banknote, class: 'ASSET' },
+  { value: 'BANK', key: 'accounts.bank', icon: Building2, class: 'ASSET' },
+  { value: 'MOBILE_WALLET', key: 'accounts.mobileWallet', icon: Wallet, class: 'ASSET' },
+  { value: 'SAVINGS', key: 'accounts.savings', icon: TrendingUp, class: 'ASSET' },
+  { value: 'CREDIT_CARD', key: 'accounts.creditCard', icon: CreditCard, class: 'LIABILITY' },
+  { value: 'LOAN', key: 'accounts.loan', icon: Landmark, class: 'LIABILITY' },
+] as const;
 
 export interface AccountItem {
   id: string;
@@ -33,9 +36,57 @@ export interface AccountItem {
   color: string;
 }
 
-export default function AccountsView({ accounts }: { accounts: AccountItem[] }) {
+export default function AccountsView({
+  accounts,
+  workspaceId,
+  currency = 'BDT',
+}: {
+  accounts: AccountItem[];
+  workspaceId: string;
+  currency?: string;
+}) {
+  const { t, locale } = useLocale();
+  const router = useRouter();
+  const [pending, startTransition] = useTransition();
   const [showCreate, setShowCreate] = useState(false);
   const [privacyMode, setPrivacyMode] = useState(false);
+
+  const fmt = (minor: number, code = currency) =>
+    getCurrency(code).symbol + formatAmount(Math.abs(minor), code, intlLocale[locale]);
+
+  // ── create-account form (previously uncontrolled inputs + a dead button) ──
+  const [name, setName] = useState('');
+  const [subtype, setSubtype] = useState<string>('CASH');
+  const [formError, setFormError] = useState<string | null>(null);
+
+  const chosen = SUBTYPES.find((option) => option.value === subtype) ?? SUBTYPES[0];
+  /** Translated display name for a stored subtype, falling back to the raw code. */
+  const subtypeLabel = (value: string) => {
+    const match = SUBTYPES.find((option) => option.value === value);
+    return match ? t(match.key) : value;
+  };
+
+  function submit() {
+    setFormError(null);
+    startTransition(async () => {
+      const result = await createAccount({
+        workspaceId,
+        name,
+        // Class follows the subtype rather than being a second dropdown the user
+        // can contradict — a CREDIT_CARD is never an ASSET.
+        accountClass: chosen.class,
+        subtype: chosen.value,
+        currency,
+      });
+      if (result.ok) {
+        setName('');
+        setShowCreate(false);
+        router.refresh();
+      } else {
+        setFormError(result.message);
+      }
+    });
+  }
 
   const assets = accounts.filter(a => a.class === 'ASSET');
   const liabilities = accounts.filter(a => a.class === 'LIABILITY');
@@ -76,7 +127,7 @@ export default function AccountsView({ accounts }: { accounts: AccountItem[] }) 
   return (
     <div>
       <div style={s.hdr}>
-        <div><h1 style={s.title}>অ্যাকাউন্ট</h1><p style={s.sub}>Accounts</p></div>
+        <div><h1 style={s.title}>{t('accounts.title')}</h1></div>
         <div style={{ display: 'flex', gap: '0.5rem' }}>
           <button onClick={() => setPrivacyMode(!privacyMode)} style={s.privacyBtn}>
             {privacyMode ? <EyeOff size={14} /> : <Eye size={14} />}
@@ -84,7 +135,7 @@ export default function AccountsView({ accounts }: { accounts: AccountItem[] }) 
           </button>
           <button onClick={() => setShowCreate(!showCreate)} style={s.addBtn}>
             {showCreate ? <X size={18} /> : <Plus size={18} />}
-            <span>{showCreate ? 'Close' : 'New Account'}</span>
+            <span>{showCreate ? t('app.close') : t('accounts.addAccount')}</span>
           </button>
         </div>
       </div>
@@ -92,28 +143,59 @@ export default function AccountsView({ accounts }: { accounts: AccountItem[] }) 
       {showCreate && (
         <div style={s.createBox}>
           <div style={s.grid}>
-            <div style={s.fg}><label style={s.lbl}>Account Name</label><input type="text" placeholder="e.g. bKash" style={s.inp} /></div>
-            <div style={s.fg}><label style={s.lbl}>Type</label><select style={s.inp}><option>ASSET</option><option>LIABILITY</option></select></div>
-            <div style={s.fg}><label style={s.lbl}>Subtype</label><select style={s.inp}><option>CASH</option><option>BANK</option><option>WALLET</option><option>CARD</option><option>LOAN</option></select></div>
-            <div style={s.fg}><label style={s.lbl}>Currency</label><select style={s.inp}><option>BDT</option><option>USD</option></select></div>
-            <div style={s.fg}><label style={s.lbl}>Opening Balance</label><input type="number" placeholder="0.00" style={s.inp} /></div>
+            <div style={s.fg}>
+              <label style={s.lbl} htmlFor="acc-name">{t('accounts.accountName')}</label>
+              <input id="acc-name" type="text" placeholder={t('accounts.namePlaceholder')}
+                     value={name} onChange={e=>setName(e.target.value)} style={s.inp} />
+            </div>
+            <div style={s.fg}>
+              <label style={s.lbl} htmlFor="acc-subtype">{t('accounts.accountType')}</label>
+              <select id="acc-subtype" value={subtype} onChange={e=>setSubtype(e.target.value)} style={s.inp}>
+                {SUBTYPES.map(option=>(
+                  <option key={option.value} value={option.value}>{t(option.key)}</option>
+                ))}
+              </select>
+            </div>
+            <div style={s.fg}>
+              <label style={s.lbl}>{t('accounts.currency')}</label>
+              {/* One currency per workspace today (DEC-002 #7 is still open), so
+                  this reflects the workspace rather than offering a choice the
+                  ledger cannot yet honour. */}
+              <input value={currency} readOnly style={{...s.inp, opacity:0.7}} />
+            </div>
           </div>
-          <div style={{ display: 'flex', justifyContent: 'flex-end' }}><button style={s.saveBtn}>Create Account</button></div>
+
+          {formError && (
+            <p role="alert" style={{color:'#fca5a5',fontSize:'0.8125rem',marginBottom:'0.75rem'}}>{formError}</p>
+          )}
+
+          <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+            <button onClick={submit} disabled={pending || !name.trim()}
+                    style={{...s.saveBtn, opacity: pending||!name.trim() ? 0.55 : 1}}>
+              {t('accounts.createAccount')}
+            </button>
+          </div>
         </div>
+      )}
+
+      {accounts.length === 0 && !showCreate && (
+        <p style={{ color: '#64748b', fontSize: '0.875rem', margin: '2rem 0' }}>
+          {t('accounts.noAccountsBody')}
+        </p>
       )}
 
       {/* Summary Cards */}
       <div style={s.summaryGrid}>
         <div style={s.summaryCard}>
-          <span style={s.summaryLabel}>Total Assets</span>
+          <span style={s.summaryLabel}>{t('accounts.asset')}</span>
           <span style={{ ...s.summaryValue, color: '#10b981' }}>{mask(fmt(totalAssets))}</span>
         </div>
         <div style={s.summaryCard}>
-          <span style={s.summaryLabel}>Total Liabilities</span>
+          <span style={s.summaryLabel}>{t('accounts.liability')}</span>
           <span style={{ ...s.summaryValue, color: '#ef4444' }}>{mask(fmt(totalLiabilities))}</span>
         </div>
         <div style={s.summaryCard}>
-          <span style={s.summaryLabel}>Net Worth</span>
+          <span style={s.summaryLabel}>{t('reports.netWorth')}</span>
           <span style={{ ...s.summaryValue, color: netWorth >= 0 ? '#10b981' : '#ef4444' }}>{mask(fmt(netWorth))}</span>
         </div>
       </div>
@@ -128,7 +210,7 @@ export default function AccountsView({ accounts }: { accounts: AccountItem[] }) 
                 <div style={{ ...s.cardIcon, background: acc.color + '18' }}>{acc.icon}</div>
                 <div style={s.cardInfo}>
                   <div style={s.cardName}>{acc.name}</div>
-                  <div style={s.cardSubtype}>{SUBTYPES[acc.subtype]?.label || acc.subtype}</div>
+                  <div style={s.cardSubtype}>{subtypeLabel(acc.subtype)}</div>
                 </div>
               </div>
               <div style={{ ...s.cardBalance, color: '#10b981' }}>{mask(fmt(acc.balance, acc.currency))}</div>
@@ -148,7 +230,7 @@ export default function AccountsView({ accounts }: { accounts: AccountItem[] }) 
                   <div style={{ ...s.cardIcon, background: acc.color + '18' }}>{acc.icon}</div>
                   <div style={s.cardInfo}>
                     <div style={s.cardName}>{acc.name}</div>
-                    <div style={s.cardSubtype}>{SUBTYPES[acc.subtype]?.label || acc.subtype}</div>
+                    <div style={s.cardSubtype}>{subtypeLabel(acc.subtype)}</div>
                   </div>
                 </div>
                 <div style={{ ...s.cardBalance, color: '#ef4444' }}>{mask(fmt(acc.balance, acc.currency))}</div>

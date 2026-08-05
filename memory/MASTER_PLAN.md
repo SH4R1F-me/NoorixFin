@@ -2,7 +2,7 @@
 
 **Generated from:** `NoorixFin_Production_Blueprint.md` v1.0 (originally `MyFin_Production_Blueprint.md`)
 **Created:** 2026-08-01
-**Revised:** 2026-08-04 — Session 14 (W1–W7 done to the limit of available infrastructure; all four layers executed and tested)
+**Revised:** 2026-08-04 — Session 18 (Enterprise Admin System built; DEC-013's console deferral reversed — see DEC-016)
 **Status:** ACTIVE — Phase 1 In Progress
 
 ---

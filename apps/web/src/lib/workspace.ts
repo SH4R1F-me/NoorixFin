@@ -86,6 +86,9 @@ export interface CategoryRow {
   custom_name: string | null;
   icon: string;
   color: string;
+  /** Soft-delete marker (migration 00005). Archived categories stay in the
+   *  ledger for historical entries but must not be offered for new ones. */
+  archived_at: string | null;
 }
 
 /** Never throws — a dashboard panel degrades to empty rather than 500ing. */

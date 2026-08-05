@@ -1,0 +1,186 @@
+'use server';
+
+/**
+ * Ledger writes — transactions, accounts, categories.
+ *
+ * ── WHY THIS FILE EXISTS ─────────────────────────────────────────────────────
+ * Until now the web app could not write to the ledger at all. The three views
+ * had "Save Transaction", "Create Account" and "Create Category" buttons with no
+ * `onClick` handler and uncontrolled inputs, so every click did nothing. The API
+ * endpoints existed, were guarded and were tested — they simply had no caller.
+ * Every transaction in the system had been created with curl.
+ *
+ * All writes go through NestJS (DEC-005): it is the only layer that enforces
+ * balanced double-entry postings (DEC-006), and it owns idempotency.
+ *
+ * Results are returned as plain objects rather than thrown, matching
+ * app/auth/actions.ts, so a form can show an inline error without a redirect.
+ */
+import { randomUUID } from 'node:crypto';
+import { revalidatePath } from 'next/cache';
+import { toMinorUnits } from '@noorixfin/money';
+import { apiFetch, ApiError } from '../../lib/api-client';
+
+export type LedgerResult = { ok: true } | { ok: false; message: string };
+
+/**
+ * Amounts arrive from a form as a human string ("1234.50") and must reach the
+ * API as MINOR units (DEC-004 — no floating point anywhere near a balance).
+ * `toMinorUnits` applies the currency's real exponent, so JPY (0) and KWD (3)
+ * are handled rather than assuming /100.
+ */
+function parseAmountToMinor(
+  input: string,
+  currency: string,
+): { ok: true; minor: number } | { ok: false; message: string } {
+  const cleaned = input.trim().replace(/,/g, '');
+  if (cleaned === '') return { ok: false, message: 'Enter an amount.' };
+
+  const major = Number(cleaned);
+  if (!Number.isFinite(major)) return { ok: false, message: 'That is not a valid amount.' };
+  if (major <= 0) return { ok: false, message: 'Amount must be greater than zero.' };
+
+  const minor = toMinorUnits(major, currency);
+  if (!Number.isSafeInteger(minor)) {
+    return { ok: false, message: 'That amount is too large.' };
+  }
+  return { ok: true, minor };
+}
+
+function fail(error: unknown): LedgerResult {
+  if (error instanceof ApiError) return { ok: false, message: error.message };
+  return { ok: false, message: 'Could not reach the API. Nothing was saved.' };
+}
+
+/** Every ledger view is server-rendered, so a write must revalidate to show. */
+function revalidateLedger() {
+  revalidatePath('/dashboard');
+  revalidatePath('/dashboard/transactions');
+  revalidatePath('/dashboard/accounts');
+  revalidatePath('/dashboard/categories');
+}
+
+export interface NewTransactionInput {
+  workspaceId: string;
+  type: 'EXPENSE' | 'INCOME' | 'TRANSFER';
+  amount: string;
+  currency: string;
+  accountId: string;
+  /** Category for income/expense. */
+  categoryId?: string;
+  /** Destination account for a transfer. */
+  transferToAccountId?: string;
+  payee?: string;
+  note?: string;
+  occurredAt?: string;
+}
+
+export async function createTransaction(
+  input: NewTransactionInput,
+): Promise<LedgerResult> {
+  if (!input.accountId) return { ok: false, message: 'Choose an account.' };
+
+  if (input.type === 'TRANSFER') {
+    if (!input.transferToAccountId) {
+      return { ok: false, message: 'Choose a destination account.' };
+    }
+    if (input.transferToAccountId === input.accountId) {
+      // The API would build a self-cancelling pair of postings; catching it here
+      // gives a sentence instead of a silently meaningless entry.
+      return { ok: false, message: 'Transfer source and destination must differ.' };
+    }
+  } else if (!input.categoryId) {
+    return { ok: false, message: 'Choose a category.' };
+  }
+
+  const parsed = parseAmountToMinor(input.amount, input.currency);
+  if (!parsed.ok) return parsed;
+
+  try {
+    await apiFetch(`/workspaces/${input.workspaceId}/transactions`, {
+      method: 'POST',
+      body: {
+        type: input.type,
+        // The API takes minor units as a decimal STRING (Blueprint §8.1) so the
+        // value never passes through a JSON float.
+        amount: String(parsed.minor),
+        account_id: input.accountId,
+        ...(input.type === 'TRANSFER'
+          ? { transfer_to_account_id: input.transferToAccountId }
+          : { category_id: input.categoryId }),
+        ...(input.payee?.trim() ? { payee: input.payee.trim() } : {}),
+        ...(input.note?.trim() ? { note: input.note.trim() } : {}),
+        ...(input.occurredAt ? { occurred_at: new Date(input.occurredAt).toISOString() } : {}),
+        // Generated per submission, server-side. A retry of the SAME submission
+        // reuses it via the form's own state; a genuinely new entry gets a new
+        // one. This is what stops a double-click becoming two transactions
+        // (Blueprint §8.3).
+        idempotency_key: randomUUID(),
+      },
+    });
+    revalidateLedger();
+    return { ok: true };
+  } catch (error) {
+    return fail(error);
+  }
+}
+
+export interface NewAccountInput {
+  workspaceId: string;
+  name: string;
+  accountClass: 'ASSET' | 'LIABILITY';
+  subtype: string;
+  currency: string;
+}
+
+export async function createAccount(input: NewAccountInput): Promise<LedgerResult> {
+  if (!input.name.trim()) return { ok: false, message: 'Give the account a name.' };
+
+  try {
+    await apiFetch(`/workspaces/${input.workspaceId}/accounts`, {
+      method: 'POST',
+      body: {
+        name: input.name.trim(),
+        class: input.accountClass,
+        subtype: input.subtype,
+        currency_code: input.currency,
+      },
+    });
+    revalidateLedger();
+    return { ok: true };
+  } catch (error) {
+    return fail(error);
+  }
+}
+
+export interface NewCategoryInput {
+  workspaceId: string;
+  name: string;
+  kind: 'INCOME' | 'EXPENSE';
+  icon: string;
+  color: string;
+}
+
+export async function createCategory(input: NewCategoryInput): Promise<LedgerResult> {
+  if (!input.name.trim()) return { ok: false, message: 'Give the category a name.' };
+
+  try {
+    await apiFetch(`/workspaces/${input.workspaceId}/categories`, {
+      method: 'POST',
+      body: {
+        // The DTO field is `name`; the service stores it as `custom_name` and
+        // also uses it to name the backing ledger account (DEC-015). A
+        // user-created category has no translation_key, so `custom_name` is what
+        // categoryLabel() will display.
+        name: input.name.trim(),
+        kind: input.kind,
+        icon: input.icon,
+        color: input.color,
+      },
+    });
+    revalidateLedger();
+    return { ok: true };
+  } catch (error) {
+    return fail(error);
+  }
+}

@@ -4,8 +4,7 @@ import { NotYetAvailable } from '../../../components/not-yet-available';
 export default function CalendarPage() {
   return (
     <NotYetAvailable
-      title="ক্যালেন্ডার ও বিল"
-      titleEn="Calendar & Bills"
+      titleKey="nav.calendar"
       icon={<Calendar size={30} color="#10b981" />}
       summary="Bill tracking and the financial calendar are Phase 3. The dashboard's bills panel renders an empty state for the same reason — it will not show invented reminders."
       planned={[

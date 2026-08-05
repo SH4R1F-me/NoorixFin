@@ -83,6 +83,27 @@ export class ProfileResponseDto {
   @ApiProperty({ example: 'COMPLETE' })
   onboarding_status!: string;
 
+  @ApiProperty({
+    example: false,
+    description:
+      'Platform operator flag (DEC-007). The web shell uses this to decide ' +
+      'whether to render the System Admin switch. It grants METADATA access ' +
+      "only — never access to another user's financial rows.",
+  })
+  is_super_admin!: boolean;
+
+  @ApiProperty({
+    example: 'ACTIVE',
+    enum: ['ACTIVE', 'SUSPENDED', 'PENDING_DELETION'],
+    description: 'Account lifecycle state (DEC-017).',
+  })
+  status!: string;
+
+  @ApiPropertyOptional({
+    description: 'Set when status is PENDING_DELETION — when the purge runs.',
+  })
+  deletion_scheduled_for?: string | null;
+
   @ApiProperty()
   email!: string;
 

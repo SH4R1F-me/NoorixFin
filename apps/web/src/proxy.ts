@@ -20,8 +20,17 @@ const AUTH_COOKIE_OPTIONS = {
   path: '/',
 };
 
-/** Routes that require an authenticated user. */
-const PROTECTED_PREFIXES = ['/dashboard'];
+/**
+ * Routes that require an authenticated user.
+ *
+ * `/admin` is listed for the sign-in redirect only — this file does NOT check
+ * whether the user is an operator. Doing so would mean a `profiles` lookup on
+ * every matched request including static-ish navigations, which is the per-
+ * request database cost DEC-011 exists to avoid. The role check lives in
+ * app/admin/layout.tsx (which calls notFound()), backed by SuperAdminGuard in
+ * the API and RLS in the database.
+ */
+const PROTECTED_PREFIXES = ['/dashboard', '/admin'];
 
 /** Routes that an already-authenticated user should not see. */
 const AUTH_ROUTES = ['/auth', '/auth/login'];

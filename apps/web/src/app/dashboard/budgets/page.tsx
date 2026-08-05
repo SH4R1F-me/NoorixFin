@@ -4,8 +4,7 @@ import { NotYetAvailable } from '../../../components/not-yet-available';
 export default function BudgetsPage() {
   return (
     <NotYetAvailable
-      title="বাজেট"
-      titleEn="Budgets"
+      titleKey="nav.budgets"
       icon={<PiggyBank size={30} color="#10b981" />}
       summary="Budgets are part of Phase 3. The ledger they will read from is live — categories and transactions already record real data — but the budget model itself is not built."
       planned={[

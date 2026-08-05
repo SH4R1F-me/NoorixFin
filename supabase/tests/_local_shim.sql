@@ -5,10 +5,28 @@ CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
 CREATE SCHEMA IF NOT EXISTS auth;
 
+-- Columns mirror the subset of real auth.users our migrations and admin
+-- functions read. admin_user_overview() selects last_sign_in_at,
+-- email_confirmed_at and banned_until, so a shim without them fails at function
+-- creation rather than at the assertion — which reads as a broken test suite
+-- instead of a missing column.
 CREATE TABLE IF NOT EXISTS auth.users (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   email TEXT UNIQUE,
   encrypted_password TEXT,
+  last_sign_in_at TIMESTAMPTZ,
+  email_confirmed_at TIMESTAMPTZ,
+  banned_until TIMESTAMPTZ,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- Linked sign-in providers. admin_user_overview() counts these to show how many
+-- methods an account can sign in with (email, Google, …).
+CREATE TABLE IF NOT EXISTS auth.identities (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  provider TEXT NOT NULL,
+  identity_data JSONB NOT NULL DEFAULT '{}'::jsonb,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 

@@ -22,7 +22,7 @@ const LOOK: Record<string, { icon: string; color: string }> = {
 
 export default async function AccountsPage() {
   const workspace = await getActiveWorkspace();
-  if (!workspace) return <AccountsView accounts={[]} />;
+  if (!workspace) return <AccountsView accounts={[]} workspaceId="" />;
 
   const rows = await getAccounts(workspace.id);
 
@@ -41,5 +41,11 @@ export default async function AccountsPage() {
       color: LOOK[a.subtype]?.color ?? '#64748b',
     }));
 
-  return <AccountsView accounts={accounts} />;
+  return (
+    <AccountsView
+      accounts={accounts}
+      workspaceId={workspace.id}
+      currency={workspace.base_currency ?? 'BDT'}
+    />
+  );
 }
