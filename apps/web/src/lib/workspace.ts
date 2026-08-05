@@ -76,6 +76,14 @@ export interface TransactionRow {
   status: string;
   /** Derived from the postings by the API — the entry itself carries no amount. */
   amount_minor: number;
+  /**
+   * True when a REVERSAL entry points at this one (FIN-03).
+   *
+   * Derived by the API per page, never stored: the original stays POSTED and
+   * the mirror cancels it, so "corrected" is a fact about the ledger rather
+   * than a status that could drift from it.
+   */
+  reversed?: boolean;
   currency_code: string | null;
   /**
    * Every ledger account this entry posted against.

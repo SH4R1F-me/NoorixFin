@@ -1224,6 +1224,10 @@ export type Database = {
           user_id: string
         }[]
       }
+      reverse_journal_entry: {
+        Args: { p_entry_id: string; p_workspace_id: string }
+        Returns: string
+      }
       workspace_summary: { Args: { p_workspace_id: string }; Returns: Json }
       workspace_tz: { Args: { p_workspace_id: string }; Returns: string }
     }

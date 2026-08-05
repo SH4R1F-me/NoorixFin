@@ -90,6 +90,12 @@ export default async function TransactionsPage({
       account: '',
       date: row.local_date,
       note: row.note ?? '',
+      status: row.status,
+      // Both the original AND its mirror stay POSTED and cancel (00019), so
+      // "already corrected" cannot be read off the status — the API derives it
+      // from a reversal pointing here.
+      reversed: row.reversed === true,
+      isReversal: row.entry_type === 'REVERSAL',
     };
   });
 

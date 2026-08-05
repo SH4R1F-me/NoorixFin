@@ -4,12 +4,12 @@ import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   Plus, Search, ArrowDownLeft, ArrowUpRight, ArrowLeftRight,
-  X, TrendingUp, TrendingDown, Repeat, Loader2,
+  X, TrendingUp, TrendingDown, Repeat, Loader2, Undo2, Ban,
 } from 'lucide-react';
 import { formatAmount, getCurrency } from '@noorixfin/money';
 import { intlLocale } from '@noorixfin/i18n';
 import { useLocale } from '../../../lib/i18n/locale-provider';
-import { createTransaction } from '../ledger-actions';
+import { createTransaction, reverseTransaction } from '../ledger-actions';
 
 export interface Option { id: string; label: string; kind?: string }
 
@@ -25,6 +25,12 @@ export interface TxItem {
   account: string;
   date: string;
   note: string;
+  /** POSTED · DRAFT · PENDING · VOIDED. A corrected entry stays POSTED. */
+  status?: string;
+  /** A REVERSAL entry points at this one — derived by the API, not stored. */
+  reversed?: boolean;
+  /** This row IS a correcting entry. */
+  isReversal?: boolean;
 }
 
 export default function TransactionsView({
@@ -72,6 +78,27 @@ export default function TransactionsView({
   const [payee, setPayee] = useState('');
   const [occurredAt, setOccurredAt] = useState(new Date().toISOString().split('T')[0]);
   const [formError, setFormError] = useState<string | null>(null);
+
+  // ── reversal (FIN-03) ──────────────────────────────────────────────────────
+  // `confirmId` rather than a boolean: the confirmation belongs to ONE row, and
+  // a shared flag would open every row's dialog at once.
+  const [confirmId, setConfirmId] = useState<string | null>(null);
+  const [reverseError, setReverseError] = useState<string | null>(null);
+  const [reversedNote, setReversedNote] = useState<string | null>(null);
+
+  function doReverse(id: string) {
+    setReverseError(null);
+    startTransition(async () => {
+      const result = await reverseTransaction(workspaceId, id);
+      if (result.ok) {
+        setConfirmId(null);
+        setReversedNote(tr('transactions.reverseDone'));
+        router.refresh();
+      } else {
+        setReverseError(result.message);
+      }
+    });
+  }
 
   const selectableCategories = categories.filter(
     (c) => !c.kind || c.kind === (addType === 'INCOME' ? 'INCOME' : 'EXPENSE'),
@@ -145,6 +172,20 @@ export default function TransactionsView({
     amt: { fontSize:'0.9375rem', fontWeight:700, fontVariantNumeric:'tabular-nums' as const },
     date: { fontSize:'0.75rem', color:'#8b9ab0', marginTop:2 },
     empty: { display:'flex', flexDirection:'column' as const, alignItems:'center', padding:'3rem' },
+    // ── reversal (FIN-03) ──────────────────────────────────────────────────
+    badgeVoided: { display:'inline-flex', alignItems:'center', gap:3, padding:'1px 6px', borderRadius:'0.35rem', background:'rgba(248,113,113,0.12)', color:'#f87171', fontSize:'0.6875rem', fontWeight:600 },
+    badgeReversal: { display:'inline-flex', alignItems:'center', gap:3, padding:'1px 6px', borderRadius:'0.35rem', background:'rgba(59,130,246,0.12)', color:'#93c5fd', fontSize:'0.6875rem', fontWeight:600 },
+    reverseBtn: { display:'inline-flex', alignItems:'center', gap:5, flexShrink:0, padding:'0.35rem 0.6rem', background:'transparent', border:'1px solid #334155', borderRadius:'0.5rem', color:'#c9c2bc', fontSize:'0.75rem', fontFamily:'inherit', cursor:'pointer' },
+    reverseBtnLabel: { whiteSpace:'nowrap' as const },
+    reverseNote: { display:'flex', alignItems:'center', gap:8, padding:'0.7rem 1rem', marginBottom:'1rem', borderRadius:'0.75rem', background:'rgba(59,130,246,0.08)', border:'1px solid rgba(59,130,246,0.28)', color:'#93c5fd', fontSize:'0.8125rem' },
+    confirmBox: { padding:'1rem 1.25rem', marginBottom:'1rem', borderRadius:'0.75rem', background:'rgba(248,113,113,0.06)', border:'1px solid rgba(248,113,113,0.28)' },
+    confirmTitle: { display:'flex', alignItems:'center', gap:8, fontSize:'0.9375rem', fontWeight:700, color:'#f8fafc' },
+    confirmBody: { fontSize:'0.8125rem', lineHeight:1.6, color:'#c9c2bc', margin:'0.5rem 0 0' },
+    confirmTarget: { fontSize:'0.8125rem', fontWeight:600, color:'#f8fafc', margin:'0.6rem 0 0' },
+    confirmError: { fontSize:'0.8125rem', color:'#f87171', margin:'0.6rem 0 0' },
+    confirmActions: { display:'flex', gap:'0.5rem', marginTop:'0.9rem', flexWrap:'wrap' as const },
+    confirmBtn: { display:'inline-flex', alignItems:'center', gap:6, padding:'0.5rem 0.9rem', background:'#f87171', border:'none', borderRadius:'0.5rem', color:'#0b1020', fontSize:'0.8125rem', fontWeight:700, fontFamily:'inherit', cursor:'pointer' },
+    cancelBtn: { padding:'0.5rem 0.9rem', background:'transparent', border:'1px solid #334155', borderRadius:'0.5rem', color:'#c9c2bc', fontSize:'0.8125rem', fontFamily:'inherit', cursor:'pointer' },
     drillBanner: { display:'flex', alignItems:'center', justifyContent:'space-between', gap:'1rem', padding:'0.7rem 1rem', background:'rgba(16,185,129,0.08)', border:'1px solid rgba(16,185,129,0.28)', borderRadius:'0.75rem', color:'#6ee7b7', fontSize:'0.8125rem', marginBottom:'1rem', flexWrap:'wrap' as const },
     drillClear: { color:'#10b981', textDecoration:'none', fontWeight:600, fontSize:'0.8125rem' },
   };
@@ -272,19 +313,110 @@ export default function TransactionsView({
         </select>
       </div>
 
+      {reversedNote && (
+        <div role="status" style={s.reverseNote}>
+          <Undo2 size={14} aria-hidden="true" />
+          {reversedNote}
+        </div>
+      )}
+
+      {/*
+        An inline panel rather than a modal. The row it refers to stays visible
+        behind it, so someone confirming can still see WHICH transaction they
+        are correcting — which is the one fact a confirmation dialog exists to
+        establish, and the one a modal covering the list takes away.
+      */}
+      {confirmId && (
+        <div role="alertdialog" aria-labelledby="reverse-title" aria-describedby="reverse-body" style={s.confirmBox}>
+          <div id="reverse-title" style={s.confirmTitle}>
+            <Undo2 size={16} aria-hidden="true" />
+            {tr('transactions.reverseTitle')}
+          </div>
+          <p id="reverse-body" style={s.confirmBody}>{tr('transactions.reverseBody')}</p>
+          {(() => {
+            const target = transactions.find((t) => t.id === confirmId);
+            return target ? (
+              <p style={s.confirmTarget}>
+                {target.payee} · {fmt(target.amount)} · {fmtDate(target.date)}
+              </p>
+            ) : null;
+          })()}
+          {reverseError && (
+            <p role="alert" style={s.confirmError}>{reverseError}</p>
+          )}
+          <div style={s.confirmActions}>
+            <button onClick={() => doReverse(confirmId)} disabled={pending} style={s.confirmBtn}>
+              {pending ? <Loader2 size={14} aria-hidden="true" /> : <Undo2 size={14} aria-hidden="true" />}
+              {tr('transactions.reverseConfirm')}
+            </button>
+            <button onClick={() => { setConfirmId(null); setReverseError(null); }} disabled={pending} style={s.cancelBtn}>
+              {tr('app.cancel')}
+            </button>
+          </div>
+        </div>
+      )}
+
       <div style={s.list}>
         {filtered.map((tx,idx)=>{
           const isE=tx.type==='EXPENSE', isI=tx.type==='INCOME';
           const col=isE?'#f87171':isI?'#10b981':'#3b82f6';
           const pfx=isE?'-':isI?'+':'';
+          // A corrected entry still COUNTS — its mirror cancels it rather than
+          // removing it — so it is marked, not hidden. Struck through and
+          // labelled, never colour alone (§5.5). Offering Reverse again would
+          // be a button the database is going to refuse.
+          const isCorrected = tx.reversed === true || tx.status === 'VOIDED';
+          const isReversal = tx.isReversal === true || tx.type === 'REVERSAL';
+          const canReverse = tx.status === 'POSTED' && !isReversal && !isCorrected;
+
           return (
-            <div key={tx.id} style={{...s.row,borderBottom:idx<filtered.length-1?'1px solid #1e293b':'none'}}>
+            <div
+              key={tx.id}
+              style={{
+                ...s.row,
+                borderBottom: idx<filtered.length-1?'1px solid #1e293b':'none',
+                opacity: isCorrected ? 0.6 : 1,
+              }}
+            >
               <div style={{...s.icon,background:isE?'rgba(239,68,68,0.1)':isI?'rgba(16,185,129,0.1)':'rgba(59,130,246,0.1)'}}><span style={{fontSize:'1.25rem'}}>{tx.catIcon}</span></div>
               <div style={s.det}>
-                <div style={s.payee}>{tx.payee}</div>
-                <div style={s.meta}><span style={{color:'#94a3b8'}}>{tx.cat}</span><span style={{color:'#334155'}}>·</span><span>{tx.account}</span>{tx.note&&<><span style={{color:'#334155'}}>·</span><span>{tx.note}</span></>}</div>
+                <div style={{...s.payee, textDecoration: isCorrected ? 'line-through' : 'none'}}>
+                  {tx.payee}
+                </div>
+                <div style={s.meta}>
+                  <span style={{color:'#94a3b8'}}>{tx.cat}</span>
+                  {tx.account && <><span style={{color:'#334155'}}>·</span><span>{tx.account}</span></>}
+                  {tx.note&&<><span style={{color:'#334155'}}>·</span><span>{tx.note}</span></>}
+                  {isCorrected && (
+                    <span style={s.badgeVoided}>
+                      <Ban size={11} aria-hidden="true" />
+                      {tr('transactions.reversed')}
+                    </span>
+                  )}
+                  {isReversal && (
+                    <span style={s.badgeReversal}>
+                      <Undo2 size={11} aria-hidden="true" />
+                      {tr('transactions.reversalOf')}
+                    </span>
+                  )}
+                </div>
               </div>
-              <div style={s.amtS}><div style={{...s.amt,color:col}}>{pfx}{fmt(tx.amount)}</div><div style={s.date}>{fmtDate(tx.date)}</div></div>
+              <div style={s.amtS}>
+                <div style={{...s.amt,color:col,textDecoration: isCorrected ? 'line-through' : 'none'}}>
+                  {pfx}{fmt(tx.amount)}
+                </div>
+                <div style={s.date}>{fmtDate(tx.date)}</div>
+              </div>
+              {canReverse && (
+                <button
+                  onClick={() => { setConfirmId(tx.id); setReverseError(null); }}
+                  style={s.reverseBtn}
+                  aria-label={`${tr('transactions.reverse')}: ${tx.payee} ${fmt(tx.amount)}`}
+                >
+                  <Undo2 size={14} aria-hidden="true" />
+                  <span style={s.reverseBtnLabel}>{tr('transactions.reverse')}</span>
+                </button>
+              )}
             </div>
           );
         })}

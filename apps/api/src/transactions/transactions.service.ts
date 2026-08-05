@@ -362,7 +362,28 @@ export class TransactionsService {
       };
     });
 
-    const entries = withAmounts;
+    // ── Which of these have been corrected? ──────────────────────────────
+    // Derived, not stored (migration 00019): a reversal is an entry pointing at
+    // its original, and the original stays POSTED so the two cancel. One extra
+    // query bounded by the page size, rather than a `reversed` column that
+    // would be a second source of truth able to drift from the ledger.
+    const pageIds = withAmounts.map((entry) => entry.id);
+    const reversedIds = new Set<string>();
+    if (pageIds.length > 0) {
+      const { data: reversals } = await client
+        .from('journal_entries')
+        .select('reverses_entry_id')
+        .eq('workspace_id', workspaceId)
+        .in('reverses_entry_id', pageIds);
+      for (const row of reversals ?? []) {
+        if (row.reverses_entry_id) reversedIds.add(row.reverses_entry_id);
+      }
+    }
+
+    const entries = withAmounts.map((entry) => ({
+      ...entry,
+      reversed: reversedIds.has(entry.id),
+    }));
     const hasMore = entries.length > limit;
     const items = hasMore ? entries.slice(0, limit) : entries;
     const nextCursor = hasMore
@@ -412,98 +433,81 @@ export class TransactionsService {
    * Reverse a transaction (§8.2: correction creates reversal entry).
    * Never modifies the original — creates a new REVERSAL entry.
    */
+  /**
+   * Reverse a posted transaction — FIN-03, "correction preserves history".
+   *
+   * ── WHY THIS IS ONE RPC AND NOT FOUR WRITES ──────────────────────────────
+   * It used to be four sequential PostgREST calls with the last three's errors
+   * discarded, and every gap between them corrupted the ledger silently:
+   * a failed postings insert left a POSTED entry carrying no amount, and a
+   * failed void left the original counted alongside its own reversal. It was
+   * also racy — the POSTED check was a SELECT before an unconditional INSERT,
+   * so two concurrent reversals both proceeded and produced two mirror entries
+   * for one original.
+   *
+   * `reverse_journal_entry()` (migration 00019) does the whole thing in one
+   * transaction and claims the entry with a conditional UPDATE, so the status
+   * change IS the lock rather than a later side effect. It is SECURITY INVOKER,
+   * so RLS remains the tenant boundary exactly as it is everywhere else.
+   */
   async reverseTransaction(
     transactionId: string,
     workspaceId: string,
-    userId: string,
+    _userId: string,
     accessToken: string,
   ) {
     const client = this.supabaseService.getUserClient(accessToken);
 
-    // Get original entry
-    const { data: original, error } = await client
+    const { data: reversalId, error } = await client.rpc(
+      'reverse_journal_entry',
+      { p_entry_id: transactionId, p_workspace_id: workspaceId },
+    );
+
+    if (error) {
+      // The function raises named exceptions so the API can map them to
+      // something a user can act on, rather than surfacing a 500 for what is
+      // usually "you already reversed this".
+      if (error.message.includes('ENTRY_NOT_REVERSIBLE')) {
+        throw new NotFoundException({
+          code: 'TRANSACTION_NOT_REVERSIBLE',
+          message:
+            'That transaction is not available to reverse. It may already have ' +
+            'been reversed, or it may not be posted.',
+        });
+      }
+      if (error.message.includes('ENTRY_HAS_NO_POSTINGS')) {
+        throw new BadRequestException({
+          code: 'NO_POSTINGS',
+          message: 'Original transaction has no postings',
+        });
+      }
+      // A second reversal that somehow got past the claim hits the partial
+      // unique index from 00019.
+      if (error.code === '23505') {
+        throw new BadRequestException({
+          code: 'ALREADY_REVERSED',
+          message: 'That transaction has already been reversed.',
+        });
+      }
+
+      this.logger.error(
+        `Failed to reverse ${transactionId}: ${error.code ?? 'no code'} ${error.message}`,
+      );
+      throw new BadRequestException({
+        code: 'REVERSAL_FAILED',
+        message: 'Could not reverse the transaction. Nothing was changed.',
+      });
+    }
+
+    // Read back rather than returning what we hoped we wrote: the response is
+    // the reversal as the database actually holds it, postings included.
+    const { data: reversal } = await client
       .from('journal_entries')
-      .select('*')
-      .eq('id', transactionId)
-      .eq('workspace_id', workspaceId)
+      .select('*, journal_postings(*)')
+      .eq('id', reversalId)
       .single();
 
-    if (error || !original) {
-      throw new NotFoundException({
-        code: 'TRANSACTION_NOT_FOUND',
-        message: 'Transaction not found',
-      });
-    }
-
-    if (original.status !== 'POSTED') {
-      throw new BadRequestException({
-        code: 'CANNOT_REVERSE',
-        message: 'Only POSTED transactions can be reversed',
-      });
-    }
-
-    // Get original postings
-    const { data: originalPostings } = await client
-      .from('journal_postings')
-      .select('*')
-      .eq('journal_entry_id', transactionId);
-
-    if (!originalPostings || originalPostings.length === 0) {
-      throw new BadRequestException({
-        code: 'NO_POSTINGS',
-        message: 'Original transaction has no postings',
-      });
-    }
-
-    const reversalId = randomUUID();
-
-    // Create reversal entry
-    const { data: reversalEntry, error: reversalError } = await client
-      .from('journal_entries')
-      .insert({
-        id: reversalId,
-        workspace_id: original.workspace_id,
-        entry_type: 'REVERSAL',
-        occurred_at: new Date().toISOString(),
-        local_date: new Date().toISOString().split('T')[0],
-        note: `Reversal of ${original.id}`,
-        status: 'POSTED',
-        source: 'MANUAL',
-        client_entry_id: randomUUID(),
-        reverses_entry_id: transactionId,
-        created_by: userId,
-        posted_at: new Date().toISOString(),
-        version: 1,
-      })
-      .select()
-      .single();
-
-    if (reversalError) {
-      throw new BadRequestException('Failed to create reversal');
-    }
-
-    // Create reversed postings (swap debit/credit)
-    const reversedPostings = originalPostings.map((p) => ({
-      id: randomUUID(),
-      journal_entry_id: reversalId,
-      workspace_id: workspaceId,
-      ledger_account_id: p.ledger_account_id,
-      debit_minor: p.credit_minor,
-      credit_minor: p.debit_minor,
-      currency_code: p.currency_code,
-      base_amount_minor: p.base_amount_minor,
-      memo: `Reversal of posting ${p.id}`,
-    }));
-
-    await client.from('journal_postings').insert(reversedPostings);
-
-    // Void the original
-    await client
-      .from('journal_entries')
-      .update({ status: 'VOIDED', updated_at: new Date().toISOString() })
-      .eq('id', transactionId);
-
-    return { ...reversalEntry, postings: reversedPostings };
+    return reversal;
   }
 
   /**

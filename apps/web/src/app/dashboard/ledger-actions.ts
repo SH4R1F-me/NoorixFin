@@ -184,3 +184,36 @@ export async function createCategory(input: NewCategoryInput): Promise<LedgerRes
     return fail(error);
   }
 }
+
+/**
+ * Reverse a posted transaction — FIN-03, audit §6.4.
+ *
+ * ── WHY THIS IS NOT A DELETE ────────────────────────────────────────────────
+ * The API posts a MIRROR ENTRY and marks the original VOIDED; nothing is
+ * removed. That is the requirement — "correction preserves history" — and it is
+ * also the only honest thing a ledger can do: a deleted entry takes with it the
+ * record that it was ever made, which is exactly what someone reconciling an
+ * account later needs to see.
+ *
+ * The UI wording follows from that. It says "reverse", never "delete", and the
+ * confirmation says a correcting entry will be added rather than implying the
+ * original disappears.
+ *
+ * No idempotency key: the reversal is claimed by a conditional status UPDATE in
+ * `reverse_journal_entry()` (migration 00019), so a second attempt is refused by
+ * the database rather than by a key this layer would have to remember.
+ */
+export async function reverseTransaction(
+  workspaceId: string,
+  transactionId: string,
+): Promise<LedgerResult> {
+  try {
+    await apiFetch(`/workspaces/${workspaceId}/transactions/${transactionId}/reverse`, {
+      method: 'POST',
+    });
+    revalidateLedger();
+    return { ok: true };
+  } catch (error) {
+    return fail(error);
+  }
+}

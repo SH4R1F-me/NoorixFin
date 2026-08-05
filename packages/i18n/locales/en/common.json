@@ -167,7 +167,7 @@
     "draft": "Draft",
     "posted": "Posted",
     "voided": "Voided",
-    "reverse": "Reverse Transaction",
+    "reverse": "Reverse",
     "noTransactions": "No transactions yet",
     "saveTransaction": "Save Transaction",
     "toAccount": "To Account",
@@ -178,7 +178,14 @@
     "added": "Transaction added",
     "selectAccount": "Select an account",
     "selectCategory": "Select a category",
-    "needAccount": "Create an account first — a transaction needs somewhere to come from."
+    "needAccount": "Create an account first — a transaction needs somewhere to come from.",
+    "reverseTitle": "Reverse this transaction?",
+    "reverseBody": "Nothing is deleted. A matching correcting entry is added, and the original stays on record marked reversed — so the history of what was recorded, and when, survives the correction.",
+    "reverseConfirm": "Add correcting entry",
+    "reversed": "Reversed",
+    "reversalOf": "Correction",
+    "reverseDone": "Correcting entry added.",
+    "cannotReverse": "Only posted transactions can be reversed."
   },
   "budgets": {
     "title": "Budgets",
