@@ -1,8 +1,73 @@
 # NoorixFin — PROGRESS LOG
 
-**Last updated:** 2026-08-04 Session 6
+**Last updated:** 2026-08-05 — Session 24
+**HEAD:** `980e99a` on `feat/noorixfin-foundation`
+
+> ➡️ **For "what do I do next", read `memory/SESSION_STATE.md`.** It is the
+> resume file. This log is the historical record and reads oldest-last.
 
 ---
+
+## Session 24 — 2026-08-05 — Closing the audit's Tier 3 and the a11y pass
+
+Five commits. Every item in the audit's Tier 1, Tier 2 and Tier 3 lists is now
+closed; four items from its §2.3/§6 tables remain (see SESSION_STATE §5).
+
+| Commit | Audit items | What landed |
+|---|---|---|
+| `3e47ade` | 13, 17, 14 | CI pipeline · data export (DATA-01) · **rehearsed** backup/restore (BACKUP-01) · throttle re-keyed from IP to verified user |
+| `b233311` | 16 | Idempotency for operator writes · migration `00018` |
+| `ac07900` | 18 | Operator MFA/TOTP enforced on the `aal` claim · admin E2E suite un-skipped |
+| `e3445eb` | — | The last 4 E2E specs CI never ran · API-down CI step |
+| `980e99a` | 10, §6.6, §6.9 | WCAG 2.2 AA scan as a CI gate · the responsive shell it exposed · Google OAuth wired |
+
+### Nine defects found by executing rather than reading
+
+1. CI started the API from the repo root — `envFilePath` is cwd-relative, so it
+   died on the first `getOrThrow`.
+2. **The backup runbook restored ZERO tables.** Four separate corrections; see
+   `supabase/BACKUP_RESTORE.md` §6 for the rehearsal log.
+3. The rate-limit throttle was IP-keyed, so under a 3-per-minute tier one user
+   429'd another from the same address. Measured, then fixed and re-measured.
+4. `idempotency_records` had **RLS disabled** with a SELECT grant to
+   `authenticated` — a latent tenant leak that using the table would have
+   activated. Closed in `00018` *before* first use.
+5. `ci-assertions.sql` failed on its own leftovers on a second run.
+6. **10 E2E tests never ran** — including the entire operator access-control
+   file. A skipped test reports as a pass.
+7. **The app had no responsive CSS at all** — not one media query. 376px of
+   horizontal scrolling at the reflow-equivalent of 200% zoom.
+8. Contrast failed systemically: four colours, ~60 occurrences, worst 2.35:1.
+9. A live Google client secret reached the staging area in a downloaded JSON.
+   Caught in the staged diff; the pattern is now gitignored.
+
+### Two of my own tests were wrong
+
+Recorded because both would otherwise have produced "fixes" to things that were
+never broken:
+
+- The first Bangla-clipping check flagged every heading. `scrollHeight` exceeds
+  `clientHeight` whenever a line box is taller than its box — with
+  `overflow: visible` that text renders perfectly.
+- The first axe run reported contrast failures against colours nobody sees:
+  cards were scanned **mid-fade-in at 13% opacity**.
+
+### Verification at `980e99a`
+
+typecheck clean · lint 0/0 · **76 unit** · **78 E2E** (1 skipped by design) ·
+18 migrations from scratch · `ci-assertions.sql` green on the source **and on a
+restored database** · locale parity 358 keys · db types fresh.
+
+### Acceptance matrix movement
+
+- **BACKUP-01** — was "not tested". Now rehearsed end to end; see the rehearsal
+  log in `supabase/BACKUP_RESTORE.md` §6.
+- **DATA-01** — was "not tested". Export implemented and verified across 24 live
+  checks plus an E2E download.
+
+---
+
+## Historical log (Sessions 1–18)
 
 ## Current Phase: 1 — Foundation
 ## Current Task: blocked — see "What needs you" below

@@ -568,3 +568,78 @@ how a misconfigured deployment spends an afternoon looking like a permissions pu
 distinguished by message, and a missing grant reports 503 with a pointer to migration 00014.
 
 **Status:** Confirmed — closed 2026-08-04.
+
+---
+
+## DEC-023: Rate limits are keyed on the VERIFIED USER, not the IP
+
+**Date:** 2026-08-05 (Session 24) · **Supersedes part of audit item 14**
+
+`ThrottlerGuard` tracks by `req.ip`. That was survivable under one global budget
+of 10 req/s, and stopped being survivable the moment audit item 14 introduced
+tiers: `ThrottleSensitive` allows **three requests per minute**.
+
+**Measured before the change:** one user's data export left a *different* user's
+export returning 429 from the same loopback address. Behind any reverse proxy
+that does not set `X-Forwarded-For` correctly, every user shares one bucket and
+the tier collapses to a global three-per-minute — which presents as an outage.
+Meanwhile the abuse case the limit exists to stop, one caller hammering one
+account, is unaffected by changing IP.
+
+**Decision:** `IdentityThrottlerGuard` keys on `user:<sub>` from a **verified**
+token, falling back to `ip:<addr>`.
+
+**The token must be verified, and this is the whole decision.** The obvious
+shortcut is to decode the JWT without checking its signature — it is only a
+cache key. It is not: an unverified `sub` is attacker-chosen, so anyone wanting
+an unlimited budget mints a new one per request. That is strictly *worse* than
+keying on IP, because it removes the limit rather than sharing it. Verification
+is local (DEC-011) — an in-process signature check against a cached JWKS — so it
+costs microseconds and no quota. The auth guard verifies the same token again
+moments later; duplicating that is far cheaper than making the throttler depend
+on guard ordering.
+
+**Status:** Confirmed — verified live, 4 checks; 7 unit tests.
+
+---
+
+## DEC-024: Operator MFA is enforced on the SESSION's assurance level
+
+**Date:** 2026-08-05 (Session 24) · **Closes audit item 18**
+
+A super-admin account protected only by a password was the weakest link in an
+otherwise careful authorization design.
+
+**Decision:** TOTP via Supabase Auth (`auth.mfa.totp`), enforced by
+`SuperAdminGuard` requiring `aal2` on every `/v1/admin/*` route.
+
+**Why the `aal` claim and not a profile column.** A column saying "this operator
+has MFA enabled" is satisfied by a stolen password: the attacker signs in, the
+column still reads true, the console opens. `aal` describes how *this session*
+was established, so it cannot be satisfied without the factor being presented.
+Verified: a new password-only sign-in on an already-enrolled operator is still
+refused. A stored flag would have passed that test — that is the distinction,
+and without it the control would be decoration.
+
+**Ordering is part of the design.** The MFA check runs *after* the operator and
+status checks, so a non-operator receives `NOT_SUPER_ADMIN` and a 404 and never
+learns that MFA guards an admin surface.
+
+**A missing claim counts as unverified**, not as unknown-allow. An Auth server
+that stops emitting `aal` is precisely where failing open would be silent and
+total.
+
+**It cannot lock anyone out.** Enrolment lives at `/dashboard/settings`, outside
+the admin gate, so an operator with no factor can always sign in, enrol, step up
+and return; the refusal names that path. Recovery from a lost authenticator is
+service-role SQL, like the promotion that made them an operator (DEC-013).
+
+**Operators cannot remove their own factor.** A self-service switch that turns
+off the control protecting the console means a stolen session simply turns it
+off. Ordinary users can.
+
+**Consequence to accept:** MFA is a paid-plan feature on Supabase's managed
+platform. On a plan without it, `/admin` becomes unreachable for anyone not
+already enrolled. Recorded in `supabase/config.toml` above the provider block.
+
+**Status:** Confirmed — 11 live checks, 3 new guard unit tests, 2 E2E specs.

@@ -1,6 +1,27 @@
 # NoorixFin — TEST RESULTS
 
-**Last updated:** 2026-08-04 (Session 18 — Enterprise Admin System: console, account lifecycle, observability)
+**Last updated:** 2026-08-05 (Session 24 — audit Tier 3 closed, WCAG 2.2 AA, CI)
+
+> Session 24 verification totals at HEAD `980e99a`: typecheck clean · lint 0/0 ·
+> **76 unit** · **78 E2E** (1 skipped by design — it needs the API stopped and
+> has its own CI step) · 18 migrations from scratch · `ci-assertions.sql` green
+> on the source **and on a restored database** · locale parity 358 keys ·
+> db types fresh. All of it now runs automatically — see
+> `.github/workflows/ci.yml`.
+
+
+---
+
+## Session 24 additions — audit items 10, 13, 14, 16, 17, 18
+
+| Area | Evidence |
+|---|---|
+| **CI (#13)** | 3 jobs — static / database / e2e. The database job resets from EMPTY; `ci-assertions.sql` is the gate because `acceptance.sql` exits 0 whatever it prints. A 4th step runs the API-DOWN resilience spec after killing the API and confirming it is dead |
+| **Idempotency, operator writes (#16)** | 15 live checks: create without a key refused, same key twice → one broadcast and one id, **five CONCURRENT identical submits → one row**, reused key with different content refused by name, same key from a different operator kept separate, publish replay writes no second audit entry, RLS confines records to their actor. The in-flight 409 is pinned in unit tests — live it is a race that never went that way |
+| **Operator MFA (#18)** | 11 live checks. The one that matters: **a NEW password-only sign-in on an already-enrolled operator is still refused.** A stored "has MFA" flag would have passed that; the check reads the session's `aal` claim instead. A non-operator gets `NOT_SUPER_ADMIN`, never `MFA_REQUIRED` |
+| **Rate-limit tiers (#14, corrected)** | Was IP-keyed. Measured: one user's export 429'd a *different* user from the same address. Now keyed on the verified user; a forged token falls back to IP rather than buying a fresh bucket |
+| **WCAG 2.2 AA (#10, §6.6)** | axe-core over every route — signed out, signed in, operator console — as a CI gate, plus hand-written assertions for what axe cannot see: table `scope`, reduced motion, 200% reflow, Bangla clipping, keyboard reachability. 13 tests |
+| **Google OAuth (§6.9)** | 🟡 Configured and verified to the boundary: GoTrue holds the credentials, `/authorize` hands off to Google with the registered client and callback, Google returns its sign-in page (not `redirect_uri_mismatch`), the UI offers the button, the callback refuses a forged code. The final consent step needs a human with a real Google account. ⚠️ The client secret was pasted into a chat transcript — **rotate it** |
 
 ---
 
@@ -14,14 +35,14 @@
 | — | **Table privileges present for `authenticated`** | ✅ **PASS (live)** | Added by migration 00008 after a total-outage 42501 was found |
 | FIN-01 | Every posted journal balanced | ✅ **PASS (live)** | `chk_posting_sides` rejects debit+credit both positive; `chk_posting_nonzero` rejects zero-only. Plus 44/44 `validateBalance` unit tests |
 | FIN-02 | Retry cannot duplicate — **incl. mobile queue replay after app kill** (DEC-010) | ✅ **PASS (mobile side)** | Same key twice → 1 server entry; enqueue dedupes; **reclaimed after kill cannot double-post**. API-side cross-request dedup still needs `supabase start` |
-| FIN-03 | Correction preserves history | ⬜ Not tested | Schema supports `reverses_entry_id` |
+| FIN-03 | Correction preserves history | ⬜ **Not tested — BLOCKED ON UI** | Schema supports `reverses_entry_id`; `POST /workspaces/:id/transactions/:id/reverse` is implemented, guarded and unit-tested. **No UI calls it**, so a user cannot exercise this. Audit §6.4 — first item in the next session's queue (`memory/SESSION_STATE.md` §5A) |
 | SYNC-01 | Web and Mobile show same committed data — **incl. offline→online convergence** (DEC-010) | ⬜ Not tested | Mobile app is still a scaffold |
 | SYNC-02 | Stale edit detected — **incl. queued mobile mutation → 409 surfaced** (DEC-010) | ✅ **PASS (mobile side)** | 409 parks as NEEDS_ATTENTION with the reason preserved, never silently merged; does not block later writes. API-side 409 emission still untested |
-| I18N-01 | Bangla and English complete | 🟡 Partial | Parity 186/186 verified by script each session; still no CI check |
+| I18N-01 | Bangla and English complete | ✅ **PASS (S24)** | Parity is now a **CI gate**, not a per-session ritual: `pnpm --filter @noorixfin/i18n check:keys` runs in the `static` job. 358 keys in `common`, 784 key checks across bn/en × common/errors |
 | TIME-01 | Timezone boundary correct | ⬜ Not tested | All timestamps are `TIMESTAMPTZ` |
-| DATA-01 | Export complete and scoped | ⬜ Not tested | |
+| DATA-01 | Export complete and scoped | ✅ **PASS (live, S24)** | `GET /v1/me/export` runs on the USER'S client so RLS is the scope boundary. 24 live checks: profile, workspace, accounts, categories, entries **and postings** (the entry carries no amount under DEC-006), budgets, goals, debts, calendar, recurring rules, tags. Scoped: a second user's entries never appear, an account with no workspace still exports cleanly, `system_events`/`audit_events` excluded, 401 without a session. Plus `e2e/data-export.spec.ts` — a real browser download asserting Content-Disposition and no-store |
 | DATA-02 | Deletion flow works | 🟡 **Partial (live)** | **NEW (S18, DEC-017):** `purge_expired_deletions()` verified to skip accounts still in grace and to remove ledger→workspace→profile in FK order once expired, leaving the `ACCOUNT_PURGED` audit row. The `PENDING_DELETION`-without-deadline CHECK is enforced. Not yet exercised end-to-end through the UI against a real 30-day expiry (no scheduler — purge is an operator action) |
-| BACKUP-01 | Restore is usable | ⬜ Not tested | |
+| BACKUP-01 | Restore is usable | ✅ **PASS (rehearsed, S24)** | **The runbook was wrong and executing it proved it: the first attempt restored ZERO tables.** Four corrections (the `extensions` schema, privileges, migration history, pg_cron's one-database-per-cluster rule) are now written into `supabase/BACKUP_RESTORE.md` §2/§3/§5. Rehearsal: `pg_restore` exit 0 with 0 errors, counts identical to source, 0 orphaned users, 0 unbalanced POSTED entries, and `ci-assertions.sql` exits 0 **on the restored database**. Rehearsal log in §6 of that file. NOT covered: sign-in against the restored DB (needs a full Auth stack), Storage, and timing under load — so no RPO/RTO is claimed |
 | STORE-01 | Store privacy declarations accurate | ⬜ Not tested | Must be filed under the new name `NoorixFin` (DEC-008) |
 | A11Y-01 | Core flow accessible | ⬜ Not tested | |
 

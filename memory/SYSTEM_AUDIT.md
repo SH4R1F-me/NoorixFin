@@ -1,5 +1,37 @@
 # NoorixFin — System-Wide Audit
 
+> ## ⚠️ STATUS BANNER — read before acting on anything below
+>
+> **This document is the Session-19 SNAPSHOT and is deliberately left unedited
+> below this banner.** It is the record of what was true on 2026-08-04, and
+> rewriting it would destroy the only account of how the product got here.
+>
+> **Most of it has since been fixed.** As of **2026-08-05 (Session 24, HEAD
+> `980e99a`)**:
+>
+> | Group | Status |
+> |---|---|
+> | **Tier 1 — Blockers (1–4)** | ✅ all closed |
+> | **Tier 2 (5–10)** | ✅ all closed |
+> | **Tier 3 (11–19)** | ✅ all closed |
+> | **§6 other defects** | ✅ 1, 2, 5, 6, 8 closed · 🟡 9 configured · ❌ **3, 4, 7 open** |
+> | **§2.3 never-built** | ✅ onboarding, quick-add, drill-down, error boundaries · ❌ **recurring rules UI open** · optional: split categories, receipts |
+>
+> **Still open — the complete list:**
+> 1. §6.4 — `POST /transactions/:id/reverse` is unreachable from the UI (blocks FIN-03)
+> 2. §6.3 — `tags` / `journal_entry_tags` have no UI
+> 3. §2.3 — recurring rules have no UI
+> 4. §2.4 / §6.7 — the mobile sync engine still has no UI
+>
+> ➡️ **`memory/SESSION_STATE.md` is the live status file.** Start there.
+>
+> Two claims in §5 and §9 below are now measurably WRONG and are worth naming,
+> because they were re-tested rather than assumed:
+> - §5 "any API outage 500s the whole dashboard" — re-measured with the API
+>   stopped: all four routes return **200** with a degraded banner.
+> - §9 "API lint 205 errors / web 14" — now **0 and 0**, enforced by CI with
+>   `--max-warnings 0`.
+
 **Date:** 2026-08-04 (Session 19)
 **Scope:** every route, the API surface, business logic, i18n, and resilience
 **Method:** static inventory **plus live execution** against local Supabase (14 migrations), the NestJS
