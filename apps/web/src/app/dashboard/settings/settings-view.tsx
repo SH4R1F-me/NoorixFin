@@ -13,6 +13,7 @@ import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   AlertTriangle,
+  Download,
   Globe,
   Link2,
   Loader2,
@@ -404,6 +405,35 @@ export default function SettingsView({
               <LogOut size={14} />
               {t('settings.signOutAll')}
             </button>
+          </div>
+        </section>
+
+        {/* ── Your data (§15.3, DATA-01) ──────────────────── */}
+        <section style={s.section}>
+          <div style={s.sectionHeader}>
+            <Download size={18} style={{ color: '#38bdf8' }} />
+            <span style={s.sectionTitle}>{t('settings.exportData')}</span>
+          </div>
+
+          <div style={{ ...s.row, borderBottom: 'none' }}>
+            <div style={s.rowLabel}>
+              <span style={s.rowTitle}>{t('settings.exportData')}</span>
+              <span style={s.rowDesc}>{t('settings.exportDataBody')}</span>
+            </div>
+            {/*
+              A plain link, not a fetch-and-blob. The endpoint sets
+              Content-Disposition, so the browser saves the file itself — which
+              means the download works without JavaScript holding a full copy
+              of someone's finances in memory, and it survives a tab close.
+            */}
+            <a
+              href="/dashboard/settings/export"
+              style={{ ...s.ghostBtn, textDecoration: 'none' }}
+              download
+            >
+              <Download size={15} aria-hidden="true" />
+              {t('settings.downloadExport')}
+            </a>
           </div>
         </section>
 

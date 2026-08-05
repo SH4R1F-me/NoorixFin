@@ -7,7 +7,7 @@
 import { Module, MiddlewareConsumer, NestModule } from '@nestjs/common';
 import { APP_GUARD, APP_FILTER, APP_INTERCEPTOR } from '@nestjs/core';
 import { ConfigModule } from '@nestjs/config';
-import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
+import { ThrottlerModule } from '@nestjs/throttler';
 
 // Infrastructure modules
 import { SupabaseModule } from './supabase/supabase.module';
@@ -31,6 +31,7 @@ import { AccountModule } from './account/account.module';
 import { RequestIdMiddleware } from './common/middleware/request-id.middleware';
 import { GlobalHttpExceptionFilter } from './common/filters/http-exception.filter';
 import { RequestTelemetryInterceptor } from './common/interceptors/logging.interceptor';
+import { IdentityThrottlerGuard } from './common/guards/identity-throttler.guard';
 
 @Module({
   imports: [
@@ -86,10 +87,12 @@ import { RequestTelemetryInterceptor } from './common/interceptors/logging.inter
       provide: APP_GUARD,
       useClass: SupabaseAuthGuard,
     },
-    // Global rate limiting
+    // Global rate limiting, keyed on the authenticated user rather than the
+    // IP — see identity-throttler.guard.ts for why the default breaks the
+    // tight tiers introduced by audit item 14.
     {
       provide: APP_GUARD,
-      useClass: ThrottlerGuard,
+      useClass: IdentityThrottlerGuard,
     },
     // Global exception filter — also feeds system_events (DEC-018)
     {

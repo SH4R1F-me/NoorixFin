@@ -82,4 +82,10 @@ async function bootstrap() {
   console.log(`🚀 NoorixFin API running on http://localhost:${port}`);
   console.log(`📚 Swagger UI: http://localhost:${port}/api/docs`);
 }
-bootstrap();
+// `void`, not a bare call: an unhandled rejection here means the process
+// started and then silently failed to listen, which looks like a hung deploy.
+// The catch turns that into an exit code a supervisor can act on.
+void bootstrap().catch((error) => {
+  console.error('Failed to start NoorixFin API', error);
+  process.exit(1);
+});

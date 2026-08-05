@@ -8,9 +8,10 @@ import {
   PublicSettingsController,
 } from './account.controller';
 import { AccountService } from './account.service';
+import { ExportService } from './export.service';
 
 @Module({
   controllers: [AccountController, PublicSettingsController],
-  providers: [AccountService],
+  providers: [AccountService, ExportService],
 })
 export class AccountModule {}

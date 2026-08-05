@@ -291,7 +291,8 @@ export class UpdateBroadcastDto extends CreateBroadcastDto {
 export class EnableTracingDto {
   @ApiPropertyOptional({
     example: 15,
-    description: 'How long to trace for. Clamped server-side to at most 60 minutes.',
+    description:
+      'How long to trace for. Clamped server-side to at most 60 minutes.',
   })
   @IsOptional()
   @IsInt()

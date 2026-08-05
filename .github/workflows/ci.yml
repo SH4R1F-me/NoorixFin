@@ -1,0 +1,228 @@
+name: CI
+
+# ── WHY THIS EXISTS ──────────────────────────────────────────────────────────
+# Audit item 13: "CI pipeline — none exists. All the tests exist; nothing runs
+# them automatically."
+#
+# Everything below already ran locally, by hand, when someone remembered. That
+# is how this repository accumulated the class of bug it keeps re-discovering:
+# migrations that had never been applied from scratch, an E2E suite that only
+# passed against one hand-made login, locale catalogs that had drifted. Each was
+# found by a human running something they did not have to run.
+#
+# ── THE GATES, AND WHY EACH ONE IS HERE ──────────────────────────────────────
+#   typecheck      — the cheapest gate, and since the schema types landed it
+#                    catches wrong-column and wrong-constraint bugs too.
+#   lint           — 0 errors is the enforced state, not an aspiration.
+#   unit           — money arithmetic and the guards.
+#   migrations     — FROM SCRATCH. A migration that only works against a
+#                    developer's already-migrated database is the failure mode
+#                    00008/00009/00014 each shipped.
+#   db types fresh — a generated types file that has drifted is worse than none,
+#                    because the compiler keeps vouching for a shape the
+#                    database stopped having.
+#   locale parity  — a key present in one language renders as its own name for
+#                    half the users.
+#   sql acceptance — RLS and the ledger invariants, as `authenticated`.
+#   e2e            — against a production build, with a real API and database.
+#
+# Jobs are split so a failure names itself. One "test" job that runs everything
+# reports "test failed", and someone has to open the log to learn whether the
+# database or the browser broke.
+
+on:
+  push:
+    branches: [master, 'feat/**', 'fix/**']
+  pull_request:
+    branches: [master]
+
+# A second push supersedes the first. Two runs of the E2E suite against the same
+# branch are two Supabase stacks competing for the same ports.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: '20'
+  PNPM_VERSION: '11.18.0'
+
+jobs:
+  # ───────────────────────────────────────────────────────────────────────────
+  static:
+    name: Typecheck, lint and unit tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Locale parity (bn ↔ en)
+        run: pnpm --filter @noorixfin/i18n check:keys
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      # `--max-warnings 0`. The count is zero today, and letting warnings
+      # accumulate is exactly how 289 lint errors became the normal state.
+      - name: Lint (API)
+        run: pnpm --filter @noorixfin/api exec eslint src --max-warnings 0
+
+      - name: Lint (web)
+        run: pnpm --filter @noorixfin/web exec eslint src --max-warnings 0
+
+      - name: Unit tests
+        run: pnpm test
+
+      - name: Production build
+        run: pnpm build
+
+  # ───────────────────────────────────────────────────────────────────────────
+  database:
+    name: Migrations from scratch, types and SQL acceptance
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      # `db reset` applies every migration to an EMPTY database. That is the
+      # whole point of this job: a migration that depends on state a developer
+      # happens to have is one that fails on the first real deployment.
+      - name: Start Supabase (applies all migrations from scratch)
+        run: supabase start
+
+      - name: Generated types match the migrations
+        run: pnpm --filter @noorixfin/db-types check:fresh
+
+      - name: Seed the acceptance fixture
+        run: |
+          psql "postgresql://postgres:postgres@127.0.0.1:54322/postgres" \
+            -v ON_ERROR_STOP=1 -q -f supabase/tests/_seed.sql
+
+      # The GATE. `acceptance.sql` prints counts for a human and exits 0
+      # whatever they say, so running it alone would be a green tick proving
+      # only that psql ran. Every check in ci-assertions.sql RAISES, so a
+      # regression exits non-zero. Verified by breaking each invariant on
+      # purpose and confirming the exit code changed.
+      - name: SQL invariants (tenant isolation, ledger, idempotency)
+        run: |
+          psql "postgresql://postgres:postgres@127.0.0.1:54322/postgres" \
+            -v ON_ERROR_STOP=1 -f supabase/tests/ci-assertions.sql
+
+      # Not a gate — kept because the printed counts are what a human reads
+      # when the gate above fails and they need to see the shape of it.
+      - name: SQL acceptance report (informational)
+        run: |
+          psql "postgresql://postgres:postgres@127.0.0.1:54322/postgres" \
+            -f supabase/tests/acceptance.sql
+
+      - name: Stop Supabase
+        if: always()
+        run: supabase stop
+
+  # ───────────────────────────────────────────────────────────────────────────
+  e2e:
+    name: End-to-end (real API, real database, production build)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Start Supabase
+        run: supabase start
+
+      - name: Build
+        run: pnpm build
+
+      # Local demo keys. Not secrets — they are the published Supabase local
+      # defaults, and RLS is what protects the data (see apps/web/.env.local).
+      - name: Write environment
+        run: |
+          cat > apps/api/.env.local <<'ENV'
+          SUPABASE_URL=http://127.0.0.1:54321
+          SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0
+          SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImV4cCI6MTk4MzgxMjk5Nn0.EGIM96RAZx35lJzdJsyH-qQwv8Hdp7fsn3W0YpN81IU
+          SUPABASE_JWT_SECRET=super-secret-jwt-token-with-at-least-32-characters-long
+          API_PORT=8080
+          CORS_ORIGINS=http://127.0.0.1:3100
+          NODE_ENV=test
+          ENV
+          cat > apps/web/.env.local <<'ENV'
+          NEXT_PUBLIC_SUPABASE_URL=http://127.0.0.1:54321
+          NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0
+          NEXT_PUBLIC_API_URL=http://localhost:8080
+          NEXT_PUBLIC_SITE_URL=http://127.0.0.1:3100
+          NEXT_PUBLIC_GOOGLE_AUTH_ENABLED=false
+          ENV
+
+      # From inside apps/api, not the repo root. `envFilePath: ['.env.local']`
+      # is resolved against process.cwd(), so starting it from the root means
+      # the config is never read and the process dies on the first getOrThrow.
+      - name: Start the API
+        working-directory: apps/api
+        run: |
+          node dist/main.js &
+          # Poll rather than sleep: a fixed wait is either flaky or slow, and on
+          # a cold runner it is usually both.
+          for i in $(seq 1 30); do
+            curl -sf http://localhost:8080/v1/health > /dev/null && break
+            sleep 1
+          done
+          curl -sf http://localhost:8080/v1/health
+
+      - name: Install Playwright browser
+        run: pnpm --filter @noorixfin/web exec playwright install --with-deps chromium
+
+      # E2E_LIVE=1 turns on the specs that seed their own accounts through the
+      # real API. Without it they skip, and a green run would mean nothing.
+      - name: E2E
+        run: pnpm --filter @noorixfin/web test:e2e
+        env:
+          E2E_LIVE: '1'
+
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: apps/web/test-results/
+          retention-days: 7
+
+      - name: Stop Supabase
+        if: always()
+        run: supabase stop

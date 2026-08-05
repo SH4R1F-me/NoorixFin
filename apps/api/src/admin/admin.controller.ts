@@ -154,7 +154,9 @@ export class AdminController {
   }
 
   @Get('tracing')
-  @ApiOperation({ summary: 'Whether the request-trace window is open, and until when' })
+  @ApiOperation({
+    summary: 'Whether the request-trace window is open, and until when',
+  })
   tracingStatus() {
     return this.tracing.status();
   }
@@ -164,7 +166,7 @@ export class AdminController {
   @ApiOperation({
     summary: 'Open a time-boxed request-trace window',
     description:
-      'Records EVERY request to system_events so one user\'s request can be ' +
+      "Records EVERY request to system_events so one user's request can be " +
       'followed end to end. Expires on its own — a trace that must be switched ' +
       'off by hand becomes a permanent activity log of every user, which ' +
       'DEC-016 does not permit an operator to keep.',

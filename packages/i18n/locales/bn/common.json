@@ -338,7 +338,9 @@
     "confirmDeletion": "মুছে ফেলা নিশ্চিত করুন",
     "reasonOptional": "কারণ (ঐচ্ছিক)",
     "emailChangeUnavailable": "ইমেইল পরিবর্তন এখনও উপলব্ধ নয়।",
-    "displayNamePlaceholder": "আপনার নাম"
+    "displayNamePlaceholder": "আপনার নাম",
+    "exportDataBody": "এই অ্যাকাউন্টের প্রতিটি অ্যাকাউন্ট, লেনদেন, বাজেট ও লক্ষ্য নিয়ে একটি JSON ফাইল। লেজারে যা আছে সবই, আর অন্য কারও কিছুই নয়।",
+    "downloadExport": "আমার তথ্য ডাউনলোড করুন"
   },
   "time": {
     "sunday": "রবিবার",

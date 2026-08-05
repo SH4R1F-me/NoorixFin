@@ -14,6 +14,7 @@ import {
   ParseUUIDPipe,
   Post,
   Req,
+  Res,
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
@@ -22,7 +23,9 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 import { Request } from 'express';
+import type { Response } from 'express';
 import { AccountService } from './account.service';
+import { ExportService } from './export.service';
 import { RequestDeletionDto } from './dto/account.dto';
 import { ThrottleSensitive } from '../common/throttle';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
@@ -34,7 +37,50 @@ type AuthedRequest = Request & { accessToken: string };
 @ApiBearerAuth('supabase-auth')
 @Controller('me')
 export class AccountController {
-  constructor(private readonly accountService: AccountService) {}
+  constructor(
+    private readonly accountService: AccountService,
+    private readonly exportService: ExportService,
+  ) {}
+
+  /**
+   * Blueprint §15.3, acceptance DATA-01.
+   *
+   * The GDPR sibling of the deletion flow below: a user who can ask to be
+   * forgotten should be able to ask what is held first. Rate-limited with the
+   * sensitive tier — an export is a full copy of someone's finances in one
+   * response, which is precisely what a stolen session would want repeatedly.
+   */
+  @Get('export')
+  @ThrottleSensitive()
+  @ApiOperation({
+    summary: 'Export every row this account owns (§15.3)',
+    description:
+      "Runs on the USER's client, so RLS is the scope boundary and a bug here " +
+      'cannot widen it. Operational logs are excluded: an audit trail a user ' +
+      'can export is an audit trail an attacker can read after taking an account.',
+  })
+  @ApiOkResponse({
+    description: 'A single JSON document. See ExportService for the shape.',
+  })
+  async exportData(
+    @CurrentUser() user: AuthenticatedUser,
+    @Req() req: AuthedRequest,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    const bundle = await this.exportService.exportEverything(
+      user.id,
+      req.accessToken,
+    );
+
+    // Offered as a download rather than rendered in a tab: this is a file
+    // someone keeps, and a browser showing 4MB of a user's finances as text is
+    // both unusable and easy to leave open on a shared screen.
+    res.setHeader(
+      'Content-Disposition',
+      `attachment; filename="noorixfin-export-${new Date().toISOString().slice(0, 10)}.json"`,
+    );
+    return bundle;
+  }
 
   @Post('deletion-request')
   @ThrottleSensitive()

@@ -125,7 +125,10 @@ export class TracingService {
    * point of the switch is that it cannot become permanent by accident.
    */
   async enable(minutes: number, actorId: string): Promise<{ until: string }> {
-    const bounded = Math.min(Math.max(Math.floor(minutes), 1), MAX_TRACE_MINUTES);
+    const bounded = Math.min(
+      Math.max(Math.floor(minutes), 1),
+      MAX_TRACE_MINUTES,
+    );
     const until = new Date(Date.now() + bounded * 60_000).toISOString();
 
     const client = this.supabase.getServiceClient();

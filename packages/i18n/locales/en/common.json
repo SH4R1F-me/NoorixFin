@@ -338,7 +338,9 @@
     "confirmDeletion": "Confirm deletion",
     "reasonOptional": "Reason (optional)",
     "emailChangeUnavailable": "Changing your email is not available yet.",
-    "displayNamePlaceholder": "Your name"
+    "displayNamePlaceholder": "Your name",
+    "exportDataBody": "A single JSON file with every account, transaction, budget and goal on this account. Everything the ledger holds, and nothing belonging to anyone else.",
+    "downloadExport": "Download my data"
   },
   "time": {
     "sunday": "Sunday",
