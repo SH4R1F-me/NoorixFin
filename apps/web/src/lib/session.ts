@@ -38,6 +38,17 @@ export interface SessionProfile {
 export interface SessionContext {
   profile: SessionProfile | null;
   isSuperAdmin: boolean;
+  /**
+   * False when the API could not be contacted at all.
+   *
+   * Distinct from `profile === null`, which also covers "the API answered, but
+   * this request was not authorised". The shell needs the difference: an
+   * unreachable API means every panel on the page is empty for a reason the
+   * user did not cause, and showing empty states with no explanation would read
+   * as "your data is gone" on a finance product. `false` drives the degraded
+   * banner; it never affects authorization.
+   */
+  apiReachable: boolean;
 }
 
 export const getSessionContext = cache(async (): Promise<SessionContext> => {
@@ -48,12 +59,21 @@ export const getSessionContext = cache(async (): Promise<SessionContext> => {
       // Defensive coercion: an API that ever returned a truthy string here must
       // not be able to turn into an operator by accident.
       isSuperAdmin: profile.is_super_admin === true,
+      apiReachable: true,
     };
   } catch (error) {
     // The shell must still render for a signed-in user when the API is down —
     // they see their dashboard chrome and empty states, not a crash. Failing
     // closed on the role is the important half: no API, no admin switch.
-    if (error instanceof ApiError) return { profile: null, isSuperAdmin: false };
+    //
+    // Since apiFetch normalises connection refusals and timeouts into
+    // ApiError('API_UNREACHABLE'), this branch now genuinely catches every
+    // failure. It used to re-throw the raw TypeError a refused connection
+    // produced, and because this function runs in dashboard/layout.tsx that
+    // single unhandled throw 500'd every dashboard route (audit finding C).
+    if (error instanceof ApiError) {
+      return { profile: null, isSuperAdmin: false, apiReachable: !error.isUnreachable };
+    }
     throw error;
   }
 });

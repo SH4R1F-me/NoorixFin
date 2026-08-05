@@ -26,7 +26,7 @@ export default async function DashboardLayout({
 
   // Fetched together; getSessionContext is React-cached so pages in the same
   // render reuse it rather than issuing another /me call (DEC-011).
-  const [{ profile, isSuperAdmin }, broadcasts, settings] = await Promise.all([
+  const [{ profile, isSuperAdmin, apiReachable }, broadcasts, settings] = await Promise.all([
     getSessionContext(),
     getMyBroadcasts(),
     getPublicSettings(),
@@ -37,6 +37,9 @@ export default async function DashboardLayout({
       userEmail={user.email ?? ''}
       displayName={profile?.display_name ?? ''}
       isSuperAdmin={isSuperAdmin}
+      // Every panel below will be empty when this is false. Saying so is the
+      // difference between "the service is down" and "my money is missing".
+      apiReachable={apiReachable}
       broadcasts={broadcasts}
       maintenance={settings.maintenance_mode ?? null}
       donationUrl={settings.donation_url?.value ?? ''}

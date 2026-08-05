@@ -28,7 +28,22 @@ export class ApiError extends Error {
     super(message);
     this.name = 'ApiError';
   }
+
+  /** True when the API could not be contacted at all, as opposed to answering with an error. */
+  get isUnreachable(): boolean {
+    return this.code === 'API_UNREACHABLE';
+  }
 }
+
+/**
+ * How long to wait before giving up on the API.
+ *
+ * Without this, a hung API (accepting the connection but never answering)
+ * stalls the whole server render until Next's own timeout — the user sees a
+ * blank tab rather than the degraded-but-branded page the callers can render.
+ * A refusal fails in milliseconds; a hang is the case this bounds.
+ */
+const REQUEST_TIMEOUT_MS = 10_000;
 
 type RequestOptions = {
   method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
@@ -60,12 +75,40 @@ export async function apiFetch<T>(path: string, options: RequestOptions = {}): P
   };
   if (idempotencyKey) headers['Idempotency-Key'] = idempotencyKey;
 
-  const response = await fetch(`${API_URL}/v1${path}`, {
-    method,
-    headers,
-    cache,
-    ...(body !== undefined ? { body: JSON.stringify(body) } : {}),
-  });
+  // ── Why this try/catch exists ─────────────────────────────────────────────
+  // Before it, the failure modes were backwards: "the API returned 500"
+  // degraded gracefully into an ApiError that every caller already handles,
+  // while "the API is unreachable" escaped as a raw TypeError. That TypeError
+  // was thrown inside getSessionContext(), which runs in dashboard/layout.tsx,
+  // so a refused connection took down every dashboard route with a 500 —
+  // verified during the 2026-08-04 audit on /dashboard, /transactions,
+  // /accounts and /settings.
+  //
+  // Normalising to ApiError(503) means there is exactly ONE error type leaving
+  // this module. Callers already branch on `instanceof ApiError`, so they all
+  // inherit the graceful path without changing.
+  let response: Response;
+  try {
+    response = await fetch(`${API_URL}/v1${path}`, {
+      method,
+      headers,
+      cache,
+      signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+      ...(body !== undefined ? { body: JSON.stringify(body) } : {}),
+    });
+  } catch (error) {
+    // Distinguished only in the message: a timeout means the API accepted the
+    // connection and stopped answering, which is a different operational fault
+    // from nothing listening on the port.
+    const timedOut = error instanceof Error && error.name === 'TimeoutError';
+    throw new ApiError(
+      503,
+      'API_UNREACHABLE',
+      timedOut
+        ? `The API did not respond within ${REQUEST_TIMEOUT_MS / 1000}s`
+        : 'Could not reach the API',
+    );
+  }
 
   if (!response.ok) {
     let code = 'UNKNOWN';

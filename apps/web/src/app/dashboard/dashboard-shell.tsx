@@ -24,6 +24,7 @@ import {
   ShieldAlert,
   Heart,
   Wrench,
+  PlugZap,
 } from 'lucide-react';
 import BroadcastBanner from '../../components/broadcast-banner';
 import { useLocale } from '../../lib/i18n/locale-provider';
@@ -57,12 +58,15 @@ export default function DashboardShell({
   maintenance = null,
   donationUrl = '',
   appVersion = '',
+  apiReachable = true,
 }: {
   children: React.ReactNode;
   userEmail: string;
   displayName?: string;
   /** Resolved server-side from the API. Never from client state (DEC-016). */
   isSuperAdmin?: boolean;
+  /** False when the API could not be contacted — drives the degraded banner. */
+  apiReachable?: boolean;
   broadcasts?: Broadcast[];
   maintenance?: { enabled: boolean; message_en: string; message_bn: string } | null;
   donationUrl?: string;
@@ -274,6 +278,20 @@ export default function DashboardShell({
 
         {/* Page content */}
         <div style={styles.pageContent}>
+          {/*
+            Degraded mode. Ranked above even the maintenance notice: if the API
+            is unreachable the page below is empty, and an unexplained empty
+            finance dashboard is the single most alarming thing this UI can
+            show. `role="alert"` rather than `status` because it changes what
+            the rest of the page means.
+          */}
+          {!apiReachable && (
+            <div style={styles.offlineBanner} role="alert">
+              <PlugZap size={17} style={{ flexShrink: 0 }} aria-hidden="true" />
+              <span>{t('app.offlineBody')}</span>
+            </div>
+          )}
+
           {/* Operator-set maintenance notice. Above broadcasts because it is
               about the service being degraded right now. */}
           {maintenance?.enabled && (
@@ -454,6 +472,18 @@ const styles: Record<string, React.CSSProperties> = {
   },
   adminSwitchLabel: {
     whiteSpace: 'nowrap',
+  },
+  offlineBanner: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.7rem',
+    padding: '0.85rem 1rem',
+    background: 'rgba(56,189,248,0.1)',
+    border: '1px solid rgba(56,189,248,0.32)',
+    borderRadius: '0.75rem',
+    color: '#7dd3fc',
+    fontSize: '0.875rem',
+    marginBottom: '1rem',
   },
   maintenanceBanner: {
     display: 'flex',
