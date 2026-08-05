@@ -17,7 +17,9 @@
  */
 import { notFound } from 'next/navigation';
 import { getSessionContext } from '../../lib/session';
+import { getMfaState } from '../../lib/supabase/server';
 import AdminShell from './admin-shell';
+import MfaGate from './mfa-gate';
 
 export default async function AdminLayout({
   children,
@@ -30,6 +32,22 @@ export default async function AdminLayout({
   // console — mirroring the same check in SuperAdminGuard, so the UI and the
   // API cannot disagree about who is allowed in.
   if (!isSuperAdmin || profile?.status !== 'ACTIVE') notFound();
+
+  // ── Second factor (audit item 18) ──────────────────────────────────────────
+  // Ordered AFTER the operator check on purpose. A non-operator has already
+  // received notFound() above, so the step-up screen is only ever shown to
+  // someone who is genuinely an operator — it never tells a stranger that an
+  // admin console exists behind an MFA prompt.
+  //
+  // A prompt, not a 404: this person is allowed in, they just have not proved
+  // it for this session, and a 404 would send a legitimate operator debugging
+  // their own permissions. The API refuses independently, so this screen is the
+  // usable face of a decision that is enforced elsewhere — deleting it would
+  // leave every panel empty with a MFA_REQUIRED error rather than open the door.
+  const mfa = await getMfaState();
+  if (!mfa.stepped) {
+    return <MfaGate enrolled={mfa.enrolled} factorId={mfa.factorId} />;
+  }
 
   return (
     <AdminShell email={profile.email} displayName={profile.display_name}>

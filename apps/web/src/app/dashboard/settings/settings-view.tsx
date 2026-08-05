@@ -35,6 +35,8 @@ import {
 import { GOOGLE_AUTH_ENABLED, PROVIDER_LABELS, type LinkedIdentity } from '../../../lib/auth-config';
 import { useLocale } from '../../../lib/i18n/locale-provider';
 import type { SessionProfile } from '../../../lib/session';
+import type { MfaState } from '../../../lib/supabase/server';
+import MfaPanel from './mfa-panel';
 
 const TIMEZONES = [
   'Asia/Dhaka',
@@ -57,9 +59,13 @@ type Notice = { ok: boolean; text: string } | null;
 export default function SettingsView({
   profile,
   identities,
+  mfa,
+  isSuperAdmin,
 }: {
   profile: SessionProfile;
   identities: LinkedIdentity[];
+  mfa: MfaState;
+  isSuperAdmin: boolean;
 }) {
   const [displayName, setDisplayName] = useState(profile.display_name);
   // Shared locale: choosing a language here changes the whole app immediately
@@ -393,6 +399,14 @@ export default function SettingsView({
               </div>
             </div>
           )}
+
+          {/* ── Two-factor (audit item 18) ─────────────────── */}
+          <MfaPanel
+            enrolled={mfa.enrolled}
+            factorId={mfa.factorId}
+            isSuperAdmin={isSuperAdmin}
+            styles={s}
+          />
 
           <div style={{ ...s.row, borderBottom: 'none' }}>
             <div style={s.rowLabel}>

@@ -38,6 +38,18 @@ export interface SupabaseJwtClaims extends JWTPayload {
   email?: string;
   role?: string;
   session_id?: string;
+  /**
+   * Authenticator Assurance Level — 'aal1' for a password alone, 'aal2' once a
+   * second factor has been verified for THIS session (audit item 18).
+   *
+   * It is a claim, not a profile column, and that is the property that makes it
+   * usable as a control: it describes how the current session was established,
+   * so it cannot be satisfied by a stolen password on a new session the way a
+   * stored "this user has MFA" flag could.
+   */
+  aal?: string;
+  /** Which methods were used, and when. Recorded for the audit trail. */
+  amr?: { method: string; timestamp: number }[];
 }
 
 @Injectable()

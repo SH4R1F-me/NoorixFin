@@ -72,6 +72,8 @@ export class SupabaseAuthGuard implements CanActivate {
           email: claims.email,
           role: claims.role,
           aud: typeof claims.aud === 'string' ? claims.aud : claims.aud?.[0],
+          // Carried through for SuperAdminGuard's step-up check (audit #18).
+          aal: claims.aal,
         },
       };
 

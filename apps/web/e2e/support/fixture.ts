@@ -21,12 +21,16 @@
  * Requires Supabase and the API to be running. Callers `test.skip()` when
  * `E2E_LIVE` is not set.
  */
+import { execFileSync } from 'node:child_process';
+import { createHmac } from 'node:crypto';
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL ?? 'http://127.0.0.1:54321';
 const ANON_KEY =
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ??
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0';
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8080';
+const DB_URL =
+  process.env.SUPABASE_DB_URL ?? 'postgresql://postgres:postgres@127.0.0.1:54322/postgres';
 
 /** Set when the live stack is available. Every data-dependent spec gates on it. */
 export const LIVE = process.env.E2E_LIVE === '1';
@@ -267,4 +271,98 @@ export async function seedWorkspace(label: string): Promise<Fixture> {
  */
 export async function setLocale(token: string, locale: 'bn' | 'en'): Promise<void> {
   await api(token, '/me/preferences', { method: 'PATCH', body: { locale } });
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Operators
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * A super admin with a verified TOTP factor.
+ *
+ * ── WHY THIS EXISTS ──────────────────────────────────────────────────────────
+ * The admin specs used to gate on `E2E_ADMIN_EMAIL`, which nobody sets, so the
+ * ACCESS-CONTROL suite — the one asserting that a normal user cannot reach the
+ * console and that an operator cannot see another user's money — skipped
+ * silently on every CI run. A security test that does not run is worse than one
+ * that does not exist, because the green tick is read as coverage.
+ *
+ * Promotion goes through psql because there is deliberately no API for it:
+ * DEC-019 made `is_super_admin` unwritable through column grants precisely so
+ * that becoming an operator cannot be done by anything holding a user token.
+ * The fixture has to use the same door the real bootstrap uses.
+ */
+export interface Operator extends Fixture {
+  /** Base32 TOTP secret, so a spec can generate a live code. */
+  totpSecret: string;
+}
+
+/** RFC 6238. Six digits, 30-second step — no dependency needed for that. */
+export function totpCode(base32Secret: string, when = Date.now()): string {
+  const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
+  let bits = '';
+  for (const char of base32Secret.replace(/=+$/, '').toUpperCase()) {
+    bits += alphabet.indexOf(char).toString(2).padStart(5, '0');
+  }
+  const key = Buffer.from((bits.match(/.{8}/g) ?? []).map((b) => parseInt(b, 2)));
+  const counter = Buffer.alloc(8);
+  counter.writeBigUInt64BE(BigInt(Math.floor(when / 1000 / 30)));
+  const digest = createHmac('sha1', key).update(counter).digest();
+  const offset = digest[digest.length - 1] & 0x0f;
+  return ((digest.readUInt32BE(offset) & 0x7fffffff) % 1_000_000)
+    .toString()
+    .padStart(6, '0');
+}
+
+export async function createOperator(label: string): Promise<Operator> {
+  const fixture = await seedWorkspace(`admin-${label}`);
+
+  execFileSync(
+    'psql',
+    [
+      DB_URL,
+      '-v',
+      'ON_ERROR_STOP=1',
+      '-tAc',
+      // Parameterised by email, which the fixture generated — no interpolation
+      // of anything a test author types.
+      `UPDATE public.profiles SET is_super_admin = TRUE WHERE id = (SELECT id FROM auth.users WHERE email = '${fixture.email}');`,
+    ],
+    { stdio: 'pipe' },
+  );
+
+  // Enrol a factor through GoTrue directly. The UI path is covered by its own
+  // spec; here the factor is a precondition, not the thing under test.
+  const authCall = async (path: string, body?: unknown) => {
+    const response = await fetch(`${SUPABASE_URL}/auth/v1${path}`, {
+      method: body ? 'POST' : 'GET',
+      headers: {
+        apikey: ANON_KEY,
+        Authorization: `Bearer ${fixture.token}`,
+        'Content-Type': 'application/json',
+      },
+      ...(body !== undefined ? { body: JSON.stringify(body) } : {}),
+    });
+    if (!response.ok) {
+      throw new Error(`${path} → ${response.status} ${await response.text()}`);
+    }
+    return response.json() as Promise<Record<string, never>>;
+  };
+
+  const enrolled = (await authCall('/factors', {
+    factor_type: 'totp',
+    friendly_name: 'E2E',
+  })) as unknown as { id: string; totp: { secret: string } };
+
+  const challenge = (await authCall(
+    `/factors/${enrolled.id}/challenge`,
+    {},
+  )) as unknown as { id: string };
+
+  await authCall(`/factors/${enrolled.id}/verify`, {
+    challenge_id: challenge.id,
+    code: totpCode(enrolled.totp.secret),
+  });
+
+  return { ...fixture, totpSecret: enrolled.totp.secret };
 }

@@ -16,7 +16,24 @@ import type { SupabaseService } from '../../supabase/supabase.service';
 
 type ProfileRow = { is_super_admin: boolean; status: string } | null;
 
-const DEFAULT_USER = { id: 'user-1', email: 'a@b.c' };
+/**
+ * A stepped-up operator. `aal: 'aal2'` is part of the DEFAULT because since
+ * audit #18 it is a precondition for every other check in this file — without
+ * it each test below would be asserting the MFA refusal rather than the thing
+ * it names.
+ */
+const DEFAULT_USER = {
+  id: 'user-1',
+  email: 'a@b.c',
+  claims: { sub: 'user-1', aal: 'aal2' },
+};
+
+/** The same operator, password only. */
+const PASSWORD_ONLY_USER = {
+  id: 'user-1',
+  email: 'a@b.c',
+  claims: { sub: 'user-1', aal: 'aal1' },
+};
 
 /**
  * `user` is not a defaulted parameter: passing `undefined` to a default would
@@ -92,6 +109,52 @@ describe('SuperAdminGuard', () => {
     await expect(
       guard.canActivate(makeContext(DEFAULT_USER)),
     ).rejects.toBeInstanceOf(ForbiddenException);
+  });
+
+  it('rejects an operator whose SESSION has no second factor', async () => {
+    // The point of the control: the profile flag is unchanged, the account is
+    // active, and the session is still refused because this session did not
+    // present the factor. A stored "has MFA" flag would pass here, which is
+    // exactly why the check reads the claim instead.
+    const guard = new SuperAdminGuard(
+      makeSupabase({
+        data: { is_super_admin: true, status: 'ACTIVE' },
+        error: null,
+      }),
+    );
+    await expect(
+      guard.canActivate(makeContext(PASSWORD_ONLY_USER)),
+    ).rejects.toMatchObject({ response: { code: 'MFA_REQUIRED' } });
+  });
+
+  it('treats a MISSING aal claim as unverified rather than as unknown-allow', async () => {
+    // An Auth server that does not emit `aal` is precisely the case where
+    // failing open would be silent and total.
+    const guard = new SuperAdminGuard(
+      makeSupabase({
+        data: { is_super_admin: true, status: 'ACTIVE' },
+        error: null,
+      }),
+    );
+    await expect(
+      guard.canActivate(
+        makeContext({ id: 'user-1', email: 'a@b.c', claims: {} }),
+      ),
+    ).rejects.toMatchObject({ response: { code: 'MFA_REQUIRED' } });
+  });
+
+  it('tells a NON-operator nothing about MFA', async () => {
+    // Ordering matters: if the second-factor check ran first, any signed-in
+    // user could learn that an admin surface exists behind an MFA prompt.
+    const guard = new SuperAdminGuard(
+      makeSupabase({
+        data: { is_super_admin: false, status: 'ACTIVE' },
+        error: null,
+      }),
+    );
+    await expect(
+      guard.canActivate(makeContext(PASSWORD_ONLY_USER)),
+    ).rejects.toMatchObject({ response: { code: 'NOT_SUPER_ADMIN' } });
   });
 
   it('reports a BROKEN LOOKUP as 503, not as "not a super admin"', async () => {

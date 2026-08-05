@@ -1,8 +1,23 @@
 /**
- * SuperAdmin Guard — DEC-007
+ * SuperAdmin Guard — DEC-007, and the second-factor requirement of audit #18.
  *
- * Checks that the authenticated user has is_super_admin = true on their profile.
- * Used for admin-only endpoints (user management, system dashboard, etc.)
+ * Checks that the authenticated user has is_super_admin = true on their profile,
+ * that the account is ACTIVE, and that the SESSION was established with a second
+ * factor.
+ *
+ * ── WHY AAL AND NOT "DOES THIS USER HAVE MFA ENABLED" ────────────────────────
+ * A profile column saying the operator has enrolled a factor would be satisfied
+ * by a stolen password: the attacker signs in, the column still says true, and
+ * the console opens. `aal` is a claim about how THIS session was established, so
+ * it cannot be satisfied without the factor actually being presented. That
+ * distinction is the entire control; a stored flag would be decoration.
+ *
+ * ── WHY THIS CANNOT LOCK ANYONE OUT ──────────────────────────────────────────
+ * Enrolment lives at `/dashboard/settings`, which is NOT behind this guard, so
+ * an operator with no factor can always sign in, enrol, step up, and return. The
+ * refusal below names that path. An operator who loses their authenticator is
+ * recovered the same way they were promoted — service-role SQL, see
+ * supabase/setup/create_super_admin.sql.
  *
  * Usage:
  *   @UseGuards(SuperAdminGuard)
@@ -77,6 +92,26 @@ export class SuperAdminGuard implements CanActivate {
       throw new ForbiddenException({
         code: 'ACCOUNT_NOT_ACTIVE',
         message: `This account is ${String(profile.status).toLowerCase()} and cannot use the admin console`,
+      });
+    }
+
+    // ── Second factor (audit #18) ────────────────────────────────────────────
+    // Checked LAST, deliberately. Reaching this line means the caller really is
+    // an active operator, so telling them what to do next reveals nothing they
+    // do not already know — whereas ordering it first would let any signed-in
+    // user learn that MFA gates an admin surface.
+    //
+    // A missing claim is treated as aal1 rather than as "unknown, allow": a
+    // token from an Auth server that does not emit `aal` is exactly the case
+    // where this must not silently pass.
+    const aal = (request.user.claims as { aal?: unknown } | undefined)?.aal;
+    if (aal !== 'aal2') {
+      throw new ForbiddenException({
+        code: 'MFA_REQUIRED',
+        message:
+          'The admin console requires a verified second factor for this ' +
+          'session. Enrol or confirm your authenticator app in Settings → ' +
+          'Security, then return here.',
       });
     }
 

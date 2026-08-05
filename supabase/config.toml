@@ -310,10 +310,24 @@ auth_token = "env(SUPABASE_AUTH_SMS_TWILIO_AUTH_TOKEN)"
 # Control how many MFA factors can be enrolled at once per user.
 max_enrolled_factors = 10
 
-# Control MFA via App Authenticator (TOTP)
+# ── TOTP — audit item 18 ────────────────────────────────────────────────────
+# "A super-admin account protected only by a password is the weakest link in an
+# otherwise careful authorization design."
+#
+# Enabled for EVERY user rather than only operators. GoTrue has no per-role
+# switch, and the alternative — building enrollment ourselves — would mean this
+# codebase storing TOTP secrets, which is strictly worse than letting Auth hold
+# them. Operators are where it is ENFORCED (see SuperAdminGuard); for everyone
+# else it is available and optional.
+#
+# NOTE for hosted deployments: MFA is a paid-plan feature on Supabase's managed
+# platform. It works on local and self-hosted GoTrue regardless. If the project
+# is ever on a plan without it, `/admin` becomes unreachable for anyone who has
+# not already enrolled — see supabase/setup/README or the recovery note in
+# create_super_admin.sql before flipping plans.
 [auth.mfa.totp]
-enroll_enabled = false
-verify_enabled = false
+enroll_enabled = true
+verify_enabled = true
 
 # Configure MFA via Phone Messaging
 [auth.mfa.phone]

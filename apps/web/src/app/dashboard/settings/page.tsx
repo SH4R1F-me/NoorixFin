@@ -7,13 +7,15 @@
  */
 import { redirect } from 'next/navigation';
 import { getSessionContext } from '../../../lib/session';
+import { getMfaState } from '../../../lib/supabase/server';
 import { listIdentities } from '../../auth/actions';
 import SettingsView from './settings-view';
 
 export default async function SettingsPage() {
-  const [{ profile }, identities] = await Promise.all([
+  const [{ profile, isSuperAdmin }, identities, mfa] = await Promise.all([
     getSessionContext(),
     listIdentities(),
+    getMfaState(),
   ]);
 
   // proxy.ts already gates /dashboard, so this is the API-unreachable case
@@ -21,5 +23,12 @@ export default async function SettingsPage() {
   // rendering a settings form bound to nothing.
   if (!profile) redirect('/auth/login');
 
-  return <SettingsView profile={profile} identities={identities} />;
+  return (
+    <SettingsView
+      profile={profile}
+      identities={identities}
+      mfa={mfa}
+      isSuperAdmin={isSuperAdmin}
+    />
+  );
 }
