@@ -8,7 +8,12 @@
  * signal the feed exists to surface.
  */
 import { of, lastValueFrom } from 'rxjs';
-import { Get, Sse, type CallHandler, type ExecutionContext } from '@nestjs/common';
+import {
+  Get,
+  Sse,
+  type CallHandler,
+  type ExecutionContext,
+} from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { SSE_METADATA } from '@nestjs/common/constants';
 import { RequestTelemetryInterceptor, scrubPath } from './logging.interceptor';
@@ -53,8 +58,12 @@ function makeContext(
   } as unknown as ExecutionContext;
 }
 
+/* eslint-disable @typescript-eslint/unbound-method -- these are handler
+   REFERENCES passed to `getHandler()`, exactly as Nest itself passes them. They
+   are never invoked here, so there is no `this` to lose. */
 const SSE_HANDLER = ProbeController.prototype.streaming;
 const PLAIN_HANDLER = ProbeController.prototype.normal;
+/* eslint-enable @typescript-eslint/unbound-method */
 
 const NEXT: CallHandler = { handle: () => of('payload') };
 
@@ -71,7 +80,10 @@ describe('RequestTelemetryInterceptor', () => {
   afterEach(() => jest.useRealTimers());
 
   it('does not record a fast request', async () => {
-    const interceptor = new RequestTelemetryInterceptor(systemEvents, REFLECTOR);
+    const interceptor = new RequestTelemetryInterceptor(
+      systemEvents,
+      REFLECTOR,
+    );
     await lastValueFrom(
       interceptor.intercept(makeContext(PLAIN_HANDLER), NEXT),
     );
@@ -79,7 +91,10 @@ describe('RequestTelemetryInterceptor', () => {
   });
 
   it('records a genuinely slow request as WARN', async () => {
-    const interceptor = new RequestTelemetryInterceptor(systemEvents, REFLECTOR);
+    const interceptor = new RequestTelemetryInterceptor(
+      systemEvents,
+      REFLECTOR,
+    );
     const slow: CallHandler = {
       handle: () => {
         jest.advanceTimersByTime(2500);
@@ -96,7 +111,10 @@ describe('RequestTelemetryInterceptor', () => {
   });
 
   it('NEVER records an @Sse() handler, however long it stays open', async () => {
-    const interceptor = new RequestTelemetryInterceptor(systemEvents, REFLECTOR);
+    const interceptor = new RequestTelemetryInterceptor(
+      systemEvents,
+      REFLECTOR,
+    );
     const streaming: CallHandler = {
       handle: () => {
         jest.advanceTimersByTime(600_000); // ten minutes of an open stream

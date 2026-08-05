@@ -54,13 +54,21 @@ function makeClient() {
       order: self,
       limit: self,
       upsert: () => Promise.resolve({ data: [], error: null }),
-      delete: () => ({ eq: () => Promise.resolve({ data: null, error: null }) }),
+      delete: () => ({
+        eq: () => Promise.resolve({ data: null, error: null }),
+      }),
       single: () => {
         if (table === 'journal_entries') {
-          return Promise.resolve({ data: existingEntry, error: existingEntry ? null : { message: 'none' } });
+          return Promise.resolve({
+            data: existingEntry,
+            error: existingEntry ? null : { message: 'none' },
+          });
         }
         if (table === 'ledger_accounts') {
-          return Promise.resolve({ data: { currency_code: 'BDT' }, error: null });
+          return Promise.resolve({
+            data: { currency_code: 'BDT' },
+            error: null,
+          });
         }
         return Promise.resolve({ data: null, error: { message: 'none' } });
       },
@@ -71,11 +79,15 @@ function makeClient() {
         return {
           select: () => ({
             single: () =>
-              Promise.resolve({ data: { id: 'entry-1', workspace_id: WORKSPACE }, error: null }),
+              Promise.resolve({
+                data: { id: 'entry-1', workspace_id: WORKSPACE },
+                error: null,
+              }),
             then: (resolve: (v: unknown) => unknown) =>
               resolve({ data: rows, error: null }),
           }),
-          then: (resolve: (v: unknown) => unknown) => resolve({ data: rows, error: null }),
+          then: (resolve: (v: unknown) => unknown) =>
+            resolve({ data: rows, error: null }),
         };
       },
     });
@@ -84,7 +96,9 @@ function makeClient() {
 
   return {
     capturedPostings,
-    setExistingEntry: (e: unknown) => { existingEntry = e; },
+    setExistingEntry: (e: unknown) => {
+      existingEntry = e;
+    },
     client: { from: (table: string) => builder(table) },
   };
 }
@@ -97,18 +111,31 @@ function makeService(categoryAccountId: string | null = CATEGORY_ACCOUNT) {
   } as unknown as SupabaseService;
 
   const categories = {
-    resolveLedgerAccountId: jest.fn(async () => {
+    // Not `async`: the body throws or returns synchronously, and an async
+    // arrow with no await is just a promise wrapper the linter rightly
+    // flags. `mockResolvedValue` semantics are preserved by the explicit
+    // Promise.resolve below.
+    resolveLedgerAccountId: jest.fn(() => {
       if (!categoryAccountId) {
-        throw new NotFoundException({ code: 'CATEGORY_NOT_FOUND', message: 'not found' });
+        throw new NotFoundException({
+          code: 'CATEGORY_NOT_FOUND',
+          message: 'not found',
+        });
       }
       return categoryAccountId;
     }),
   } as unknown as CategoriesService;
 
-  return { service: new TransactionsService(supabase, categories), mock, categories };
+  return {
+    service: new TransactionsService(supabase, categories),
+    mock,
+    categories,
+  };
 }
 
-function baseDto(overrides: Partial<CreateTransactionDto> = {}): CreateTransactionDto {
+function baseDto(
+  overrides: Partial<CreateTransactionDto> = {},
+): CreateTransactionDto {
   return {
     type: 'EXPENSE',
     amount: '5000',
@@ -116,7 +143,7 @@ function baseDto(overrides: Partial<CreateTransactionDto> = {}): CreateTransacti
     category_id: CATEGORY,
     idempotency_key: '77777777-7777-7777-7777-777777777777',
     ...overrides,
-  } as CreateTransactionDto;
+  };
 }
 
 const sum = (rows: Posting[], key: 'debit_minor' | 'credit_minor') =>
@@ -127,7 +154,14 @@ describe('TransactionsService — ledger engine', () => {
     it.each([
       ['EXPENSE', baseDto({ type: 'EXPENSE' })],
       ['INCOME', baseDto({ type: 'INCOME' })],
-      ['TRANSFER', baseDto({ type: 'TRANSFER', category_id: undefined, transfer_to_account_id: DEST_ACCOUNT })],
+      [
+        'TRANSFER',
+        baseDto({
+          type: 'TRANSFER',
+          category_id: undefined,
+          transfer_to_account_id: DEST_ACCOUNT,
+        }),
+      ],
     ])('%s postings balance', async (_label, dto) => {
       const { service, mock } = makeService();
       await service.createTransaction(WORKSPACE, USER, 'token', dto);
@@ -141,7 +175,12 @@ describe('TransactionsService — ledger engine', () => {
     it('holds across a range of amounts', async () => {
       for (const amount of ['1', '7', '99', '100000', '999999999']) {
         const { service, mock } = makeService();
-        await service.createTransaction(WORKSPACE, USER, 'token', baseDto({ amount }));
+        await service.createTransaction(
+          WORKSPACE,
+          USER,
+          'token',
+          baseDto({ amount }),
+        );
         expect(sum(mock.capturedPostings, 'debit_minor')).toBe(
           sum(mock.capturedPostings, 'credit_minor'),
         );
@@ -170,7 +209,14 @@ describe('TransactionsService — ledger engine', () => {
       const { service, mock, categories } = makeService();
       await service.createTransaction(WORKSPACE, USER, 'token', baseDto());
 
-      expect(categories.resolveLedgerAccountId).toHaveBeenCalledWith(CATEGORY, WORKSPACE, 'token');
+      // Reading a jest.fn() off the mock to assert on it does not call it, so
+      // the `this` binding the rule protects is not in play.
+      /* eslint-disable-next-line @typescript-eslint/unbound-method */
+      expect(categories.resolveLedgerAccountId).toHaveBeenCalledWith(
+        CATEGORY,
+        WORKSPACE,
+        'token',
+      );
 
       const accountIds = mock.capturedPostings.map((p) => p.ledger_account_id);
       expect(accountIds).toContain(CATEGORY_ACCOUNT);
@@ -188,23 +234,41 @@ describe('TransactionsService — ledger engine', () => {
   });
 
   describe('DEC-004: amount parsing rejects what parseInt would accept', () => {
-    it.each(['12.7', '10abc', '', 'abc', 'NaN', '1e3'])('rejects %p', async (amount) => {
-      const { service } = makeService();
-      await expect(
-        service.createTransaction(WORKSPACE, USER, 'token', baseDto({ amount })),
-      ).rejects.toBeInstanceOf(BadRequestException);
-    });
+    it.each(['12.7', '10abc', '', 'abc', 'NaN', '1e3'])(
+      'rejects %p',
+      async (amount) => {
+        const { service } = makeService();
+        await expect(
+          service.createTransaction(
+            WORKSPACE,
+            USER,
+            'token',
+            baseDto({ amount }),
+          ),
+        ).rejects.toBeInstanceOf(BadRequestException);
+      },
+    );
 
     it.each(['0', '-1', '-5000'])('rejects non-positive %p', async (amount) => {
       const { service } = makeService();
       await expect(
-        service.createTransaction(WORKSPACE, USER, 'token', baseDto({ amount })),
+        service.createTransaction(
+          WORKSPACE,
+          USER,
+          'token',
+          baseDto({ amount }),
+        ),
       ).rejects.toBeInstanceOf(BadRequestException);
     });
 
     it('accepts a well-formed minor-unit string', async () => {
       const { service, mock } = makeService();
-      await service.createTransaction(WORKSPACE, USER, 'token', baseDto({ amount: '1025' }));
+      await service.createTransaction(
+        WORKSPACE,
+        USER,
+        'token',
+        baseDto({ amount: '1025' }),
+      );
       expect(sum(mock.capturedPostings, 'debit_minor')).toBe(1025);
     });
   });
@@ -213,7 +277,12 @@ describe('TransactionsService — ledger engine', () => {
     it('EXPENSE without a category is rejected', async () => {
       const { service } = makeService();
       await expect(
-        service.createTransaction(WORKSPACE, USER, 'token', baseDto({ category_id: undefined })),
+        service.createTransaction(
+          WORKSPACE,
+          USER,
+          'token',
+          baseDto({ category_id: undefined }),
+        ),
       ).rejects.toBeInstanceOf(BadRequestException);
     });
 
@@ -224,7 +293,11 @@ describe('TransactionsService — ledger engine', () => {
           WORKSPACE,
           USER,
           'token',
-          baseDto({ type: 'TRANSFER', category_id: undefined, transfer_to_account_id: undefined }),
+          baseDto({
+            type: 'TRANSFER',
+            category_id: undefined,
+            transfer_to_account_id: undefined,
+          }),
         ),
       ).rejects.toBeInstanceOf(BadRequestException);
     });
@@ -236,7 +309,7 @@ describe('TransactionsService — ledger engine', () => {
           WORKSPACE,
           USER,
           'token',
-          baseDto({ type: 'GIFT' as CreateTransactionDto['type'] }),
+          baseDto({ type: 'GIFT' }),
         ),
       ).rejects.toBeInstanceOf(BadRequestException);
     });
@@ -247,7 +320,12 @@ describe('TransactionsService — ledger engine', () => {
       const { service, mock } = makeService();
       mock.setExistingEntry({ id: 'existing-entry', workspace_id: WORKSPACE });
 
-      const result = await service.createTransaction(WORKSPACE, USER, 'token', baseDto());
+      const result = await service.createTransaction(
+        WORKSPACE,
+        USER,
+        'token',
+        baseDto(),
+      );
 
       expect((result as { id: string }).id).toBe('existing-entry');
       expect(mock.capturedPostings).toHaveLength(0);
@@ -261,11 +339,19 @@ describe('TransactionsService — ledger engine', () => {
         WORKSPACE,
         USER,
         'token',
-        baseDto({ type: 'TRANSFER', category_id: undefined, transfer_to_account_id: DEST_ACCOUNT }),
+        baseDto({
+          type: 'TRANSFER',
+          category_id: undefined,
+          transfer_to_account_id: DEST_ACCOUNT,
+        }),
       );
 
-      const source = mock.capturedPostings.find((p) => p.ledger_account_id === CASH_ACCOUNT);
-      const destination = mock.capturedPostings.find((p) => p.ledger_account_id === DEST_ACCOUNT);
+      const source = mock.capturedPostings.find(
+        (p) => p.ledger_account_id === CASH_ACCOUNT,
+      );
+      const destination = mock.capturedPostings.find(
+        (p) => p.ledger_account_id === DEST_ACCOUNT,
+      );
 
       // Money leaving an asset account is a credit; arriving is a debit.
       expect(source).toMatchObject({ credit_minor: 5000, debit_minor: 0 });

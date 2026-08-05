@@ -1,6 +1,8 @@
 'use client';
 
 import { useEffect, useState, useRef } from 'react';
+import Image from 'next/image';
+import Link from 'next/link';
 import { useLocale } from '../lib/i18n/locale-provider';
 import './landing.css';
 import {
@@ -20,13 +22,25 @@ import {
   CheckCircle2,
   Sparkles,
   Lock,
-  Smartphone,
   Monitor,
 } from 'lucide-react';
 
 /* ─────────────────────────────────────────────────────────
    Intersection Observer hook for scroll-triggered animations
    ───────────────────────────────────────────────────────── */
+/**
+ * Returns a TUPLE, not `{ ref, isInView }`.
+ *
+ * The object form tripped `react-hooks/refs` at every call site: the rule sees
+ * a `somethingRef.<property>` read during render and cannot tell the ref object
+ * being handed to a `ref` prop apart from a `.current` dereference, which is
+ * the real bug it exists to catch. Six sections × two reads meant twelve
+ * errors, all of them noise — and noise in a lint rule about refs is how the
+ * genuine case gets scrolled past.
+ *
+ * Destructuring at the call site fixes it honestly: the ref is passed straight
+ * to `ref=`, and `inView` is plain state.
+ */
 function useInView(threshold = 0.15) {
   const ref = useRef<HTMLDivElement>(null);
   const [isInView, setIsInView] = useState(false);
@@ -42,7 +56,7 @@ function useInView(threshold = 0.15) {
     return () => obs.disconnect();
   }, [threshold]);
 
-  return { ref, isInView };
+  return [ref, isInView] as const;
 }
 
 /* ─────────────────────────────────────────────────────────
@@ -75,17 +89,17 @@ export default function Home() {
   const [scrollY, setScrollY] = useState(0);
 
   // Scroll-triggered sections
-  const heroRef = useInView(0.1);
-  const statsRef = useInView(0.2);
-  const featuresRef = useInView(0.1);
-  const previewRef = useInView(0.1);
-  const benefitsRef = useInView(0.1);
-  const ctaRef = useInView(0.2);
+  const [heroRef, heroInView] = useInView(0.1);
+  const [statsRef, statsInView] = useInView(0.2);
+  const [featuresRef, featuresInView] = useInView(0.1);
+  const [previewRef, previewInView] = useInView(0.1);
+  const [benefitsRef, benefitsInView] = useInView(0.1);
+  const [ctaRef, ctaInView] = useInView(0.2);
 
   // Animated counters
-  const usersCount = useCounter(10000, 2000, statsRef.isInView);
-  const txnCount = useCounter(500, 2000, statsRef.isInView);
-  const securityCount = useCounter(99, 1800, statsRef.isInView);
+  const usersCount = useCounter(10000, 2000, statsInView);
+  const txnCount = useCounter(500, 2000, statsInView);
+  const securityCount = useCounter(99, 1800, statsInView);
 
   // Session redirect happens in proxy.ts, not here — with httpOnly cookies the
   // browser cannot read the session (DEC-009).
@@ -306,12 +320,12 @@ export default function Home() {
       {/* ── Navbar ─────────────────────────────────────── */}
       <nav className={`landing-nav ${scrollY > 50 ? 'landing-nav--scrolled' : ''}`}>
         <div className="landing-nav-inner">
-          <a href="/" className="landing-nav-logo">
+          <Link href="/" className="landing-nav-logo">
             <div className="landing-nav-logo-icon">
               <Wallet size={20} color="white" />
             </div>
             <span className="landing-nav-logo-text">NoorixFin</span>
-          </a>
+          </Link>
 
           <div className="landing-nav-links">
             <a href="#features" className="landing-nav-link">{text.nav.features}</a>
@@ -336,8 +350,8 @@ export default function Home() {
           SECTION 1: HERO
           ══════════════════════════════════════════════════ */}
       <section
-        ref={heroRef.ref}
-        className={`landing-hero ${heroRef.isInView ? 'in-view' : ''}`}
+        ref={heroRef}
+        className={`landing-hero ${heroInView ? 'in-view' : ''}`}
       >
         <div className="landing-hero-content">
           <div className="landing-hero-badge">
@@ -393,8 +407,8 @@ export default function Home() {
           SECTION 2: STATS BAR
           ══════════════════════════════════════════════════ */}
       <section
-        ref={statsRef.ref}
-        className={`landing-stats ${statsRef.isInView ? 'in-view' : ''}`}
+        ref={statsRef}
+        className={`landing-stats ${statsInView ? 'in-view' : ''}`}
       >
         <div className="landing-stats-inner">
           <div className="landing-stat">
@@ -419,8 +433,8 @@ export default function Home() {
           ══════════════════════════════════════════════════ */}
       <section
         id="features"
-        ref={featuresRef.ref}
-        className={`landing-features ${featuresRef.isInView ? 'in-view' : ''}`}
+        ref={featuresRef}
+        className={`landing-features ${featuresInView ? 'in-view' : ''}`}
       >
         <div className="landing-section-header">
           <h2 className="landing-section-title">{text.features.title}</h2>
@@ -451,8 +465,8 @@ export default function Home() {
           SECTION 4: DASHBOARD PREVIEW
           ══════════════════════════════════════════════════ */}
       <section
-        ref={previewRef.ref}
-        className={`landing-preview ${previewRef.isInView ? 'in-view' : ''}`}
+        ref={previewRef}
+        className={`landing-preview ${previewInView ? 'in-view' : ''}`}
       >
         <div className="landing-section-header">
           <h2 className="landing-section-title">{text.preview.title}</h2>
@@ -465,10 +479,24 @@ export default function Home() {
             <div className="landing-preview-dots">
               <span /><span /><span />
             </div>
-            <img
+            {/*
+              next/image rather than a bare <img>: this is the landing page's
+              largest element and therefore its LCP. `sizes` matters because the
+              frame is fluid — without it every viewport downloads the widest
+              variant, which is the opposite of the point.
+
+              The alt text describes what the screenshot SHOWS rather than
+              naming the file, so a screen-reader user learns something instead
+              of hearing "dashboard preview" (§5.5).
+            */}
+            <Image
               src="/images/dashboard-preview.png"
-              alt="NoorixFin Dashboard Preview"
+              alt="The NoorixFin dashboard: balance, monthly income and expense cards above a list of recent transactions"
               className="landing-preview-img"
+              width={1200}
+              height={750}
+              sizes="(max-width: 900px) 100vw, 900px"
+              priority
             />
           </div>
         </div>
@@ -479,8 +507,8 @@ export default function Home() {
           ══════════════════════════════════════════════════ */}
       <section
         id="security"
-        ref={benefitsRef.ref}
-        className={`landing-benefits ${benefitsRef.isInView ? 'in-view' : ''}`}
+        ref={benefitsRef}
+        className={`landing-benefits ${benefitsInView ? 'in-view' : ''}`}
       >
         <div className="landing-section-header">
           <h2 className="landing-section-title">{text.benefits.title}</h2>
@@ -506,8 +534,8 @@ export default function Home() {
           SECTION 6: FINAL CTA
           ══════════════════════════════════════════════════ */}
       <section
-        ref={ctaRef.ref}
-        className={`landing-cta ${ctaRef.isInView ? 'in-view' : ''}`}
+        ref={ctaRef}
+        className={`landing-cta ${ctaInView ? 'in-view' : ''}`}
       >
         <div className="landing-cta-glow" />
         <div className="landing-cta-content">

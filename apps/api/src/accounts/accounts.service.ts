@@ -9,8 +9,9 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { SupabaseService } from '../supabase/supabase.service';
+import type { Updatable } from '@noorixfin/db-types';
 import { CreateAccountDto, UpdateAccountDto } from './dto/account.dto';
-import { randomUUID } from 'crypto';
+import { createHash, randomUUID } from 'crypto';
 
 /** Default normal balance by account class */
 const DEFAULT_NORMAL_BALANCE: Record<string, string> = {
@@ -107,7 +108,9 @@ export class AccountsService {
       // Explicit columns, never `*`, on a list path (DEC-011 — egress counts).
       // Must be a single string literal: supabase-js infers row types from it,
       // and a concatenated expression degrades to GenericStringError.
-      .select('id, workspace_id, name, class, subtype, currency_code, normal_balance, include_in_budget, include_in_net_worth, opening_date, archived_at, created_at, updated_at, version')
+      .select(
+        'id, workspace_id, name, class, subtype, currency_code, normal_balance, include_in_budget, include_in_net_worth, opening_date, archived_at, created_at, updated_at, version',
+      )
       .eq('workspace_id', workspaceId)
       .is('archived_at', null)
       .is('deleted_at', null)
@@ -160,7 +163,10 @@ export class AccountsService {
   ) {
     const client = this.supabaseService.getUserClient(accessToken);
 
-    const updatePayload: Record<string, unknown> = {};
+    // `Updatable<'ledger_accounts'>` rather than `Record<string, unknown>`: the
+    // loose type accepted any key, so a typo silently wrote nothing and the
+    // request still returned 200.
+    const updatePayload: Updatable<'ledger_accounts'> = {};
     if (dto.name !== undefined) updatePayload.name = dto.name;
     if (dto.include_in_budget !== undefined)
       updatePayload.include_in_budget = dto.include_in_budget;
@@ -207,7 +213,16 @@ export class AccountsService {
     if (amount === 0) return;
 
     const entryId = randomUUID();
-    const idempotencyKey = `opening-${accountId}`;
+
+    // Deterministic per account, so the unique index on
+    // (created_by, idempotency_key_hash) makes a second opening entry
+    // impossible. This key was previously computed and DISCARDED while the
+    // insert used a fresh random `client_entry_id` — so retrying account
+    // creation could post the opening balance twice and silently double the
+    // account's starting figure.
+    const idempotencyHash = createHash('sha256')
+      .update(`${userId}:opening:${accountId}`)
+      .digest('hex');
 
     // Create the journal entry
     const { error: entryError } = await client.from('journal_entries').insert({
@@ -219,16 +234,21 @@ export class AccountsService {
       note: 'Opening balance',
       status: 'POSTED',
       source: 'SYSTEM',
-      client_entry_id: randomUUID(),
+      client_entry_id: entryId,
+      idempotency_key_hash: idempotencyHash,
       created_by: userId,
       posted_at: new Date().toISOString(),
       version: 1,
     });
 
     if (entryError) {
-      this.logger.error(
-        `Failed to create opening balance entry: ${entryError.message}`,
-      );
+      // 23505 means this account already has its opening entry — the desired
+      // state, not a failure.
+      if (entryError.code !== '23505') {
+        this.logger.error(
+          `Failed to create opening balance entry: ${entryError.message}`,
+        );
+      }
       return; // Don't fail account creation for opening balance
     }
 
@@ -274,6 +294,7 @@ export class AccountsService {
       {
         id: randomUUID(),
         journal_entry_id: entryId,
+        workspace_id: workspaceId,
         ledger_account_id: accountId,
         debit_minor: normalBalance === 'DEBIT' ? absAmount : 0,
         credit_minor: normalBalance === 'CREDIT' ? absAmount : 0,
@@ -283,6 +304,7 @@ export class AccountsService {
       {
         id: randomUUID(),
         journal_entry_id: entryId,
+        workspace_id: workspaceId,
         ledger_account_id: equityAccount.id,
         debit_minor: normalBalance === 'CREDIT' ? absAmount : 0,
         credit_minor: normalBalance === 'DEBIT' ? absAmount : 0,

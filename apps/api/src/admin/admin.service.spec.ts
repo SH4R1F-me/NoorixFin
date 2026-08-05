@@ -104,7 +104,10 @@ function makeHarness(
                 count: options.superAdminCount ?? 2,
               });
           }
-          return Reflect.get(target, prop);
+          // Proxy fall-through for anything the stub does not model. `Reflect.get`
+          // is `any` by definition here — the target is a partial mock, so there
+          // is no real type to return.
+          return Reflect.get(target, prop) as unknown;
         },
       });
     },

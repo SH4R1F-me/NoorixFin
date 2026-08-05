@@ -30,6 +30,7 @@ import {
 } from '@nestjs/common';
 import { SupabaseClient } from '@supabase/supabase-js';
 import { SupabaseService } from '../supabase/supabase.service';
+import type { Json, Updatable } from '@noorixfin/db-types';
 import { AuditService } from '../observability/audit.service';
 import { SystemEventsService } from '../observability/system-events.service';
 import {
@@ -71,6 +72,23 @@ function stripTotalCount(
   const copy = { ...row };
   delete copy.total_count;
   return copy;
+}
+
+/**
+ * Copy `value` onto `target[key]` when it is defined.
+ *
+ * Exists purely to satisfy correlated-union assignment: `for (const key of
+ * KEYS) target[key] = source[key]` is sound but unprovable to the compiler,
+ * and the alternative is widening the target back to `Record<string, unknown>`
+ * — which is exactly the looseness that let a misspelled column write nothing
+ * and still return 200.
+ */
+function assignIfDefined<T, K extends keyof T>(
+  target: T,
+  key: K,
+  value: T[K] | undefined,
+): void {
+  if (value !== undefined) target[key] = value;
 }
 
 @Injectable()
@@ -203,7 +221,7 @@ export class AdminService {
     if (error) throw this.translate(error);
 
     return {
-      items: (data ?? []) as Record<string, unknown>[],
+      items: data ?? [],
       total: count ?? 0,
       limit,
       offset,
@@ -228,7 +246,7 @@ export class AdminService {
       metadata: { deleted: data },
     });
 
-    return { deleted: (data as number) ?? 0 };
+    return { deleted: data ?? 0 };
   }
 
   // ─── Audit trail ──────────────────────────────────────────────────────────
@@ -258,7 +276,7 @@ export class AdminService {
     if (error) throw this.translate(error);
 
     return {
-      items: (data ?? []) as Record<string, unknown>[],
+      items: data ?? [],
       total: count ?? 0,
       limit,
       offset,
@@ -273,8 +291,11 @@ export class AdminService {
     const offset = query.offset ?? 0;
 
     const { data, error } = await client.rpc('admin_user_overview', {
-      p_search: query.search ?? null,
-      p_status: query.status ?? null,
+      // Omitted rather than sent as null: these params carry DEFAULT NULL in
+      // SQL, and there is only one signature, so there is no overload to
+      // disambiguate (unlike category_report, where the nulls are load-bearing).
+      ...(query.search ? { p_search: query.search } : {}),
+      ...(query.status ? { p_status: query.status } : {}),
       p_limit: limit,
       p_offset: offset,
     });
@@ -293,8 +314,6 @@ export class AdminService {
   async getUser(accessToken: string, userId: string) {
     const client = this.supabaseService.getUserClient(accessToken);
     const { data, error } = await client.rpc('admin_user_overview', {
-      p_search: null,
-      p_status: null,
       p_limit: 200,
       p_offset: 0,
     });
@@ -325,7 +344,7 @@ export class AdminService {
     userId: string,
     dto: AdminUpdateUserDto,
   ) {
-    const payload: Record<string, unknown> = {};
+    const payload: Updatable<'profiles'> = {};
     if (dto.display_name !== undefined) payload.display_name = dto.display_name;
     if (dto.locale !== undefined) payload.locale = dto.locale;
     if (dto.timezone !== undefined) payload.timezone = dto.timezone;
@@ -564,7 +583,7 @@ export class AdminService {
       .select('key');
     if (readError) throw this.translate(readError);
 
-    const known = new Set((existing ?? []).map((row) => row.key as string));
+    const known = new Set((existing ?? []).map((row) => row.key));
     const unknown = dto.settings.filter((s) => !known.has(s.key));
     if (unknown.length > 0) {
       throw new BadRequestException({
@@ -577,7 +596,9 @@ export class AdminService {
       const { error } = await client
         .from('app_settings')
         .update({
-          value: setting.value,
+          // `app_settings.value` is jsonb. The DTO types it as a plain object,
+          // which is a subset of Json but not structurally assignable to it.
+          value: setting.value as Json,
           updated_by: actorId,
           updated_at: new Date().toISOString(),
         })
@@ -629,7 +650,7 @@ export class AdminService {
 
     return (data ?? []).map((broadcast) => ({
       ...broadcast,
-      stats: counts.get(broadcast.id as string) ?? { seen: 0, dismissed: 0 },
+      stats: counts.get(broadcast.id) ?? { seen: 0, dismissed: 0 },
     }));
   }
 
@@ -664,11 +685,11 @@ export class AdminService {
       actorId,
       action: 'ADMIN_BROADCAST_CREATED',
       resourceType: 'broadcast',
-      resourceId: data.id as string,
+      resourceId: data.id,
       metadata: { severity: data.severity },
     });
 
-    return data as Record<string, unknown>;
+    return data;
   }
 
   async updateBroadcast(
@@ -677,7 +698,7 @@ export class AdminService {
     dto: UpdateBroadcastDto,
   ) {
     const client = this.supabaseService.getServiceClient();
-    const payload: Record<string, unknown> = {};
+    const payload: Updatable<'broadcasts'> = {};
     for (const key of [
       'title_en',
       'title_bn',
@@ -690,7 +711,12 @@ export class AdminService {
       'publish_at',
       'expires_at',
     ] as const) {
-      if (dto[key] !== undefined) payload[key] = dto[key];
+      // A generic helper rather than a direct assignment: TypeScript cannot
+      // correlate `payload[key]` with `dto[key]` when `key` is a union, even
+      // though every pairing is sound. This proves it once instead of
+      // casting the payload back to `Record<string, unknown>` and losing the
+      // column checking that motivated typing it at all.
+      assignIfDefined(payload, key, dto[key]);
     }
 
     if (Object.keys(payload).length === 0) {
@@ -726,7 +752,7 @@ export class AdminService {
   ) {
     const client = this.supabaseService.getServiceClient();
 
-    const payload: Record<string, unknown> = { status };
+    const payload: Updatable<'broadcasts'> = { status };
     if (status === 'PUBLISHED') {
       // Publishing with no publish_at means "now" — otherwise the RLS window
       // check (publish_at IS NULL OR publish_at <= now()) would be the only
@@ -756,7 +782,7 @@ export class AdminService {
     this.systemEvents.record({
       level: 'INFO',
       eventCode: `BROADCAST_${status}`,
-      message: `Broadcast "${data.title_en as string}" → ${status}`,
+      message: `Broadcast "${data.title_en}" → ${status}`,
       actorId,
     });
 

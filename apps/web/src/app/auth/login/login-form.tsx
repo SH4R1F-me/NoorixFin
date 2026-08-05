@@ -5,7 +5,6 @@ import { signIn, signUp, signInWithGoogle } from '../actions';
 import { GOOGLE_AUTH_ENABLED } from '../../../lib/auth-config';
 import { useLocale } from '../../../lib/i18n/locale-provider';
 import {
-  LogIn,
   Mail,
   Lock,
   Eye,
@@ -42,7 +41,7 @@ export default function LoginForm({ next }: { next?: string }) {
   // Strings come from the shared catalog now. This component used to carry its
   // own bn/en dictionary AND its own locale state, so a visitor who picked
   // English here saw Bangla again on the very next screen (DEC-021).
-  const { t, locale, toggleLocale, otherLanguageName } = useLocale();
+  const { t, toggleLocale, otherLanguageName } = useLocale();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

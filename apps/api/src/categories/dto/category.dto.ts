@@ -14,7 +14,8 @@ import {
 // ─── Create ─────────────────────────────────────────────
 export class CreateCategoryDto {
   @ApiProperty({
-    description: 'Display name. Stored as `custom_name`; also names the backing ledger account.',
+    description:
+      'Display name. Stored as `custom_name`; also names the backing ledger account.',
     example: 'Food & Dining',
   })
   @IsString()
@@ -103,18 +104,23 @@ export class CategoryResponseDto {
   @ApiProperty() id!: string;
   @ApiProperty() workspace_id!: string;
 
-  @ApiProperty({ description: 'Backing ledger account. Postings reference THIS, not `id`.' })
+  @ApiProperty({
+    description: 'Backing ledger account. Postings reference THIS, not `id`.',
+  })
   ledger_account_id!: string;
 
   @ApiProperty({ enum: ['INCOME', 'EXPENSE'] }) kind!: string;
 
   @ApiPropertyOptional({
-    description: 'Set for system categories. Translate it for display; also marks the row as system-provided.',
+    description:
+      'Set for system categories. Translate it for display; also marks the row as system-provided.',
     example: 'cat.food_dining',
   })
   translation_key?: string | null;
 
-  @ApiPropertyOptional({ description: 'User-supplied name. Overrides translation_key when present.' })
+  @ApiPropertyOptional({
+    description: 'User-supplied name. Overrides translation_key when present.',
+  })
   custom_name?: string | null;
 
   @ApiPropertyOptional() parent_id?: string | null;

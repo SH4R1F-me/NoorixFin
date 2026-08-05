@@ -24,6 +24,7 @@ import {
   OnModuleInit,
 } from '@nestjs/common';
 import { SupabaseService } from '../supabase/supabase.service';
+import type { Insertable, Json } from '@noorixfin/db-types';
 
 export type SystemEventLevel = 'DEBUG' | 'INFO' | 'WARN' | 'ERROR' | 'FATAL';
 
@@ -42,19 +43,18 @@ export interface SystemEventInput {
 }
 
 /** Row shape as it goes to Postgres (snake_case). */
-interface SystemEventRow {
+/**
+ * A buffered row, derived from the table rather than restated.
+ *
+ * Hand-writing this shape meant it could drift from `system_events` silently —
+ * a column added by a migration would simply never be written, and the writer
+ * would keep succeeding. `Insertable` keeps the two in step, and `level` is
+ * narrowed back to the union because the generated type is a bare `string`
+ * (Postgres CHECK constraints do not survive into the generator).
+ */
+type SystemEventRow = Omit<Insertable<'system_events'>, 'level'> & {
   level: SystemEventLevel;
-  source: string;
-  event_code: string;
-  message: string;
-  request_id: string | null;
-  actor_id: string | null;
-  route: string | null;
-  method: string | null;
-  status_code: number | null;
-  latency_ms: number | null;
-  metadata: Record<string, unknown>;
-}
+};
 
 @Injectable()
 export class SystemEventsService implements OnModuleInit, OnModuleDestroy {
@@ -114,7 +114,8 @@ export class SystemEventsService implements OnModuleInit, OnModuleDestroy {
         method: input.method ?? null,
         status_code: input.statusCode ?? null,
         latency_ms: input.latencyMs ?? null,
-        metadata: input.metadata ?? {},
+        // system_events.metadata is jsonb; callers pass a plain object.
+        metadata: (input.metadata ?? {}) as Json,
       });
     } catch {
       // Telemetry must not be able to fail a request. There is deliberately no

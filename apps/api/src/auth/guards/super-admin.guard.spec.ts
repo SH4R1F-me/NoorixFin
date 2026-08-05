@@ -44,27 +44,40 @@ function makeSupabase(result: { data: ProfileRow; error: unknown }) {
 describe('SuperAdminGuard', () => {
   it('allows an active super admin', async () => {
     const guard = new SuperAdminGuard(
-      makeSupabase({ data: { is_super_admin: true, status: 'ACTIVE' }, error: null }),
+      makeSupabase({
+        data: { is_super_admin: true, status: 'ACTIVE' },
+        error: null,
+      }),
     );
-    await expect(guard.canActivate(makeContext(DEFAULT_USER))).resolves.toBe(true);
+    await expect(guard.canActivate(makeContext(DEFAULT_USER))).resolves.toBe(
+      true,
+    );
   });
 
   it('rejects a normal user with 403', async () => {
     const guard = new SuperAdminGuard(
-      makeSupabase({ data: { is_super_admin: false, status: 'ACTIVE' }, error: null }),
+      makeSupabase({
+        data: { is_super_admin: false, status: 'ACTIVE' },
+        error: null,
+      }),
     );
-    await expect(guard.canActivate(makeContext(DEFAULT_USER))).rejects.toBeInstanceOf(
-      ForbiddenException,
-    );
+    await expect(
+      guard.canActivate(makeContext(DEFAULT_USER)),
+    ).rejects.toBeInstanceOf(ForbiddenException);
   });
 
   it('rejects a SUSPENDED operator — the flag survives, the privilege does not', async () => {
     // Closes the window where a banned operator's still-valid access token
     // (up to jwt_expiry) would otherwise reach the console.
     const guard = new SuperAdminGuard(
-      makeSupabase({ data: { is_super_admin: true, status: 'SUSPENDED' }, error: null }),
+      makeSupabase({
+        data: { is_super_admin: true, status: 'SUSPENDED' },
+        error: null,
+      }),
     );
-    await expect(guard.canActivate(makeContext(DEFAULT_USER))).rejects.toMatchObject({
+    await expect(
+      guard.canActivate(makeContext(DEFAULT_USER)),
+    ).rejects.toMatchObject({
       response: { code: 'ACCOUNT_NOT_ACTIVE' },
     });
   });
@@ -76,9 +89,9 @@ describe('SuperAdminGuard', () => {
         error: null,
       }),
     );
-    await expect(guard.canActivate(makeContext(DEFAULT_USER))).rejects.toBeInstanceOf(
-      ForbiddenException,
-    );
+    await expect(
+      guard.canActivate(makeContext(DEFAULT_USER)),
+    ).rejects.toBeInstanceOf(ForbiddenException);
   });
 
   it('reports a BROKEN LOOKUP as 503, not as "not a super admin"', async () => {
@@ -87,29 +100,38 @@ describe('SuperAdminGuard', () => {
     const guard = new SuperAdminGuard(
       makeSupabase({
         data: null,
-        error: { code: '42501', message: 'permission denied for table profiles' },
+        error: {
+          code: '42501',
+          message: 'permission denied for table profiles',
+        },
       }),
     );
-    await expect(guard.canActivate(makeContext(DEFAULT_USER))).rejects.toBeInstanceOf(
-      ServiceUnavailableException,
-    );
+    await expect(
+      guard.canActivate(makeContext(DEFAULT_USER)),
+    ).rejects.toBeInstanceOf(ServiceUnavailableException);
   });
 
   it('treats "no profile row" (PGRST116) as a genuine 403, not a server fault', async () => {
     const guard = new SuperAdminGuard(
-      makeSupabase({ data: null, error: { code: 'PGRST116', message: 'no rows' } }),
+      makeSupabase({
+        data: null,
+        error: { code: 'PGRST116', message: 'no rows' },
+      }),
     );
-    await expect(guard.canActivate(makeContext(DEFAULT_USER))).rejects.toBeInstanceOf(
-      ForbiddenException,
-    );
+    await expect(
+      guard.canActivate(makeContext(DEFAULT_USER)),
+    ).rejects.toBeInstanceOf(ForbiddenException);
   });
 
   it('rejects an unauthenticated request', async () => {
     const guard = new SuperAdminGuard(
-      makeSupabase({ data: { is_super_admin: true, status: 'ACTIVE' }, error: null }),
+      makeSupabase({
+        data: { is_super_admin: true, status: 'ACTIVE' },
+        error: null,
+      }),
     );
-    await expect(guard.canActivate(makeContext(undefined))).rejects.toBeInstanceOf(
-      ForbiddenException,
-    );
+    await expect(
+      guard.canActivate(makeContext(undefined)),
+    ).rejects.toBeInstanceOf(ForbiddenException);
   });
 });

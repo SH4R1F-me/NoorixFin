@@ -25,7 +25,8 @@ const TABLES = {
   journal_postings:
     'id, workspace_id, journal_entry_id, ledger_account_id, debit_minor, credit_minor, currency_code, base_amount_minor, fx_rate, memo, created_at, updated_at',
   tags: 'id, workspace_id, name, deleted_at, created_at, updated_at',
-  journal_entry_tags: 'journal_entry_id, tag_id, workspace_id, created_at, updated_at',
+  journal_entry_tags:
+    'journal_entry_id, tag_id, workspace_id, created_at, updated_at',
 } as const;
 
 type TableName = keyof typeof TABLES;
@@ -38,7 +39,11 @@ export class SyncService {
 
   constructor(private readonly supabaseService: SupabaseService) {}
 
-  async getDelta(workspaceId: string, accessToken: string, query: SyncQueryDto) {
+  async getDelta(
+    workspaceId: string,
+    accessToken: string,
+    query: SyncQueryDto,
+  ) {
     const client = this.supabaseService.getUserClient(accessToken);
     const limit = query.limit ?? DEFAULT_LIMIT;
     const serverTime = new Date().toISOString();
@@ -78,13 +83,13 @@ export class SyncService {
 
       if (rows.length === limit) {
         hasMore = true;
-        const last = rows[rows.length - 1]!.updated_at;
+        const last = rows[rows.length - 1].updated_at;
 
         // Pathological case: a full page whose rows all share the cursor's
         // timestamp (e.g. a bulk import stamping identical updated_at). The
         // cursor cannot advance, so the client would loop forever. Fail loudly
         // instead. Fix when it bites: a composite (updated_at, id) cursor.
-        if (last === since && rows[0]!.updated_at === since) {
+        if (last === since && rows[0].updated_at === since) {
           throw new BadRequestException({
             code: 'SYNC_CURSOR_STALLED',
             message:
@@ -110,14 +115,19 @@ export class SyncService {
       .limit(limit);
 
     if (sysError) {
-      this.logger.error(`Sync failed for system categories: ${sysError.message}`);
+      this.logger.error(
+        `Sync failed for system categories: ${sysError.message}`,
+      );
       throw new BadRequestException({
         code: 'SYNC_FAILED',
         message: 'Failed to read system categories',
       });
     }
 
-    changes.categories = [...(changes.categories ?? []), ...(systemCategories ?? [])];
+    changes.categories = [
+      ...(changes.categories ?? []),
+      ...(systemCategories ?? []),
+    ];
 
     return {
       cursor: truncatedWatermark ?? serverTime,

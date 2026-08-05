@@ -16,7 +16,8 @@ export class SyncQueryDto {
   since?: string;
 
   @ApiPropertyOptional({
-    description: 'Max rows per table in one page. The response says whether more remain.',
+    description:
+      'Max rows per table in one page. The response says whether more remain.',
     default: 500,
     minimum: 1,
     maximum: 1000,
@@ -43,7 +44,9 @@ export class SyncResponseDto {
   })
   has_more!: boolean;
 
-  @ApiProperty({ description: 'Server time when this delta was computed (ISO-8601).' })
+  @ApiProperty({
+    description: 'Server time when this delta was computed (ISO-8601).',
+  })
   server_time!: string;
 
   @ApiProperty({ description: 'Changed rows per table, keyed by table name.' })

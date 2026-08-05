@@ -9,7 +9,6 @@ import {
   Logger,
   BadRequestException,
   NotFoundException,
-  ConflictException,
 } from '@nestjs/common';
 import { SupabaseService } from '../supabase/supabase.service';
 import { CategoriesService } from '../categories/categories.service';
@@ -59,7 +58,21 @@ export class TransactionsService {
       });
     }
 
-    // Idempotency check (§8.3)
+    // ── Idempotency (§8.3) ────────────────────────────────────────────────
+    //
+    // Two layers, and the second one is the one that actually holds.
+    //
+    // The read below is the fast path: a retry of a submission that already
+    // landed returns the original result instead of a 409. But a read-then-write
+    // check RACES — two identical submissions arriving together both see no row
+    // and both insert.
+    //
+    // `idempotency_key_hash` closes that. Migration 00002 created
+    // `idx_idempotency UNIQUE (created_by, idempotency_key_hash)`, and this hash
+    // was being COMPUTED AND DISCARDED, so the column stayed NULL, the partial
+    // index never matched anything, and the database-level guarantee §8.3 asks
+    // for did not exist. Writing it means the second concurrent insert is
+    // rejected by Postgres rather than by a check that already passed.
     const idempotencyHash = createHash('sha256')
       .update(`${userId}:transactions:${dto.idempotency_key}`)
       .digest('hex');
@@ -103,6 +116,7 @@ export class TransactionsService {
         status: 'POSTED',
         source: 'MANUAL',
         client_entry_id: dto.idempotency_key,
+        idempotency_key_hash: idempotencyHash,
         created_by: userId,
         posted_at: new Date().toISOString(),
         version: 1,
@@ -111,6 +125,27 @@ export class TransactionsService {
       .single();
 
     if (entryError) {
+      // 23505 on this insert means the unique index caught a concurrent
+      // duplicate — the other request won the race and its entry is the answer.
+      // Returning it is what makes a double-submit idempotent rather than an
+      // error the user has to interpret (§8.3).
+      if (entryError.code === '23505') {
+        const { data: winner } = await client
+          .from('journal_entries')
+          .select('*')
+          .eq('created_by', userId)
+          .eq('idempotency_key_hash', idempotencyHash)
+          .single();
+
+        if (winner) {
+          const { data: postings } = await client
+            .from('journal_postings')
+            .select('*')
+            .eq('journal_entry_id', winner.id);
+          return { ...winner, postings: postings ?? [] };
+        }
+      }
+
       this.logger.error(
         `Failed to create journal entry: ${entryError.message}`,
       );
@@ -142,6 +177,7 @@ export class TransactionsService {
     // Create balanced postings based on transaction type (§8.2)
     const postings = this.buildPostings(
       entryId,
+      workspaceId,
       dto.type,
       amount,
       dto.account_id,
@@ -189,15 +225,19 @@ export class TransactionsService {
         .eq('workspace_id', workspaceId)
         .in('name', tagNames);
 
-      // 3. Link them all at once. workspace_id is filled by the
-      //    derive_workspace_from_entry() trigger (migration 00005).
+      // 3. Link them all at once. `workspace_id` is denormalised (migration
+      //    00005) and sent explicitly — the trigger would supply it, but a
+      //    column the compiler cannot see is a column that goes missing.
       if (tagRows && tagRows.length > 0) {
-        const { error: linkError } = await client.from('journal_entry_tags').insert(
-          tagRows.map((tag) => ({
-            journal_entry_id: entryId,
-            tag_id: tag.id,
-          })),
-        );
+        const { error: linkError } = await client
+          .from('journal_entry_tags')
+          .insert(
+            tagRows.map((tag) => ({
+              journal_entry_id: entryId,
+              workspace_id: workspaceId,
+              tag_id: tag.id,
+            })),
+          );
 
         if (linkError) {
           this.logger.error(`Failed to link tags: ${linkError.message}`);
@@ -232,11 +272,12 @@ export class TransactionsService {
     // postings filtered away, every amount would come out at half its value.
     let entryIdFilter: string[] | undefined;
     if (categoryId) {
-      const ledgerAccountId = await this.categoriesService.resolveLedgerAccountId(
-        categoryId,
-        workspaceId,
-        accessToken,
-      );
+      const ledgerAccountId =
+        await this.categoriesService.resolveLedgerAccountId(
+          categoryId,
+          workspaceId,
+          accessToken,
+        );
 
       const { data: matches } = await client
         .from('journal_postings')
@@ -245,9 +286,7 @@ export class TransactionsService {
         .eq('ledger_account_id', ledgerAccountId);
 
       entryIdFilter = [
-        ...new Set(
-          (matches ?? []).map((row) => (row as { journal_entry_id: string }).journal_entry_id),
-        ),
+        ...new Set((matches ?? []).map((row) => row.journal_entry_id)),
       ];
 
       // No postings against that category means no transactions — returning
@@ -270,7 +309,9 @@ export class TransactionsService {
       // `ledger_account_id` is embedded so the caller can name the category an
       // entry belongs to. A posting references the category's BACKING ledger
       // account, never the category id (DEC-015), so this is the only link.
-      .select('id, workspace_id, entry_type, occurred_at, local_date, payee, note, status, source, reverses_entry_id, created_by, posted_at, created_at, updated_at, version, journal_postings(ledger_account_id, debit_minor, credit_minor, currency_code)')
+      .select(
+        'id, workspace_id, entry_type, occurred_at, local_date, payee, note, status, source, reverses_entry_id, created_by, posted_at, created_at, updated_at, version, journal_postings(ledger_account_id, debit_minor, credit_minor, currency_code)',
+      )
       .eq('workspace_id', workspaceId)
       .order('occurred_at', { ascending: false })
       .order('id', { ascending: false })
@@ -294,16 +335,21 @@ export class TransactionsService {
     // magnitude is either side — summing both and halving avoids caring which.
     const withAmounts = (data || []).map((entry) => {
       const postings =
-        (entry as unknown as {
-          journal_postings?: {
-            ledger_account_id: string;
-            debit_minor: number;
-            credit_minor: number;
-            currency_code: string;
-          }[];
-        }).journal_postings ?? [];
+        (
+          entry as unknown as {
+            journal_postings?: {
+              ledger_account_id: string;
+              debit_minor: number;
+              credit_minor: number;
+              currency_code: string;
+            }[];
+          }
+        ).journal_postings ?? [];
 
-      const total = postings.reduce((sum, p) => sum + p.debit_minor + p.credit_minor, 0);
+      const total = postings.reduce(
+        (sum, p) => sum + p.debit_minor + p.credit_minor,
+        0,
+      );
 
       return {
         ...entry,
@@ -440,6 +486,7 @@ export class TransactionsService {
     const reversedPostings = originalPostings.map((p) => ({
       id: randomUUID(),
       journal_entry_id: reversalId,
+      workspace_id: workspaceId,
       ledger_account_id: p.ledger_account_id,
       debit_minor: p.credit_minor,
       credit_minor: p.debit_minor,
@@ -468,6 +515,16 @@ export class TransactionsService {
    */
   private buildPostings(
     entryId: string,
+    /**
+     * Denormalised onto every posting (migration 00005).
+     *
+     * The `derive_workspace_from_entry()` trigger would fill this in and would
+     * ignore whatever we sent — but relying on that made the column invisible
+     * to the type system, which is how it stayed absent from these inserts
+     * unnoticed. Sending it explicitly means the code is correct with or
+     * without the trigger, and the compiler can see that it is.
+     */
+    workspaceId: string,
     type: string,
     amount: number,
     accountId: string,
@@ -490,6 +547,7 @@ export class TransactionsService {
         postings.push({
           id: randomUUID(),
           journal_entry_id: entryId,
+          workspace_id: workspaceId,
           ledger_account_id: accountId,
           debit_minor: 0,
           credit_minor: amount,
@@ -500,6 +558,7 @@ export class TransactionsService {
         postings.push({
           id: randomUUID(),
           journal_entry_id: entryId,
+          workspace_id: workspaceId,
           ledger_account_id: categoryAccountId,
           debit_minor: amount,
           credit_minor: 0,
@@ -519,6 +578,7 @@ export class TransactionsService {
         postings.push({
           id: randomUUID(),
           journal_entry_id: entryId,
+          workspace_id: workspaceId,
           ledger_account_id: accountId,
           debit_minor: amount,
           credit_minor: 0,
@@ -529,6 +589,7 @@ export class TransactionsService {
         postings.push({
           id: randomUUID(),
           journal_entry_id: entryId,
+          workspace_id: workspaceId,
           ledger_account_id: categoryAccountId,
           debit_minor: 0,
           credit_minor: amount,
@@ -548,6 +609,7 @@ export class TransactionsService {
         postings.push({
           id: randomUUID(),
           journal_entry_id: entryId,
+          workspace_id: workspaceId,
           ledger_account_id: accountId,
           debit_minor: 0,
           credit_minor: amount,
@@ -558,6 +620,7 @@ export class TransactionsService {
         postings.push({
           id: randomUUID(),
           journal_entry_id: entryId,
+          workspace_id: workspaceId,
           ledger_account_id: transferToId,
           debit_minor: amount,
           credit_minor: 0,

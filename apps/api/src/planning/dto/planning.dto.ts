@@ -37,11 +37,19 @@ export class BudgetLineInputDto {
   @IsUUID()
   category_id!: string;
 
-  @ApiProperty({ example: '2000000', description: 'Planned limit, minor units' })
-  @Matches(MINOR_UNITS, { message: 'planned_minor must be a whole number of minor units' })
+  @ApiProperty({
+    example: '2000000',
+    description: 'Planned limit, minor units',
+  })
+  @Matches(MINOR_UNITS, {
+    message: 'planned_minor must be a whole number of minor units',
+  })
   planned_minor!: string;
 
-  @ApiPropertyOptional({ example: 80, description: 'Warn at this % of the limit. 0 disables.' })
+  @ApiPropertyOptional({
+    example: 80,
+    description: 'Warn at this % of the limit. 0 disables.',
+  })
   @IsOptional()
   @IsInt()
   @Min(0)
@@ -61,7 +69,9 @@ export class UpsertBudgetDto {
   @IsIn(['MONTHLY', 'WEEKLY'])
   cadence?: 'MONTHLY' | 'WEEKLY';
 
-  @ApiPropertyOptional({ description: 'Whether unspent limit carries into the next period' })
+  @ApiPropertyOptional({
+    description: 'Whether unspent limit carries into the next period',
+  })
   @IsOptional()
   @IsBoolean()
   rollover?: boolean;
@@ -121,11 +131,23 @@ export class CreateGoalDto {
 }
 
 export class UpdateGoalDto {
-  @ApiPropertyOptional() @IsOptional() @IsString() @Length(1, 100) name?: string;
-  @ApiPropertyOptional() @IsOptional() @Matches(MINOR_UNITS) target_minor?: string;
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  @Length(1, 100)
+  name?: string;
+  @ApiPropertyOptional()
+  @IsOptional()
+  @Matches(MINOR_UNITS)
+  target_minor?: string;
   @ApiPropertyOptional() @IsOptional() @IsISO8601() target_date?: string;
   @ApiPropertyOptional() @IsOptional() @IsUUID() linked_account_id?: string;
-  @ApiPropertyOptional() @IsOptional() @IsInt() @Min(0) @Max(100) priority?: number;
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  @Max(100)
+  priority?: number;
 
   @ApiPropertyOptional({ enum: ['ACTIVE', 'ACHIEVED', 'ABANDONED'] })
   @IsOptional()
@@ -136,11 +158,16 @@ export class UpdateGoalDto {
 // ─── Debt terms ──────────────────────────────────────────────────────────────
 
 export class UpsertDebtDto {
-  @ApiProperty({ description: 'The LIABILITY ledger account these terms describe' })
+  @ApiProperty({
+    description: 'The LIABILITY ledger account these terms describe',
+  })
   @IsUUID()
   ledger_account_id!: string;
 
-  @ApiProperty({ example: '30000000', description: 'Original principal, minor units' })
+  @ApiProperty({
+    example: '30000000',
+    description: 'Original principal, minor units',
+  })
   @Matches(MINOR_UNITS)
   principal_minor!: string;
 
@@ -150,7 +177,10 @@ export class UpsertDebtDto {
    * Optional because informal loans often have no stated rate, and defaulting
    * to 0 would render "0% APR", which is a claim rather than a blank.
    */
-  @ApiPropertyOptional({ example: 950, description: 'Annual rate in basis points' })
+  @ApiPropertyOptional({
+    example: 950,
+    description: 'Annual rate in basis points',
+  })
   @IsOptional()
   @IsInt()
   @Min(0)
@@ -162,7 +192,10 @@ export class UpsertDebtDto {
   @Matches(MINOR_UNITS)
   minimum_payment_minor?: string;
 
-  @ApiPropertyOptional({ example: 5, description: 'Day of month the payment is due' })
+  @ApiPropertyOptional({
+    example: 5,
+    description: 'Day of month the payment is due',
+  })
   @IsOptional()
   @IsInt()
   @Min(1)
@@ -193,7 +226,10 @@ export class CreateCalendarEventDto {
   @Length(3, 3)
   currency_code?: string;
 
-  @ApiProperty({ example: '2026-08-10', description: 'Due date in the workspace timezone' })
+  @ApiProperty({
+    example: '2026-08-10',
+    description: 'Due date in the workspace timezone',
+  })
   @IsISO8601()
   due_date!: string;
 
@@ -209,8 +245,15 @@ export class CreateCalendarEventDto {
 }
 
 export class UpdateCalendarEventDto {
-  @ApiPropertyOptional() @IsOptional() @IsString() @Length(1, 120) title?: string;
-  @ApiPropertyOptional() @IsOptional() @Matches(MINOR_UNITS) amount_minor?: string;
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  @Length(1, 120)
+  title?: string;
+  @ApiPropertyOptional()
+  @IsOptional()
+  @Matches(MINOR_UNITS)
+  amount_minor?: string;
   @ApiPropertyOptional() @IsOptional() @IsISO8601() due_date?: string;
 
   /**
@@ -223,7 +266,9 @@ export class UpdateCalendarEventDto {
   @IsIn(['UPCOMING', 'PAID', 'SKIPPED'])
   status?: 'UPCOMING' | 'PAID' | 'SKIPPED';
 
-  @ApiPropertyOptional({ description: 'The transaction that settled this event' })
+  @ApiPropertyOptional({
+    description: 'The transaction that settled this event',
+  })
   @IsOptional()
   @IsUUID()
   journal_entry_id?: string;
@@ -253,7 +298,11 @@ export class CreateRecurringRuleDto {
 
   @ApiPropertyOptional() @IsOptional() @IsUUID() account_id?: string;
   @ApiPropertyOptional() @IsOptional() @IsUUID() category_id?: string;
-  @ApiPropertyOptional() @IsOptional() @IsString() @Length(0, 120) payee?: string;
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  @Length(0, 120)
+  payee?: string;
 
   @ApiProperty({ enum: ['DAILY', 'WEEKLY', 'MONTHLY', 'YEARLY'] })
   @IsIn(['DAILY', 'WEEKLY', 'MONTHLY', 'YEARLY'])

@@ -13,7 +13,6 @@ import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   AlertTriangle,
-  Check,
   Globe,
   Link2,
   Loader2,

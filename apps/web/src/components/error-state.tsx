@@ -19,7 +19,7 @@
  * function with no React dependency, so this component reads the locale itself
  * and works in both positions.
  */
-import { useEffect, useState, type CSSProperties, type ReactNode } from 'react';
+import { useSyncExternalStore, type CSSProperties, type ReactNode } from 'react';
 import { AlertTriangle, RefreshCw, LayoutDashboard, PlugZap, SearchX } from 'lucide-react';
 import {
   defaultLocale,
@@ -29,23 +29,33 @@ import {
 } from '@noorixfin/i18n';
 
 /**
- * Read the locale mirror cookie the LocaleProvider writes.
+ * The cookie is an external store, so read it with the hook meant for external
+ * stores.
  *
- * Starts at the default and corrects in an effect rather than reading during
- * render: the server has no `document`, and a mismatch between the two passes
- * is a hydration error — which would be a second failure on top of the one
- * being reported.
+ * The obvious alternative — `useState(default)` plus an effect that corrects it
+ * — works but is a cascading render, and React now flags it
+ * (`react-hooks/set-state-in-effect`). Reading `document.cookie` during render
+ * instead would hydrate mismatched, because the server has no `document`.
+ *
+ * `useSyncExternalStore` is built for exactly this shape: `getServerSnapshot`
+ * supplies the default during SSR and hydration, `getSnapshot` reads the real
+ * cookie afterwards, and React reconciles the two without a mismatch warning
+ * and without an extra state update.
  */
+const subscribe = () => () => {
+  // Nothing to unsubscribe from: the preference cookie cannot change while an
+  // error page is on screen — the app that would change it is the thing that
+  // just failed.
+};
+
+function readCookieLocale(): SupportedLanguage {
+  const match = /(?:^|;\s*)nf_locale=([^;]*)/.exec(document.cookie);
+  const value = match?.[1];
+  return isSupportedLocale(value) ? value : defaultLocale;
+}
+
 function useCookieLocale(): SupportedLanguage {
-  const [locale, setLocale] = useState<SupportedLanguage>(defaultLocale);
-
-  useEffect(() => {
-    const match = /(?:^|;\s*)nf_locale=([^;]*)/.exec(document.cookie);
-    const value = match?.[1];
-    if (isSupportedLocale(value)) setLocale(value);
-  }, []);
-
-  return locale;
+  return useSyncExternalStore(subscribe, readCookieLocale, () => defaultLocale);
 }
 
 export type ErrorKind = 'crash' | 'offline' | 'notFound';

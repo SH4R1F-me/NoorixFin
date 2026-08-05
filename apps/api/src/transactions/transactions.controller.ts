@@ -85,14 +85,17 @@ export class TransactionsController {
   ) {
     // Shape-checked before it reaches the service: a non-UUID would go to
     // Postgres as a uuid literal and come back as a 500 for a bad link.
-    const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    const uuid =
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
     const parsedLimit = limit ? parseInt(limit, 10) : 20;
 
     return this.transactionsService.listTransactions(
       workspaceId,
       req.accessToken,
       cursor,
-      Number.isFinite(parsedLimit) ? Math.min(Math.max(parsedLimit, 1), 200) : 20,
+      Number.isFinite(parsedLimit)
+        ? Math.min(Math.max(parsedLimit, 1), 200)
+        : 20,
       category && uuid.test(category) ? category : undefined,
     );
   }

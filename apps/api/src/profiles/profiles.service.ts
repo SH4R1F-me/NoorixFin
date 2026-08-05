@@ -9,6 +9,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { SupabaseService } from '../supabase/supabase.service';
+import type { Updatable } from '@noorixfin/db-types';
 import { UpdatePreferencesDto, UpdateOnboardingDto } from './dto/profile.dto';
 
 /**
@@ -95,7 +96,11 @@ export class ProfilesService {
       throw new NotFoundException('Profile not found');
     }
 
-    return { ...profile, email };
+    // Neither a row nor an error. The early `if (profile)` above already
+    // returned every case where there IS one, so reaching here means the read
+    // produced nothing — which the old code spread into `{ email }`, returning
+    // a profile object with no id that every caller would have treated as real.
+    throw new NotFoundException('Profile not found');
   }
 
   /**
@@ -109,7 +114,7 @@ export class ProfilesService {
     const client = this.supabaseService.getUserClient(accessToken);
 
     // Build update payload (only non-undefined fields)
-    const updatePayload: Record<string, unknown> = {};
+    const updatePayload: Updatable<'profiles'> = {};
     if (dto.locale !== undefined) updatePayload.locale = dto.locale;
     if (dto.timezone !== undefined) updatePayload.timezone = dto.timezone;
     if (dto.base_currency !== undefined)
@@ -169,12 +174,11 @@ export class ProfilesService {
       throw new NotFoundException('Profile not found');
     }
 
-    const patch: Record<string, unknown> = {};
+    const patch: Updatable<'profiles'> = {};
 
     if (dto.onboarding_status !== undefined) {
       const currentRank = ONBOARDING_ORDER.indexOf(
-        (current as { onboarding_status: string })
-          .onboarding_status as (typeof ONBOARDING_ORDER)[number],
+        current.onboarding_status as (typeof ONBOARDING_ORDER)[number],
       );
       const nextRank = ONBOARDING_ORDER.indexOf(
         dto.onboarding_status as (typeof ONBOARDING_ORDER)[number],

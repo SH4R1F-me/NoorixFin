@@ -4,7 +4,7 @@ import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   Plus, Landmark, CreditCard, Wallet, Banknote, Building2,
-  TrendingUp, X, Eye, EyeOff, MoreHorizontal,
+  TrendingUp, X, Eye, EyeOff,
 } from 'lucide-react';
 import { formatAmount, getCurrency } from '@noorixfin/money';
 import { intlLocale } from '@noorixfin/i18n';

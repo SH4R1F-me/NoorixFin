@@ -10,6 +10,20 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import type { Database } from '@noorixfin/db-types';
+
+/**
+ * A client that knows the schema.
+ *
+ * Both factories below used to return a bare `SupabaseClient`, so every
+ * `.from(...).select(...)` in the API produced `any`. That was ~105
+ * `no-unsafe-*` lint errors — but the errors were the symptom. The disease was
+ * that `category_id` where `ledger_account_id` belongs (DEC-015) type-checked
+ * perfectly and broke every transaction write at runtime. With the generic in
+ * place that is a compile error, and so is selecting a column that does not
+ * exist or inserting a value the CHECK constraint forbids.
+ */
+export type TypedSupabaseClient = SupabaseClient<Database>;
 
 @Injectable()
 export class SupabaseService {
@@ -31,8 +45,8 @@ export class SupabaseService {
    * This client operates under the caller's RLS policies.
    * Blueprint §7.3: "Regular request-এ NestJS request-scoped Supabase client"
    */
-  getUserClient(accessToken: string): SupabaseClient {
-    return createClient(this.supabaseUrl, this.supabaseAnonKey, {
+  getUserClient(accessToken: string): TypedSupabaseClient {
+    return createClient<Database>(this.supabaseUrl, this.supabaseAnonKey, {
       global: {
         headers: {
           Authorization: `Bearer ${accessToken}`,
@@ -53,13 +67,13 @@ export class SupabaseService {
    *
    * Do NOT use this in regular user request handlers.
    */
-  getServiceClient(): SupabaseClient {
+  getServiceClient(): TypedSupabaseClient {
     if (!this.supabaseServiceKey) {
       this.logger.error('SUPABASE_SERVICE_ROLE_KEY not configured');
       throw new Error('Service client not available');
     }
 
-    return createClient(this.supabaseUrl, this.supabaseServiceKey, {
+    return createClient<Database>(this.supabaseUrl, this.supabaseServiceKey, {
       auth: {
         autoRefreshToken: false,
         persistSession: false,

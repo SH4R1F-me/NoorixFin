@@ -21,8 +21,10 @@ import {
   Logger,
   NotFoundException,
 } from '@nestjs/common';
-import type { PostgrestError, SupabaseClient } from '@supabase/supabase-js';
+import type { PostgrestError } from '@supabase/supabase-js';
+import type { Database, Json, Updatable } from '@noorixfin/db-types';
 import { SupabaseService } from '../supabase/supabase.service';
+import type { TypedSupabaseClient } from '../supabase/supabase.service';
 import type {
   CreateCalendarEventDto,
   CreateGoalDto,
@@ -32,6 +34,15 @@ import type {
   UpsertBudgetDto,
   UpsertDebtDto,
 } from './dto/planning.dto';
+
+/**
+ * The read-side aggregations from migration 00016, all SECURITY INVOKER.
+ *
+ * Named as a union rather than left as `string` so `rpc()` below can type its
+ * arguments against the generated function map.
+ */
+type PlanningFunction =
+  'budget_status' | 'calendar_overview' | 'goals_overview' | 'category_report';
 
 /** Postgres foreign-key violation — a referenced row is not visible or gone. */
 const FK_VIOLATION = '23503';
@@ -44,7 +55,14 @@ export class PlanningService {
 
   constructor(private readonly supabase: SupabaseService) {}
 
-  private client(accessToken: string): SupabaseClient {
+  /**
+   * `TypedSupabaseClient`, not the bare `SupabaseClient`.
+   *
+   * Without the schema generic every `.from(...)` in this file returned `any`,
+   * so a mistyped column or a table that does not exist compiled cleanly and
+   * failed at runtime.
+   */
+  private client(accessToken: string): TypedSupabaseClient {
     return this.supabase.getUserClient(accessToken);
   }
 
@@ -69,7 +87,10 @@ export class PlanningService {
       });
     }
     this.logger.error(`${what} failed: ${error.code} ${error.message}`);
-    throw new BadRequestException({ code: 'PLANNING_WRITE_FAILED', message: error.message });
+    throw new BadRequestException({
+      code: 'PLANNING_WRITE_FAILED',
+      message: error.message,
+    });
   }
 
   /**
@@ -91,23 +112,38 @@ export class PlanningService {
     return parsed;
   }
 
-  private async rpc<T>(
+  /**
+   * Call one of the 00016 aggregations.
+   *
+   * `fn` is a KEY of the generated function map, not a `string`. That
+   * distinction is the whole point: with a plain string, supabase-js falls back
+   * to its untyped overload and every aggregation on this screen came back as
+   * `any` — so a misspelled function name, a wrong argument name, or a renamed
+   * SQL function would all have failed at runtime with a 404 from PostgREST.
+   * Now each is a compile error, and `data` arrives as `Json` rather than `any`.
+   */
+  private async rpc<F extends PlanningFunction>(
     accessToken: string,
-    fn: string,
-    args: Record<string, unknown>,
-  ): Promise<T> {
+    fn: F,
+    args: Database['public']['Functions'][F]['Args'],
+  ): Promise<Json> {
     const { data, error } = await this.client(accessToken).rpc(fn, args);
     if (error) {
       this.logger.error(`${fn} failed: ${error.code} ${error.message}`);
-      throw new BadRequestException({ code: 'AGGREGATION_FAILED', message: error.message });
+      throw new BadRequestException({
+        code: 'AGGREGATION_FAILED',
+        message: error.message,
+      });
     }
-    return data as T;
+    return data;
   }
 
   // ── Budgets ────────────────────────────────────────────────────────────────
 
   getBudgetStatus(workspaceId: string, accessToken: string) {
-    return this.rpc(accessToken, 'budget_status', { p_workspace_id: workspaceId });
+    return this.rpc(accessToken, 'budget_status', {
+      p_workspace_id: workspaceId,
+    });
   }
 
   /**
@@ -138,7 +174,7 @@ export class PlanningService {
     let budgetId: string;
 
     if (existing?.id) {
-      budgetId = existing.id as string;
+      budgetId = existing.id;
       const { error } = await client
         .from('budgets')
         .update({
@@ -164,7 +200,7 @@ export class PlanningService {
         .select('id')
         .single();
       if (error) this.fail(error, 'Budget');
-      budgetId = (created as { id: string }).id;
+      budgetId = created.id;
     }
 
     // Rewrite the line set. Safe to delete first: budget_lines holds no
@@ -191,7 +227,11 @@ export class PlanningService {
     return this.getBudgetStatus(workspaceId, accessToken);
   }
 
-  async deleteBudget(workspaceId: string, accessToken: string, budgetId: string) {
+  async deleteBudget(
+    workspaceId: string,
+    accessToken: string,
+    budgetId: string,
+  ) {
     const { error } = await this.client(accessToken)
       .from('budgets')
       .delete()
@@ -204,7 +244,9 @@ export class PlanningService {
   // ── Goals and debts ────────────────────────────────────────────────────────
 
   getGoalsOverview(workspaceId: string, accessToken: string) {
-    return this.rpc(accessToken, 'goals_overview', { p_workspace_id: workspaceId });
+    return this.rpc(accessToken, 'goals_overview', {
+      p_workspace_id: workspaceId,
+    });
   }
 
   async createGoal(
@@ -237,12 +279,13 @@ export class PlanningService {
     goalId: string,
     dto: UpdateGoalDto,
   ) {
-    const patch: Record<string, unknown> = {};
+    const patch: Updatable<'savings_goals'> = {};
     if (dto.name !== undefined) patch.name = dto.name;
     if (dto.target_minor !== undefined)
       patch.target_minor = this.minor(dto.target_minor, 'target_minor');
     if (dto.target_date !== undefined) patch.target_date = dto.target_date;
-    if (dto.linked_account_id !== undefined) patch.linked_account_id = dto.linked_account_id;
+    if (dto.linked_account_id !== undefined)
+      patch.linked_account_id = dto.linked_account_id;
     if (dto.priority !== undefined) patch.priority = dto.priority;
     if (dto.status !== undefined) patch.status = dto.status;
 
@@ -251,7 +294,10 @@ export class PlanningService {
     // while the account holds nothing is a lie the API should not accept.
 
     if (Object.keys(patch).length === 0) {
-      throw new BadRequestException({ code: 'EMPTY_PATCH', message: 'Nothing to update.' });
+      throw new BadRequestException({
+        code: 'EMPTY_PATCH',
+        message: 'Nothing to update.',
+      });
     }
 
     const { data, error } = await this.client(accessToken)
@@ -262,7 +308,11 @@ export class PlanningService {
       .select()
       .single();
     if (error) this.fail(error, 'Goal');
-    if (!data) throw new NotFoundException({ code: 'GOAL_NOT_FOUND', message: 'Goal not found' });
+    if (!data)
+      throw new NotFoundException({
+        code: 'GOAL_NOT_FOUND',
+        message: 'Goal not found',
+      });
     return data;
   }
 
@@ -359,7 +409,8 @@ export class PlanningService {
       .eq('id', workspaceId)
       .single();
 
-    const timezone = (workspace as { timezone?: string } | null)?.timezone ?? 'Asia/Dhaka';
+    const timezone =
+      (workspace as { timezone?: string } | null)?.timezone ?? 'Asia/Dhaka';
     const localDate = dto.due_date.slice(0, 10);
 
     const { data, error } = await client
@@ -369,7 +420,9 @@ export class PlanningService {
         type: dto.type,
         title: dto.title,
         amount_minor:
-          dto.amount_minor !== undefined ? this.minor(dto.amount_minor, 'amount_minor') : null,
+          dto.amount_minor !== undefined
+            ? this.minor(dto.amount_minor, 'amount_minor')
+            : null,
         currency_code:
           dto.currency_code ??
           (workspace as { base_currency?: string } | null)?.base_currency ??
@@ -395,7 +448,7 @@ export class PlanningService {
     eventId: string,
     dto: UpdateCalendarEventDto,
   ) {
-    const patch: Record<string, unknown> = {};
+    const patch: Updatable<'calendar_events'> = {};
     if (dto.title !== undefined) patch.title = dto.title;
     if (dto.amount_minor !== undefined)
       patch.amount_minor = this.minor(dto.amount_minor, 'amount_minor');
@@ -405,10 +458,14 @@ export class PlanningService {
       patch.due_at = new Date(`${localDate}T12:00:00Z`).toISOString();
     }
     if (dto.status !== undefined) patch.status = dto.status;
-    if (dto.journal_entry_id !== undefined) patch.journal_entry_id = dto.journal_entry_id;
+    if (dto.journal_entry_id !== undefined)
+      patch.journal_entry_id = dto.journal_entry_id;
 
     if (Object.keys(patch).length === 0) {
-      throw new BadRequestException({ code: 'EMPTY_PATCH', message: 'Nothing to update.' });
+      throw new BadRequestException({
+        code: 'EMPTY_PATCH',
+        message: 'Nothing to update.',
+      });
     }
 
     const { data, error } = await this.client(accessToken)
@@ -420,12 +477,19 @@ export class PlanningService {
       .single();
     if (error) this.fail(error, 'Calendar event');
     if (!data) {
-      throw new NotFoundException({ code: 'EVENT_NOT_FOUND', message: 'Event not found' });
+      throw new NotFoundException({
+        code: 'EVENT_NOT_FOUND',
+        message: 'Event not found',
+      });
     }
     return data;
   }
 
-  async deleteCalendarEvent(workspaceId: string, accessToken: string, eventId: string) {
+  async deleteCalendarEvent(
+    workspaceId: string,
+    accessToken: string,
+    eventId: string,
+  ) {
     const { error } = await this.client(accessToken)
       .from('calendar_events')
       .delete()
@@ -476,7 +540,8 @@ export class PlanningService {
         payee: dto.payee ?? null,
         frequency: dto.frequency,
         interval_count: dto.interval_count ?? 1,
-        timezone: (workspace as { timezone?: string } | null)?.timezone ?? 'Asia/Dhaka',
+        timezone:
+          (workspace as { timezone?: string } | null)?.timezone ?? 'Asia/Dhaka',
         next_occurrence: dto.next_occurrence.slice(0, 10),
         ends_at: dto.ends_at?.slice(0, 10) ?? null,
         behavior: dto.behavior ?? 'REMIND_ONLY',
@@ -488,7 +553,11 @@ export class PlanningService {
     return data;
   }
 
-  async deleteRecurringRule(workspaceId: string, accessToken: string, ruleId: string) {
+  async deleteRecurringRule(
+    workspaceId: string,
+    accessToken: string,
+    ruleId: string,
+  ) {
     const { error } = await this.client(accessToken)
       .from('recurring_rules')
       .delete()
@@ -508,10 +577,13 @@ export class PlanningService {
   ) {
     return this.rpc(accessToken, 'category_report', {
       p_workspace_id: workspaceId,
-      // Explicit nulls rather than omitted keys: PostgREST resolves overloads by
-      // argument name, and omitting one silently selects a different signature.
-      p_from: from ?? null,
-      p_to: to ?? null,
+      // Omitted rather than sent as null. Both parameters carry DEFAULT NULL in
+      // SQL and `category_report` has exactly one signature, so there is no
+      // overload for PostgREST to pick between — omission and an explicit null
+      // reach the function as the same value, and the generated Args type
+      // (`p_from?: string`) says so.
+      ...(from ? { p_from: from } : {}),
+      ...(to ? { p_to: to } : {}),
     });
   }
 }

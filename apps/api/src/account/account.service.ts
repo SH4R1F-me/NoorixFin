@@ -261,7 +261,7 @@ export class AccountService {
     );
 
     return (broadcasts ?? []).filter(
-      (broadcast) => !dismissed.has(broadcast.id as string),
+      (broadcast) => !dismissed.has(broadcast.id),
     );
   }
 

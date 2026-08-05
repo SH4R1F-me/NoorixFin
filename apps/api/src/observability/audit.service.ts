@@ -18,6 +18,7 @@
  */
 import { Injectable, Logger } from '@nestjs/common';
 import { SupabaseService } from '../supabase/supabase.service';
+import type { Json } from '@noorixfin/db-types';
 
 export interface AuditEntry {
   actorId: string;
@@ -55,7 +56,8 @@ export class AuditService {
         resource_type: entry.resourceType,
         resource_id: entry.resourceId ?? null,
         workspace_id: entry.workspaceId ?? null,
-        metadata: entry.metadata ?? {},
+        // audit_events.metadata is jsonb; the caller supplies a plain object.
+        metadata: (entry.metadata ?? {}) as Json,
         ip_address: entry.ipAddress ?? null,
       });
 

@@ -22,6 +22,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { SupabaseService } from '../supabase/supabase.service';
+import type { Updatable } from '@noorixfin/db-types';
 import { CreateCategoryDto, UpdateCategoryDto } from './dto/category.dto';
 import { randomUUID } from 'crypto';
 import { ACCOUNT_CLASS_NORMAL_BALANCE } from '@noorixfin/domain';
@@ -43,22 +44,118 @@ const SYSTEM_CATEGORIES: ReadonlyArray<{
   color: string;
   fallbackName: string;
 }> = [
-  { translation_key: 'cat.food_dining', kind: 'EXPENSE', icon: '🍕', color: '#f59e0b', fallbackName: 'Food & Dining' },
-  { translation_key: 'cat.transport', kind: 'EXPENSE', icon: '🚗', color: '#3b82f6', fallbackName: 'Transport' },
-  { translation_key: 'cat.housing', kind: 'EXPENSE', icon: '🏠', color: '#8b5cf6', fallbackName: 'Housing' },
-  { translation_key: 'cat.utilities', kind: 'EXPENSE', icon: '💡', color: '#06b6d4', fallbackName: 'Utilities' },
-  { translation_key: 'cat.healthcare', kind: 'EXPENSE', icon: '🏥', color: '#ef4444', fallbackName: 'Healthcare' },
-  { translation_key: 'cat.education', kind: 'EXPENSE', icon: '📚', color: '#6366f1', fallbackName: 'Education' },
-  { translation_key: 'cat.entertainment', kind: 'EXPENSE', icon: '🎮', color: '#ec4899', fallbackName: 'Entertainment' },
-  { translation_key: 'cat.shopping', kind: 'EXPENSE', icon: '🛍️', color: '#f97316', fallbackName: 'Shopping' },
-  { translation_key: 'cat.personal_care', kind: 'EXPENSE', icon: '💇', color: '#14b8a6', fallbackName: 'Personal Care' },
-  { translation_key: 'cat.gifts_donations', kind: 'EXPENSE', icon: '🎁', color: '#a855f7', fallbackName: 'Gifts & Donations' },
-  { translation_key: 'cat.other_expense', kind: 'EXPENSE', icon: '📦', color: '#6b7785', fallbackName: 'Other Expense' },
-  { translation_key: 'cat.salary', kind: 'INCOME', icon: '💰', color: '#10b981', fallbackName: 'Salary' },
-  { translation_key: 'cat.business', kind: 'INCOME', icon: '🏢', color: '#059669', fallbackName: 'Business' },
-  { translation_key: 'cat.freelance', kind: 'INCOME', icon: '💻', color: '#0ea5e9', fallbackName: 'Freelance' },
-  { translation_key: 'cat.investment', kind: 'INCOME', icon: '📈', color: '#22c55e', fallbackName: 'Investment' },
-  { translation_key: 'cat.other_income', kind: 'INCOME', icon: '💵', color: '#84cc16', fallbackName: 'Other Income' },
+  {
+    translation_key: 'cat.food_dining',
+    kind: 'EXPENSE',
+    icon: '🍕',
+    color: '#f59e0b',
+    fallbackName: 'Food & Dining',
+  },
+  {
+    translation_key: 'cat.transport',
+    kind: 'EXPENSE',
+    icon: '🚗',
+    color: '#3b82f6',
+    fallbackName: 'Transport',
+  },
+  {
+    translation_key: 'cat.housing',
+    kind: 'EXPENSE',
+    icon: '🏠',
+    color: '#8b5cf6',
+    fallbackName: 'Housing',
+  },
+  {
+    translation_key: 'cat.utilities',
+    kind: 'EXPENSE',
+    icon: '💡',
+    color: '#06b6d4',
+    fallbackName: 'Utilities',
+  },
+  {
+    translation_key: 'cat.healthcare',
+    kind: 'EXPENSE',
+    icon: '🏥',
+    color: '#ef4444',
+    fallbackName: 'Healthcare',
+  },
+  {
+    translation_key: 'cat.education',
+    kind: 'EXPENSE',
+    icon: '📚',
+    color: '#6366f1',
+    fallbackName: 'Education',
+  },
+  {
+    translation_key: 'cat.entertainment',
+    kind: 'EXPENSE',
+    icon: '🎮',
+    color: '#ec4899',
+    fallbackName: 'Entertainment',
+  },
+  {
+    translation_key: 'cat.shopping',
+    kind: 'EXPENSE',
+    icon: '🛍️',
+    color: '#f97316',
+    fallbackName: 'Shopping',
+  },
+  {
+    translation_key: 'cat.personal_care',
+    kind: 'EXPENSE',
+    icon: '💇',
+    color: '#14b8a6',
+    fallbackName: 'Personal Care',
+  },
+  {
+    translation_key: 'cat.gifts_donations',
+    kind: 'EXPENSE',
+    icon: '🎁',
+    color: '#a855f7',
+    fallbackName: 'Gifts & Donations',
+  },
+  {
+    translation_key: 'cat.other_expense',
+    kind: 'EXPENSE',
+    icon: '📦',
+    color: '#6b7785',
+    fallbackName: 'Other Expense',
+  },
+  {
+    translation_key: 'cat.salary',
+    kind: 'INCOME',
+    icon: '💰',
+    color: '#10b981',
+    fallbackName: 'Salary',
+  },
+  {
+    translation_key: 'cat.business',
+    kind: 'INCOME',
+    icon: '🏢',
+    color: '#059669',
+    fallbackName: 'Business',
+  },
+  {
+    translation_key: 'cat.freelance',
+    kind: 'INCOME',
+    icon: '💻',
+    color: '#0ea5e9',
+    fallbackName: 'Freelance',
+  },
+  {
+    translation_key: 'cat.investment',
+    kind: 'INCOME',
+    icon: '📈',
+    color: '#22c55e',
+    fallbackName: 'Investment',
+  },
+  {
+    translation_key: 'cat.other_income',
+    kind: 'INCOME',
+    icon: '💵',
+    color: '#84cc16',
+    fallbackName: 'Other Income',
+  },
 ];
 
 /** Postgres unique-violation. Benign here: a concurrent seeder got there first. */
@@ -91,9 +188,13 @@ export class CategoriesService {
       .not('translation_key', 'is', null);
 
     const seeded = new Set(
-      (existing ?? []).map((row: { translation_key: string | null }) => row.translation_key),
+      (existing ?? []).map(
+        (row: { translation_key: string | null }) => row.translation_key,
+      ),
     );
-    const missing = SYSTEM_CATEGORIES.filter((c) => !seeded.has(c.translation_key));
+    const missing = SYSTEM_CATEGORIES.filter(
+      (c) => !seeded.has(c.translation_key),
+    );
     if (missing.length === 0) return;
 
     // Categories post into ledger accounts, so each one needs a backing account
@@ -123,9 +224,14 @@ export class CategoriesService {
       .select('id, name')
       .eq('workspace_id', workspaceId)
       .eq('subtype', 'CATEGORY')
-      .in('name', missing.map((c) => c.fallbackName));
+      .in(
+        'name',
+        missing.map((c) => c.fallbackName),
+      );
 
-    const haveAccount = new Set((existingAccounts ?? []).map((a: { name: string }) => a.name));
+    const haveAccount = new Set(
+      (existingAccounts ?? []).map((a: { name: string }) => a.name),
+    );
     const accountRows = missing
       .filter((cat) => !haveAccount.has(cat.fallbackName))
       .map((cat) => ({
@@ -147,7 +253,9 @@ export class CategoriesService {
         .insert(accountRows);
 
       if (accountError && !isUniqueViolation(accountError)) {
-        this.logger.error(`Failed to seed category accounts: ${accountError.message}`);
+        this.logger.error(
+          `Failed to seed category accounts: ${accountError.message}`,
+        );
         throw new BadRequestException({
           code: 'CATEGORY_SEED_FAILED',
           message: 'Failed to prepare category accounts',
@@ -162,7 +270,10 @@ export class CategoriesService {
       .select('id, name')
       .eq('workspace_id', workspaceId)
       .eq('subtype', 'CATEGORY')
-      .in('name', missing.map((c) => c.fallbackName));
+      .in(
+        'name',
+        missing.map((c) => c.fallbackName),
+      );
 
     const accountByName = new Map(
       (accounts ?? []).map((a: { id: string; name: string }) => [a.name, a.id]),
@@ -274,21 +385,25 @@ export class CategoriesService {
       .single();
 
     const accountId = randomUUID();
-    const { error: accountError } = await client.from('ledger_accounts').insert({
-      id: accountId,
-      workspace_id: workspaceId,
-      name: dto.name,
-      class: dto.kind,
-      subtype: 'CATEGORY',
-      currency_code: workspace?.base_currency ?? 'BDT',
-      normal_balance: ACCOUNT_CLASS_NORMAL_BALANCE[dto.kind as 'INCOME' | 'EXPENSE'],
-      include_in_budget: dto.kind === 'EXPENSE',
-      include_in_net_worth: false,
-      created_by: userId,
-    });
+    const { error: accountError } = await client
+      .from('ledger_accounts')
+      .insert({
+        id: accountId,
+        workspace_id: workspaceId,
+        name: dto.name,
+        class: dto.kind,
+        subtype: 'CATEGORY',
+        currency_code: workspace?.base_currency ?? 'BDT',
+        normal_balance: ACCOUNT_CLASS_NORMAL_BALANCE[dto.kind],
+        include_in_budget: dto.kind === 'EXPENSE',
+        include_in_net_worth: false,
+        created_by: userId,
+      });
 
     if (accountError) {
-      this.logger.error(`Failed to create category account: ${accountError.message}`);
+      this.logger.error(
+        `Failed to create category account: ${accountError.message}`,
+      );
       throw new BadRequestException({
         code: 'CATEGORY_CREATE_FAILED',
         message: 'Failed to create the category ledger account',
@@ -352,7 +467,7 @@ export class CategoriesService {
       });
     }
 
-    const patch: Record<string, unknown> = {};
+    const patch: Updatable<'categories'> = {};
     // Renaming a system category sets custom_name, which overrides the
     // translation. translation_key is kept so the row stays identifiable.
     if (dto.name !== undefined) patch.custom_name = dto.name;

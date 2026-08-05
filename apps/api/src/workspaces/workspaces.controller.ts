@@ -6,7 +6,15 @@
  *
  * Invitation and member management endpoints removed (2-role system).
  */
-import { Controller, Get, Post, Body, Req, Param, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Req,
+  Param,
+  UseGuards,
+} from '@nestjs/common';
 import {
   ApiBearerAuth,
   ApiTags,
@@ -55,7 +63,8 @@ export class WorkspacesController {
   @Get(':workspaceId/summary')
   @UseGuards(WorkspaceMemberGuard)
   @ApiOperation({
-    summary: 'Dashboard summary — net worth, month income/expense/net, prior month',
+    summary:
+      'Dashboard summary — net worth, month income/expense/net, prior month',
     description:
       'Single aggregated payload (DEC-011). Amounts are minor units. Percentage deltas are NOT ' +
       'returned: with a zero prior month a change is undefined rather than +100%, so the client ' +

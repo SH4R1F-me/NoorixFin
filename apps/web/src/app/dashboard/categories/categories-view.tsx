@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
-import { Plus, X, Edit3, Grid, List } from 'lucide-react';
+import { Plus, X, Grid, List } from 'lucide-react';
 import { useLocale } from '../../../lib/i18n/locale-provider';
 import { createCategory } from '../ledger-actions';
 

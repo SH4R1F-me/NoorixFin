@@ -49,7 +49,10 @@ export class RequestTelemetryInterceptor implements NestInterceptor {
     // that grew without bound — 181 bogus "slow request" entries in the first
     // few minutes of use, which is precisely the noise that buries real signal
     // in the operator's feed. Streaming endpoints are exempt.
-    const isSse = this.reflector.get<boolean>(SSE_METADATA, context.getHandler());
+    const isSse = this.reflector.get<boolean>(
+      SSE_METADATA,
+      context.getHandler(),
+    );
     if (isSse) return next.handle();
 
     const http = context.switchToHttp();

@@ -59,17 +59,26 @@ export class PlanningController {
   // ── Budgets ────────────────────────────────────────────────────────────────
 
   @Get('budget')
-  @ApiOperation({ summary: 'Budget status: planned vs actual for the current period' })
+  @ApiOperation({
+    summary: 'Budget status: planned vs actual for the current period',
+  })
   @ApiParam({ name: 'workspaceId', type: 'string' })
-  @ApiOkResponse({ description: 'One payload per DEC-011; spend derived from postings' })
-  getBudget(@Param('workspaceId') workspaceId: string, @Req() req: AuthedRequest) {
+  @ApiOkResponse({
+    description: 'One payload per DEC-011; spend derived from postings',
+  })
+  getBudget(
+    @Param('workspaceId') workspaceId: string,
+    @Req() req: AuthedRequest,
+  ) {
     return this.planning.getBudgetStatus(workspaceId, req.accessToken);
   }
 
   // PUT, not PATCH: the body is the complete set of lines and replaces what is
   // there. A partial apply would leave a budget describing two intentions.
   @Put('budget')
-  @ApiOperation({ summary: 'Create or replace the budget and all of its lines' })
+  @ApiOperation({
+    summary: 'Create or replace the budget and all of its lines',
+  })
   @ApiParam({ name: 'workspaceId', type: 'string' })
   upsertBudget(
     @Param('workspaceId') workspaceId: string,
@@ -77,7 +86,12 @@ export class PlanningController {
     @Req() req: AuthedRequest,
     @Body() dto: UpsertBudgetDto,
   ) {
-    return this.planning.upsertBudget(workspaceId, user.id, req.accessToken, dto);
+    return this.planning.upsertBudget(
+      workspaceId,
+      user.id,
+      req.accessToken,
+      dto,
+    );
   }
 
   @Delete('budget/:id')
@@ -93,8 +107,13 @@ export class PlanningController {
   // ── Goals and debts ────────────────────────────────────────────────────────
 
   @Get('goals')
-  @ApiOperation({ summary: 'Savings goals and debt summary, progress read from the ledger' })
-  getGoals(@Param('workspaceId') workspaceId: string, @Req() req: AuthedRequest) {
+  @ApiOperation({
+    summary: 'Savings goals and debt summary, progress read from the ledger',
+  })
+  getGoals(
+    @Param('workspaceId') workspaceId: string,
+    @Req() req: AuthedRequest,
+  ) {
     return this.planning.getGoalsOverview(workspaceId, req.accessToken);
   }
 
@@ -131,7 +150,9 @@ export class PlanningController {
   }
 
   @Put('debts')
-  @ApiOperation({ summary: 'Attach or replace repayment terms on a liability account' })
+  @ApiOperation({
+    summary: 'Attach or replace repayment terms on a liability account',
+  })
   upsertDebt(
     @Param('workspaceId') workspaceId: string,
     @Req() req: AuthedRequest,
@@ -154,8 +175,14 @@ export class PlanningController {
     // and `Number('abc')` is NaN, which Postgres would reject with a 500 for
     // what is really a bad request.
     const parsed = Number(days);
-    const horizon = Number.isFinite(parsed) ? Math.min(Math.max(parsed, 1), 365) : 30;
-    return this.planning.getCalendarOverview(workspaceId, req.accessToken, horizon);
+    const horizon = Number.isFinite(parsed)
+      ? Math.min(Math.max(parsed, 1), 365)
+      : 30;
+    return this.planning.getCalendarOverview(
+      workspaceId,
+      req.accessToken,
+      horizon,
+    );
   }
 
   @Post('calendar')
@@ -166,7 +193,12 @@ export class PlanningController {
     @Req() req: AuthedRequest,
     @Body() dto: CreateCalendarEventDto,
   ) {
-    return this.planning.createCalendarEvent(workspaceId, user.id, req.accessToken, dto);
+    return this.planning.createCalendarEvent(
+      workspaceId,
+      user.id,
+      req.accessToken,
+      dto,
+    );
   }
 
   @Patch('calendar/:id')
@@ -177,7 +209,12 @@ export class PlanningController {
     @Req() req: AuthedRequest,
     @Body() dto: UpdateCalendarEventDto,
   ) {
-    return this.planning.updateCalendarEvent(workspaceId, req.accessToken, eventId, dto);
+    return this.planning.updateCalendarEvent(
+      workspaceId,
+      req.accessToken,
+      eventId,
+      dto,
+    );
   }
 
   @Delete('calendar/:id')
@@ -187,26 +224,40 @@ export class PlanningController {
     @Param('id') eventId: string,
     @Req() req: AuthedRequest,
   ) {
-    return this.planning.deleteCalendarEvent(workspaceId, req.accessToken, eventId);
+    return this.planning.deleteCalendarEvent(
+      workspaceId,
+      req.accessToken,
+      eventId,
+    );
   }
 
   // ── Recurring rules ────────────────────────────────────────────────────────
 
   @Get('recurring')
   @ApiOperation({ summary: 'List recurring rules' })
-  listRules(@Param('workspaceId') workspaceId: string, @Req() req: AuthedRequest) {
+  listRules(
+    @Param('workspaceId') workspaceId: string,
+    @Req() req: AuthedRequest,
+  ) {
     return this.planning.listRecurringRules(workspaceId, req.accessToken);
   }
 
   @Post('recurring')
-  @ApiOperation({ summary: 'Create a recurring rule (never auto-posts — §9.4)' })
+  @ApiOperation({
+    summary: 'Create a recurring rule (never auto-posts — §9.4)',
+  })
   createRule(
     @Param('workspaceId') workspaceId: string,
     @CurrentUser() user: AuthenticatedUser,
     @Req() req: AuthedRequest,
     @Body() dto: CreateRecurringRuleDto,
   ) {
-    return this.planning.createRecurringRule(workspaceId, user.id, req.accessToken, dto);
+    return this.planning.createRecurringRule(
+      workspaceId,
+      user.id,
+      req.accessToken,
+      dto,
+    );
   }
 
   @Delete('recurring/:id')
@@ -216,13 +267,19 @@ export class PlanningController {
     @Param('id') ruleId: string,
     @Req() req: AuthedRequest,
   ) {
-    return this.planning.deleteRecurringRule(workspaceId, req.accessToken, ruleId);
+    return this.planning.deleteRecurringRule(
+      workspaceId,
+      req.accessToken,
+      ruleId,
+    );
   }
 
   // ── Reports ────────────────────────────────────────────────────────────────
 
   @Get('reports/categories')
-  @ApiOperation({ summary: 'Category breakdown and 6-month trend (§11.3 contract)' })
+  @ApiOperation({
+    summary: 'Category breakdown and 6-month trend (§11.3 contract)',
+  })
   @ApiQuery({ name: 'from', required: false, example: '2026-08-01' })
   @ApiQuery({ name: 'to', required: false, example: '2026-09-01' })
   getReport(

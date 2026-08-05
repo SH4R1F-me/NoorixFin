@@ -15,8 +15,13 @@ export interface AuthenticatedUser {
 
 export const CurrentUser = createParamDecorator(
   (data: keyof AuthenticatedUser | undefined, ctx: ExecutionContext) => {
-    const request = ctx.switchToHttp().getRequest();
-    const user = request.user as AuthenticatedUser;
+    // `getRequest()` is generic and defaults to `any`, so both lines below used
+    // to be unchecked. Naming the shape makes the contract with
+    // SupabaseAuthGuard — which is what sets `user` — visible at the type level.
+    const request = ctx
+      .switchToHttp()
+      .getRequest<{ user?: AuthenticatedUser }>();
+    const user = request.user;
 
     if (!user) {
       return undefined;
