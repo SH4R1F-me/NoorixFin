@@ -9,6 +9,19 @@
  *   1. SuperAdminGuard        — API-level
  *   2. RLS + the RPCs' internal is_super_admin() checks — database-level
  *   3. notFound() in the web layout — the route does not appear to exist
+ *
+ * ── @Idempotent() (audit item 16) ────────────────────────────────────────────
+ * Every mutation here honours an `Idempotency-Key` header. Two levels:
+ *
+ *   `@Idempotent()`                  — replay-safe if a key is sent.
+ *   `@Idempotent({ required: true })` — refuses without one.
+ *
+ * Only broadcast CREATION is required, because it is the only route where a
+ * retry produces a second thing: the same platform-wide message delivered
+ * twice, with two audit entries that make it look deliberate. The rest set a
+ * field to a value, so a replay was already harmless — a key there buys a
+ * clean audit trail rather than correctness, and demanding one would be
+ * ceremony. See idempotency.interceptor.ts.
  */
 import {
   Body,
@@ -39,6 +52,7 @@ import { TracingService } from '../observability/tracing.service';
 import { EnableTracingDto } from './dto/admin.dto';
 import { SuperAdminGuard } from '../auth/guards/super-admin.guard';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
+import { Idempotent } from '../common/decorators/idempotent.decorator';
 import type { AuthenticatedUser } from '../common/decorators/current-user.decorator';
 import {
   AdminUpdateUserDto,
@@ -162,6 +176,7 @@ export class AdminController {
   }
 
   @Post('tracing')
+  @Idempotent()
   @ThrottleAdminWrite()
   @ApiOperation({
     summary: 'Open a time-boxed request-trace window',
@@ -187,6 +202,7 @@ export class AdminController {
   }
 
   @Post('events/prune')
+  @Idempotent()
   @ThrottleAdminWrite()
   @ApiOperation({ summary: 'Drop events past the retention window' })
   pruneEvents(
@@ -230,6 +246,7 @@ export class AdminController {
 
   @Patch('users/:userId')
   @ThrottleAdminWrite()
+  @Idempotent()
   @ApiOperation({
     summary: 'Update the operator-editable subset of a profile',
     description:
@@ -247,6 +264,7 @@ export class AdminController {
 
   @Post('users/:userId/suspend')
   @ThrottleAdminWrite()
+  @Idempotent()
   @ApiOperation({ summary: 'Suspend an account (Auth ban + status)' })
   suspendUser(
     @Req() req: AuthedRequest,
@@ -264,6 +282,7 @@ export class AdminController {
 
   @Post('users/:userId/reinstate')
   @ThrottleAdminWrite()
+  @Idempotent()
   @ApiOperation({
     summary: 'Lift a suspension, and cancel any pending deletion',
   })
@@ -277,6 +296,7 @@ export class AdminController {
 
   @Post('purge')
   @ThrottleAdminWrite()
+  @Idempotent()
   @ApiOperation({
     summary: 'Run the deletion purge for expired grace periods',
     description:
@@ -297,6 +317,7 @@ export class AdminController {
 
   @Put('settings')
   @ThrottleAdminWrite()
+  @Idempotent()
   @ApiOperation({ summary: 'Update one or more known settings' })
   updateSettings(
     @Req() req: AuthedRequest,
@@ -316,6 +337,7 @@ export class AdminController {
 
   @Post('broadcasts')
   @ThrottleAdminWrite()
+  @Idempotent({ required: true })
   @ApiOperation({ summary: 'Compose a broadcast (always created as DRAFT)' })
   createBroadcast(
     @CurrentUser() user: AuthenticatedUser,
@@ -326,6 +348,7 @@ export class AdminController {
 
   @Patch('broadcasts/:broadcastId')
   @ThrottleAdminWrite()
+  @Idempotent()
   @ApiOperation({ summary: 'Edit a broadcast' })
   updateBroadcast(
     @CurrentUser() user: AuthenticatedUser,
@@ -337,6 +360,7 @@ export class AdminController {
 
   @Post('broadcasts/:broadcastId/publish')
   @ThrottleAdminWrite()
+  @Idempotent()
   @ApiOperation({ summary: 'Publish — makes it visible to its audience' })
   publishBroadcast(
     @CurrentUser() user: AuthenticatedUser,
@@ -351,6 +375,7 @@ export class AdminController {
 
   @Post('broadcasts/:broadcastId/archive')
   @ThrottleAdminWrite()
+  @Idempotent()
   @ApiOperation({ summary: 'Archive — withdraws it from every user' })
   archiveBroadcast(
     @CurrentUser() user: AuthenticatedUser,

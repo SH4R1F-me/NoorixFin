@@ -512,6 +512,7 @@ export type Database = {
           expires_at: string
           id: string
           key_hash: string
+          request_fingerprint: string | null
           response_body: Json | null
           response_status: number | null
           route: string
@@ -522,6 +523,7 @@ export type Database = {
           expires_at?: string
           id?: string
           key_hash: string
+          request_fingerprint?: string | null
           response_body?: Json | null
           response_status?: number | null
           route: string
@@ -532,6 +534,7 @@ export type Database = {
           expires_at?: string
           id?: string
           key_hash?: string
+          request_fingerprint?: string | null
           response_body?: Json | null
           response_status?: number | null
           route?: string
@@ -1213,6 +1216,7 @@ export type Database = {
       check_error_rate_alert: { Args: never; Returns: Json }
       goals_overview: { Args: { p_workspace_id: string }; Returns: Json }
       is_super_admin: { Args: never; Returns: boolean }
+      prune_idempotency_records: { Args: never; Returns: number }
       prune_system_events: { Args: { p_retain_days?: number }; Returns: number }
       purge_expired_deletions: {
         Args: { p_limit?: number }

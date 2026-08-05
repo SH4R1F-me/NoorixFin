@@ -43,6 +43,21 @@ const EMPTY = {
 
 export default function BroadcastsView({ broadcasts }: { broadcasts: AdminBroadcast[] }) {
   const [form, setForm] = useState(EMPTY);
+  /**
+   * One key per COMPOSED MESSAGE, minted here and reset only when the form
+   * clears after a successful save.
+   *
+   * This is the whole reason the API's replay protection does anything. A key
+   * generated server-side would be new on every submission, so two clicks would
+   * be two keys and two identical broadcasts to every user on the platform.
+   * Because it lives with the draft, every attempt at THIS message — a double
+   * click, a retry, a resend after a timeout the browser wrongly read as a
+   * failure — carries the same key and collapses to one row.
+   *
+   * `useState` with an initialiser function, not a plain value: the plain form
+   * would call randomUUID on every render.
+   */
+  const [draftKey, setDraftKey] = useState(() => crypto.randomUUID());
   const [message, setMessage] = useState<{ ok: boolean; text: string } | null>(null);
   const [pending, startTransition] = useTransition();
   const router = useRouter();
@@ -174,8 +189,14 @@ export default function BroadcastsView({ broadcasts }: { broadcasts: AdminBroadc
           <button
             onClick={() =>
               act(async () => {
-                const result = await createBroadcast(form);
-                if (result.ok) setForm(EMPTY);
+                const result = await createBroadcast(form, draftKey);
+                if (result.ok) {
+                  setForm(EMPTY);
+                  // A NEW draft is a new intent, so it gets a new key. Reusing
+                  // this one would make the next broadcast a replay of the last
+                  // and return its response without writing anything.
+                  setDraftKey(crypto.randomUUID());
+                }
                 return result;
               }, 'Draft saved.')
             }
