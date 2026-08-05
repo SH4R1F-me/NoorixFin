@@ -62,6 +62,8 @@ function revalidateLedger() {
 
 export interface NewTransactionInput {
   workspaceId: string;
+  /** Free-form labels (§6.3). Created on first use by the API. */
+  tags?: string[];
   type: 'EXPENSE' | 'INCOME' | 'TRANSFER';
   amount: string;
   currency: string;
@@ -111,6 +113,19 @@ export async function createTransaction(
         ...(input.payee?.trim() ? { payee: input.payee.trim() } : {}),
         ...(input.note?.trim() ? { note: input.note.trim() } : {}),
         ...(input.occurredAt ? { occurred_at: new Date(input.occurredAt).toISOString() } : {}),
+        // Trimmed and de-duplicated here as well as by the API: the form lets
+        // someone type the same label twice, and `tags` has UNIQUE
+        // (workspace_id, name), so sending it twice would be a wasted upsert
+        // rather than an error — silent, but still wrong.
+        ...(input.tags?.length
+          ? {
+              tags: [
+                ...new Set(
+                  input.tags.map((tag) => tag.trim()).filter((tag) => tag !== ''),
+                ),
+              ],
+            }
+          : {}),
         // Generated per submission, server-side. A retry of the SAME submission
         // reuses it via the form's own state; a genuinely new entry gets a new
         // one. This is what stops a double-click becoming two transactions
@@ -211,6 +226,26 @@ export async function reverseTransaction(
     await apiFetch(`/workspaces/${workspaceId}/transactions/${transactionId}/reverse`, {
       method: 'POST',
     });
+    revalidateLedger();
+    return { ok: true };
+  } catch (error) {
+    return fail(error);
+  }
+}
+
+/**
+ * Delete a tag — §6.3.
+ *
+ * Detaches it from every entry and alters no posting, so this is safe to offer
+ * without a reversal-style confirmation: what is lost is a way of FINDING
+ * transactions, never a transaction.
+ */
+export async function deleteTag(
+  workspaceId: string,
+  tagId: string,
+): Promise<LedgerResult> {
+  try {
+    await apiFetch(`/workspaces/${workspaceId}/tags/${tagId}`, { method: 'DELETE' });
     revalidateLedger();
     return { ok: true };
   } catch (error) {

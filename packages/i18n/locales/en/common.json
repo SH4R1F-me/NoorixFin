@@ -185,7 +185,15 @@
     "reversed": "Reversed",
     "reversalOf": "Correction",
     "reverseDone": "Correcting entry added.",
-    "cannotReverse": "Only posted transactions can be reversed."
+    "cannotReverse": "Only posted transactions can be reversed.",
+    "addTag": "Add a tag",
+    "tagsHint": "Press Enter to add. Tags are labels for finding transactions later.",
+    "filterByTag": "Filter by tag",
+    "allTags": "All tags",
+    "noTags": "No tags yet",
+    "removeTag": "Remove tag",
+    "tagUses": "{{count}} uses",
+    "taggedWith": "Tagged {{tag}}"
   },
   "budgets": {
     "title": "Budgets",

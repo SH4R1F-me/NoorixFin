@@ -21,6 +21,7 @@ import {
   getTransactions,
   getCategories,
   getAccounts,
+  getTags,
   categoryLabel,
 } from '../../../lib/workspace';
 import { getServerT } from '../../../lib/i18n/locale';
@@ -29,7 +30,7 @@ import TransactionsView, { type TxItem } from './transactions-view';
 export default async function TransactionsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ category?: string; new?: string }>;
+  searchParams: Promise<{ category?: string; tag?: string; new?: string }>;
 }) {
   const [workspace, t, params] = await Promise.all([
     getActiveWorkspace(),
@@ -43,6 +44,7 @@ export default async function TransactionsPage({
         transactions={[]}
         categories={[]}
         accounts={[]}
+        tags={[]}
         workspaceId=""
         currency="BDT"
       />
@@ -52,11 +54,16 @@ export default async function TransactionsPage({
   const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
   const filterCategoryId =
     params.category && uuid.test(params.category) ? params.category : undefined;
+  // Shape-checked for the same reason as `category`: a non-UUID reaches
+  // Postgres as a uuid literal and comes back as a 500 for what is only a
+  // mistyped link.
+  const filterTagId = params.tag && uuid.test(params.tag) ? params.tag : undefined;
 
-  const [rows, categoryRows, accountRows] = await Promise.all([
-    getTransactions(workspace.id, 50, filterCategoryId),
+  const [rows, categoryRows, accountRows, tagRows] = await Promise.all([
+    getTransactions(workspace.id, 50, filterCategoryId, filterTagId),
     getCategories(workspace.id),
     getAccounts(workspace.id),
+    getTags(workspace.id),
   ]);
 
   // Postings reference a category's BACKING ledger account, never the category
@@ -96,11 +103,15 @@ export default async function TransactionsPage({
       // from a reversal pointing here.
       reversed: row.reversed === true,
       isReversal: row.entry_type === 'REVERSAL',
+      tags: row.tags ?? [],
     };
   });
 
   const activeCategory = filterCategoryId
     ? categoryRows.find((category) => category.id === filterCategoryId)
+    : undefined;
+  const activeTag = filterTagId
+    ? tagRows.find((tag) => tag.id === filterTagId)
     : undefined;
 
   return (
@@ -124,9 +135,21 @@ export default async function TransactionsPage({
             account.subtype !== 'SYSTEM',
         )
         .map((account) => ({ id: account.id, label: account.name }))}
+      tags={tagRows}
       workspaceId={workspace.id}
       currency={workspace.base_currency ?? 'BDT'}
-      drillDownLabel={activeCategory ? categoryLabel(activeCategory, t) : undefined}
+      // Both filters can be active at once and they intersect, so the banner
+      // names whichever are set — saying only one would understate why the
+      // list is short.
+      drillDownLabel={
+        [
+          activeCategory ? categoryLabel(activeCategory, t) : null,
+          activeTag ? `#${activeTag.name}` : null,
+        ]
+          .filter(Boolean)
+          .join(' · ') || undefined
+      }
+      activeTagId={filterTagId}
     />
   );
 }

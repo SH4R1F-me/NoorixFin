@@ -8,10 +8,12 @@
  */
 import {
   Controller,
+  Delete,
   Get,
   Post,
   Body,
   Param,
+  ParseUUIDPipe,
   Query,
   Req,
   UseGuards,
@@ -71,6 +73,11 @@ export class TransactionsController {
   @ApiQuery({ name: 'cursor', required: false })
   @ApiQuery({ name: 'limit', required: false, type: 'number' })
   @ApiQuery({
+    name: 'tag',
+    required: false,
+    description: 'Only entries carrying this tag. Intersects with `category`.',
+  })
+  @ApiQuery({
     name: 'category',
     required: false,
     description:
@@ -84,6 +91,7 @@ export class TransactionsController {
     @Query('cursor') cursor?: string,
     @Query('limit') limit?: string,
     @Query('category') category?: string,
+    @Query('tag') tag?: string,
   ) {
     // Shape-checked before it reaches the service: a non-UUID would go to
     // Postgres as a uuid literal and come back as a 500 for a bad link.
@@ -99,6 +107,51 @@ export class TransactionsController {
         ? Math.min(Math.max(parsedLimit, 1), 200)
         : 20,
       category && uuid.test(category) ? category : undefined,
+      tag && uuid.test(tag) ? tag : undefined,
+    );
+  }
+
+  // ── Tags (§6.3) ─────────────────────────────────────────────────────────
+  // Declared BEFORE `transactions/:id` would matter if it shared a prefix; it
+  // does not, but the ordering is kept deliberate because Nest matches routes
+  // in declaration order and `/tags` under a `:id` segment is a classic way to
+  // make a working endpoint unreachable.
+  @Get('workspaces/:workspaceId/tags')
+  @UseGuards(WorkspaceMemberGuard)
+  @ApiOperation({
+    summary: 'Every tag in the workspace, with usage counts',
+    description:
+      'The count distinguishes a label in active use from one left behind by a ' +
+      'typo — which is the decision this list exists to support.',
+  })
+  @ApiParam({ name: 'workspaceId', type: 'string' })
+  async listTags(
+    @Param('workspaceId') workspaceId: string,
+    @Req() req: Request & { accessToken: string },
+  ) {
+    return this.transactionsService.listTags(workspaceId, req.accessToken);
+  }
+
+  @Delete('workspaces/:workspaceId/tags/:tagId')
+  @ThrottleLedgerWrite()
+  @UseGuards(WorkspaceMemberGuard)
+  @ApiOperation({
+    summary: 'Delete a tag',
+    description:
+      'Detaches it from every entry and alters no posting — a tag is a label, ' +
+      'not a fact about the money.',
+  })
+  @ApiParam({ name: 'workspaceId', type: 'string' })
+  @ApiParam({ name: 'tagId', type: 'string' })
+  async deleteTag(
+    @Param('workspaceId') workspaceId: string,
+    @Param('tagId', ParseUUIDPipe) tagId: string,
+    @Req() req: Request & { accessToken: string },
+  ) {
+    return this.transactionsService.deleteTag(
+      tagId,
+      workspaceId,
+      req.accessToken,
     );
   }
 

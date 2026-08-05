@@ -258,6 +258,7 @@ export class TransactionsService {
     cursor?: string,
     limit = 20,
     categoryId?: string,
+    tagId?: string,
   ) {
     const client = this.supabaseService.getUserClient(accessToken);
 
@@ -292,6 +293,31 @@ export class TransactionsService {
       // No postings against that category means no transactions — returning
       // early avoids an `.in('id', [])`, which PostgREST treats as no filter at
       // all and would show the user the whole ledger instead of nothing.
+      if (entryIdFilter.length === 0) {
+        return { items: [], next_cursor: undefined, has_more: false };
+      }
+    }
+
+    // ── Tag filter (§6.3) ───────────────────────────────────────────────────
+    // Intersected with the category filter rather than replacing it, so
+    // "housing, tagged #renovation" narrows as a user would expect instead of
+    // one filter quietly winning.
+    if (tagId) {
+      const { data: tagged } = await client
+        .from('journal_entry_tags')
+        .select('journal_entry_id')
+        .eq('workspace_id', workspaceId)
+        .eq('tag_id', tagId);
+
+      const taggedIds = new Set(
+        (tagged ?? []).map((row) => row.journal_entry_id),
+      );
+
+      entryIdFilter = entryIdFilter
+        ? entryIdFilter.filter((id) => taggedIds.has(id))
+        : [...taggedIds];
+
+      // Same trap as above: an empty `.in()` is no filter at all.
       if (entryIdFilter.length === 0) {
         return { items: [], next_cursor: undefined, has_more: false };
       }
@@ -380,9 +406,32 @@ export class TransactionsService {
       }
     }
 
+    // The tags on this page, in ONE query rather than one per row. A tag is
+    // shown on every transaction that carries it, so N+1 here would be N+1 on
+    // the busiest list in the app.
+    const tagsByEntry = new Map<string, string[]>();
+    if (pageIds.length > 0) {
+      const { data: links } = await client
+        .from('journal_entry_tags')
+        .select('journal_entry_id, tags(name)')
+        .eq('workspace_id', workspaceId)
+        .in('journal_entry_id', pageIds);
+
+      for (const link of links ?? []) {
+        const name = (link as { tags?: { name?: string } | null }).tags?.name;
+        if (!name) continue;
+        const list = tagsByEntry.get(link.journal_entry_id) ?? [];
+        list.push(name);
+        tagsByEntry.set(link.journal_entry_id, list);
+      }
+    }
+
     const entries = withAmounts.map((entry) => ({
       ...entry,
       reversed: reversedIds.has(entry.id),
+      tags: (tagsByEntry.get(entry.id) ?? []).sort((a, b) =>
+        a.localeCompare(b),
+      ),
     }));
     const hasMore = entries.length > limit;
     const items = hasMore ? entries.slice(0, limit) : entries;
@@ -433,6 +482,87 @@ export class TransactionsService {
    * Reverse a transaction (§8.2: correction creates reversal entry).
    * Never modifies the original — creates a new REVERSAL entry.
    */
+  /**
+   * Every tag in a workspace, with how many entries carry it — §6.3.
+   *
+   * The COUNT is not decoration. A tag list without it cannot distinguish a
+   * label in active use from one left behind by a typo, which is exactly the
+   * decision someone opening this list is trying to make. It is also what
+   * makes a delete safe to offer: "remove #grocries (0 uses)" is obviously
+   * fine, "remove #groceries (214 uses)" obviously is not.
+   *
+   * Two queries rather than an aggregate join: PostgREST cannot GROUP BY, and
+   * a per-tag count would be N+1 on a list that renders on every page load.
+   */
+  async listTags(workspaceId: string, accessToken: string) {
+    const client = this.supabaseService.getUserClient(accessToken);
+
+    const { data: tags, error } = await client
+      .from('tags')
+      .select('id, name')
+      .eq('workspace_id', workspaceId)
+      .order('name');
+
+    if (error) {
+      this.logger.error(`Failed to list tags: ${error.message}`);
+      throw new BadRequestException('Failed to list tags');
+    }
+
+    const { data: links } = await client
+      .from('journal_entry_tags')
+      .select('tag_id')
+      .eq('workspace_id', workspaceId);
+
+    const counts = new Map<string, number>();
+    for (const link of links ?? []) {
+      counts.set(link.tag_id, (counts.get(link.tag_id) ?? 0) + 1);
+    }
+
+    return (tags ?? []).map((tag) => ({
+      ...tag,
+      usage_count: counts.get(tag.id) ?? 0,
+    }));
+  }
+
+  /**
+   * Delete a tag.
+   *
+   * Detaches it from every entry (`journal_entry_tags` cascades on `tag_id`)
+   * and touches no posting. That distinction is the reason this is safe to
+   * offer at all: a tag is a label, so removing one loses a way of FINDING
+   * money, never the money itself.
+   *
+   * Migration 00020 added the DELETE policy this needs. Until then RLS
+   * rejected every delete while returning success, so a tag simply would not
+   * go away and nothing said why.
+   */
+  async deleteTag(tagId: string, workspaceId: string, accessToken: string) {
+    const client = this.supabaseService.getUserClient(accessToken);
+
+    const { data, error } = await client
+      .from('tags')
+      .delete()
+      .eq('id', tagId)
+      .eq('workspace_id', workspaceId)
+      .select('id');
+
+    if (error) {
+      this.logger.error(`Failed to delete tag ${tagId}: ${error.message}`);
+      throw new BadRequestException('Failed to delete tag');
+    }
+
+    // RLS returns success with zero rows for a tag in another workspace, so
+    // the row count is the only way to tell "deleted" from "not yours".
+    if (!data || data.length === 0) {
+      throw new NotFoundException({
+        code: 'TAG_NOT_FOUND',
+        message: 'That tag does not exist in this workspace.',
+      });
+    }
+
+    return { id: tagId };
+  }
+
   /**
    * Reverse a posted transaction — FIN-03, "correction preserves history".
    *

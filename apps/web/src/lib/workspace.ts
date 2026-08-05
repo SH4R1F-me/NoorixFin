@@ -84,6 +84,8 @@ export interface TransactionRow {
    * than a status that could drift from it.
    */
   reversed?: boolean;
+  /** Tag names carried by this entry, alphabetical. Empty, never absent. */
+  tags?: string[];
   currency_code: string | null;
   /**
    * Every ledger account this entry posted against.
@@ -132,9 +134,27 @@ export function getCategories(workspaceId: string) {
  *   line or a report slice lead to the transactions behind it, rather than
  *   being a dead number.
  */
-export async function getTransactions(workspaceId: string, limit = 50, categoryId?: string) {
+export interface TagRow {
+  id: string;
+  name: string;
+  /** How many entries carry it — what distinguishes a live tag from a typo. */
+  usage_count: number;
+}
+
+/** Every tag in the workspace, alphabetical, with usage counts (§6.3). */
+export async function getTags(workspaceId: string) {
+  return safeFetch<TagRow[]>(`/workspaces/${workspaceId}/tags`, []);
+}
+
+export async function getTransactions(
+  workspaceId: string,
+  limit = 50,
+  categoryId?: string,
+  tagId?: string,
+) {
   const query = new URLSearchParams({ limit: String(limit) });
   if (categoryId) query.set('category', categoryId);
+  if (tagId) query.set('tag', tagId);
 
   const result = await safeFetch<{ items: TransactionRow[] }>(
     `/workspaces/${workspaceId}/transactions?${query.toString()}`,

@@ -12,6 +12,7 @@ import { useLocale } from '../../../lib/i18n/locale-provider';
 import { createTransaction, reverseTransaction } from '../ledger-actions';
 
 export interface Option { id: string; label: string; kind?: string }
+export interface TagOption { id: string; name: string; usage_count: number }
 
 export interface TxItem {
   id: string;
@@ -31,19 +32,25 @@ export interface TxItem {
   reversed?: boolean;
   /** This row IS a correcting entry. */
   isReversal?: boolean;
+  /** Tag names carried by this entry (§6.3). */
+  tags?: string[];
 }
 
 export default function TransactionsView({
   transactions,
   categories,
   accounts,
+  tags,
   workspaceId,
   currency,
   drillDownLabel,
+  activeTagId,
 }: {
   transactions: TxItem[];
   categories: Option[];
   accounts: Option[];
+  /** Every tag in the workspace, with usage counts (§6.3). */
+  tags: TagOption[];
   workspaceId: string;
   currency: string;
   /**
@@ -52,6 +59,8 @@ export default function TransactionsView({
    * a user having very few transactions, which is an alarming thing to imply.
    */
   drillDownLabel?: string;
+  /** Set when the list is filtered to one tag — drives the select's value. */
+  activeTagId?: string;
 }) {
   const { t: tr, locale } = useLocale();
   const router = useRouter();
@@ -76,6 +85,24 @@ export default function TransactionsView({
   const [categoryId, setCategoryId] = useState('');
   const [toAccountId, setToAccountId] = useState('');
   const [payee, setPayee] = useState('');
+  // ── tags on the new transaction (§6.3) ────────────────────────────────────
+  // `draftTags` is what has been committed with Enter; `tagInput` is what is
+  // still being typed. Keeping them apart is what lets a half-typed tag be
+  // submitted with the form rather than silently dropped — see submit().
+  const [draftTags, setDraftTags] = useState<string[]>([]);
+  const [tagInput, setTagInput] = useState('');
+
+  function addTag(raw: string) {
+    const name = raw.trim();
+    // Case-insensitive: `tags` is UNIQUE (workspace_id, name), so "Food" and
+    // "food" would become two rows that look like one to a reader.
+    if (!name || draftTags.some((t) => t.toLowerCase() === name.toLowerCase())) {
+      setTagInput('');
+      return;
+    }
+    setDraftTags([...draftTags, name]);
+    setTagInput('');
+  }
   const [occurredAt, setOccurredAt] = useState(new Date().toISOString().split('T')[0]);
   const [formError, setFormError] = useState<string | null>(null);
 
@@ -117,9 +144,14 @@ export default function TransactionsView({
         transferToAccountId: addType === 'TRANSFER' ? toAccountId : undefined,
         payee,
         occurredAt,
+        // Whatever is still in the input counts. Someone who types a tag and
+        // clicks Save without pressing Enter means it — dropping it would be
+        // the form quietly discarding what they typed.
+        tags: [...draftTags, tagInput].map((t) => t.trim()).filter(Boolean),
       });
       if (result.ok) {
         setAmount(''); setPayee(''); setCategoryId(''); setToAccountId('');
+        setDraftTags([]); setTagInput('');
         setShowAdd(false);
         // The list is server-rendered; refresh so the new entry appears.
         router.refresh();
@@ -172,6 +204,12 @@ export default function TransactionsView({
     amt: { fontSize:'0.9375rem', fontWeight:700, fontVariantNumeric:'tabular-nums' as const },
     date: { fontSize:'0.75rem', color:'#8b9ab0', marginTop:2 },
     empty: { display:'flex', flexDirection:'column' as const, alignItems:'center', padding:'3rem' },
+    // ── tags (§6.3) ────────────────────────────────────────────────────────
+    tagDraftRow: { display:'flex', flexWrap:'wrap' as const, gap:'0.35rem', marginBottom:'0.4rem' },
+    tagChip: { display:'inline-flex', alignItems:'center', gap:4, padding:'2px 6px 2px 8px', borderRadius:'0.4rem', background:'rgba(59,130,246,0.14)', color:'#93c5fd', fontSize:'0.75rem', fontWeight:600 },
+    tagChipX: { display:'inline-flex', alignItems:'center', background:'transparent', border:'none', color:'#93c5fd', cursor:'pointer', padding:0, lineHeight:1 },
+    tagChipSm: { display:'inline-flex', alignItems:'center', padding:'1px 6px', borderRadius:'0.35rem', background:'rgba(59,130,246,0.12)', color:'#93c5fd', fontSize:'0.6875rem', fontWeight:600 },
+    hint: { display:'block', fontSize:'0.6875rem', color:'#8b9ab0', marginTop:'0.3rem' },
     // ── reversal (FIN-03) ──────────────────────────────────────────────────
     badgeVoided: { display:'inline-flex', alignItems:'center', gap:3, padding:'1px 6px', borderRadius:'0.35rem', background:'rgba(248,113,113,0.12)', color:'#f87171', fontSize:'0.6875rem', fontWeight:600 },
     badgeReversal: { display:'inline-flex', alignItems:'center', gap:3, padding:'1px 6px', borderRadius:'0.35rem', background:'rgba(59,130,246,0.12)', color:'#93c5fd', fontSize:'0.6875rem', fontWeight:600 },
@@ -266,6 +304,59 @@ export default function TransactionsView({
               <input id="tx-payee" type="text" placeholder={tr('transactions.payeePlaceholder')}
                      value={payee} onChange={e=>setPayee(e.target.value)} style={s.inp}/>
             </div>
+            <div>
+              <label style={s.lbl} htmlFor="tx-tags">{tr('transactions.tags')}</label>
+              {draftTags.length > 0 && (
+                <div style={s.tagDraftRow}>
+                  {draftTags.map((tag) => (
+                    <span key={tag} style={s.tagChip}>
+                      #{tag}
+                      <button
+                        type="button"
+                        onClick={() => setDraftTags(draftTags.filter((t) => t !== tag))}
+                        style={s.tagChipX}
+                        aria-label={`${tr('transactions.removeTag')}: ${tag}`}
+                      >
+                        <X size={11} aria-hidden="true" />
+                      </button>
+                    </span>
+                  ))}
+                </div>
+              )}
+              <input
+                id="tx-tags"
+                type="text"
+                placeholder={tr('transactions.addTag')}
+                value={tagInput}
+                onChange={(e) => setTagInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ',') {
+                    // Enter must not submit the surrounding form — in a tag
+                    // field it means "commit this tag".
+                    e.preventDefault();
+                    addTag(tagInput);
+                  } else if (e.key === 'Backspace' && tagInput === '' && draftTags.length) {
+                    setDraftTags(draftTags.slice(0, -1));
+                  }
+                }}
+                onBlur={() => addTag(tagInput)}
+                list="tx-tag-suggestions"
+                aria-describedby="tx-tags-hint"
+                style={s.inp}
+              />
+              {/*
+                Existing tags offered as suggestions rather than a dropdown:
+                a new tag is created by typing it, so the control has to accept
+                free text, and `datalist` is the one native input that does both
+                without a custom combobox to keep accessible.
+              */}
+              <datalist id="tx-tag-suggestions">
+                {tags.map((tag) => (
+                  <option key={tag.id} value={tag.name} />
+                ))}
+              </datalist>
+              <span id="tx-tags-hint" style={s.hint}>{tr('transactions.tagsHint')}</span>
+            </div>
 
             <div style={s.fg}>
               <label style={s.lbl} htmlFor="tx-date">{tr('transactions.date')}</label>
@@ -311,6 +402,32 @@ export default function TransactionsView({
           <option value="">{tr('app.all')}</option>
           {categories.map(c=><option key={c.id} value={c.label}>{c.label}</option>)}
         </select>
+        {/*
+          A round trip, not a client-side filter like the others above. Tags
+          live on the server side of the page boundary and the list is
+          paginated, so filtering in the browser would only ever narrow the 50
+          rows already fetched — and quietly imply there were no others.
+        */}
+        {tags.length > 0 && (
+          <select
+            value={activeTagId ?? ''}
+            onChange={(e) => {
+              const next = new URLSearchParams(window.location.search);
+              if (e.target.value) next.set('tag', e.target.value);
+              else next.delete('tag');
+              router.push(`/dashboard/transactions?${next.toString()}`);
+            }}
+            style={s.selF}
+            aria-label={tr('transactions.filterByTag')}
+          >
+            <option value="">{tr('transactions.allTags')}</option>
+            {tags.map((tag) => (
+              <option key={tag.id} value={tag.id}>
+                #{tag.name} ({tag.usage_count})
+              </option>
+            ))}
+          </select>
+        )}
       </div>
 
       {reversedNote && (
@@ -399,6 +516,9 @@ export default function TransactionsView({
                       {tr('transactions.reversalOf')}
                     </span>
                   )}
+                  {(tx.tags ?? []).map((tag) => (
+                    <span key={tag} style={s.tagChipSm}>#{tag}</span>
+                  ))}
                 </div>
               </div>
               <div style={s.amtS}>
