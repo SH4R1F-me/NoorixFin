@@ -6,20 +6,27 @@
  * of a reload, not the presence of a success message.
  */
 import { test, expect, type Page } from '@playwright/test';
+import { LIVE, seedWorkspace, setLocale, type Fixture } from './support/fixture';
 
-const EMAIL = process.env.E2E_EMAIL;
-const PASSWORD = process.env.E2E_PASSWORD;
+/** Own account: this spec renames the user and opens the deletion flow. */
+let fixture: Fixture;
 
 async function signIn(page: Page) {
   await page.goto('/auth/login');
-  await page.getByPlaceholder('name@example.com').fill(EMAIL!);
-  await page.locator('input[type="password"]').first().fill(PASSWORD!);
+  await page.getByPlaceholder('name@example.com').fill(fixture.email);
+  await page.locator('input[type="password"]').first().fill(fixture.password);
   await page.locator('form button[type="submit"]').click();
   await page.waitForURL(/\/dashboard/, { timeout: 20_000 });
 }
 
 test.describe('profile settings', () => {
-  test.skip(!EMAIL || !PASSWORD, 'needs supabase + API running');
+  test.skip(!LIVE, 'needs E2E_LIVE=1 with supabase and the API running');
+
+  test.beforeAll(async () => {
+    fixture = await seedWorkspace('settings');
+    // The selectors below are English catalog strings.
+    await setLocale(fixture.token, 'en');
+  });
 
   test('preferences survive a reload', async ({ page }) => {
     await signIn(page);
@@ -56,7 +63,7 @@ test.describe('profile settings', () => {
     await signIn(page);
     await page.goto('/dashboard/settings');
 
-    await page.getByRole('button', { name: /delete my account/i }).click();
+    await page.getByRole('button', { name: /delete account/i }).click();
 
     const confirm = page.getByRole('button', { name: /confirm deletion/i });
     // Disabled until the typed confirmation matches — the deliberate friction.

@@ -15,9 +15,19 @@ import {
   getActiveWorkspace,
   getTransactions,
   apiSummary,
+  getBudgetStatus,
+  getCalendarOverview,
+  getGoalsOverview,
+  type CalendarEvent,
   type WorkspaceSummary,
 } from '../../lib/workspace';
-import DashboardView, { type SummaryCard, type RecentTx } from './dashboard-view';
+import DashboardView, {
+  type SummaryCard,
+  type RecentTx,
+  type BudgetPanelLine,
+  type BillPanelItem,
+  type GoalPanelItem,
+} from './dashboard-view';
 
 /**
  * Month-over-month change.
@@ -48,12 +58,32 @@ export default async function DashboardPage() {
   const [workspace, locale] = await Promise.all([getActiveWorkspace(), getLocale()]);
 
   if (!workspace) {
-    return <DashboardView summaryCards={[]} recentTransactions={[]} upcomingBills={[]} />;
+    return (
+      <DashboardView
+        summaryCards={[]}
+        recentTransactions={[]}
+        upcomingBills={[]}
+        budgetLines={[]}
+        goals={[]}
+      />
+    );
   }
 
-  const [summary, transactions] = await Promise.all([
+  // Four aggregations in parallel. Each is ONE Postgres function returning one
+  // payload (DEC-011) — the alternative is four waterfalls of raw rows the
+  // browser then has to sum, on the page a user opens most often.
+  //
+  // Every one of these fetchers swallows its own failure and returns an empty
+  // shape, so a single unavailable panel degrades to its empty state rather
+  // than taking the dashboard down with it.
+  const [summary, transactions, budget, calendar, goalsOverview] = await Promise.all([
     apiSummary(workspace.id),
     getTransactions(workspace.id, 5),
+    getBudgetStatus(workspace.id),
+    // A fortnight, not the calendar page's 30 days: this panel is "what needs
+    // attention", and a bill three weeks out does not.
+    getCalendarOverview(workspace.id, 14),
+    getGoalsOverview(workspace.id),
   ]);
 
   const currency = workspace.base_currency ?? 'BDT';
@@ -76,6 +106,9 @@ export default async function DashboardPage() {
       positive: s.net_worth >= 0,
       iconKey: 'wallet',
       gradient: 'linear-gradient(135deg, #059669, #10b981)',
+      // Net worth breaks down by ACCOUNT, not by transaction — it is a stock,
+      // and the accounts page is where its components live.
+      href: '/dashboard/accounts',
     },
     {
       titleKey: 'dashboard.thisMonthIncome',
@@ -83,6 +116,7 @@ export default async function DashboardPage() {
       change: incomeChange.text, positive: incomeChange.positive,
       iconKey: 'up',
       gradient: 'linear-gradient(135deg, #0284c7, #38bdf8)',
+      href: '/dashboard/reports',
     },
     {
       titleKey: 'dashboard.thisMonthExpense',
@@ -90,6 +124,7 @@ export default async function DashboardPage() {
       change: expenseChange.text, positive: !expenseChange.positive,
       iconKey: 'down',
       gradient: 'linear-gradient(135deg, #dc2626, #f87171)',
+      href: '/dashboard/reports',
     },
     {
       titleKey: 'dashboard.netCashFlow',
@@ -97,6 +132,7 @@ export default async function DashboardPage() {
       change: netChange.text, positive: s.net >= 0,
       iconKey: 'flow',
       gradient: 'linear-gradient(135deg, #7c3aed, #a78bfa)',
+      href: '/dashboard/reports',
     },
   ];
 
@@ -109,14 +145,69 @@ export default async function DashboardPage() {
     date: t.local_date,
   }));
 
+  // §5.3 items 3, 4, 5 and 6 — previously "coming soon" placeholders because
+  // the features did not exist. Every figure below is derived from the ledger
+  // by the aggregations above; none of it is stored or guessed (DEC-012).
+  const budgetLines: BudgetPanelLine[] = (budget.lines ?? [])
+    // The three closest to their limit. A dashboard panel is a summary, and
+    // showing twenty lines here would make the one that matters harder to see.
+    .map((line) => ({
+      categoryId: line.category_id,
+      name: line.custom_name ?? line.translation_key ?? 'Unnamed',
+      translationKey: line.translation_key,
+      icon: line.icon,
+      spent: line.spent_minor,
+      planned: line.planned_minor,
+      over: line.remaining_minor < 0,
+    }))
+    .sort((a, b) => b.spent / Math.max(b.planned, 1) - a.spent / Math.max(a.planned, 1))
+    .slice(0, 3);
+
+  // Settled events are history and belong on the calendar page, not on a panel
+  // whose job is "what needs attention". The predicate narrows the union so the
+  // panel's own type cannot receive a PAID row.
+  const needsAttention = (
+    event: CalendarEvent,
+  ): event is CalendarEvent & { status: 'UPCOMING' | 'DUE' | 'OVERDUE' } =>
+    event.status === 'OVERDUE' || event.status === 'DUE' || event.status === 'UPCOMING';
+
+  const upcomingBills: BillPanelItem[] = (calendar.events ?? [])
+    .filter(needsAttention)
+    .slice(0, 4)
+    .map((event) => ({
+      id: event.id,
+      name: event.title,
+      amount: event.amount_minor ?? 0,
+      date: event.local_date,
+      daysAway: event.days_away,
+      status: event.status,
+      isIncome: event.type === 'INCOME',
+    }));
+
+  const goals: GoalPanelItem[] = (goalsOverview.goals ?? [])
+    .filter((goal) => goal.status === 'ACTIVE')
+    .slice(0, 2)
+    .map((goal) => ({
+      id: goal.id,
+      name: goal.name,
+      // Preserved as null rather than coerced to 0 — an unlinked goal renders
+      // "link an account", not "0% saved".
+      current: goal.current_minor,
+      target: goal.target_minor,
+    }));
+
   return (
     <DashboardView
       currencySymbol={getCurrency(currency).symbol}
+      // The CODE too, not just the symbol: the view formats minor units and
+      // needs the currency's exponent to do it correctly.
+      currency={currency}
       summaryCards={summaryCards}
       recentTransactions={recentTransactions}
-      // Bills need the calendar/recurring modules (Phase 3), which have no API
-      // yet. Empty rather than fabricated — the view renders its empty state.
-      upcomingBills={[]}
+      upcomingBills={upcomingBills}
+      budgetLines={budgetLines}
+      goals={goals}
+      totalDebt={goalsOverview.total_debt_minor ?? 0}
     />
   );
 }

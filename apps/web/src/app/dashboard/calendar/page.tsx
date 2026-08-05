@@ -1,19 +1,27 @@
-import { Calendar } from 'lucide-react';
-import { NotYetAvailable } from '../../../components/not-yet-available';
+/**
+ * Calendar & Bills — server component.
+ *
+ * One aggregation call. `calendar_overview()` derives OVERDUE/DUE from the
+ * workspace's own timezone, so a bill due 1 August in Dhaka is not marked late
+ * because the server's clock is in UTC (TIME-01).
+ */
+import { getActiveWorkspace, getCalendarOverview } from '../../../lib/workspace';
+import CalendarView from './calendar-view';
 
-export default function CalendarPage() {
+export default async function CalendarPage() {
+  const workspace = await getActiveWorkspace();
+
+  if (!workspace) {
+    return <CalendarView overview={{ visible: false }} workspaceId="" currency="BDT" />;
+  }
+
+  const overview = await getCalendarOverview(workspace.id, 30);
+
   return (
-    <NotYetAvailable
-      titleKey="nav.calendar"
-      icon={<Calendar size={30} color="#10b981" />}
-      summary="Bill tracking and the financial calendar are Phase 3. The dashboard's bills panel renders an empty state for the same reason — it will not show invented reminders."
-      planned={[
-        'Bill, income, goal and custom events with due dates',
-        'Status tracking: upcoming, due, paid, skipped, overdue',
-        'Recurring rules that either remind or create a draft transaction',
-        'In-app reminders via the transactional outbox',
-      ]}
-      blockedBy="Needs the calendar and recurring-rules APIs (Blueprint §3.2, §3.3)."
+    <CalendarView
+      overview={overview}
+      workspaceId={workspace.id}
+      currency={workspace.base_currency ?? 'BDT'}
     />
   );
 }

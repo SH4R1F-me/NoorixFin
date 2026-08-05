@@ -217,8 +217,46 @@ export class TransactionsService {
     accessToken: string,
     cursor?: string,
     limit = 20,
+    categoryId?: string,
   ) {
     const client = this.supabaseService.getUserClient(accessToken);
+
+    // ── Drill-down filter (Blueprint §5.3) ──────────────────────────────────
+    // §5.3: "কোনো metric শুধু aggregate number দেখাবে না" — every figure must
+    // lead to the entries behind it. That needs this filter, because a budget
+    // line or a report slice is identified by CATEGORY.
+    //
+    // Resolved in two steps rather than with an `!inner` embed. An inner join
+    // would return only the postings that matched, and the amount below is
+    // computed by summing BOTH sides of the entry and halving — with half the
+    // postings filtered away, every amount would come out at half its value.
+    let entryIdFilter: string[] | undefined;
+    if (categoryId) {
+      const ledgerAccountId = await this.categoriesService.resolveLedgerAccountId(
+        categoryId,
+        workspaceId,
+        accessToken,
+      );
+
+      const { data: matches } = await client
+        .from('journal_postings')
+        .select('journal_entry_id')
+        .eq('workspace_id', workspaceId)
+        .eq('ledger_account_id', ledgerAccountId);
+
+      entryIdFilter = [
+        ...new Set(
+          (matches ?? []).map((row) => (row as { journal_entry_id: string }).journal_entry_id),
+        ),
+      ];
+
+      // No postings against that category means no transactions — returning
+      // early avoids an `.in('id', [])`, which PostgREST treats as no filter at
+      // all and would show the user the whole ledger instead of nothing.
+      if (entryIdFilter.length === 0) {
+        return { items: [], next_cursor: undefined, has_more: false };
+      }
+    }
 
     let query = client
       .from('journal_entries')
@@ -228,11 +266,17 @@ export class TransactionsService {
       // Postings are embedded rather than fetched per row: the amount belongs to
       // the postings, not the entry (DEC-006), and a second round trip per entry
       // would be an N+1 on the hottest list in the app.
-      .select('id, workspace_id, entry_type, occurred_at, local_date, payee, note, status, source, reverses_entry_id, created_by, posted_at, created_at, updated_at, version, journal_postings(debit_minor, credit_minor, currency_code)')
+      //
+      // `ledger_account_id` is embedded so the caller can name the category an
+      // entry belongs to. A posting references the category's BACKING ledger
+      // account, never the category id (DEC-015), so this is the only link.
+      .select('id, workspace_id, entry_type, occurred_at, local_date, payee, note, status, source, reverses_entry_id, created_by, posted_at, created_at, updated_at, version, journal_postings(ledger_account_id, debit_minor, credit_minor, currency_code)')
       .eq('workspace_id', workspaceId)
       .order('occurred_at', { ascending: false })
       .order('id', { ascending: false })
       .limit(limit + 1); // Fetch one extra for next cursor
+
+    if (entryIdFilter) query = query.in('id', entryIdFilter);
 
     if (cursor) {
       // Cursor is the occurred_at of the last item
@@ -251,7 +295,12 @@ export class TransactionsService {
     const withAmounts = (data || []).map((entry) => {
       const postings =
         (entry as unknown as {
-          journal_postings?: { debit_minor: number; credit_minor: number; currency_code: string }[];
+          journal_postings?: {
+            ledger_account_id: string;
+            debit_minor: number;
+            credit_minor: number;
+            currency_code: string;
+          }[];
         }).journal_postings ?? [];
 
       const total = postings.reduce((sum, p) => sum + p.debit_minor + p.credit_minor, 0);
@@ -260,6 +309,10 @@ export class TransactionsService {
         ...entry,
         amount_minor: Math.round(total / 2),
         currency_code: postings[0]?.currency_code ?? null,
+        // Every account this entry touched. The caller matches these against
+        // the category list it already has, so naming the category costs no
+        // extra query.
+        ledger_account_ids: postings.map((p) => p.ledger_account_id),
       };
     });
 

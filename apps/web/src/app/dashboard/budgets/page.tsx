@@ -1,18 +1,37 @@
-import { PiggyBank } from 'lucide-react';
-import { NotYetAvailable } from '../../../components/not-yet-available';
+/**
+ * Budgets — server component.
+ *
+ * Two round trips, in parallel: the aggregation (which already carries each
+ * line's derived spend) and the category list the editor needs. Spend is NOT
+ * computed here — `budget_status()` does it in Postgres, so the browser never
+ * receives a posting (DEC-011).
+ */
+import { getActiveWorkspace, getBudgetStatus, getCategories } from '../../../lib/workspace';
+import BudgetsView from './budgets-view';
 
-export default function BudgetsPage() {
+export default async function BudgetsPage() {
+  const workspace = await getActiveWorkspace();
+
+  if (!workspace) {
+    // No workspace yet, or the API is unreachable. The shell's degraded banner
+    // already explains the second case; the empty view is right for both, and
+    // is not a crash in either.
+    return (
+      <BudgetsView status={{ visible: false }} categories={[]} workspaceId="" currency="BDT" />
+    );
+  }
+
+  const [status, categories] = await Promise.all([
+    getBudgetStatus(workspace.id),
+    getCategories(workspace.id),
+  ]);
+
   return (
-    <NotYetAvailable
-      titleKey="nav.budgets"
-      icon={<PiggyBank size={30} color="#10b981" />}
-      summary="Budgets are part of Phase 3. The ledger they will read from is live — categories and transactions already record real data — but the budget model itself is not built."
-      planned={[
-        'Per-category monthly limits (DEC-002 #6: simple limits for MVP, not envelopes)',
-        'Spent vs planned, computed from the ledger rather than stored',
-        'Alert thresholds as a category approaches its limit',
-      ]}
-      blockedBy="Needs the budgets API (Blueprint §3.1) — no endpoint exists yet."
+    <BudgetsView
+      status={status}
+      categories={categories}
+      workspaceId={workspace.id}
+      currency={workspace.base_currency ?? 'BDT'}
     />
   );
 }

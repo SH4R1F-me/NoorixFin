@@ -1,18 +1,33 @@
-import { BarChart3 } from 'lucide-react';
-import { NotYetAvailable } from '../../../components/not-yet-available';
+/**
+ * Reports — server component.
+ *
+ * `category_report()` returns the breakdown, the six-month trend AND the §11.3
+ * metadata (period, timezone, currency basis, generated-at) in one payload, so
+ * the page is one round trip and the figures cannot come from two moments in
+ * time.
+ */
+import { getActiveWorkspace, getCategoryReport } from '../../../lib/workspace';
+import ReportsView from './reports-view';
 
-export default function ReportsPage() {
-  return (
-    <NotYetAvailable
-      titleKey="nav.reports"
-      icon={<BarChart3 size={30} color="#10b981" />}
-      summary="Reporting is Phase 3. The dashboard already shows a real server-side aggregation of net worth and this month's cash flow; reports extend that with history and drill-down."
-      planned={[
-        'Cash flow and net worth over time',
-        'Category breakdown with drill-down to the source transactions',
-        'Report metadata: period, timezone, currency, generated-at',
-      ]}
-      blockedBy="Needs the reports API (Blueprint §3.5). The dashboard summary uses workspace_summary() as a first step."
-    />
+export default async function ReportsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ from?: string; to?: string }>;
+}) {
+  const [workspace, params] = await Promise.all([getActiveWorkspace(), searchParams]);
+
+  if (!workspace) {
+    return <ReportsView report={{ visible: false }} currency="BDT" />;
+  }
+
+  // Validated here as well as in the API: a malformed date reaching Postgres as
+  // a literal is a 500 for what is a bad link.
+  const iso = /^\d{4}-\d{2}-\d{2}$/;
+  const report = await getCategoryReport(
+    workspace.id,
+    params.from && iso.test(params.from) ? params.from : undefined,
+    params.to && iso.test(params.to) ? params.to : undefined,
   );
+
+  return <ReportsView report={report} currency={workspace.base_currency ?? 'BDT'} />;
 }

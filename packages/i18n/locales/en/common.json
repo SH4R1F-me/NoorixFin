@@ -39,7 +39,13 @@
     "offline": "Cannot reach the server",
     "offlineBody": "NoorixFin cannot contact its API right now. Nothing has been lost — try again in a moment.",
     "free": "Free and donation-funded",
-    "supportUs": "Support NoorixFin"
+    "supportUs": "Support NoorixFin",
+    "total": "Total",
+    "of": "of",
+    "noneYet": "Nothing here yet",
+    "showTable": "Show as table",
+    "hideTable": "Hide table",
+    "estimate": "Estimate"
   },
   "nav": {
     "home": "Home",
@@ -90,7 +96,18 @@
     "createWorkspace": "Creating your workspace...",
     "addFirstAccount": "Add your first account",
     "openingBalance": "Opening balance",
-    "getStarted": "Get Started"
+    "getStarted": "Get Started",
+    "subtitle": "Four quick questions, then your dashboard is ready.",
+    "stepOf": "Step {{current}} of {{total}}",
+    "personaHint": "This only changes which categories we suggest. You can edit all of them later.",
+    "preferencesTitle": "How should we show your money?",
+    "weekStart": "Week starts on",
+    "accountHint": "Start with the account you use most. You can add the rest any time.",
+    "openingBalanceHint": "What is in it right now. This is recorded as an opening entry, so your ledger balances from day one.",
+    "skip": "Skip for now",
+    "finish": "Finish setup",
+    "allDone": "You are set up",
+    "allDoneBody": "Your workspace, categories and first account are ready. Add a transaction to see your dashboard fill in."
   },
   "workspace": {
     "personal": "Personal",
@@ -171,7 +188,20 @@
     "spent": "Spent",
     "remaining": "Remaining",
     "overBudget": "Over Budget",
-    "onTrack": "On Track"
+    "onTrack": "On Track",
+    "subtitle": "Limits you set. Spending is read from your ledger, never stored separately.",
+    "noBudget": "No budget yet",
+    "noBudgetBody": "Set a monthly limit per category. Spent and remaining are calculated from your real transactions each time you open this page.",
+    "editBudget": "Edit budget",
+    "planned": "Planned",
+    "period": "Period",
+    "addLine": "Add a category",
+    "removeLine": "Remove",
+    "saveBudget": "Save budget",
+    "limit": "Limit",
+    "nearLimit": "Near limit",
+    "needCategories": "Create a category first — a budget line needs something to limit.",
+    "usedPercent": "{{percent}}% used"
   },
   "goals": {
     "title": "Goals & Debts",
@@ -183,7 +213,25 @@
     "principal": "Principal",
     "interestRate": "Interest Rate",
     "minimumPayment": "Minimum Payment",
-    "dueDay": "Due Day"
+    "dueDay": "Due Day",
+    "subtitle": "Progress comes from the linked account balance, so it can never disagree with your ledger.",
+    "addGoal": "Add goal",
+    "goalName": "Goal name",
+    "namePlaceholder": "e.g. Emergency fund",
+    "linkedAccount": "Linked account",
+    "noLink": "Not linked",
+    "noLinkBody": "Link an account to track progress automatically.",
+    "noGoals": "No savings goals yet",
+    "noGoalsBody": "Set a target and link a savings account. Progress is read from that account, not typed in.",
+    "noDebts": "No debts recorded",
+    "noDebtsBody": "Add a loan or credit card account, then record its terms here.",
+    "outstanding": "Outstanding",
+    "totalDebt": "Total debt",
+    "achieved": "Achieved",
+    "daysLeft": "{{count}} days left",
+    "overdue": "Past target date",
+    "noRate": "Rate not recorded",
+    "payoffEstimate": "About {{months}} months at the minimum payment. Estimate only — it ignores fees and rate changes."
   },
   "calendar": {
     "title": "Calendar & Bills",
@@ -192,7 +240,21 @@
     "due": "Due",
     "paid": "Paid",
     "overdue": "Overdue",
-    "skipped": "Skipped"
+    "skipped": "Skipped",
+    "subtitle": "Bills and expected income. Overdue is worked out from today, not from a background job.",
+    "addEvent": "Add bill or income",
+    "eventTitle": "What is it?",
+    "titlePlaceholder": "e.g. Electricity bill",
+    "dueDate": "Due date",
+    "expectedIncome": "Expected income",
+    "markPaid": "Mark paid",
+    "markSkipped": "Skip",
+    "noEvents": "Nothing scheduled",
+    "noEventsBody": "Add a bill or an expected payment and it will appear here and on your dashboard.",
+    "dueToday": "Due today",
+    "inDays": "in {{count}} days",
+    "daysAgo": "{{count}} days ago",
+    "dueSoon": "Due in the next 30 days"
   },
   "reports": {
     "title": "Reports",
@@ -204,7 +266,16 @@
     "thisMonth": "This Month",
     "lastMonth": "Last Month",
     "thisYear": "This Year",
-    "custom": "Custom Range"
+    "custom": "Custom Range",
+    "subtitle": "Every figure is computed from posted entries at the moment you load this page.",
+    "noData": "Nothing to report yet",
+    "noDataBody": "Add some transactions and this page will break them down by category.",
+    "share": "Share of spending",
+    "entries": "Entries",
+    "generatedAt": "Generated {{when}}",
+    "sixMonths": "Last 6 months",
+    "currencyBasis": "Amounts in {{currency}}",
+    "chartTableNote": "The same data as the chart, for screen readers and for copying."
   },
   "dashboard": {
     "availableBalance": "Available Balance",
@@ -226,7 +297,8 @@
     "thisMonthIncome": "This Month Income",
     "thisMonthExpense": "This Month Expense",
     "noRecent": "No transactions yet",
-    "maintenance": "Scheduled maintenance in progress. Some features may be temporarily unavailable."
+    "maintenance": "Scheduled maintenance in progress. Some features may be temporarily unavailable.",
+    "drillDown": "See the transactions behind this"
   },
   "settings": {
     "title": "Settings",

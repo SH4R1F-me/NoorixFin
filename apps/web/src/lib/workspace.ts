@@ -77,11 +77,21 @@ export interface TransactionRow {
   /** Derived from the postings by the API — the entry itself carries no amount. */
   amount_minor: number;
   currency_code: string | null;
+  /**
+   * Every ledger account this entry posted against.
+   *
+   * A posting references a category's BACKING ledger account, never the
+   * category id (DEC-015), so this is the only link back to a category — and
+   * matching it against the already-fetched category list costs no extra query.
+   */
+  ledger_account_ids?: string[];
 }
 
 export interface CategoryRow {
   id: string;
   kind: string;
+  /** The category's backing ledger account — what postings actually reference. */
+  ledger_account_id: string;
   translation_key: string | null;
   custom_name: string | null;
   icon: string;
@@ -108,9 +118,18 @@ export function getCategories(workspaceId: string) {
   return safeFetch<CategoryRow[]>(`/workspaces/${workspaceId}/categories`, []);
 }
 
-export async function getTransactions(workspaceId: string, limit = 50) {
+/**
+ * @param categoryId Drill-down filter (§5.3). When set, only entries that
+ *   posted against that category are returned — this is what makes a budget
+ *   line or a report slice lead to the transactions behind it, rather than
+ *   being a dead number.
+ */
+export async function getTransactions(workspaceId: string, limit = 50, categoryId?: string) {
+  const query = new URLSearchParams({ limit: String(limit) });
+  if (categoryId) query.set('category', categoryId);
+
   const result = await safeFetch<{ items: TransactionRow[] }>(
-    `/workspaces/${workspaceId}/transactions?limit=${limit}`,
+    `/workspaces/${workspaceId}/transactions?${query.toString()}`,
     { items: [] },
   );
   return result.items ?? [];
@@ -138,6 +157,157 @@ export interface WorkspaceSummary {
  */
 export function apiSummary(workspaceId: string) {
   return safeFetch<WorkspaceSummary | null>(`/workspaces/${workspaceId}/summary`, null);
+}
+
+// ─── Planning (§9.4) ────────────────────────────────────────────────────────
+//
+// Each of these is ONE aggregation RPC behind ONE endpoint (DEC-011). The
+// alternative — fetching budget lines, then categories, then postings, and
+// summing in the browser — would be a second implementation of ledger
+// arithmetic that has to agree with Postgres forever.
+//
+// Every "spent", "progress" and "outstanding" figure below is DERIVED
+// server-side from postings. None of them is a stored total, so none can drift
+// from the ledger (DEC-022).
+
+export interface BudgetLine {
+  line_id: string;
+  category_id: string;
+  /** Pre-resolved fallback. Prefer translating `translation_key` when present. */
+  name: string;
+  translation_key: string | null;
+  custom_name: string | null;
+  icon: string;
+  color: string;
+  planned_minor: number;
+  spent_minor: number;
+  remaining_minor: number;
+  alert_threshold_pct: number;
+}
+
+export interface BudgetStatus {
+  visible: boolean;
+  has_budget?: boolean;
+  budget_id?: string;
+  name?: string;
+  cadence?: 'MONTHLY' | 'WEEKLY';
+  rollover?: boolean;
+  period_start?: string;
+  period_end?: string;
+  timezone?: string;
+  generated_at?: string;
+  lines?: BudgetLine[];
+  planned_total?: number;
+  spent_total?: number;
+}
+
+export interface SavingsGoal {
+  id: string;
+  name: string;
+  target_minor: number;
+  currency_code: string;
+  target_date: string | null;
+  status: string;
+  priority: number;
+  linked_account_id: string | null;
+  /** null — not zero — when no account is linked. The two mean different things. */
+  current_minor: number | null;
+  days_left: number | null;
+}
+
+export interface DebtSummary {
+  ledger_account_id: string;
+  name: string;
+  currency_code: string;
+  principal_minor: number;
+  annual_rate_bps: number | null;
+  minimum_payment_minor: number | null;
+  due_day: number | null;
+  outstanding_minor: number;
+}
+
+export interface GoalsOverview {
+  visible: boolean;
+  goals?: SavingsGoal[];
+  debts?: DebtSummary[];
+  total_debt_minor?: number;
+  generated_at?: string;
+}
+
+export interface CalendarEvent {
+  id: string;
+  type: 'BILL' | 'INCOME' | 'GOAL' | 'CUSTOM';
+  title: string;
+  amount_minor: number | null;
+  currency_code: string | null;
+  due_at: string;
+  local_date: string;
+  /** OVERDUE and DUE are computed from today; only the other three are stored. */
+  status: 'UPCOMING' | 'DUE' | 'OVERDUE' | 'PAID' | 'SKIPPED';
+  days_away: number;
+  journal_entry_id: string | null;
+  recurring_rule_id: string | null;
+}
+
+export interface CalendarOverview {
+  visible: boolean;
+  today?: string;
+  horizon_days?: number;
+  events?: CalendarEvent[];
+  overdue_count?: number;
+  due_soon_total_minor?: number;
+  generated_at?: string;
+}
+
+export interface ReportCategory {
+  category_id: string;
+  translation_key: string | null;
+  custom_name: string | null;
+  icon: string;
+  color: string;
+  kind: 'INCOME' | 'EXPENSE';
+  amount_minor: number;
+  entry_count: number;
+}
+
+export interface CategoryReport {
+  visible: boolean;
+  /** §11.3 requires these on every report — without them a screenshot is uninterpretable. */
+  period_from?: string;
+  period_to?: string;
+  timezone?: string;
+  currency_basis?: string;
+  generated_at?: string;
+  categories?: ReportCategory[];
+  trend?: { month: string; income_minor: number; expense_minor: number }[];
+}
+
+const NOT_VISIBLE = { visible: false } as const;
+
+export function getBudgetStatus(workspaceId: string) {
+  return safeFetch<BudgetStatus>(`/workspaces/${workspaceId}/budget`, NOT_VISIBLE);
+}
+
+export function getGoalsOverview(workspaceId: string) {
+  return safeFetch<GoalsOverview>(`/workspaces/${workspaceId}/goals`, NOT_VISIBLE);
+}
+
+export function getCalendarOverview(workspaceId: string, days = 30) {
+  return safeFetch<CalendarOverview>(
+    `/workspaces/${workspaceId}/calendar?days=${days}`,
+    NOT_VISIBLE,
+  );
+}
+
+export function getCategoryReport(workspaceId: string, from?: string, to?: string) {
+  const query = new URLSearchParams();
+  if (from) query.set('from', from);
+  if (to) query.set('to', to);
+  const suffix = query.size > 0 ? `?${query.toString()}` : '';
+  return safeFetch<CategoryReport>(
+    `/workspaces/${workspaceId}/reports/categories${suffix}`,
+    NOT_VISIBLE,
+  );
 }
 
 /** Display name for a category: user-supplied wins, else the translation key (DEC-015). */

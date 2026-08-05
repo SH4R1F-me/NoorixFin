@@ -26,6 +26,8 @@ import {
   Wallet,
   CreditCard,
 } from 'lucide-react';
+import { formatAmount } from '@noorixfin/money';
+import { intlLocale } from '@noorixfin/i18n';
 import { useLocale } from '../../lib/i18n/locale-provider';
 
 export interface SummaryCard {
@@ -36,6 +38,13 @@ export interface SummaryCard {
   positive: boolean;
   iconKey: 'wallet' | 'up' | 'down' | 'flow';
   gradient: string;
+  /**
+   * Where this figure breaks down. §5.3: "কোনো metric শুধু aggregate number
+   * দেখাবে না; click/tap করলে included accounts, period, filters এবং source
+   * transactions দেখা যাবে." Every card had `cursor: pointer` and no
+   * destination — it looked clickable and did nothing.
+   */
+  href: string;
 }
 
 export interface RecentTx {
@@ -45,22 +54,88 @@ export interface RecentTx {
   date: string;
 }
 
+/**
+ * The four panels below carry REAL data now. They rendered hardcoded numbers
+ * until the 2026-08-04 audit, then honest "coming soon" placeholders once those
+ * were removed, and now the aggregations that back them exist.
+ *
+ * Every figure is derived server-side from postings (DEC-011, DEC-022). Note
+ * `current: number | null` on a goal — null means no linked account, which is
+ * not the same statement as zero saved.
+ */
+export interface BudgetPanelLine {
+  categoryId: string;
+  name: string;
+  translationKey: string | null;
+  icon: string;
+  spent: number;
+  planned: number;
+  over: boolean;
+}
+
+export interface BillPanelItem {
+  id: string;
+  name: string;
+  amount: number;
+  date: string;
+  daysAway: number;
+  status: 'UPCOMING' | 'DUE' | 'OVERDUE';
+  isIncome: boolean;
+}
+
+export interface GoalPanelItem {
+  id: string;
+  name: string;
+  current: number | null;
+  target: number;
+}
+
 const ICONS = { wallet: Wallet, up: TrendingUp, down: TrendingDown, flow: ArrowLeftRight } as const;
 
 export default function DashboardView({
   summaryCards: rawCards,
   recentTransactions,
   upcomingBills,
+  budgetLines = [],
+  goals = [],
+  totalDebt = 0,
   currencySymbol = '৳',
+  currency = 'BDT',
 }: {
   summaryCards: SummaryCard[];
   recentTransactions: RecentTx[];
-  upcomingBills: { name: string; amount: number; due: string; icon: string }[];
+  upcomingBills: BillPanelItem[];
+  budgetLines?: BudgetPanelLine[];
+  goals?: GoalPanelItem[];
+  totalDebt?: number;
   currencySymbol?: string;
+  /** Needed as well as the symbol — the CODE is what carries the exponent. */
+  currency?: string;
 }) {
   const { t, locale } = useLocale();
   const summaryCards = rawCards.map((c) => ({ ...c, icon: ICONS[c.iconKey] }));
-  const nf = new Intl.NumberFormat(locale === 'bn' ? 'bn-BD' : 'en-BD');
+
+  /**
+   * Every amount on this page is in MINOR units (DEC-004).
+   *
+   * `Intl.NumberFormat` alone renders them as if they were major — 3,000,000
+   * poisha displayed as "৳ ৩০,০০,০০০" instead of "৳ ৩০,০০০.০০", a 100×
+   * overstatement of the user's debt. `formatAmount` divides by the currency's
+   * real exponent, which is also why the currency CODE has to reach this
+   * component and not just its symbol: JPY has exponent 0 and KWD has 3, so
+   * "/100" is not a safe shortcut either.
+   */
+  const amount = (minor: number) =>
+    `${currencySymbol} ${formatAmount(Math.abs(minor), currency, intlLocale[locale])}`;
+
+  /**
+   * Counts and percentages in the reader's digits too.
+   *
+   * Amounts already followed the locale; counts did not, so a Bangla page read
+   * "2 দিন আগে · ৳৮০০.০০" — two numbering systems in one line. §4.6 raised this
+   * for amounts, and the same argument covers every number on screen.
+   */
+  const count = (value: number) => new Intl.NumberFormat(intlLocale[locale]).format(value);
 
   return (
     <div style={styles.page}>
@@ -81,7 +156,15 @@ export default function DashboardView({
         {summaryCards.map((card, i) => {
           const Icon = card.icon;
           return (
-            <div key={i} style={{ ...styles.summaryCard, animationDelay: `${i * 80}ms` }}>
+            // An <a>, not a <div> with an onClick: it is keyboard-reachable,
+            // announces itself as a link, and works with middle-click — none of
+            // which a div gives you (§5.5 keyboard navigation).
+            <a
+              key={i}
+              href={card.href}
+              style={{ ...styles.summaryCard, animationDelay: `${i * 80}ms` }}
+              aria-label={`${t(card.titleKey)}: ${card.amount}. ${t('dashboard.drillDown')}`}
+            >
               <div style={styles.cardHeader}>
                 <div style={{ ...styles.cardIcon, background: card.gradient }}>
                   <Icon size={20} color="white" />
@@ -100,7 +183,7 @@ export default function DashboardView({
               </div>
               <p style={styles.cardTitle}>{t(card.titleKey)}</p>
               <p style={styles.cardAmount}>{card.amount}</p>
-            </div>
+            </a>
           );
         })}
       </div>
@@ -137,7 +220,7 @@ export default function DashboardView({
                     ...styles.txAmount,
                     color: tx.amount > 0 ? '#10b981' : '#ef4444',
                   }}>
-                    {tx.amount > 0 ? '+' : ''}{currencySymbol} {nf.format(Math.abs(tx.amount))}
+                    {tx.amount > 0 ? '+' : ''}{amount(tx.amount)}
                   </span>
                 </div>
               ))
@@ -147,16 +230,57 @@ export default function DashboardView({
 
         {/* Right column */}
         <div style={styles.rightColumn}>
-          {/* Budget progress — feature not built; see the header note. */}
+          {/* Budget progress — §5.3 item 3. Spend derived from postings. */}
           <div style={styles.section}>
             <div style={styles.sectionHeader}>
               <h2 style={styles.sectionTitle}>{t('dashboard.budgetProgress')}</h2>
               <a href="/dashboard/budgets" style={styles.viewAll}>{t('dashboard.details')} →</a>
             </div>
-            <p style={styles.emptyHint}>{t('app.comingSoon')}</p>
+            {budgetLines.length === 0 ? (
+              <p style={styles.emptyHint}>{t('budgets.noBudgetBody')}</p>
+            ) : (
+              <div style={styles.budgetList}>
+                {budgetLines.map((line) => {
+                  const percent = line.planned > 0 ? (line.spent / line.planned) * 100 : 0;
+                  const name = line.translationKey ? t(line.translationKey) : line.name;
+                  return (
+                    <div key={line.categoryId} style={styles.budgetItem}>
+                      <div style={styles.budgetHeader}>
+                        <span style={styles.budgetName}>
+                          <span aria-hidden="true">{line.icon}</span> {name}
+                        </span>
+                        <span style={styles.budgetNumbers}>
+                          {amount(line.spent)} / {amount(line.planned)}
+                        </span>
+                      </div>
+                      {/* A real progressbar, not a coloured div: §5.5 forbids
+                          conveying state by colour alone, and a bar with no
+                          accessible value conveys nothing at all. */}
+                      <div
+                        role="progressbar"
+                        aria-valuenow={Math.round(percent)}
+                        aria-valuemin={0}
+                        aria-valuemax={100}
+                        aria-label={`${name}: ${t('budgets.usedPercent', { percent: count(Math.round(percent)) })}`}
+                        style={styles.progressBar}
+                      >
+                        <div
+                          aria-hidden="true"
+                          style={{
+                            ...styles.progressFill,
+                            width: `${Math.min(percent, 100)}%`,
+                            background: line.over ? '#ef4444' : '#10b981',
+                          }}
+                        />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
 
-          {/* Upcoming bills — data-driven, currently always empty (Calendar unbuilt). */}
+          {/* Upcoming bills — §5.3 item 4. Overdue derived from today. */}
           <div style={styles.section}>
             <div style={styles.sectionHeader}>
               <h2 style={styles.sectionTitle}>{t('dashboard.upcomingBills')}</h2>
@@ -164,30 +288,114 @@ export default function DashboardView({
             </div>
             <div style={styles.billList}>
               {upcomingBills.length === 0 ? (
-                <p style={styles.emptyHint}>{t('app.comingSoon')}</p>
+                <p style={styles.emptyHint}>{t('calendar.noEventsBody')}</p>
               ) : (
-                upcomingBills.map((bill, i) => (
-                  <div key={i} style={styles.billItem}>
-                    <span style={styles.billIcon}>{bill.icon}</span>
+                upcomingBills.map((bill) => (
+                  <div key={bill.id} style={styles.billItem}>
+                    <span style={styles.billIcon} aria-hidden="true">
+                      {bill.isIncome ? '💰' : bill.status === 'OVERDUE' ? '⚠️' : '📄'}
+                    </span>
                     <div style={styles.billInfo}>
                       <span style={styles.billName}>{bill.name}</span>
-                      <span style={styles.billDue}>{bill.due}</span>
+                      <span
+                        style={{
+                          ...styles.billDue,
+                          // Colour AND word — the word is what survives
+                          // greyscale and a screen reader (§5.5).
+                          color: bill.status === 'OVERDUE' ? '#fca5a5' : '#64748b',
+                        }}
+                      >
+                        {bill.status === 'OVERDUE'
+                          ? `${t('calendar.overdue')} · ${t('calendar.daysAgo', { count: count(Math.abs(bill.daysAway)) })}`
+                          : bill.daysAway === 0
+                            ? t('calendar.dueToday')
+                            : t('calendar.inDays', { count: count(bill.daysAway) })}
+                      </span>
                     </div>
-                    <span style={styles.billAmount}>{currencySymbol} {nf.format(bill.amount)}</span>
+                    <span
+                      style={{
+                        ...styles.billAmount,
+                        color: bill.isIncome ? '#10b981' : '#f8fafc',
+                      }}
+                    >
+                      {bill.isIncome ? '+' : ''}{amount(bill.amount)}
+                    </span>
                   </div>
                 ))
               )}
             </div>
           </div>
 
-          {/* Savings goal — feature not built; see the header note. */}
+          {/* Savings goals — §5.3 item 5. Progress is the linked balance. */}
           <div style={styles.section}>
             <div style={styles.sectionHeader}>
               <h2 style={styles.sectionTitle}>{t('dashboard.savingsProgress')}</h2>
               <a href="/dashboard/goals" style={styles.viewAll}>{t('dashboard.details')} →</a>
             </div>
-            <p style={styles.emptyHint}>{t('app.comingSoon')}</p>
+            {goals.length === 0 ? (
+              <p style={styles.emptyHint}>{t('goals.noGoalsBody')}</p>
+            ) : (
+              <div style={styles.budgetList}>
+                {goals.map((goal) => {
+                  // null current means no linked account. Rendering it as a 0%
+                  // bar would assert something the system does not know.
+                  if (goal.current === null) {
+                    return (
+                      <div key={goal.id} style={styles.budgetItem}>
+                        <div style={styles.budgetHeader}>
+                          <span style={styles.budgetName}>{goal.name}</span>
+                          <span style={styles.budgetNumbers}>{amount(goal.target)}</span>
+                        </div>
+                        <span style={styles.emptyHint}>{t('goals.noLinkBody')}</span>
+                      </div>
+                    );
+                  }
+                  const percent = goal.target > 0 ? (goal.current / goal.target) * 100 : 0;
+                  return (
+                    <div key={goal.id} style={styles.budgetItem}>
+                      <div style={styles.budgetHeader}>
+                        <span style={styles.budgetName}>{goal.name}</span>
+                        <span style={styles.budgetNumbers}>
+                          {amount(goal.current)} / {amount(goal.target)}
+                        </span>
+                      </div>
+                      <div
+                        role="progressbar"
+                        aria-valuenow={Math.round(percent)}
+                        aria-valuemin={0}
+                        aria-valuemax={100}
+                        aria-label={`${goal.name}: ${count(Math.round(percent))}%`}
+                        style={styles.progressBar}
+                      >
+                        <div
+                          aria-hidden="true"
+                          style={{
+                            ...styles.progressFill,
+                            width: `${Math.min(percent, 100)}%`,
+                            background: '#f59e0b',
+                          }}
+                        />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
+
+          {/* Debt summary — §5.3 item 6. Only rendered when there is one. */}
+          {totalDebt > 0 && (
+            <div style={styles.section}>
+              <div style={styles.sectionHeader}>
+                <h2 style={styles.sectionTitle}>{t('dashboard.debtSummary')}</h2>
+                <a href="/dashboard/goals" style={styles.viewAll}>{t('dashboard.details')} →</a>
+              </div>
+              <p style={{ ...styles.cardAmount, color: '#ef4444', margin: 0 }}>
+                {amount(totalDebt)}
+              </p>
+              <p style={styles.emptyHint}>{t('goals.outstanding')}</p>
+            </div>
+          )}
         </div>
       </div>
     </div>
@@ -252,6 +460,9 @@ const styles: Record<string, React.CSSProperties> = {
     animation: 'fadeIn 0.4s ease-out both',
     transition: 'all 200ms',
     cursor: 'pointer',
+    textDecoration: 'none',
+    display: 'block',
+    color: 'inherit',
   },
   cardHeader: {
     display: 'flex',

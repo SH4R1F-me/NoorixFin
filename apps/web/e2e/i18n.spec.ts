@@ -13,19 +13,26 @@
  * they stay meaningful if the plumbing changes again.
  */
 import { test, expect, type Page } from '@playwright/test';
-
-const EMAIL = process.env.E2E_EMAIL;
-const PASSWORD = process.env.E2E_PASSWORD;
+import { LIVE, seedWorkspace, setLocale, type Fixture } from './support/fixture';
 
 /** Bangla codepoints, excluding the Taka sign (৳, U+09F3) which is a currency
  *  symbol and correctly stays put in an English UI. */
 const banglaWords = (text: string) =>
   (text.match(/[ঀ-৲৴-৿]+/g) ?? []).length;
 
+/**
+ * This spec owns its account.
+ *
+ * It TOGGLES and PERSISTS the language, so sharing a login with the rest of the
+ * suite meant flipping every other spec's UI to English mid-run — failures that
+ * looked like product bugs and were this spec's own writes.
+ */
+let fixture: Fixture;
+
 async function signIn(page: Page) {
   await page.goto('/auth/login');
-  await page.getByPlaceholder('name@example.com').fill(EMAIL!);
-  await page.locator('input[type="password"]').first().fill(PASSWORD!);
+  await page.getByPlaceholder('name@example.com').fill(fixture.email);
+  await page.locator('input[type="password"]').first().fill(fixture.password);
   await page.locator('form button[type="submit"]').click();
   await page.waitForURL(/\/dashboard/, { timeout: 30_000 });
 }
@@ -34,7 +41,25 @@ const switchLanguage = (page: Page) =>
   page.locator('aside button', { hasText: /English|বাংলা/ }).first().click();
 
 test.describe('i18n', () => {
-  test.skip(!EMAIL || !PASSWORD, 'needs supabase + API running');
+  /**
+   * Serial, deliberately.
+   *
+   * Every test here TOGGLES the language, and the language is now a single
+   * persisted value on one profile (DEC-021). Run in parallel they overwrite
+   * each other's starting state, so a test asserting "it switched to English"
+   * fails because a sibling switched it back — a failure that describes the
+   * suite, not the product.
+   */
+  test.describe.configure({ mode: 'serial' });
+
+  test.skip(!LIVE, 'needs E2E_LIVE=1 with supabase and the API running');
+
+  test.beforeAll(async () => {
+    fixture = await seedWorkspace('i18n');
+    // Start from a known language so "switch and check it changed" is
+    // deterministic rather than depending on what the last run left behind.
+    await setLocale(fixture.token, 'bn');
+  });
 
   test('switching language changes the PAGE BODY, not just the sidebar', async ({ page }) => {
     await signIn(page);

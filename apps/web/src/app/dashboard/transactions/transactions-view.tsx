@@ -20,6 +20,8 @@ export interface TxItem {
   amount: number;
   cat: string;
   catIcon: string;
+  /** Resolved from the postings' ledger account (DEC-015). Absent for transfers. */
+  categoryId?: string;
   account: string;
   date: string;
   note: string;
@@ -31,12 +33,19 @@ export default function TransactionsView({
   accounts,
   workspaceId,
   currency,
+  drillDownLabel,
 }: {
   transactions: TxItem[];
   categories: Option[];
   accounts: Option[];
   workspaceId: string;
   currency: string;
+  /**
+   * Set when the list was reached from a budget line or a report slice (§5.3).
+   * The banner it drives matters: without it a filtered list looks identical to
+   * a user having very few transactions, which is an alarming thing to imply.
+   */
+  drillDownLabel?: string;
 }) {
   const { t: tr, locale } = useLocale();
   const router = useRouter();
@@ -136,6 +145,8 @@ export default function TransactionsView({
     amt: { fontSize:'0.9375rem', fontWeight:700, fontVariantNumeric:'tabular-nums' as const },
     date: { fontSize:'0.75rem', color:'#64748b', marginTop:2 },
     empty: { display:'flex', flexDirection:'column' as const, alignItems:'center', padding:'3rem' },
+    drillBanner: { display:'flex', alignItems:'center', justifyContent:'space-between', gap:'1rem', padding:'0.7rem 1rem', background:'rgba(16,185,129,0.08)', border:'1px solid rgba(16,185,129,0.28)', borderRadius:'0.75rem', color:'#6ee7b7', fontSize:'0.8125rem', marginBottom:'1rem', flexWrap:'wrap' as const },
+    drillClear: { color:'#10b981', textDecoration:'none', fontWeight:600, fontSize:'0.8125rem' },
   };
 
   return (
@@ -147,6 +158,22 @@ export default function TransactionsView({
           <span>{showAdd ? tr('app.close') : tr('transactions.addTransaction')}</span>
         </button>
       </div>
+
+      {/*
+        Drill-down banner (§5.3). Says which figure this list came from and
+        offers the way back — a filtered list with no indication that it is
+        filtered is indistinguishable from a nearly-empty ledger.
+      */}
+      {drillDownLabel && (
+        <div style={s.drillBanner} role="status">
+          <span>
+            {tr('transactions.category')}: <strong>{drillDownLabel}</strong>
+          </span>
+          <a href="/dashboard/transactions" style={s.drillClear}>
+            {tr('app.clear')} ×
+          </a>
+        </div>
+      )}
 
       {showAdd && (
         <div style={s.qaBox}>

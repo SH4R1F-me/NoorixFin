@@ -8,12 +8,22 @@
  * The audit measured status=500 on /dashboard, /transactions, /accounts and
  * /settings with the API stopped.
  *
- * These tests run with NO API on the configured port, which is the normal state
- * for the E2E suite. That is the point: the failure mode under test IS "nothing
- * is listening", so it needs no fixture to reproduce.
+ * The first three tests hold whether or not the API is up — they assert that
+ * signed-out routes and the 404 do not depend on it at all. The signed-in group
+ * needs the API genuinely STOPPED, so it is gated on `E2E_API_DOWN=1`:
+ *
+ *   # stop the API first, then
+ *   E2E_API_DOWN=1 E2E_EMAIL=... E2E_PASSWORD=... npx playwright test resilience
  */
 import { test, expect } from '@playwright/test';
 
+/**
+ * Set when the API is deliberately STOPPED. The signed-in half of this spec
+ * asserts behaviour with nothing listening, so it cannot pass while the API is
+ * up — gating on credentials alone made it fail for the wrong reason on every
+ * normal run.
+ */
+const API_DOWN = process.env.E2E_API_DOWN === '1';
 const EMAIL = process.env.E2E_EMAIL;
 const PASSWORD = process.env.E2E_PASSWORD;
 
@@ -48,7 +58,10 @@ test('the login page survives an unreachable API', async ({ page }) => {
 });
 
 test.describe('signed-in degraded mode', () => {
-  test.skip(!EMAIL || !PASSWORD, 'needs supabase running (the API deliberately is not)');
+  test.skip(
+    !API_DOWN || !EMAIL || !PASSWORD,
+    'run with E2E_API_DOWN=1 and the API stopped — that is the condition under test',
+  );
 
   test('dashboard routes render 200 and explain themselves with the API down', async ({
     page,

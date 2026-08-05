@@ -1,18 +1,31 @@
-import { Target } from 'lucide-react';
-import { NotYetAvailable } from '../../../components/not-yet-available';
+/**
+ * Goals & Debts — server component.
+ *
+ * `goals_overview()` returns savings progress and debt outstanding already
+ * derived from postings; the accounts list is only for the "link an account"
+ * dropdown, not for computing anything.
+ */
+import { getAccounts, getActiveWorkspace, getGoalsOverview } from '../../../lib/workspace';
+import GoalsView from './goals-view';
 
-export default function GoalsPage() {
+export default async function GoalsPage() {
+  const workspace = await getActiveWorkspace();
+
+  if (!workspace) {
+    return <GoalsView overview={{ visible: false }} accounts={[]} workspaceId="" currency="BDT" />;
+  }
+
+  const [overview, accounts] = await Promise.all([
+    getGoalsOverview(workspace.id),
+    getAccounts(workspace.id),
+  ]);
+
   return (
-    <NotYetAvailable
-      titleKey="nav.goals"
-      icon={<Target size={30} color="#10b981" />}
-      summary="Savings goals and debt tracking are Phase 3. Liability accounts already work today — a loan or credit card can be created under Accounts and will post correctly."
-      planned={[
-        'Savings goals with a target amount and linked accounts',
-        'Progress derived from the ledger, not stored separately',
-        'Debt details: principal, rate, minimum payment, due day',
-      ]}
-      blockedBy="Needs the goals and debts APIs (Blueprint §3.4)."
+    <GoalsView
+      overview={overview}
+      accounts={accounts}
+      workspaceId={workspace.id}
+      currency={workspace.base_currency ?? 'BDT'}
     />
   );
 }

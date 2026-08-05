@@ -13,26 +13,32 @@
  * the old page showed encouraging UI while writing nothing.
  */
 import { test, expect, type Page } from '@playwright/test';
+import { LIVE, seedWorkspace, setLocale, type Fixture } from './support/fixture';
 
-const EMAIL = process.env.E2E_EMAIL;
-const PASSWORD = process.env.E2E_PASSWORD;
+/** Own account: every test here writes real ledger rows. */
+let fixture: Fixture;
 
 /** Unique per run so repeated runs cannot pass on a previous run's rows. */
 const stamp = () => `${Date.now()}${Math.floor(Math.random() * 1000)}`;
 
 async function signInEnglish(page: Page) {
   await page.goto('/auth/login');
-  await page.getByPlaceholder('name@example.com').fill(EMAIL!);
-  await page.locator('input[type="password"]').first().fill(PASSWORD!);
+  await page.getByPlaceholder('name@example.com').fill(fixture.email);
+  await page.locator('input[type="password"]').first().fill(fixture.password);
   await page.locator('form button[type="submit"]').click();
   await page.waitForURL(/\/dashboard/, { timeout: 30_000 });
-  // English keeps the selectors below readable and locale-independent.
-  await page.locator('aside button', { hasText: /English|বাংলা/ }).first().click();
-  await page.waitForTimeout(900);
+  // The language is pinned in beforeAll rather than by clicking the toggle:
+  // clicking raced the persist, so a later navigation could re-render in Bangla
+  // and every English selector below would miss.
 }
 
 test.describe('ledger CRUD', () => {
-  test.skip(!EMAIL || !PASSWORD, 'needs supabase + API running');
+  test.skip(!LIVE, 'needs E2E_LIVE=1 with supabase and the API running');
+
+  test.beforeAll(async () => {
+    fixture = await seedWorkspace('ledger');
+    await setLocale(fixture.token, 'en');
+  });
 
   test('an account can be created and survives a reload', async ({ page }) => {
     const name = `E2E Account ${stamp()}`;

@@ -67,6 +67,29 @@ export function LocaleProvider({
   const [locale, setLocaleState] = useState<SupportedLanguage>(initialLocale);
   const [isPending, startTransition] = useTransition();
 
+  // ── Re-seeding when the server's answer changes ────────────────────────────
+  //
+  // `useState(initialLocale)` reads the prop ONCE. This provider lives in the
+  // root layout, which React keeps mounted across client-side navigations — so
+  // the state it captured on the first render survives them.
+  //
+  // That produced a visible bug: the sign-in page renders with no session, so
+  // the server resolves the default 'bn' and seeds the provider with it. Signing
+  // in navigates to /dashboard client-side; the server re-renders the layout and
+  // sends `initialLocale='en'` from the user's saved preference, `<html lang>`
+  // updates — and the provider keeps 'bn'. The user's whole UI was in the wrong
+  // language, disagreeing with its own `lang` attribute, until a hard reload.
+  //
+  // Comparing against the last SEEDED value rather than against `locale` is what
+  // makes this safe. After a local toggle, a server render still carrying the
+  // pre-toggle profile value has `initialLocale === seededFrom`, so it does not
+  // fire and cannot stamp on the choice the user just made.
+  const [seededFrom, setSeededFrom] = useState<SupportedLanguage>(initialLocale);
+  if (initialLocale !== seededFrom) {
+    setSeededFrom(initialLocale);
+    setLocaleState(initialLocale);
+  }
+
   const setLocale = useCallback(
     (next: SupportedLanguage) => {
       if (next === locale) return;
