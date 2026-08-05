@@ -209,7 +209,7 @@ const styles: Record<string, CSSProperties> = {
   digest: {
     marginTop: '1.25rem',
     fontSize: '0.6875rem',
-    color: '#475569',
+    color: '#8b9ab0',
     fontFamily: 'ui-monospace, monospace',
   },
 };

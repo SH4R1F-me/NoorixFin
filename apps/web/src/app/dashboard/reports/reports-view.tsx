@@ -96,14 +96,14 @@ export default function ReportsView({
           <span style={field.meta}>
             <TrendingDown size={13} aria-hidden="true" /> {t('transactions.expense')}
           </span>
-          <p style={{ ...styles.totalValue, color: '#ef4444' }}>{fmt(expenseTotal)}</p>
+          <p style={{ ...styles.totalValue, color: '#f87171' }}>{fmt(expenseTotal)}</p>
         </div>
         <div style={field.card}>
           <span style={field.meta}>{t('reports.cashFlow')}</span>
           <p
             style={{
               ...styles.totalValue,
-              color: incomeTotal - expenseTotal >= 0 ? '#10b981' : '#ef4444',
+              color: incomeTotal - expenseTotal >= 0 ? '#10b981' : '#f87171',
             }}
           >
             {fmt(incomeTotal - expenseTotal)}
@@ -357,12 +357,12 @@ const styles: Record<string, React.CSSProperties> = {
   trendColumn: { flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.4rem', height: '100%' },
   trendBars: { flex: 1, display: 'flex', alignItems: 'flex-end', gap: 3, width: '100%', justifyContent: 'center' },
   trendBar: { width: '42%', minHeight: 2, borderRadius: '3px 3px 0 0', transition: 'height 600ms ease-out' },
-  trendLabel: { fontSize: '0.6875rem', color: '#64748b' },
+  trendLabel: { fontSize: '0.6875rem', color: '#8b9ab0' },
   legend: { display: 'flex', gap: '1rem', marginTop: '0.5rem' },
   legendItem: { display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.75rem', color: '#94a3b8' },
   swatch: { width: 10, height: 10, borderRadius: 2, display: 'inline-block' },
   table: { width: '100%', borderCollapse: 'collapse', fontSize: '0.8125rem' },
-  caption: { captionSide: 'bottom', textAlign: 'left', fontSize: '0.6875rem', color: '#475569', paddingTop: '0.6rem' },
+  caption: { captionSide: 'bottom', textAlign: 'left', fontSize: '0.6875rem', color: '#8b9ab0', paddingTop: '0.6rem' },
   th: {
     textAlign: 'left',
     padding: '0.55rem 0.6rem',
@@ -388,6 +388,6 @@ const styles: Record<string, React.CSSProperties> = {
     paddingTop: '1rem',
     borderTop: '1px solid #1e293b',
     fontSize: '0.6875rem',
-    color: '#475569',
+    color: '#8b9ab0',
   },
 };

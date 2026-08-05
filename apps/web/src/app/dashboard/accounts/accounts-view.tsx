@@ -97,7 +97,7 @@ export default function AccountsView({
   const s: Record<string, React.CSSProperties> = {
     hdr: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' },
     title: { fontSize: '1.75rem', fontWeight: 800, color: '#f8fafc', margin: 0 },
-    sub: { fontSize: '0.8125rem', color: '#64748b', margin: 0, marginTop: 2 },
+    sub: { fontSize: '0.8125rem', color: '#8b9ab0', margin: 0, marginTop: 2 },
     addBtn: { display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.625rem 1.25rem', background: 'linear-gradient(135deg,#059669,#10b981)', border: 'none', borderRadius: '0.75rem', color: 'white', fontWeight: 600, fontSize: '0.875rem', cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 4px 12px rgba(16,185,129,0.3)' },
     summaryGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', marginBottom: '2rem' },
     summaryCard: { padding: '1.25rem', background: 'rgba(30,41,59,0.5)', backdropFilter: 'blur(12px)', border: '1px solid #1e293b', borderRadius: '1rem', display: 'flex', flexDirection: 'column' as const, gap: '0.5rem' },
@@ -111,7 +111,7 @@ export default function AccountsView({
     cardIcon: { width: 44, height: 44, borderRadius: '0.75rem', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.25rem', flexShrink: 0 },
     cardInfo: { flex: 1 },
     cardName: { fontSize: '0.9375rem', fontWeight: 600, color: '#f8fafc' },
-    cardSubtype: { fontSize: '0.75rem', color: '#64748b', marginTop: 1 },
+    cardSubtype: { fontSize: '0.75rem', color: '#8b9ab0', marginTop: 1 },
     cardBalance: { fontSize: '1.25rem', fontWeight: 800, fontVariantNumeric: 'tabular-nums' as const },
     privacyBtn: { background: 'rgba(30,41,59,0.5)', border: '1px solid #1e293b', borderRadius: '0.5rem', color: '#94a3b8', padding: '0.375rem 0.75rem', display: 'flex', alignItems: 'center', gap: '0.375rem', cursor: 'pointer', fontSize: '0.8125rem', fontFamily: 'inherit' },
     createBox: { background: 'rgba(30,41,59,0.6)', backdropFilter: 'blur(20px)', border: '1px solid #334155', borderRadius: '1rem', padding: '1.5rem', marginBottom: '1.5rem' },
@@ -179,7 +179,7 @@ export default function AccountsView({
       )}
 
       {accounts.length === 0 && !showCreate && (
-        <p style={{ color: '#64748b', fontSize: '0.875rem', margin: '2rem 0' }}>
+        <p style={{ color: '#8b9ab0', fontSize: '0.875rem', margin: '2rem 0' }}>
           {t('accounts.noAccountsBody')}
         </p>
       )}
@@ -192,11 +192,11 @@ export default function AccountsView({
         </div>
         <div style={s.summaryCard}>
           <span style={s.summaryLabel}>{t('accounts.liability')}</span>
-          <span style={{ ...s.summaryValue, color: '#ef4444' }}>{mask(fmt(totalLiabilities))}</span>
+          <span style={{ ...s.summaryValue, color: '#f87171' }}>{mask(fmt(totalLiabilities))}</span>
         </div>
         <div style={s.summaryCard}>
           <span style={s.summaryLabel}>{t('reports.netWorth')}</span>
-          <span style={{ ...s.summaryValue, color: netWorth >= 0 ? '#10b981' : '#ef4444' }}>{mask(fmt(netWorth))}</span>
+          <span style={{ ...s.summaryValue, color: netWorth >= 0 ? '#10b981' : '#f87171' }}>{mask(fmt(netWorth))}</span>
         </div>
       </div>
 
@@ -222,7 +222,7 @@ export default function AccountsView({
       {/* Liability Accounts */}
       {liabilities.length > 0 && (
         <div style={s.section}>
-          <div style={s.sectionTitle}><CreditCard size={16} style={{ color: '#ef4444' }} /> Liabilities ({liabilities.length})</div>
+          <div style={s.sectionTitle}><CreditCard size={16} style={{ color: '#f87171' }} /> Liabilities ({liabilities.length})</div>
           <div style={s.cardGrid}>
             {liabilities.map(acc => (
               <div key={acc.id} style={s.card}>
@@ -233,7 +233,7 @@ export default function AccountsView({
                     <div style={s.cardSubtype}>{subtypeLabel(acc.subtype)}</div>
                   </div>
                 </div>
-                <div style={{ ...s.cardBalance, color: '#ef4444' }}>{mask(fmt(acc.balance, acc.currency))}</div>
+                <div style={{ ...s.cardBalance, color: '#f87171' }}>{mask(fmt(acc.balance, acc.currency))}</div>
               </div>
             ))}
           </div>

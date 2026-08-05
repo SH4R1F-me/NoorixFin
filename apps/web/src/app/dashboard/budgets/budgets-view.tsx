@@ -257,7 +257,7 @@ export default function BudgetsView({
               <p
                 style={{
                   ...styles.totalValue,
-                  color: plannedTotal - spentTotal >= 0 ? '#10b981' : '#ef4444',
+                  color: plannedTotal - spentTotal >= 0 ? '#10b981' : '#f87171',
                 }}
               >
                 {fmt(plannedTotal - spentTotal)}

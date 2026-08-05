@@ -93,6 +93,7 @@ export default function DashboardShell({
       {/* Mobile overlay */}
       {mobileOpen && (
         <div
+          className="nf-overlay"
           style={styles.overlay}
           onClick={() => setMobileOpen(false)}
         />
@@ -100,6 +101,11 @@ export default function DashboardShell({
 
       {/* Sidebar */}
       <aside
+        className="nf-sidebar"
+        // A data attribute rather than a second class: the open state is what
+        // the media query keys on, and expressing it as data keeps the class
+        // list a description of WHAT the element is, not what it is doing.
+        data-open={mobileOpen}
         style={{
           ...styles.sidebar,
           width: collapsed ? 72 : 280,
@@ -148,7 +154,7 @@ export default function DashboardShell({
                 <Icon
                   size={20}
                   style={{
-                    color: isActive ? '#10b981' : '#64748b',
+                    color: isActive ? '#10b981' : '#8b9ab0',
                     flexShrink: 0,
                   }}
                 />
@@ -256,12 +262,12 @@ export default function DashboardShell({
       </aside>
 
       {/* Main Content */}
-      <main style={{
+      <main className="nf-main" style={{
         ...styles.main,
         marginLeft: collapsed ? 72 : 280,
       }}>
         {/* Mobile header */}
-        <div style={styles.mobileHeader}>
+        <div className="nf-mobile-header" style={styles.mobileHeader}>
           <button
             onClick={() => setMobileOpen(true)}
             style={styles.menuBtn}
@@ -277,7 +283,7 @@ export default function DashboardShell({
         </div>
 
         {/* Page content */}
-        <div style={styles.pageContent}>
+        <div className="nf-page-content" style={styles.pageContent}>
           {/*
             Degraded mode. Ranked above even the maintenance notice: if the API
             is unreachable the page below is empty, and an unexplained empty
@@ -380,7 +386,7 @@ const styles: Record<string, React.CSSProperties> = {
   collapseBtn: {
     background: 'rgba(255,255,255,0.05)',
     border: '1px solid #1e293b',
-    color: '#64748b',
+    color: '#8b9ab0',
     width: 28,
     height: 28,
     borderRadius: '0.375rem',
@@ -443,7 +449,7 @@ const styles: Record<string, React.CSSProperties> = {
     background: 'transparent',
     border: 'none',
     borderRadius: '0.5rem',
-    color: '#64748b',
+    color: '#8b9ab0',
     cursor: 'pointer',
     fontSize: '0.8125rem',
     fontFamily: 'inherit',
@@ -501,7 +507,7 @@ const styles: Record<string, React.CSSProperties> = {
     marginTop: '3rem',
     paddingTop: '1rem',
     borderTop: '1px solid #1e293b',
-    color: '#475569',
+    color: '#8b9ab0',
     fontSize: '0.75rem',
   },
   userSection: {
@@ -541,7 +547,7 @@ const styles: Record<string, React.CSSProperties> = {
   },
   userEmail: {
     fontSize: '0.6875rem',
-    color: '#64748b',
+    color: '#8b9ab0',
     whiteSpace: 'nowrap',
     overflow: 'hidden',
     textOverflow: 'ellipsis',
@@ -549,7 +555,7 @@ const styles: Record<string, React.CSSProperties> = {
   logoutBtn: {
     background: 'transparent',
     border: 'none',
-    color: '#64748b',
+    color: '#8b9ab0',
     cursor: 'pointer',
     padding: '0.25rem',
     display: 'flex',

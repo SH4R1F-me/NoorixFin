@@ -498,7 +498,7 @@ const styles: Record<string, React.CSSProperties> = {
     background: 'linear-gradient(90deg,#059669,#10b981)',
     transition: 'width 400ms ease-out',
   },
-  stepLabel: { fontSize: '0.75rem', color: '#64748b', margin: '0.5rem 0 1.5rem' },
+  stepLabel: { fontSize: '0.75rem', color: '#8b9ab0', margin: '0.5rem 0 1.5rem' },
   stepTitle: {
     display: 'flex',
     alignItems: 'center',
@@ -508,7 +508,7 @@ const styles: Record<string, React.CSSProperties> = {
     color: '#f8fafc',
     margin: '0 0 1rem',
   },
-  hint: { fontSize: '0.75rem', color: '#64748b', margin: '0 0 1rem', lineHeight: 1.55 },
+  hint: { fontSize: '0.75rem', color: '#8b9ab0', margin: '0 0 1rem', lineHeight: 1.55 },
   choiceGrid: { display: 'grid', gap: '0.6rem' },
   choice: {
     display: 'flex',
@@ -542,7 +542,7 @@ const styles: Record<string, React.CSSProperties> = {
   skip: {
     background: 'transparent',
     border: 'none',
-    color: '#64748b',
+    color: '#8b9ab0',
     fontSize: '0.8125rem',
     fontFamily: 'inherit',
     cursor: 'pointer',

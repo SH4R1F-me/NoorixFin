@@ -174,7 +174,7 @@ export default function DashboardView({
                 {card.change !== null && (
                   <span style={{
                     ...styles.cardChange,
-                    color: card.positive ? '#10b981' : '#ef4444',
+                    color: card.positive ? '#10b981' : '#f87171',
                     background: card.positive ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)',
                   }}>
                     {card.change}
@@ -189,7 +189,7 @@ export default function DashboardView({
       </div>
 
       {/* Content grid */}
-      <div style={styles.contentGrid}>
+      <div className="nf-content-grid" style={styles.contentGrid}>
         {/* Recent Transactions */}
         <div style={styles.section}>
           <div style={styles.sectionHeader}>
@@ -209,7 +209,7 @@ export default function DashboardView({
                     {tx.amount > 0 ? (
                       <TrendingUp size={16} color="#10b981" />
                     ) : (
-                      <CreditCard size={16} color="#ef4444" />
+                      <CreditCard size={16} color="#f87171" />
                     )}
                   </div>
                   <div style={styles.txInfo}>
@@ -218,7 +218,7 @@ export default function DashboardView({
                   </div>
                   <span style={{
                     ...styles.txAmount,
-                    color: tx.amount > 0 ? '#10b981' : '#ef4444',
+                    color: tx.amount > 0 ? '#10b981' : '#f87171',
                   }}>
                     {tx.amount > 0 ? '+' : ''}{amount(tx.amount)}
                   </span>
@@ -302,7 +302,7 @@ export default function DashboardView({
                           ...styles.billDue,
                           // Colour AND word — the word is what survives
                           // greyscale and a screen reader (§5.5).
-                          color: bill.status === 'OVERDUE' ? '#fca5a5' : '#64748b',
+                          color: bill.status === 'OVERDUE' ? '#fca5a5' : '#8b9ab0',
                         }}
                       >
                         {bill.status === 'OVERDUE'
@@ -390,7 +390,7 @@ export default function DashboardView({
                 <h2 style={styles.sectionTitle}>{t('dashboard.debtSummary')}</h2>
                 <a href="/dashboard/goals" style={styles.viewAll}>{t('dashboard.details')} →</a>
               </div>
-              <p style={{ ...styles.cardAmount, color: '#ef4444', margin: 0 }}>
+              <p style={{ ...styles.cardAmount, color: '#f87171', margin: 0 }}>
                 {amount(totalDebt)}
               </p>
               <p style={styles.emptyHint}>{t('goals.outstanding')}</p>
@@ -404,7 +404,7 @@ export default function DashboardView({
 
 const styles: Record<string, React.CSSProperties> = {
   emptyHint: {
-    color: '#64748b',
+    color: '#8b9ab0',
     fontSize: '0.8125rem',
     padding: '0.75rem 0',
     margin: 0,
@@ -554,7 +554,7 @@ const styles: Record<string, React.CSSProperties> = {
   },
   txCategory: {
     fontSize: '0.75rem',
-    color: '#64748b',
+    color: '#8b9ab0',
   },
   txAmount: {
     fontSize: '0.875rem',
@@ -626,7 +626,7 @@ const styles: Record<string, React.CSSProperties> = {
   },
   billDue: {
     fontSize: '0.6875rem',
-    color: '#64748b',
+    color: '#8b9ab0',
   },
   billAmount: {
     fontSize: '0.875rem',

@@ -203,7 +203,7 @@ const s: Record<string, React.CSSProperties> = {
   secondary: {
     marginTop: '0.25rem',
     fontSize: '0.8125rem',
-    color: '#64748b',
+    color: '#8b9ab0',
     textAlign: 'center',
     textDecoration: 'none',
   },

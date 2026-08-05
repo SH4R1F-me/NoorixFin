@@ -318,7 +318,7 @@ const styles: Record<string, React.CSSProperties> = {
   },
   dividerText: {
     fontSize: '0.75rem',
-    color: '#475569',
+    color: '#8b9ab0',
   },
   googleBtn: {
     display: 'flex',
@@ -468,7 +468,7 @@ const styles: Record<string, React.CSSProperties> = {
     background: 'transparent',
     border: 'none',
     borderRadius: '0.625rem',
-    color: '#64748b',
+    color: '#8b9ab0',
     fontSize: '0.875rem',
     fontWeight: 500,
     cursor: 'pointer',
@@ -502,7 +502,7 @@ const styles: Record<string, React.CSSProperties> = {
   inputIcon: {
     position: 'absolute',
     left: '0.875rem',
-    color: '#475569',
+    color: '#8b9ab0',
     pointerEvents: 'none',
   },
   inputWithIcon: {
@@ -514,7 +514,7 @@ const styles: Record<string, React.CSSProperties> = {
     right: '0.75rem',
     background: 'none',
     border: 'none',
-    color: '#475569',
+    color: '#8b9ab0',
     cursor: 'pointer',
     padding: '0.25rem',
     display: 'flex',
@@ -522,7 +522,7 @@ const styles: Record<string, React.CSSProperties> = {
   errorMsg: {
     background: 'rgba(239, 68, 68, 0.1)',
     border: '1px solid rgba(239, 68, 68, 0.2)',
-    color: '#ef4444',
+    color: '#f87171',
     padding: '0.75rem 1rem',
     borderRadius: '0.75rem',
     fontSize: '0.8125rem',

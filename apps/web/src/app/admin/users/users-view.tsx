@@ -102,7 +102,15 @@ export default function UsersView({
                 style={{ ...s.input, width: '100%', paddingLeft: '2rem' }}
               />
             </div>
-            <select name="status" defaultValue={status} style={s.input}>
+            {/* Icon-only filter beside a search box — no visible label, so it needs
+                its own name. axe reported this as the console's one nameless
+                control. */}
+            <select
+              name="status"
+              defaultValue={status}
+              style={s.input}
+              aria-label="Filter by account status"
+            >
               <option value="">All statuses</option>
               <option value="ACTIVE">Active</option>
               <option value="SUSPENDED">Suspended</option>
@@ -144,19 +152,25 @@ export default function UsersView({
         {users.length === 0 ? (
           <EmptyState text="No users match this filter." />
         ) : (
-          <div style={s.tableWrap}>
+          <div
+            style={s.tableWrap}
+            // Scrolls horizontally, so it must be reachable by keyboard.
+            tabIndex={0}
+            role="region"
+            aria-label="Users table, scrollable"
+          >
             <table style={s.table}>
               <thead>
                 <tr>
-                  <th style={s.th}>User</th>
-                  <th style={s.th}>Status</th>
-                  <th style={s.th}>Joined</th>
-                  <th style={s.th}>Last sign-in</th>
-                  <th style={s.th}>Workspaces</th>
-                  <th style={s.th}>Accounts</th>
-                  <th style={s.th}>Entries</th>
-                  <th style={s.th}>Sign-in methods</th>
-                  <th style={s.th}></th>
+                  <th scope="col" style={s.th}>User</th>
+                  <th scope="col" style={s.th}>Status</th>
+                  <th scope="col" style={s.th}>Joined</th>
+                  <th scope="col" style={s.th}>Last sign-in</th>
+                  <th scope="col" style={s.th}>Workspaces</th>
+                  <th scope="col" style={s.th}>Accounts</th>
+                  <th scope="col" style={s.th}>Entries</th>
+                  <th scope="col" style={s.th}>Sign-in methods</th>
+                  <th scope="col" style={s.th}></th>
                 </tr>
               </thead>
               <tbody>

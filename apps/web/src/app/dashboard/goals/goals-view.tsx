@@ -315,7 +315,7 @@ export default function GoalsView({
         <>
           <div style={{ ...field.card, marginBottom: '1rem' }}>
             <span style={field.meta}>{t('goals.totalDebt')}</span>
-            <p style={{ ...styles.totalValue, color: '#ef4444' }}>
+            <p style={{ ...styles.totalValue, color: '#f87171' }}>
               {fmt(overview.total_debt_minor ?? 0)}
             </p>
           </div>
@@ -329,7 +329,7 @@ export default function GoalsView({
                 <li key={debt.ledger_account_id} style={field.card}>
                   <div style={styles.goalTop}>
                     <span style={styles.goalName}>{debt.name}</span>
-                    <span style={{ ...styles.amount, color: '#ef4444' }}>
+                    <span style={{ ...styles.amount, color: '#f87171' }}>
                       {fmt(debt.outstanding_minor, debt.currency_code)}
                     </span>
                   </div>
@@ -428,7 +428,7 @@ const styles: Record<string, React.CSSProperties> = {
     background: 'rgba(15,23,42,0.5)',
     border: '1px dashed #334155',
     borderRadius: '0.625rem',
-    color: '#64748b',
+    color: '#8b9ab0',
   },
   badge: {
     display: 'inline-flex',

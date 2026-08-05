@@ -62,9 +62,19 @@ export default function AdminShell({
 
   return (
     <div style={styles.wrapper}>
-      {mobileOpen && <div style={styles.overlay} onClick={() => setMobileOpen(false)} />}
+      {mobileOpen && (
+        <div
+          className="nf-overlay"
+          style={styles.overlay}
+          onClick={() => setMobileOpen(false)}
+        />
+      )}
 
-      <aside style={{ ...styles.sidebar, width: collapsed ? 72 : 280 }}>
+      <aside
+        className="nf-sidebar"
+        data-open={mobileOpen}
+        style={{ ...styles.sidebar, width: collapsed ? 72 : 280 }}
+      >
         <div style={styles.sidebarHeader}>
           <div style={styles.logoContainer}>
             <div style={styles.logoIcon}>
@@ -104,10 +114,10 @@ export default function AdminShell({
               >
                 <Icon
                   size={20}
-                  style={{ color: isActive ? '#f59e0b' : '#78716c', flexShrink: 0 }}
+                  style={{ color: isActive ? '#f59e0b' : '#a09990', flexShrink: 0 }}
                 />
                 {!collapsed && (
-                  <span style={{ ...styles.navLabel, color: isActive ? '#fafaf9' : '#a8a29e' }}>
+                  <span style={{ ...styles.navLabel, color: isActive ? '#fafaf9' : '#c9c2bc' }}>
                     {t(item.key)}
                   </span>
                 )}
@@ -152,7 +162,7 @@ export default function AdminShell({
         </div>
       </aside>
 
-      <main style={{ ...styles.main, marginLeft: collapsed ? 72 : 280 }}>
+      <main className="nf-main" style={{ ...styles.main, marginLeft: collapsed ? 72 : 280 }}>
         {/* The band that makes "which mode am I in?" answerable without reading
             a single word of the page. */}
         <div style={styles.operatorBand}>
@@ -163,7 +173,7 @@ export default function AdminShell({
           <span style={styles.operatorBandText}>{t('admin.operatorMode')}</span>
         </div>
 
-        <div style={styles.pageContent}>{children}</div>
+        <div className="nf-page-content" style={styles.pageContent}>{children}</div>
       </main>
     </div>
   );
@@ -222,7 +232,7 @@ const styles: Record<string, React.CSSProperties> = {
   collapseBtn: {
     background: 'rgba(255,255,255,0.05)',
     border: '1px solid #292524',
-    color: '#78716c',
+    color: '#a09990',
     width: 28,
     height: 28,
     borderRadius: '0.375rem',
@@ -279,7 +289,7 @@ const styles: Record<string, React.CSSProperties> = {
     background: 'transparent',
     border: 'none',
     borderRadius: '0.5rem',
-    color: '#78716c',
+    color: '#a09990',
     cursor: 'pointer',
     fontSize: '0.8125rem',
     fontFamily: 'inherit',

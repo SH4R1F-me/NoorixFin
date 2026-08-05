@@ -153,6 +153,9 @@ const TONE = {
   good: 'linear-gradient(90deg,#059669,#10b981)',
   warn: 'linear-gradient(90deg,#d97706,#f59e0b)',
   over: 'linear-gradient(90deg,#dc2626,#ef4444)',
+  // Left at slate-500: this is a progress-bar FILL, not text, so the 4.5:1
+  // rule does not apply — and the state it represents also carries a word and
+  // an icon, never colour alone.
   neutral: 'linear-gradient(90deg,#475569,#64748b)',
 } as const;
 
@@ -219,7 +222,7 @@ export const field: Record<string, CSSProperties> = {
     marginBottom: '1.5rem',
   },
   error: { color: '#fca5a5', fontSize: '0.8125rem', margin: '0.75rem 0 0' },
-  meta: { fontSize: '0.75rem', color: '#64748b' },
+  meta: { fontSize: '0.75rem', color: '#8b9ab0' },
 };
 
 const ui: Record<string, CSSProperties> = {
@@ -232,7 +235,7 @@ const ui: Record<string, CSSProperties> = {
     gap: '1rem',
   },
   title: { fontSize: '1.75rem', fontWeight: 800, color: '#f8fafc', margin: 0, letterSpacing: '-0.02em' },
-  subtitle: { fontSize: '0.8125rem', color: '#64748b', margin: '4px 0 0', maxWidth: 620, lineHeight: 1.5 },
+  subtitle: { fontSize: '0.8125rem', color: '#8b9ab0', margin: '4px 0 0', maxWidth: 620, lineHeight: 1.5 },
   empty: {
     background: 'rgba(30,41,59,0.4)',
     border: '1px solid #1e293b',

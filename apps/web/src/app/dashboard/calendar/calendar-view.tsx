@@ -138,7 +138,7 @@ export default function CalendarView({
           <div style={styles.typeRow} role="group" aria-label={t('transactions.title')}>
             {(['BILL', 'INCOME'] as const).map((option) => {
               const active = type === option;
-              const colour = option === 'BILL' ? '#ef4444' : '#10b981';
+              const colour = option === 'BILL' ? '#f87171' : '#10b981';
               return (
                 <button
                   key={option}

@@ -115,7 +115,7 @@ export default function TransactionsView({
   const s: Record<string, React.CSSProperties> = {
     hdr: { display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:'1.5rem', flexWrap:'wrap', gap:'1rem' },
     title: { fontSize:'1.75rem', fontWeight:800, color:'#f8fafc', margin:0, letterSpacing:'-0.02em' },
-    sub: { fontSize:'0.8125rem', color:'#64748b', margin:0, marginTop:2 },
+    sub: { fontSize:'0.8125rem', color:'#8b9ab0', margin:0, marginTop:2 },
     addBtn: { display:'flex', alignItems:'center', gap:'0.5rem', padding:'0.625rem 1.25rem', background:'linear-gradient(135deg,#059669,#10b981)', border:'none', borderRadius:'0.75rem', color:'white', fontWeight:600, fontSize:'0.875rem', cursor:'pointer', fontFamily:'inherit', boxShadow:'0 4px 12px rgba(16,185,129,0.3)' },
     qaBox: { background:'rgba(30,41,59,0.6)', backdropFilter:'blur(20px)', border:'1px solid #334155', borderRadius:'1rem', padding:'1.5rem', marginBottom:'1.5rem' },
     typeSel: { display:'flex', gap:'0.5rem', marginBottom:'1.25rem' },
@@ -140,10 +140,10 @@ export default function TransactionsView({
     icon: { width:44, height:44, borderRadius:'0.75rem', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 },
     det: { flex:1, minWidth:0 },
     payee: { fontSize:'0.9375rem', fontWeight:600, color:'#f8fafc', whiteSpace:'nowrap' as const, overflow:'hidden', textOverflow:'ellipsis' },
-    meta: { display:'flex', alignItems:'center', gap:'0.375rem', fontSize:'0.75rem', color:'#64748b', marginTop:2, flexWrap:'wrap' as const },
+    meta: { display:'flex', alignItems:'center', gap:'0.375rem', fontSize:'0.75rem', color:'#8b9ab0', marginTop:2, flexWrap:'wrap' as const },
     amtS: { textAlign:'right' as const, flexShrink:0 },
     amt: { fontSize:'0.9375rem', fontWeight:700, fontVariantNumeric:'tabular-nums' as const },
-    date: { fontSize:'0.75rem', color:'#64748b', marginTop:2 },
+    date: { fontSize:'0.75rem', color:'#8b9ab0', marginTop:2 },
     empty: { display:'flex', flexDirection:'column' as const, alignItems:'center', padding:'3rem' },
     drillBanner: { display:'flex', alignItems:'center', justifyContent:'space-between', gap:'1rem', padding:'0.7rem 1rem', background:'rgba(16,185,129,0.08)', border:'1px solid rgba(16,185,129,0.28)', borderRadius:'0.75rem', color:'#6ee7b7', fontSize:'0.8125rem', marginBottom:'1rem', flexWrap:'wrap' as const },
     drillClear: { color:'#10b981', textDecoration:'none', fontWeight:600, fontSize:'0.8125rem' },
@@ -178,7 +178,7 @@ export default function TransactionsView({
       {showAdd && (
         <div style={s.qaBox}>
           <div style={s.typeSel}>
-            {([['EXPENSE','transactions.expense','#ef4444'],['INCOME','transactions.income','#10b981'],['TRANSFER','transactions.transfer','#3b82f6']] as const).map(([kind,labelKey,colour]) => (
+            {([['EXPENSE','transactions.expense','#f87171'],['INCOME','transactions.income','#10b981'],['TRANSFER','transactions.transfer','#3b82f6']] as const).map(([kind,labelKey,colour]) => (
               <button key={kind} onClick={() => { setAddType(kind); setCategoryId(''); }} style={{...s.typeBtn, ...(addType===kind ? {background:colour+'18',borderColor:colour,color:colour} : {})}}>
                 {kind==='EXPENSE'?<ArrowUpRight size={16}/>:kind==='INCOME'?<ArrowDownLeft size={16}/>:<ArrowLeftRight size={16}/>} {tr(labelKey)}
               </button>
@@ -254,13 +254,13 @@ export default function TransactionsView({
       <div style={s.strip}>
         <div style={s.si}><TrendingUp size={16} style={{color:'#10b981'}}/><span style={{color:'#94a3b8',fontSize:'0.8125rem'}}>{tr('transactions.income')}</span><span style={{color:'#10b981',fontWeight:600,fontSize:'0.9375rem'}}>{fmt(totIn)}</span></div>
         <div style={s.sd}/>
-        <div style={s.si}><TrendingDown size={16} style={{color:'#ef4444'}}/><span style={{color:'#94a3b8',fontSize:'0.8125rem'}}>{tr('transactions.expense')}</span><span style={{color:'#ef4444',fontWeight:600,fontSize:'0.9375rem'}}>{fmt(totEx)}</span></div>
+        <div style={s.si}><TrendingDown size={16} style={{color:'#f87171'}}/><span style={{color:'#94a3b8',fontSize:'0.8125rem'}}>{tr('transactions.expense')}</span><span style={{color:'#f87171',fontWeight:600,fontSize:'0.9375rem'}}>{fmt(totEx)}</span></div>
         <div style={s.sd}/>
-        <div style={s.si}><Repeat size={16} style={{color:'#3b82f6'}}/><span style={{color:'#94a3b8',fontSize:'0.8125rem'}}>{tr('dashboard.netCashFlow')}</span><span style={{color:totIn-totEx>=0?'#10b981':'#ef4444',fontWeight:600,fontSize:'0.9375rem'}}>{fmt(totIn-totEx)}</span></div>
+        <div style={s.si}><Repeat size={16} style={{color:'#3b82f6'}}/><span style={{color:'#94a3b8',fontSize:'0.8125rem'}}>{tr('dashboard.netCashFlow')}</span><span style={{color:totIn-totEx>=0?'#10b981':'#f87171',fontWeight:600,fontSize:'0.9375rem'}}>{fmt(totIn-totEx)}</span></div>
       </div>
 
       <div style={s.filters}>
-        <div style={s.srchC}><Search size={16} style={{color:'#64748b',flexShrink:0}}/><input type="text" placeholder={tr('app.search')} value={search} onChange={e=>setSearch(e.target.value)} style={s.srchI}/></div>
+        <div style={s.srchC}><Search size={16} style={{color:'#8b9ab0',flexShrink:0}}/><input type="text" placeholder={tr('app.search')} value={search} onChange={e=>setSearch(e.target.value)} style={s.srchI}/></div>
         <div style={s.fgr}>
           {([['ALL','app.all'],['EXPENSE','transactions.expense'],['INCOME','transactions.income'],['TRANSFER','transactions.transfer']] as const).map(([value,labelKey])=>(
             <button key={value} onClick={()=>setFilterType(value)} style={{...s.chip,...(filterType===value?s.chipA:{})}}>{tr(labelKey)}</button>
@@ -275,7 +275,7 @@ export default function TransactionsView({
       <div style={s.list}>
         {filtered.map((tx,idx)=>{
           const isE=tx.type==='EXPENSE', isI=tx.type==='INCOME';
-          const col=isE?'#ef4444':isI?'#10b981':'#3b82f6';
+          const col=isE?'#f87171':isI?'#10b981':'#3b82f6';
           const pfx=isE?'-':isI?'+':'';
           return (
             <div key={tx.id} style={{...s.row,borderBottom:idx<filtered.length-1?'1px solid #1e293b':'none'}}>
@@ -288,7 +288,7 @@ export default function TransactionsView({
             </div>
           );
         })}
-        {filtered.length===0&&<div style={s.empty}><Search size={40} style={{color:'#334155',marginBottom:12}}/><p style={{color:'#64748b'}}>{transactions.length===0?tr('transactions.noTransactions'):tr('app.filter')}</p></div>}
+        {filtered.length===0&&<div style={s.empty}><Search size={40} style={{color:'#334155',marginBottom:12}}/><p style={{color:'#8b9ab0'}}>{transactions.length===0?tr('transactions.noTransactions'):tr('app.filter')}</p></div>}
       </div>
     </div>
   );

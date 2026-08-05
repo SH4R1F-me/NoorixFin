@@ -79,15 +79,21 @@ export default async function AuditPage({
         ) : audit.data.items.length === 0 ? (
           <EmptyState text="No audit events match this filter." />
         ) : (
-          <div style={s.tableWrap}>
+          <div
+            style={s.tableWrap}
+            // Scrolls horizontally, so it must be reachable by keyboard.
+            tabIndex={0}
+            role="region"
+            aria-label="Audit trail table, scrollable"
+          >
             <table style={s.table}>
               <thead>
                 <tr>
-                  <th style={s.th}>Time</th>
-                  <th style={s.th}>Action</th>
-                  <th style={s.th}>Resource</th>
-                  <th style={s.th}>Actor</th>
-                  <th style={s.th}>Detail</th>
+                  <th scope="col" style={s.th}>Time</th>
+                  <th scope="col" style={s.th}>Action</th>
+                  <th scope="col" style={s.th}>Resource</th>
+                  <th scope="col" style={s.th}>Actor</th>
+                  <th scope="col" style={s.th}>Detail</th>
                 </tr>
               </thead>
               <tbody>

@@ -184,13 +184,15 @@ export default function SettingsView({
           </div>
           <div style={s.row}>
             <div style={s.rowLabel}>
-              <span style={s.rowTitle}>{t('settings.timezone')}</span>
+              <span id="pref-timezone" style={s.rowTitle}>{t('settings.timezone')}</span>
               <span style={s.rowDesc}>Used for transaction dates and monthly boundaries</span>
             </div>
             <select
               value={timezone}
               onChange={(event) => setTimezone(event.target.value)}
               style={s.select}
+           
+              aria-labelledby="pref-timezone"
             >
               {TIMEZONES.map((tz) => (
                 <option key={tz}>{tz}</option>
@@ -199,13 +201,15 @@ export default function SettingsView({
           </div>
           <div style={s.row}>
             <div style={s.rowLabel}>
-              <span style={s.rowTitle}>{t('settings.currency')}</span>
+              <span id="pref-currency" style={s.rowTitle}>{t('settings.currency')}</span>
               <span style={s.rowDesc}>Primary currency for new accounts</span>
             </div>
             <select
               value={currency}
               onChange={(event) => setCurrency(event.target.value)}
               style={s.select}
+           
+              aria-labelledby="pref-currency"
             >
               {CURRENCIES.map((code) => (
                 <option key={code}>{code}</option>
@@ -214,13 +218,15 @@ export default function SettingsView({
           </div>
           <div style={s.row}>
             <div style={s.rowLabel}>
-              <span style={s.rowTitle}>{t('settings.weekStart')}</span>
+              <span id="pref-week-start" style={s.rowTitle}>{t('settings.weekStart')}</span>
               <span style={s.rowDesc}>Affects budget periods and the calendar</span>
             </div>
             <select
               value={weekStart}
               onChange={(event) => setWeekStart(Number(event.target.value))}
               style={s.select}
+           
+              aria-labelledby="pref-week-start"
             >
               {WEEK_STARTS.map((day) => (
                 <option key={day.value} value={day.value}>
@@ -282,7 +288,7 @@ export default function SettingsView({
                   {t('settings.disconnect')}
                 </button>
               ) : (
-                <span style={{ ...s.rowDesc, color: '#64748b' }}>
+                <span style={{ ...s.rowDesc, color: '#8b9ab0' }}>
                   {t('settings.onlySignInMethod')}
                 </span>
               )}
@@ -454,8 +460,8 @@ export default function SettingsView({
         {/* ── Danger zone ─────────────────────────────────── */}
         <section style={s.dangerSection}>
           <div style={{ ...s.sectionHeader, borderBottom: '1px solid rgba(239,68,68,0.15)' }}>
-            <Trash2 size={18} style={{ color: '#ef4444' }} />
-            <span style={{ ...s.sectionTitle, color: '#ef4444' }}>{t('settings.dangerZone')}</span>
+            <Trash2 size={18} style={{ color: '#f87171' }} />
+            <span style={{ ...s.sectionTitle, color: '#f87171' }}>{t('settings.dangerZone')}</span>
           </div>
 
           <div style={{ ...s.row, flexDirection: 'column', alignItems: 'stretch', gap: '0.75rem', borderBottom: 'none' }}>
@@ -592,7 +598,7 @@ function GoogleMark() {
 const s: Record<string, React.CSSProperties> = {
   hdr: { marginBottom: '2rem' },
   title: { fontSize: '1.75rem', fontWeight: 800, color: '#f8fafc', margin: 0 },
-  sub: { fontSize: '0.8125rem', color: '#64748b', margin: 0, marginTop: 2 },
+  sub: { fontSize: '0.8125rem', color: '#8b9ab0', margin: 0, marginTop: 2 },
   sections: { display: 'flex', flexDirection: 'column', gap: '1.5rem', maxWidth: 760 },
   section: {
     background: 'rgba(30,41,59,0.4)',
@@ -619,7 +625,7 @@ const s: Record<string, React.CSSProperties> = {
   },
   rowLabel: { display: 'flex', flexDirection: 'column', gap: 2 },
   rowTitle: { fontSize: '0.875rem', fontWeight: 500, color: '#f8fafc' },
-  rowDesc: { fontSize: '0.75rem', color: '#64748b', lineHeight: 1.5 },
+  rowDesc: { fontSize: '0.75rem', color: '#8b9ab0', lineHeight: 1.5 },
   select: {
     padding: '0.5rem 0.75rem',
     background: 'rgba(15,23,42,0.6)',
@@ -694,7 +700,7 @@ const s: Record<string, React.CSSProperties> = {
   },
   notConfigured: {
     fontSize: '0.75rem',
-    color: '#64748b',
+    color: '#8b9ab0',
     border: '1px dashed #334155',
     borderRadius: '0.5rem',
     padding: '0.4rem 0.7rem',
@@ -714,7 +720,7 @@ const s: Record<string, React.CSSProperties> = {
     background: 'transparent',
     border: '1px solid rgba(239,68,68,0.3)',
     borderRadius: '0.5rem',
-    color: '#ef4444',
+    color: '#f87171',
     fontSize: '0.8125rem',
     cursor: 'pointer',
     fontFamily: 'inherit',

@@ -33,10 +33,10 @@
 
   /* Semantic Colors */
   --color-income: #10b981;
-  --color-expense: #ef4444;
+  --color-expense: #f87171;
   --color-transfer: #3b82f6;
   --color-warning: #f59e0b;
-  --color-error: #ef4444;
+  --color-error: #f87171;
   --color-success: #10b981;
 
   /* Fonts */
@@ -86,7 +86,12 @@
 
   --text-primary: #f8fafc;
   --text-secondary: #94a3b8;
-  --text-tertiary: #64748b;
+  /* Was #64748b (slate-500), which measures 3.98:1 on this background — large
+     text only, and it was used for body copy in 16 files. WCAG 2.2 AA needs
+     4.5:1 for normal text (§5.5), and an axe scan of every route reported it
+     as the app's single most widespread violation. #8b9ab0 measures 6.62:1 and
+     still reads as tertiary against --text-secondary. */
+  --text-tertiary: #8b9ab0;
   --text-inverse: #0f172a;
 
   --border-primary: #334155;
@@ -234,7 +239,7 @@ input::placeholder {
 
 .btn-danger {
   background: rgba(239, 68, 68, 0.1);
-  color: #ef4444;
+  color: #f87171;
   border: 1px solid rgba(239, 68, 68, 0.2);
 }
 
@@ -387,5 +392,91 @@ input::placeholder {
   [data-testid='skeleton'] {
     animation: none !important;
     background-position: 0 0 !important;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   RESPONSIVE SHELL — WCAG 1.4.10 Reflow, §5.5, audit item 10
+   ═══════════════════════════════════════════════════════════════════════════
+   Both app shells were built with a mobile design that was never connected:
+   `mobileHeader` carried `display: 'none'`, `sidebarMobileOpen` set a transform
+   nothing ever hid, and `<main>` took `marginLeft: 280` at EVERY viewport
+   width. There was not a single media query in the app.
+
+   The visible consequence is a WCAG 1.4.10 failure. Measured at a 640px-wide
+   viewport — the reflow equivalent of 200% zoom on a 1280px desktop — the page
+   demanded 1016px and scrolled HORIZONTALLY by 376px, which forces two-axis
+   scrolling to read any line of text. It is also simply broken on a phone.
+
+   `!important` is not decoration here: the widths and margins are React inline
+   styles, which win against a class selector on specificity alone. This is the
+   documented case for it — a media query overriding an inline style — and the
+   properties are confined to the three the shells set inline.
+
+   The breakpoint is 900px because the sidebar is 280px and the content grids
+   below it are laid out around a ~600px minimum. */
+
+@media (max-width: 900px) {
+  /* Off-canvas, revealed by the menu button the shells already render. */
+  .nf-sidebar {
+    width: 280px !important;
+    transform: translateX(-100%);
+    transition: transform 250ms cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .nf-sidebar[data-open='true'] {
+    transform: translateX(0);
+  }
+
+  /* The whole point: main reclaims the full width instead of being pushed
+     280px off the side of a 640px viewport. */
+  .nf-main {
+    margin-left: 0 !important;
+  }
+
+  .nf-mobile-header {
+    display: flex !important;
+  }
+
+  /* 2rem of padding on each side of a 360px content column is a quarter of the
+     screen spent on margin. */
+  .nf-page-content {
+    padding: 1rem !important;
+  }
+
+  /* The dashboard's two-column layout is `1fr 380px`. A track declared in
+     PIXELS does not shrink, so the 380px side column alone pushed the page
+     48px past a 640px viewport after everything above was fixed. One column
+     below the breakpoint; the panels stack in the order they already read. */
+  .nf-content-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* ── The flexbox min-width trap ──────────────────────────────────────────────
+   `<main>` is `flex: 1` inside a flex row, and a flex item defaults to
+   `min-width: auto` — meaning it refuses to shrink below the intrinsic width of
+   its content. So after the margin fix above, main still measured 704px in a
+   640px viewport: the margin was gone and the element simply would not narrow.
+   This is the standard remedy, and it applies at every width rather than only
+   under the breakpoint, because the same trap produces a horizontal scrollbar
+   on any narrow window. */
+.nf-main,
+.nf-page-content {
+  min-width: 0;
+}
+
+/* Long unbroken strings — an email address, an account name, a URL in a
+   broadcast — set a content minimum of their own that min-width: 0 cannot
+   overcome. Wrapping them is what actually lets the column narrow. */
+.nf-page-content {
+  overflow-wrap: break-word;
+}
+
+/* The scrim only exists to dismiss the off-canvas sidebar, so on a viewport
+   where the sidebar is permanent it must never intercept a click. */
+@media (min-width: 901px) {
+  .nf-overlay {
+    display: none !important;
   }
 }

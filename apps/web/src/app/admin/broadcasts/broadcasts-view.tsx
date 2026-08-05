@@ -214,18 +214,24 @@ export default function BroadcastsView({ broadcasts }: { broadcasts: AdminBroadc
           {broadcasts.length === 0 ? (
             <EmptyState text="No broadcasts yet." />
           ) : (
-            <div style={s.tableWrap}>
+            <div
+              style={s.tableWrap}
+              // Scrolls horizontally, so it must be reachable by keyboard.
+              tabIndex={0}
+              role="region"
+              aria-label="Broadcasts table, scrollable"
+            >
               <table style={s.table}>
                 <thead>
                   <tr>
-                    <th style={s.th}>Title</th>
-                    <th style={s.th}>Severity</th>
-                    <th style={s.th}>Status</th>
-                    <th style={s.th}>Audience</th>
-                    <th style={s.th}>Published</th>
-                    <th style={s.th}>Expires</th>
-                    <th style={s.th}>Seen / Dismissed</th>
-                    <th style={s.th}></th>
+                    <th scope="col" style={s.th}>Title</th>
+                    <th scope="col" style={s.th}>Severity</th>
+                    <th scope="col" style={s.th}>Status</th>
+                    <th scope="col" style={s.th}>Audience</th>
+                    <th scope="col" style={s.th}>Published</th>
+                    <th scope="col" style={s.th}>Expires</th>
+                    <th scope="col" style={s.th}>Seen / Dismissed</th>
+                    <th scope="col" style={s.th}></th>
                   </tr>
                 </thead>
                 <tbody>

@@ -43,3 +43,9 @@ coverage/
 test-results/
 playwright-report/
 .playwright/
+
+# OAuth client downloads. Google names these `client_secret_*.json` and they
+# contain a live secret — one landed in supabase/ during setup and was caught
+# only by inspecting a staged diff. Never again by hand.
+client_secret_*.json
+*credentials*.json

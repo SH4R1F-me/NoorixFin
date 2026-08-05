@@ -65,7 +65,7 @@ export function NotYetAvailable({
 const styles: Record<string, CSSProperties> = {
   header: { marginBottom: '1.5rem' },
   title: { fontSize: '1.75rem', fontWeight: 800, color: '#f8fafc', margin: 0, letterSpacing: '-0.02em' },
-  subtitle: { fontSize: '0.8125rem', color: '#64748b', margin: 0, marginTop: 2 },
+  subtitle: { fontSize: '0.8125rem', color: '#8b9ab0', margin: 0, marginTop: 2 },
   card: {
     background: 'rgba(30,41,59,0.4)',
     border: '1px solid #1e293b',
@@ -92,11 +92,11 @@ const styles: Record<string, CSSProperties> = {
     borderRadius: '0.75rem', padding: '1rem 1.25rem',
   },
   plannedLabel: {
-    fontSize: '0.6875rem', fontWeight: 600, color: '#64748b',
+    fontSize: '0.6875rem', fontWeight: 600, color: '#8b9ab0',
     textTransform: 'uppercase', letterSpacing: '0.06em', margin: 0, marginBottom: '0.75rem',
   },
   list: { listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: '0.5rem' },
   listItem: { display: 'flex', alignItems: 'center', gap: '0.625rem', fontSize: '0.8125rem', color: '#cbd5e1' },
   bullet: { width: 5, height: 5, borderRadius: '50%', background: '#10b981', flexShrink: 0 },
-  blocked: { fontSize: '0.75rem', color: '#64748b', marginTop: '1.25rem', fontStyle: 'italic' },
+  blocked: { fontSize: '0.75rem', color: '#8b9ab0', marginTop: '1.25rem', fontStyle: 'italic' },
 };

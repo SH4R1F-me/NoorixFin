@@ -244,16 +244,26 @@ function SettingRow({
 
           {isToggle && 'message_en' in setting.value && (
             <>
+              {/*
+                aria-label rather than the placeholder alone. A placeholder is
+                not an accessible name — it disappears the moment someone types,
+                so a screen-reader user reviewing a filled form hears nothing.
+                The setting key is included because this page renders the same
+                field shape for several settings, and "Message (English)" on its
+                own does not say WHICH setting it belongs to.
+              */}
               <input
                 value={String(value.message_en ?? '')}
                 onChange={(event) => onChange({ ...value, message_en: event.target.value })}
                 placeholder="Message (English)"
+                aria-label={`${setting.key} — message (English)`}
                 style={{ ...s.input, width: '100%' }}
               />
               <input
                 value={String(value.message_bn ?? '')}
                 onChange={(event) => onChange({ ...value, message_bn: event.target.value })}
                 placeholder="বার্তা (বাংলা)"
+                aria-label={`${setting.key} — message (Bangla)`}
                 style={{ ...s.input, width: '100%' }}
               />
             </>
@@ -263,6 +273,7 @@ function SettingRow({
             <input
               value={String(value.value ?? '')}
               onChange={(event) => onChange({ value: event.target.value })}
+              aria-label={setting.key}
               style={{ ...s.input, width: '100%' }}
             />
           )}
@@ -273,6 +284,7 @@ function SettingRow({
               min={1}
               value={Number(value.days ?? 30)}
               onChange={(event) => onChange({ days: Number(event.target.value) })}
+              aria-label={`${setting.key} — days`}
               style={{ ...s.input, width: '100%' }}
             />
           )}
@@ -292,6 +304,7 @@ function SettingRow({
                   }
                 }}
                 rows={4}
+                aria-label={`${setting.key} — raw JSON value`}
                 style={{ ...s.input, ...s.mono, width: '100%', resize: 'vertical' }}
               />
               {error && <span style={{ color: T.error, fontSize: '0.6875rem' }}>{error}</span>}

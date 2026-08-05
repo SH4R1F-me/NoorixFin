@@ -85,11 +85,11 @@ const styles: Record<string, React.CSSProperties> = {
     color: '#94a3b8', fontSize: '0.8125rem', textDecoration: 'none', marginBottom: '1.25rem',
   },
   title: { fontSize: '1.5rem', fontWeight: 800, color: '#f8fafc', margin: 0 },
-  subtitle: { fontSize: '0.8125rem', color: '#64748b', margin: 0, marginTop: 2, marginBottom: '1.5rem' },
+  subtitle: { fontSize: '0.8125rem', color: '#8b9ab0', margin: 0, marginTop: 2, marginBottom: '1.5rem' },
   form: { display: 'flex', flexDirection: 'column', gap: '0.5rem' },
   label: { fontSize: '0.75rem', fontWeight: 500, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em' },
   inputWrap: { position: 'relative', display: 'flex', alignItems: 'center' },
-  inputIcon: { position: 'absolute', left: 12, color: '#64748b' },
+  inputIcon: { position: 'absolute', left: 12, color: '#8b9ab0' },
   input: {
     width: '100%', padding: '0.75rem 0.75rem 0.75rem 2.5rem', background: 'rgba(15,23,42,0.6)',
     border: '1px solid #334155', borderRadius: '0.5rem', color: '#f8fafc',
@@ -107,6 +107,6 @@ const styles: Record<string, React.CSSProperties> = {
   },
   sentTitle: { fontSize: '0.9375rem', fontWeight: 700, color: '#10b981', margin: 0 },
   sentBody: { fontSize: '0.8125rem', color: '#cbd5e1', marginTop: '0.5rem', lineHeight: 1.6 },
-  devNote: { fontSize: '0.75rem', color: '#64748b', marginTop: '0.75rem', lineHeight: 1.5 },
+  devNote: { fontSize: '0.75rem', color: '#8b9ab0', marginTop: '0.75rem', lineHeight: 1.5 },
   link: { color: '#10b981' },
 };

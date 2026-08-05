@@ -378,7 +378,9 @@
     "kind": "ধরন",
     "noCategories": "এখনও কোনো ক্যাটাগরি নেই",
     "added": "ক্যাটাগরি তৈরি হয়েছে",
-    "namePlaceholder": "যেমন বাজার"
+    "namePlaceholder": "যেমন বাজার",
+    "switchToList": "তালিকা ভিউতে যান",
+    "switchToGrid": "গ্রিড ভিউতে যান"
   },
   "admin": {
     "title": "সিস্টেম অ্যাডমিন",

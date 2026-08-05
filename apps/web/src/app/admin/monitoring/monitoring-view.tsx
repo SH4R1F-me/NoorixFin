@@ -217,17 +217,23 @@ export default function MonitoringView({
             }
           />
         ) : (
-          <div style={s.tableWrap}>
+          <div
+            style={s.tableWrap}
+            // Scrolls horizontally, so it must be reachable by keyboard.
+            tabIndex={0}
+            role="region"
+            aria-label="System events table, scrollable"
+          >
             <table style={s.table}>
               <thead>
                 <tr>
-                  <th style={s.th}>Level</th>
-                  <th style={s.th}>Time</th>
-                  <th style={s.th}>Code</th>
-                  <th style={s.th}>Message</th>
-                  <th style={s.th}>Route</th>
-                  <th style={s.th}>Status</th>
-                  <th style={s.th}>Latency</th>
+                  <th scope="col" style={s.th}>Level</th>
+                  <th scope="col" style={s.th}>Time</th>
+                  <th scope="col" style={s.th}>Code</th>
+                  <th scope="col" style={s.th}>Message</th>
+                  <th scope="col" style={s.th}>Route</th>
+                  <th scope="col" style={s.th}>Status</th>
+                  <th scope="col" style={s.th}>Latency</th>
                 </tr>
               </thead>
               <tbody>
@@ -248,6 +254,20 @@ export default function MonitoringView({
                       {event.message}
                       {expanded === event.id && (
                         <pre
+                          /*
+                            A scrollable region needs to be focusable, or a
+                            keyboard user can see that there is more JSON and
+                            has no way to reach it — WCAG 2.1.1. `maxHeight`
+                            with `overflow: auto` is what makes this scrollable,
+                            so the two belong together.
+
+                            role="region" + a label so it is announced as
+                            something enterable rather than as an unnamed stop
+                            in the tab order.
+                          */
+                          tabIndex={0}
+                          role="region"
+                          aria-label={`Event detail for ${event.message}`}
                           style={{
                             ...s.mono,
                             marginTop: 8,

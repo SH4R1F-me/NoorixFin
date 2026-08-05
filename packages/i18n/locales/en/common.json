@@ -378,7 +378,9 @@
     "kind": "Kind",
     "noCategories": "No categories yet",
     "added": "Category created",
-    "namePlaceholder": "e.g. Groceries"
+    "namePlaceholder": "e.g. Groceries",
+    "switchToList": "Switch to list view",
+    "switchToGrid": "Switch to grid view"
   },
   "admin": {
     "title": "System Admin",

@@ -50,7 +50,7 @@ export default function CategoriesView({
   const s: Record<string, React.CSSProperties> = {
     hdr: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' },
     title: { fontSize: '1.75rem', fontWeight: 800, color: '#f8fafc', margin: 0 },
-    sub: { fontSize: '0.8125rem', color: '#64748b', margin: 0, marginTop: 2 },
+    sub: { fontSize: '0.8125rem', color: '#8b9ab0', margin: 0, marginTop: 2 },
     btns: { display: 'flex', gap: '0.5rem' },
     addBtn: { display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.625rem 1.25rem', background: 'linear-gradient(135deg,#059669,#10b981)', border: 'none', borderRadius: '0.75rem', color: 'white', fontWeight: 600, fontSize: '0.875rem', cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 4px 12px rgba(16,185,129,0.3)' },
     viewBtn: { background: 'rgba(30,41,59,0.5)', border: '1px solid #1e293b', borderRadius: '0.5rem', color: '#94a3b8', padding: '0.5rem', display: 'flex', cursor: 'pointer' },
@@ -90,7 +90,7 @@ export default function CategoriesView({
       <div key={c.id} style={s.listRow}>
         <div style={{ ...s.listIcon, background: c.color + '18' }}>{c.icon}</div>
         <span style={s.listName}>{c.name}</span>
-        <span style={{ ...s.listBadge, background: c.kind === 'EXPENSE' ? 'rgba(239,68,68,0.1)' : 'rgba(16,185,129,0.1)', color: c.kind === 'EXPENSE' ? '#ef4444' : '#10b981' }}>
+        <span style={{ ...s.listBadge, background: c.kind === 'EXPENSE' ? 'rgba(239,68,68,0.1)' : 'rgba(16,185,129,0.1)', color: c.kind === 'EXPENSE' ? '#f87171' : '#10b981' }}>
           {c.kind}
         </span>
         {c.isSystem && <span style={{ ...s.listBadge, background: 'rgba(100,116,139,0.1)' }}>System</span>}
@@ -103,8 +103,22 @@ export default function CategoriesView({
       <div style={s.hdr}>
         <div><h1 style={s.title}>{t('categories.title')}</h1></div>
         <div style={s.btns}>
-          <button onClick={() => setView(view === 'grid' ? 'list' : 'grid')} style={s.viewBtn}>
-            {view === 'grid' ? <List size={16} /> : <Grid size={16} />}
+          {/*
+            Icon-only, so it needs a name a screen reader can announce — an axe
+            scan reported this as the app's one nameless button. The label
+            describes what the click DOES rather than the current state, which is
+            what a user hearing it before pressing needs.
+          */}
+          <button
+            onClick={() => setView(view === 'grid' ? 'list' : 'grid')}
+            style={s.viewBtn}
+            aria-label={t(view === 'grid' ? 'categories.switchToList' : 'categories.switchToGrid')}
+          >
+            {view === 'grid' ? (
+              <List size={16} aria-hidden="true" />
+            ) : (
+              <Grid size={16} aria-hidden="true" />
+            )}
           </button>
           <button onClick={() => setShowCreate(!showCreate)} style={s.addBtn}>
             {showCreate ? <X size={18} /> : <Plus size={18} />}

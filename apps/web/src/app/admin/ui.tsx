@@ -13,13 +13,19 @@ export const T = {
   border: '#292524',
   borderSoft: 'rgba(41, 37, 36, 0.7)',
   text: '#fafaf9',
-  textDim: '#a8a29e',
-  textFaint: '#78716c',
+  // ── WCAG 2.2 AA (§5.5, audit item 10) ────────────────────────────────────
+  // textFaint was #78716c, which measures 3.16:1 against the panel background
+  // — below the 4.5:1 needed for normal text, and an axe scan reported it on
+  // every admin route. textDim moved with it so the two tiers stay visually
+  // distinct; leaving textDim alone would have made "dim" and "faint" the same
+  // colour and quietly flattened the hierarchy the console reads by.
+  textDim: '#c9c2bc',
+  textFaint: '#a09990',
   accent: '#f59e0b',
   accentSoft: 'rgba(245, 158, 11, 0.12)',
   ok: '#10b981',
   warn: '#f59e0b',
-  error: '#ef4444',
+  error: '#f87171',
   info: '#38bdf8',
 } as const;
 

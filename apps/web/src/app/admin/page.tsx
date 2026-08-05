@@ -134,13 +134,19 @@ export default async function AdminOverviewPage() {
               <ErrorState error={health.error} />
             </div>
           ) : (
-            <div style={s.tableWrap}>
+            <div
+              style={s.tableWrap}
+              // Scrolls horizontally, so it must be reachable by keyboard.
+              tabIndex={0}
+              role="region"
+              aria-label="Service health table, scrollable"
+            >
               <table style={s.table}>
                 <thead>
                   <tr>
-                    <th style={s.th}>Service</th>
-                    <th style={s.th}>Status</th>
-                    <th style={s.th}>Latency</th>
+                    <th scope="col" style={s.th}>Service</th>
+                    <th scope="col" style={s.th}>Status</th>
+                    <th scope="col" style={s.th}>Latency</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -186,7 +192,13 @@ export default async function AdminOverviewPage() {
           ) : events.data.items.length === 0 ? (
             <EmptyState text="No system events recorded yet." />
           ) : (
-            <div style={s.tableWrap}>
+            <div
+              style={s.tableWrap}
+              // Scrolls horizontally, so it must be reachable by keyboard.
+              tabIndex={0}
+              role="region"
+              aria-label="Recent events table, scrollable"
+            >
               <table style={s.table}>
                 <tbody>
                   {events.data.items.map((event) => (
