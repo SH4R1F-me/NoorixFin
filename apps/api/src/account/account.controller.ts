@@ -24,6 +24,7 @@ import {
 import { Request } from 'express';
 import { AccountService } from './account.service';
 import { RequestDeletionDto } from './dto/account.dto';
+import { ThrottleSensitive } from '../common/throttle';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import type { AuthenticatedUser } from '../common/decorators/current-user.decorator';
 
@@ -36,6 +37,7 @@ export class AccountController {
   constructor(private readonly accountService: AccountService) {}
 
   @Post('deletion-request')
+  @ThrottleSensitive()
   @ApiOperation({
     summary: 'Schedule this account for deletion after a 30-day grace period',
     description:
@@ -58,6 +60,7 @@ export class AccountController {
   }
 
   @Delete('deletion-request')
+  @ThrottleSensitive()
   @ApiOperation({
     summary: 'Cancel a pending deletion',
     description:

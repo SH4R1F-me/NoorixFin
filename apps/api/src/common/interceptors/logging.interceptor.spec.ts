@@ -18,6 +18,7 @@ import { Reflector } from '@nestjs/core';
 import { SSE_METADATA } from '@nestjs/common/constants';
 import { RequestTelemetryInterceptor, scrubPath } from './logging.interceptor';
 import type { SystemEventsService } from '../../observability/system-events.service';
+import type { TracingService } from '../../observability/tracing.service';
 
 /**
  * A REAL controller with a REAL @Sse() decorator, read through a REAL Reflector.
@@ -70,10 +71,16 @@ const NEXT: CallHandler = { handle: () => of('payload') };
 describe('RequestTelemetryInterceptor', () => {
   let record: jest.Mock;
   let systemEvents: SystemEventsService;
+  let tracing: TracingService;
+  let tracingActive = false;
 
   beforeEach(() => {
     record = jest.fn();
     systemEvents = { record } as unknown as SystemEventsService;
+    // Tracing OFF by default: the cases below assert what is recorded in the
+    // NORMAL state. The trace behaviour has its own tests, which flip this.
+    tracingActive = false;
+    tracing = { isActive: () => tracingActive } as unknown as TracingService;
     jest.useFakeTimers();
   });
 
@@ -82,6 +89,7 @@ describe('RequestTelemetryInterceptor', () => {
   it('does not record a fast request', async () => {
     const interceptor = new RequestTelemetryInterceptor(
       systemEvents,
+      tracing,
       REFLECTOR,
     );
     await lastValueFrom(
@@ -93,6 +101,7 @@ describe('RequestTelemetryInterceptor', () => {
   it('records a genuinely slow request as WARN', async () => {
     const interceptor = new RequestTelemetryInterceptor(
       systemEvents,
+      tracing,
       REFLECTOR,
     );
     const slow: CallHandler = {
@@ -113,6 +122,7 @@ describe('RequestTelemetryInterceptor', () => {
   it('NEVER records an @Sse() handler, however long it stays open', async () => {
     const interceptor = new RequestTelemetryInterceptor(
       systemEvents,
+      tracing,
       REFLECTOR,
     );
     const streaming: CallHandler = {
@@ -135,6 +145,52 @@ describe('RequestTelemetryInterceptor', () => {
     // Pins the assumption that broke once: the metadata key is '__sse__'.
     expect(REFLECTOR.get(SSE_METADATA, SSE_HANDLER)).toBeTruthy();
     expect(REFLECTOR.get(SSE_METADATA, PLAIN_HANDLER)).toBeFalsy();
+  });
+
+  it('records EVERY request while a trace window is open (audit item 15)', async () => {
+    tracingActive = true;
+    const interceptor = new RequestTelemetryInterceptor(
+      systemEvents,
+      tracing,
+      REFLECTOR,
+    );
+
+    await lastValueFrom(
+      interceptor.intercept(makeContext(PLAIN_HANDLER), NEXT),
+    );
+
+    // A FAST request, which normally produces no row at all. That is the
+    // point: with nothing recorded there is no entry to correlate an
+    // X-Request-ID against, so an operator can only follow the parts of a
+    // user's journey that already went wrong.
+    expect(record).toHaveBeenCalledWith(
+      expect.objectContaining({ level: 'INFO', eventCode: 'REQUEST_TRACE' }),
+    );
+  });
+
+  it('still exempts @Sse() handlers while tracing', async () => {
+    tracingActive = true;
+    const interceptor = new RequestTelemetryInterceptor(
+      systemEvents,
+      tracing,
+      REFLECTOR,
+    );
+    const streaming: CallHandler = {
+      handle: () => {
+        jest.advanceTimersByTime(600_000);
+        return of('frame');
+      },
+    };
+
+    await lastValueFrom(
+      interceptor.intercept(makeContext(SSE_HANDLER), streaming),
+    );
+
+    // The exemption has to survive the trace switch. An open stream emits per
+    // FRAME, so tracing it would write a row every few seconds for as long as
+    // the console stayed open — reproducing the 181-entry flood the exemption
+    // was added to stop.
+    expect(record).not.toHaveBeenCalled();
   });
 });
 

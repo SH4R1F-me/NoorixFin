@@ -13,6 +13,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   ParseUUIDPipe,
@@ -33,6 +34,9 @@ import {
 import { Request } from 'express';
 import { Observable, concatMap, from, interval, startWith } from 'rxjs';
 import { AdminService } from './admin.service';
+import { ThrottleAdminWrite } from '../common/throttle';
+import { TracingService } from '../observability/tracing.service';
+import { EnableTracingDto } from './dto/admin.dto';
 import { SuperAdminGuard } from '../auth/guards/super-admin.guard';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import type { AuthenticatedUser } from '../common/decorators/current-user.decorator';
@@ -67,7 +71,10 @@ type AuthedRequest = Request & {
 @UseGuards(SuperAdminGuard)
 @Controller('admin')
 export class AdminController {
-  constructor(private readonly adminService: AdminService) {}
+  constructor(
+    private readonly adminService: AdminService,
+    private readonly tracing: TracingService,
+  ) {}
 
   // ─── Overview ─────────────────────────────────────────────
 
@@ -132,7 +139,53 @@ export class AdminController {
     );
   }
 
+  // ─── Operations (audit items 8, 15) ───────────────────────
+
+  @Get('jobs')
+  @ApiOperation({
+    summary: 'Scheduled jobs and their last run outcome',
+    description:
+      'A scheduler nobody can inspect is a scheduler nobody trusts. The case ' +
+      'that matters is FAILURE: a purge that has been erroring for a week looks ' +
+      'exactly like a purge with nothing to do unless the run log is visible.',
+  })
+  scheduledJobs(@Req() req: AuthedRequest) {
+    return this.adminService.getScheduledJobs(req.accessToken);
+  }
+
+  @Get('tracing')
+  @ApiOperation({ summary: 'Whether the request-trace window is open, and until when' })
+  tracingStatus() {
+    return this.tracing.status();
+  }
+
+  @Post('tracing')
+  @ThrottleAdminWrite()
+  @ApiOperation({
+    summary: 'Open a time-boxed request-trace window',
+    description:
+      'Records EVERY request to system_events so one user\'s request can be ' +
+      'followed end to end. Expires on its own — a trace that must be switched ' +
+      'off by hand becomes a permanent activity log of every user, which ' +
+      'DEC-016 does not permit an operator to keep.',
+  })
+  enableTracing(
+    @CurrentUser() user: AuthenticatedUser,
+    @Body() dto: EnableTracingDto,
+  ) {
+    return this.tracing.enable(dto.minutes ?? 15, user.id);
+  }
+
+  @Delete('tracing')
+  @ThrottleAdminWrite()
+  @ApiOperation({ summary: 'Close the trace window early' })
+  async disableTracing(@CurrentUser() user: AuthenticatedUser) {
+    await this.tracing.disable(user.id);
+    return { active: false, until: null };
+  }
+
   @Post('events/prune')
+  @ThrottleAdminWrite()
   @ApiOperation({ summary: 'Drop events past the retention window' })
   pruneEvents(
     @Req() req: AuthedRequest,
@@ -174,6 +227,7 @@ export class AdminController {
   }
 
   @Patch('users/:userId')
+  @ThrottleAdminWrite()
   @ApiOperation({
     summary: 'Update the operator-editable subset of a profile',
     description:
@@ -190,6 +244,7 @@ export class AdminController {
   }
 
   @Post('users/:userId/suspend')
+  @ThrottleAdminWrite()
   @ApiOperation({ summary: 'Suspend an account (Auth ban + status)' })
   suspendUser(
     @Req() req: AuthedRequest,
@@ -206,6 +261,7 @@ export class AdminController {
   }
 
   @Post('users/:userId/reinstate')
+  @ThrottleAdminWrite()
   @ApiOperation({
     summary: 'Lift a suspension, and cancel any pending deletion',
   })
@@ -218,6 +274,7 @@ export class AdminController {
   }
 
   @Post('purge')
+  @ThrottleAdminWrite()
   @ApiOperation({
     summary: 'Run the deletion purge for expired grace periods',
     description:
@@ -237,6 +294,7 @@ export class AdminController {
   }
 
   @Put('settings')
+  @ThrottleAdminWrite()
   @ApiOperation({ summary: 'Update one or more known settings' })
   updateSettings(
     @Req() req: AuthedRequest,
@@ -255,6 +313,7 @@ export class AdminController {
   }
 
   @Post('broadcasts')
+  @ThrottleAdminWrite()
   @ApiOperation({ summary: 'Compose a broadcast (always created as DRAFT)' })
   createBroadcast(
     @CurrentUser() user: AuthenticatedUser,
@@ -264,6 +323,7 @@ export class AdminController {
   }
 
   @Patch('broadcasts/:broadcastId')
+  @ThrottleAdminWrite()
   @ApiOperation({ summary: 'Edit a broadcast' })
   updateBroadcast(
     @CurrentUser() user: AuthenticatedUser,
@@ -274,6 +334,7 @@ export class AdminController {
   }
 
   @Post('broadcasts/:broadcastId/publish')
+  @ThrottleAdminWrite()
   @ApiOperation({ summary: 'Publish — makes it visible to its audience' })
   publishBroadcast(
     @CurrentUser() user: AuthenticatedUser,
@@ -287,6 +348,7 @@ export class AdminController {
   }
 
   @Post('broadcasts/:broadcastId/archive')
+  @ThrottleAdminWrite()
   @ApiOperation({ summary: 'Archive — withdraws it from every user' })
   archiveBroadcast(
     @CurrentUser() user: AuthenticatedUser,

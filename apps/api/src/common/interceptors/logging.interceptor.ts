@@ -28,6 +28,7 @@ import { SSE_METADATA } from '@nestjs/common/constants';
 import { Observable, tap } from 'rxjs';
 import { Request, Response } from 'express';
 import { SystemEventsService } from '../../observability/system-events.service';
+import { TracingService } from '../../observability/tracing.service';
 import { AuthenticatedUser } from '../decorators/current-user.decorator';
 
 /** Above this, a request is worth an operator's attention. */
@@ -37,6 +38,7 @@ const SLOW_MS = 1000;
 export class RequestTelemetryInterceptor implements NestInterceptor {
   constructor(
     private readonly systemEvents: SystemEventsService,
+    private readonly tracing: TracingService,
     private readonly reflector: Reflector,
   ) {}
 
@@ -63,9 +65,31 @@ export class RequestTelemetryInterceptor implements NestInterceptor {
       tap({
         next: () => {
           const latency = Date.now() - started;
+          const response = http.getResponse<Response>();
+
+          // ── Trace window (audit item 15) ────────────────────────────────
+          // Off by default and self-expiring — see TracingService for why this
+          // is a switch rather than always-on. When open, EVERY request is
+          // recorded with its X-Request-ID, which is what lets an operator
+          // follow one user's request end to end instead of seeing only the
+          // parts that failed.
+          if (this.tracing.isActive()) {
+            this.systemEvents.record({
+              level: 'INFO',
+              eventCode: 'REQUEST_TRACE',
+              message: `${request.method} ${scrubPath(request.url)} ${response.statusCode} ${latency}ms`,
+              requestId: request.headers['x-request-id'] as string | undefined,
+              actorId: request.user?.id,
+              route: scrubPath(request.url),
+              method: request.method,
+              statusCode: response.statusCode,
+              latencyMs: latency,
+              metadata: { traced: true },
+            });
+          }
+
           if (latency < SLOW_MS) return;
 
-          const response = http.getResponse<Response>();
           this.systemEvents.record({
             level: 'WARN',
             eventCode: 'SLOW_REQUEST',

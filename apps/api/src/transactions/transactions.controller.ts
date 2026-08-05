@@ -33,6 +33,7 @@ import {
 } from './dto/transaction.dto';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import type { AuthenticatedUser } from '../common/decorators/current-user.decorator';
+import { ThrottleLedgerWrite } from '../common/throttle';
 import { WorkspaceMemberGuard } from '../auth/guards/workspace-member.guard';
 
 @ApiTags('Transactions')
@@ -42,6 +43,7 @@ export class TransactionsController {
   constructor(private readonly transactionsService: TransactionsService) {}
 
   @Post('workspaces/:workspaceId/transactions')
+  @ThrottleLedgerWrite()
   @UseGuards(WorkspaceMemberGuard)
   @ApiOperation({
     summary: 'Create a new transaction (income/expense/transfer)',
@@ -121,6 +123,7 @@ export class TransactionsController {
   // Reversal MUTATES the ledger and previously ran with no workspace guard at
   // all — the most exposed of the three unguarded routes (DEC-005).
   @Post('workspaces/:workspaceId/transactions/:id/reverse')
+  @ThrottleLedgerWrite()
   @UseGuards(WorkspaceMemberGuard)
   @ApiOperation({ summary: 'Reverse a posted transaction' })
   @ApiParam({ name: 'workspaceId', type: 'string' })

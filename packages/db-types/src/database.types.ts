@@ -9,6 +9,33 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      alert_state: {
+        Row: {
+          alert_key: string
+          is_firing: boolean
+          last_fired_at: string | null
+          last_resolved_at: string | null
+          last_value: number | null
+          updated_at: string
+        }
+        Insert: {
+          alert_key: string
+          is_firing?: boolean
+          last_fired_at?: string | null
+          last_resolved_at?: string | null
+          last_value?: number | null
+          updated_at?: string
+        }
+        Update: {
+          alert_key?: string
+          is_firing?: boolean
+          last_fired_at?: string | null
+          last_resolved_at?: string | null
+          last_value?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       app_settings: {
         Row: {
           description: string
@@ -1141,6 +1168,7 @@ export type Database = {
     }
     Functions: {
       admin_platform_stats: { Args: never; Returns: Json }
+      admin_scheduled_jobs: { Args: never; Returns: Json }
       admin_user_overview: {
         Args: {
           p_limit?: number
@@ -1182,6 +1210,7 @@ export type Database = {
         Args: { p_from?: string; p_to?: string; p_workspace_id: string }
         Returns: Json
       }
+      check_error_rate_alert: { Args: never; Returns: Json }
       goals_overview: { Args: { p_workspace_id: string }; Returns: Json }
       is_super_admin: { Args: never; Returns: boolean }
       prune_system_events: { Args: { p_retain_days?: number }; Returns: number }

@@ -280,3 +280,22 @@ export class UpdateBroadcastDto extends CreateBroadcastDto {
   @Length(1, 200)
   declare title_bn: string;
 }
+
+/**
+ * Open a request-trace window — audit item 15.
+ *
+ * `minutes` is a request, not a command: `TracingService` clamps it to
+ * MAX_TRACE_MINUTES, because "trace for 10000 minutes" is always-on wearing a
+ * time limit and the point of the switch is that it cannot become permanent.
+ */
+export class EnableTracingDto {
+  @ApiPropertyOptional({
+    example: 15,
+    description: 'How long to trace for. Clamped server-side to at most 60 minutes.',
+  })
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  @Max(60)
+  minutes?: number;
+}

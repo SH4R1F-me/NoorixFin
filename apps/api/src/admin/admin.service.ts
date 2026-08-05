@@ -249,6 +249,21 @@ export class AdminService {
     return { deleted: data ?? 0 };
   }
 
+  /**
+   * Scheduled jobs and their last outcome — audit item 8.
+   *
+   * Read-only and NOT audited: listing jobs changes nothing, and writing an
+   * audit row for every console refresh would bury the entries that record
+   * actual operator actions.
+   */
+  async getScheduledJobs(accessToken: string) {
+    void accessToken; // service role: cron.job is owned by postgres
+    const client = this.supabaseService.getServiceClient();
+    const { data, error } = await client.rpc('admin_scheduled_jobs');
+    if (error) throw this.translate(error);
+    return data;
+  }
+
   // ─── Audit trail ──────────────────────────────────────────────────────────
 
   async listAudit(

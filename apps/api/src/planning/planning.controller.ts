@@ -43,6 +43,7 @@ import {
   UpsertBudgetDto,
   UpsertDebtDto,
 } from './dto/planning.dto';
+import { ThrottleLedgerWrite, ThrottleReport } from '../common/throttle';
 import { WorkspaceMemberGuard } from '../auth/guards/workspace-member.guard';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import type { AuthenticatedUser } from '../common/decorators/current-user.decorator';
@@ -76,6 +77,7 @@ export class PlanningController {
   // PUT, not PATCH: the body is the complete set of lines and replaces what is
   // there. A partial apply would leave a budget describing two intentions.
   @Put('budget')
+  @ThrottleLedgerWrite()
   @ApiOperation({
     summary: 'Create or replace the budget and all of its lines',
   })
@@ -277,6 +279,7 @@ export class PlanningController {
   // ── Reports ────────────────────────────────────────────────────────────────
 
   @Get('reports/categories')
+  @ThrottleReport()
   @ApiOperation({
     summary: 'Category breakdown and 6-month trend (§11.3 contract)',
   })
