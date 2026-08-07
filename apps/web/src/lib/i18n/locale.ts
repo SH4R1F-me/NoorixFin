@@ -62,3 +62,8 @@ export const getLocale = cache(async (): Promise<SupportedLanguage> => {
 export async function getServerT(): Promise<Translator> {
   return createTranslator(await getLocale());
 }
+
+export async function getServerRawObject<T>(key: string): Promise<T> {
+  const { getRawTranslationObject } = await import('@noorixfin/i18n');
+  return getRawTranslationObject<T>(await getLocale(), key);
+}

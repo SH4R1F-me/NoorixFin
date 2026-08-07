@@ -421,6 +421,405 @@
     "switchToList": "Switch to list view",
     "switchToGrid": "Switch to grid view"
   },
+  "marketing": {
+    "hero": {
+      "title": "Your Money. Your Future. Your Rules.",
+      "subtitle": "Stop wondering where your paycheck went. Join thousands of individuals, students, and families taking control of their finances with NoorixFin — the simplest, most secure, and completely free personal finance manager.",
+      "ctaPrimary": "Start Budgeting Free",
+      "ctaSecondary": "How it works"
+    },
+    "audiences": {
+      "title": "Built for every stage of your life.",
+      "subtitle": "Whether you are tracking pocket money or planning for a mortgage, NoorixFin scales with your ambitions. Real financial growth requires tools that adapt to your reality.",
+      "students": {
+        "title": "Students & Bachelors",
+        "desc": "When you're studying or starting your first job, every single dollar matters. You're juggling rent, groceries, student loans, and trying to have a social life. NoorixFin gives you absolute clarity. Split bills with roommates seamlessly, track where your pocket money is actually going, and start building emergency savings before life catches you off guard. Stop relying on mental math and start building financial discipline that will pay off for decades.",
+        "badge": "For Students & Bachelors",
+        "hook": "Imagine knowing, at any moment, exactly how much money you have left for the month — not a rough guess in your head, but a real, live number. Imagine being the one friend in your group who never has to say \"wait, I need to check my balance\". NoorixFin makes that your new normal.",
+        "points": [
+          "Split bills with roommates instantly",
+          "Track every expense — no matter how small",
+          "Build an emergency fund before life surprises you",
+          "Set spending limits for food, transport, entertainment"
+        ]
+      },
+      "families": {
+        "title": "Families & Couples",
+        "desc": "Managing a household budget shouldn't feel like a second job. NoorixFin brings harmony to family finances. Track shared expenses, save for your children's education, and plan that dream family vacation without the stress of wondering 'can we afford this?'. Set unified monthly budgets for groceries, utilities, and entertainment, and get visual alerts when you are nearing your limits. Build a secure future together, with complete transparency.",
+        "badge": "For Families & Couples",
+        "hook": "The most common source of stress in any household is not about love — it is about money. \"How much did we spend on groceries this month?\" \"Can we really afford that vacation?\" NoorixFin turns those tense conversations into confident, data-driven decisions made together.",
+        "points": [
+          "Unified household budget across all accounts",
+          "Save for children's education, weddings, vacations",
+          "Visual alerts before you overspend any category",
+          "Transparent history — no surprises at month-end"
+        ]
+      },
+      "professionals": {
+        "title": "Freelancers & Professionals",
+        "desc": "Your income might be unpredictable, but your financial peace of mind shouldn't be. For freelancers, independent contractors, and salaried professionals, NoorixFin acts as your personal CFO. Track multiple income streams, manage tax pools, and monitor your true net worth across banks, credit cards, and investments in real-time. Gain the psychological freedom that comes from knowing exactly what you own, what you owe, and how fast you are growing.",
+        "badge": "For Freelancers & Professionals",
+        "hook": "When your income varies month to month, knowing your actual net worth — not a bank balance, but the full picture across bKash, Nagad, bank accounts, investments, and debts — is not a luxury. It is your compass. NoorixFin gives you that compass, for free.",
+        "points": [
+          "Track multiple income streams and clients",
+          "See true net worth across all accounts",
+          "Manage tax savings with dedicated envelopes",
+          "Recurring bills and reminders — never miss a payment"
+        ]
+      }
+    },
+    "features": {
+      "title": "Everything you need, nothing you don't",
+      "subtitle": "A complete suite of financial tools designed to give you peace of mind."
+    },
+    "calculator": {
+      "title": "See how fast you can save",
+      "subtitle": "Play with the numbers and visualize your financial freedom.",
+      "monthlyIncome": "Monthly Income",
+      "monthlyExpenses": "Monthly Expenses",
+      "savingsGoal": "Target Savings Goal",
+      "timeToReach": "Time to reach goal:",
+      "months": "months",
+      "years": "years",
+      "almostThere": "You're already there!",
+      "deficit": "You are spending more than you earn."
+    },
+    "cta": {
+      "title": "Ready to take control?",
+      "subtitle": "Join our growing community and start your journey to financial freedom today. It takes less than two minutes to set up.",
+      "button": "Create Your Free Account"
+    },
+    "nav": {
+      "features": "Features",
+      "openSource": "Open Source",
+      "docs": "Docs",
+      "community": "Community",
+      "security": "Security",
+      "donate": "Donate",
+      "launchApp": "Launch App"
+    },
+    "footer": {
+      "brandDesc": "Free and open-source personal finance management, built in public for everyone.",
+      "product": "Product",
+      "community": "Community",
+      "support": "Support",
+      "builtWith": "Built with",
+      "inBangladesh": "in Bangladesh. Free forever.",
+      "license": "MIT License",
+      "freeForever": "Free Forever",
+      "noTracking": "No Tracking",
+      "wcag": "WCAG 2.2 AA",
+      "roadmap": "Roadmap",
+      "changelog": "Changelog",
+      "faq": "FAQ",
+      "contact": "Contact",
+      "discussions": "Discussions",
+      "reportBug": "Report a Bug",
+      "contribute": "Contribute",
+      "about": "About"
+    },
+    "featuresPage": {
+      "title": "Your money, visualised and controlled.",
+      "subtitle": "Stop guessing where your money goes. NoorixFin gives you absolute clarity with intuitive budgets, real-time sync, and beautiful charts that make sense instantly.",
+      "items": {
+        "budgeting": {
+          "title": "Visual Budgeting",
+          "desc": "Set monthly limits per category. Progress bars turn orange and red to warn you before you overspend, acting as a financial guardrail."
+        },
+        "goals": {
+          "title": "Goal Tracking",
+          "desc": "Saving for a laptop or emergency fund? Create specific goals and watch your money grow day by day, giving you the psychological boost to keep saving."
+        },
+        "multiAccount": {
+          "title": "All Accounts in One Place",
+          "desc": "Cash in hand, Bank balance, bKash, and Nagad — see your true combined Net Worth without opening 4 different apps."
+        },
+        "reports": {
+          "title": "Deep Analytics",
+          "desc": "Beautiful pie charts and income vs. expense timelines show you exactly which lifestyle habits are costing you the most."
+        },
+        "privacy": {
+          "title": "Bank-Grade Privacy",
+          "desc": "Your numbers are nobody else's business. Secured with Row-Level Security, meaning even system admins cannot see your balances."
+        },
+        "offline": {
+          "title": "Offline-First Mobile",
+          "desc": "No internet? No problem. Log your expenses on the go; it automatically syncs to your secure vault the moment you reconnect."
+        }
+      }
+    },
+    "openSourcePage": {
+      "title": "Why free means free, forever.",
+      "subtitle": "NoorixFin is not a company trying to sell your data. We are a Digital Public Good — built like a public park, owned by the community, for everyone.",
+      "content1": "Most \"free\" finance apps are actually data brokers in disguise. They offer you a budget tracker, but their real product is YOUR spending habits, which they sell to credit card companies and advertisers.",
+      "content2": "We fundamentally believe that financial privacy is a human right. That is why NoorixFin is 100% Open Source (MIT Licensed). We publish our entire source code online. Anyone can inspect it, audit it, and verify that we do exactly what we say we do.",
+      "content3": "This also means NoorixFin can never be acquired by a big bank, shut down, or suddenly locked behind a monthly subscription. The code belongs to humanity now. You can even host it on your own private server if you wish."
+    },
+    "communityPage": {
+      "title": "Join thousands taking control.",
+      "subtitle": "Money doesn't have to be stressful when you are not doing it alone. Join a community of people who value financial freedom and privacy.",
+      "discussions": {
+        "title": "Discussions & Advice",
+        "desc": "Ask questions, share your budgeting strategies, and learn how others manage their household finances effectively."
+      },
+      "feedback": {
+        "title": "Shape the Future",
+        "desc": "We build what YOU need. Vote on new features, suggest ideas, and watch them come to life in the next update."
+      },
+      "github": {
+        "title": "GitHub Community",
+        "desc": "For developers and designers who want to contribute code, fix bugs, or translate the app into more languages."
+      }
+    },
+    "contactPage": {
+      "title": "We'd love to hear from you",
+      "subtitle": "Got a question, found a bug, or just want to say hi? Here's how you can reach us.",
+      "support": "General Support",
+      "supportDesc": "The fastest way to get help is through our community discussions.",
+      "security": "Security Reports",
+      "securityDesc": "If you've found a vulnerability, please report it privately."
+    },
+    "changelogPage": {
+      "title": "What's New in NoorixFin",
+      "subtitle": "We're constantly improving. Here's a timeline of our latest features and fixes.",
+      "releases": [
+        {
+          "version": "v0.1.0",
+          "date": "August 2026",
+          "tag": "Foundation",
+          "highlights": [
+            "Visual budgeting tools with category limits",
+            "Goal tracking for future savings",
+            "Multi-account support — cash, bank, bKash, Nagad",
+            "Interactive dashboards with real-time charts",
+            "Full bilingual UI — Bangla and English",
+            "Bank-grade Row-Level Security data protection",
+            "Offline-first mobile app with automatic sync"
+          ]
+        }
+      ]
+    },
+    "aboutPage": {
+      "title": "Our mission to democratise personal finance.",
+      "subtitle": "Financial literacy and powerful software should not be a luxury reserved for the rich.",
+      "story": "NoorixFin started from a simple frustration: every good budgeting app either cost 0/month (which defeats the purpose of saving money) or was \"free\" but aggressively sold our transaction history to marketers. We built NoorixFin to solve our own problem, and open-sourced it so no one else has to choose between their privacy and their wallet ever again.",
+      "promise": "Our promise: It will always be free. It will always be open-source. Your data will always be yours."
+    },
+    "docsPage": {
+      "title": "Your guide to financial clarity.",
+      "subtitle": "No technical jargon. Just simple, step-by-step guides on how to take back control of your finances using NoorixFin.",
+      "gettingStarted": {
+        "title": "Getting Started",
+        "desc": "How to set up your first budget, add your current bank balances, and log your very first expense in under 2 minutes."
+      },
+      "accounts": {
+        "title": "Managing Accounts",
+        "desc": "Learn how to handle Cash, Bank accounts, and Mobile Financial Services (like bKash/Nagad) seamlessly."
+      },
+      "goals": {
+        "title": "Setting Savings Goals",
+        "desc": "The psychology of saving: how to set realistic goals and use our trackers to actually achieve them."
+      },
+      "selfHost": {
+        "title": "Self-Hosting Guide",
+        "desc": "For the tech-savvy: How to deploy your own private instance of NoorixFin on Vercel and Supabase for free."
+      }
+    },
+    "faqPage": {
+      "title": "Frequently Asked Questions",
+      "subtitle": "Everything you need to know about NoorixFin.",
+      "items": [
+        {
+          "q": "Is NoorixFin really free?",
+          "a": "Yes — completely. NoorixFin is MIT licensed open-source software. There are no plans, no tiers, no credit card required. The hosted instance is free. Self-hosting is free. It will stay free."
+        },
+        {
+          "q": "Can I self-host NoorixFin?",
+          "a": "Absolutely. Fork the GitHub repo, create a free Supabase project, run the migrations, and deploy the web app to Vercel or any Node.js host. The self-hosting guide is in /docs."
+        },
+        {
+          "q": "Where is my data stored?",
+          "a": "On the hosted instance, data is stored in Supabase (PostgreSQL). Row-Level Security ensures only you can read your data — not us, not other users. If you self-host, your data lives wherever your Supabase project is."
+        },
+        {
+          "q": "Does NoorixFin track me?",
+          "a": "No. There are no analytics scripts, no ad pixels, and no fingerprinting. The only external requests are to Google Fonts and your Supabase project. Your financial behaviour is private."
+        },
+        {
+          "q": "What currencies does NoorixFin support?",
+          "a": "Any currency — amounts are stored as integer minor units in PostgreSQL, so there is no rounding error. The UI currently defaults to Bangladeshi Taka (৳). Multi-currency is on the roadmap."
+        },
+        {
+          "q": "Is there a mobile app?",
+          "a": "Yes — a React Native / Expo app with offline-first architecture. It syncs automatically when online and stores data locally. It is in active development."
+        },
+        {
+          "q": "How do I contribute?",
+          "a": "Check the CONTRIBUTING.md guide on GitHub. Pick a good first issue, fork the repo, and open a PR. We review pull requests within 48 hours and welcome contributions of any size."
+        },
+        {
+          "q": "What is the tech stack?",
+          "a": "Next.js 16 (App Router) + React 19 for web, Expo + React Native for mobile, NestJS for the API, Supabase (PostgreSQL + Auth + Storage) for the backend. TypeScript throughout. Turborepo monorepo."
+        },
+        {
+          "q": "I found a security vulnerability. What do I do?",
+          "a": "Please do NOT open a public GitHub Issue. Use GitHub private vulnerability reporting or email security@noorixfin.app. We respond within 72 hours and credit responsible disclosures."
+        },
+        {
+          "q": "Can I use NoorixFin for my business?",
+          "a": "NoorixFin is designed for personal and household finance. Business accounting is not currently in scope. The MIT license allows you to fork and build a business tool if you need one."
+        }
+      ]
+    },
+    "roadmapPage": {
+      "title": "Product Roadmap",
+      "subtitle": "See what we're building next.",
+      "items": {
+        "comingSoon": "Coming Soon",
+        "comingSoonDesc": "We're currently planning the next set of features based on community feedback on GitHub. Star the repo and join the Discussions to have your say."
+      }
+    },
+    "securityPage": {
+      "title": "Bank-grade privacy, mathematically enforced.",
+      "subtitle": "We do not just promise privacy — we enforce it at the database level so that a data leak is mathematically impossible.",
+      "rls": {
+        "title": "Row-Level Security (RLS)",
+        "desc": "Imagine a giant vault with millions of safety deposit boxes. RLS ensures your login token is the ONLY physical key that can unlock your specific box. Even we cannot look inside."
+      },
+      "noTracking": {
+        "title": "Zero Tracking Pixels",
+        "desc": "We do not use Google Analytics, Facebook Pixels, or any third-party SDKs that secretly record how you use the app."
+      },
+      "encryption": {
+        "title": "In-Transit Encryption",
+        "desc": "Every byte of data sent between your browser and our servers is secured using TLS 1.3 military-grade encryption."
+      },
+      "auditTitle": "Open Source Audit",
+      "auditBody": "Because NoorixFin is MIT licensed, our entire security model is public. Do not trust our marketing copy — trust the math. Read the source code on GitHub.",
+      "auditCta": "Audit the Source Code"
+    },
+    "supportPage": {
+      "title": "Keep NoorixFin free for everyone.",
+      "subtitle": "We don't run ads. We don't sell data. We rely entirely on the generosity of users like you to keep the servers running.",
+      "whyDonate": {
+        "title": "Why donate?",
+        "desc": "Running secure databases and global servers costs real money every month. If NoorixFin has helped you save money or cancel a paid subscription to another app, consider paying a fraction of it forward."
+      },
+      "perks": {
+        "title": "Where does the money go?",
+        "desc": "100% of donations go directly to our Supabase database hosting, domain renewals, and Vercel compute costs. Nothing goes to salaries."
+      },
+      "button": "Donate via BuyMeACoffee"
+    },
+    "homePage": {
+      "privacyTitle": "Your data belongs to you. Only you.",
+      "privacyBody1": "Most finance apps make money by selling your spending data to advertisers. We think that is wrong. NoorixFin is funded by voluntary donations, not data brokering. Your financial life is private — mathematically enforced at the database level with Row-Level Security.",
+      "privacyBody2": "Since our code is fully open source, you do not have to take our word for it. Read every line. Audit it. Host it yourself. That transparency is the point.",
+      "privacyCta": "Read our Security Policy",
+      "openSourceTitle": "Built in public. For everyone.",
+      "openSourceBody1": "Finance is personal. You should never have to blindly trust a company with your most sensitive data. NoorixFin publishes every line of code under the MIT license. If you want to know exactly how we store, encrypt, and protect your data — you can read it right now, on GitHub.",
+      "openSourceBody2": "This also means NoorixFin will never be acquired, shut down, or put behind a paywall. The code exists. You can always run it yourself.",
+      "communityTitle": "Join the movement",
+      "communitySubtitle": "NoorixFin is not just software — it is a growing community of people who believe managing your money should be free and dignified.",
+      "fork": "Fork & Customise",
+      "forkDesc": "Run your own instance with your own rules. Self-hosting is a first-class, documented path.",
+      "star": "Star on GitHub",
+      "starDesc": "Show your support and help more people discover a free alternative to paid finance apps.",
+      "donate": "Donate to Support",
+      "donateDesc": "If NoorixFin saved you money on subscriptions, consider paying it forward with a small donation.",
+      "ctaNote": "No credit card. No trial period. No catch. Just free.",
+      "trustPoints": [
+        "End-to-end encrypted sessions",
+        "No tracking pixels, no analytics SDKs",
+        "Local JWT verification — your token never leaves your device",
+        "WCAG 2.2 AA accessible",
+        "Native mobile app — iOS & Android",
+        "Double-entry ledger — mathematically balanced, always"
+      ],
+      "heroBadge": "100% Free & Open-Source · No Subscriptions · No Ads",
+      "heroStars": "Open on GitHub · MIT Licensed · Self-hostable",
+      "stats": [
+        {
+          "value": "100%",
+          "label": "Free. Always."
+        },
+        {
+          "value": "MIT",
+          "label": "Open License"
+        },
+        {
+          "value": "0",
+          "label": "Ads or Trackers"
+        },
+        {
+          "value": "∞",
+          "label": "Transactions"
+        }
+      ],
+      "eyebrowRealPeople": "Built for Real People",
+      "eyebrowTryIt": "Try it now",
+      "eyebrowWhatYouGet": "What you get",
+      "eyebrowSecurity": "Security & Privacy",
+      "eyebrowOpenSource": "Open Source",
+      "eyebrowCommunity": "Community",
+      "features": [
+        {
+          "title": "Visual Budgeting",
+          "desc": "Set monthly limits per category. Progress bars tell you exactly when to slow down — before you overspend, not after."
+        },
+        {
+          "title": "Dream Savings Goals",
+          "desc": "Saving for a wedding, a laptop, or an emergency fund? Watch your money grow day by day with dedicated goal trackers linked to real account balances."
+        },
+        {
+          "title": "Powerful Reports",
+          "desc": "Beautiful income vs. expense charts, net-worth timeline, and category breakdowns. Understand your money patterns at a glance."
+        },
+        {
+          "title": "Bank-Grade Privacy",
+          "desc": "Your data stays yours. Row-level security, no third-party analytics, no data selling — ever. Your most private numbers are nobody else's business."
+        },
+        {
+          "title": "Works Offline",
+          "desc": "On a train, in a village, or with poor signal? Log expenses offline on the mobile app. Everything syncs automatically the moment you reconnect."
+        },
+        {
+          "title": "100% Free, Forever",
+          "desc": "No subscriptions. No freemium traps. No ads. NoorixFin is community-funded open-source software — free for everyone, always."
+        }
+      ],
+      "viewSource": "View Source on GitHub",
+      "ourPhilosophy": "Our Philosophy",
+      "readDocs": "Read the Docs",
+      "ctaBadge": "Takes less than 2 minutes to set up"
+    },
+    "bugReportPage": {
+      "title": "Found a glitch? Let us know!",
+      "subtitle": "Software isn't perfect, but with your help, we can make it incredibly close. You don't need to be a programmer to report a bug.",
+      "whatIsBug": "What is a bug?",
+      "whatIsBugDesc": "A \"bug\" is just a fancy word for something not working the way it should. Did a button not click? Did a chart show the wrong number? Did the app crash? That is a bug.",
+      "howToReport": "How to report it",
+      "howToReportDesc": "We track all issues publicly on our GitHub platform so everyone can see what we are fixing. Click the button below, sign in (or create a free GitHub account), and just describe what went wrong in plain English or Bangla.",
+      "button": "Report on GitHub"
+    },
+    "contributePage": {
+      "title": "Help us build the future.",
+      "subtitle": "You do NOT need to be a software engineer to contribute to NoorixFin. Open source thrives on diversity of skills.",
+      "translators": {
+        "title": "For Translators & Writers",
+        "desc": "Help us translate the app into more languages, fix typos, or write better guides for our documentation. Words matter just as much as code."
+      },
+      "designers": {
+        "title": "For Designers",
+        "desc": "Have an eye for UI/UX? Help us design new features, create better icons, or improve the accessibility of the app."
+      },
+      "developers": {
+        "title": "For Developers",
+        "desc": "React, Next.js, NestJS, and React Native developers — grab a \"good first issue\" from our tracker and submit a Pull Request. We actively mentor beginners!"
+      },
+      "button": "View Contribution Guide"
+    }
+  },
   "admin": {
     "title": "System Admin",
     "operatorMode": "OPERATOR MODE — platform administration. You are not looking at your own finances.",
@@ -430,6 +829,7 @@
     "users": "Users",
     "broadcasts": "Broadcasts",
     "globalSettings": "Global Settings",
+    "siteSettings": "Site Settings",
     "superAdmin": "SUPER ADMIN"
   }
 }

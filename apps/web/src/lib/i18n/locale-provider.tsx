@@ -35,6 +35,7 @@ import {
   type Translator,
 } from '@noorixfin/i18n';
 import { persistLocale } from './actions';
+import { useRouter } from 'next/navigation';
 
 export const LOCALE_COOKIE = 'nf_locale';
 /** One year. The preference is not sensitive and should not expire on a whim. */
@@ -64,6 +65,7 @@ export function LocaleProvider({
 }) {
   const [locale, setLocaleState] = useState<SupportedLanguage>(initialLocale);
   const [isPending, startTransition] = useTransition();
+  const router = useRouter();
 
   // ── Re-seeding when the server's answer changes ────────────────────────────
   //
@@ -99,13 +101,17 @@ export function LocaleProvider({
       // that the profile can override.
       document.cookie = `${LOCALE_COOKIE}=${next}; path=/; max-age=${COOKIE_MAX_AGE}; samesite=lax`;
 
+      // Important: Since marketing pages are Server Components, they need a hard refresh 
+      // to read the new cookie and re-render with the correct language.
+      router.refresh();
+
       if (isAuthenticated) {
         startTransition(async () => {
           await persistLocale(next);
         });
       }
     },
-    [locale, isAuthenticated],
+    [locale, isAuthenticated, router],
   );
 
   const value = useMemo<LocaleContextValue>(

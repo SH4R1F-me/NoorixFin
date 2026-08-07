@@ -31,7 +31,11 @@ async function bootstrap() {
   );
 
   // ─── CORS (§16.2: strict origins) ─────────────────────
-  const allowedOrigins = (process.env.CORS_ORIGINS || 'http://localhost:3001')
+  // The fallback is the WEB app's origin (3000), not this process's own port.
+  // It previously read 3001 — the API's own port — so a checkout without
+  // `.env.local` rejected every browser request from the web app, and the only
+  // symptom was an opaque CORS failure in the devtools console.
+  const allowedOrigins = (process.env.CORS_ORIGINS || 'http://localhost:3000')
     .split(',')
     .map((o) => o.trim());
 
@@ -77,7 +81,9 @@ async function bootstrap() {
   });
 
   // ─── Start ─────────────────────────────────────────────
-  const port = process.env.API_PORT || 3000;
+  // 3001 is the documented contract (see .env.example and both clients'
+  // API_URL defaults). The fallback was 3000, which collides with `next dev`.
+  const port = process.env.API_PORT || 3001;
   await app.listen(port);
   console.log(`🚀 NoorixFin API running on http://localhost:${port}`);
   console.log(`📚 Swagger UI: http://localhost:${port}/api/docs`);

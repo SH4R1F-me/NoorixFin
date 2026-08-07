@@ -25,11 +25,28 @@ const localesDir = join(here, '..', 'locales');
 
 const REFERENCE = 'en';
 
+/**
+ * Arrays are recursed, not treated as opaque leaves.
+ *
+ * Catalogs legitimately hold arrays — `faqPage.items`, `homePage.features`,
+ * `audiences.*.points` — which components read via `getServerRawObject`.
+ * Stopping at the array made every one of them a non-string leaf, so the gate
+ * reported `EMPTY` for content that was perfectly translated, and the whole
+ * check went red the moment the first array landed.
+ *
+ * Recursing with `items[0].q` paths is what actually enforces parity inside
+ * them: a Bangla list one element shorter than English now surfaces as MISSING
+ * rather than passing silently and rendering a short list to half the users.
+ */
 function flatten(object, prefix = '') {
   const out = {};
   for (const [key, value] of Object.entries(object)) {
-    const path = prefix ? `${prefix}.${key}` : key;
-    if (value && typeof value === 'object' && !Array.isArray(value)) {
+    const path = Array.isArray(object)
+      ? `${prefix}[${key}]`
+      : prefix
+        ? `${prefix}.${key}`
+        : key;
+    if (value && typeof value === 'object') {
       Object.assign(out, flatten(value, path));
     } else {
       out[path] = value;

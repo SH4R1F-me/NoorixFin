@@ -114,6 +114,27 @@ export function createTranslator(locale: SupportedLanguage): Translator {
   return (key, vars) => translate(locale, key, vars);
 }
 
+/**
+ * Resolves a raw object/array from the translation bundle.
+ * Used for returning arrays like FAQ items or changelog releases.
+ */
+export function getRawTranslationObject<T = unknown>(
+  locale: SupportedLanguage,
+  key: string
+): T {
+  const bundle = resources[locale] ?? resources[fallbackLng];
+  
+  const value = key.split('.').reduce<unknown>(
+    (node, part) => node && typeof node === 'object' ? (node as Record<string, unknown>)[part] : undefined,
+    bundle.common
+  ) ?? key.split('.').reduce<unknown>(
+    (node, part) => node && typeof node === 'object' ? (node as Record<string, unknown>)[part] : undefined,
+    resources[fallbackLng].common
+  );
+
+  return value as T;
+}
+
 export function isSupportedLocale(value: unknown): value is SupportedLanguage {
   return (
     typeof value === 'string' &&

@@ -27,6 +27,7 @@ import {
   ArrowLeft,
   Menu,
   Globe,
+  Globe2,
 } from 'lucide-react';
 
 const NAV_ITEMS = [
@@ -35,6 +36,7 @@ const NAV_ITEMS = [
   { id: 'audit', key: 'admin.audit', icon: ScrollText, href: '/admin/audit' },
   { id: 'users', key: 'admin.users', icon: Users, href: '/admin/users' },
   { id: 'broadcasts', key: 'admin.broadcasts', icon: Megaphone, href: '/admin/broadcasts' },
+  { id: 'site-settings', key: 'admin.siteSettings', icon: Globe2, href: '/admin/site-settings' },
   { id: 'settings', key: 'admin.globalSettings', icon: Settings2, href: '/admin/settings' },
 ] as const;
 
