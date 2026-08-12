@@ -20,6 +20,7 @@ import {
 import { SupabaseService } from '../supabase/supabase.service';
 import { AuditService } from '../observability/audit.service';
 import { SystemEventsService } from '../observability/system-events.service';
+import { NotificationsService } from '../notifications/notifications.service';
 
 /** DEC-017: how long data survives a deletion request. */
 export const DELETION_GRACE_DAYS = 30;
@@ -32,6 +33,7 @@ export class AccountService {
     private readonly supabaseService: SupabaseService,
     private readonly audit: AuditService,
     private readonly systemEvents: SystemEventsService,
+    private readonly notifications: NotificationsService,
   ) {}
 
   /**
@@ -146,6 +148,17 @@ export class AccountService {
       message: `Account scheduled for deletion in ${DELETION_GRACE_DAYS} days`,
       actorId: userId,
     });
+    await this.notifications.create({
+      userId,
+      category: 'account',
+      severity: 'WARNING',
+      titleEn: 'Account deletion scheduled',
+      titleBn: 'অ্যাকাউন্ট মুছে ফেলার সময় নির্ধারিত হয়েছে',
+      bodyEn: `Your account is scheduled for deletion on ${scheduledFor.toISOString().slice(0, 10)}.`,
+      bodyBn: `আপনার অ্যাকাউন্ট ${scheduledFor.toISOString().slice(0, 10)} তারিখে মুছে ফেলার জন্য নির্ধারিত।`,
+      actionUrl: '/dashboard/settings',
+      dedupeKey: `deletion-scheduled:${scheduledFor.toISOString()}`,
+    });
 
     return {
       status: 'PENDING_DELETION',
@@ -209,6 +222,17 @@ export class AccountService {
       action: 'ACCOUNT_DELETION_CANCELLED',
       resourceType: 'profile',
       resourceId: userId,
+    });
+    await this.notifications.create({
+      userId,
+      category: 'account',
+      severity: 'SUCCESS',
+      titleEn: 'Account deletion cancelled',
+      titleBn: 'অ্যাকাউন্ট মুছে ফেলা বাতিল হয়েছে',
+      bodyEn: 'Your NoorixFin account will remain active.',
+      bodyBn: 'আপনার NoorixFin অ্যাকাউন্ট সক্রিয় থাকবে।',
+      actionUrl: '/dashboard/settings',
+      dedupeKey: `deletion-cancelled:${new Date().toISOString()}`,
     });
 
     return { status: 'ACTIVE' };

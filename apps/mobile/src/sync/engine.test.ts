@@ -33,7 +33,12 @@ let serverEntries: Set<string>;
 function online() {
   mockFetch.mockImplementation(async (path: string, options?: { idempotencyKey?: string }) => {
     if (path.includes('/sync')) {
-      return { cursor: new Date().toISOString(), has_more: false, server_time: '', changes: {} } as never;
+      return {
+        cursor: new Date().toISOString(),
+        has_more: false,
+        server_time: '',
+        changes: {},
+      } as never;
     }
     if (options?.idempotencyKey) serverEntries.add(options.idempotencyKey);
     return { id: options?.idempotencyKey } as never;
@@ -83,6 +88,26 @@ describe('W4-1: airplane mode → 5 transactions → reconnect', () => {
   });
 });
 
+describe('notification mutations use the durable queue', () => {
+  it('replays read and read-all operations after reconnect', async () => {
+    await enqueue('read-one', WS, 'READ_NOTIFICATION', { notification_id: 'notice-1' });
+    await enqueue('read-all', WS, 'READ_ALL_NOTIFICATIONS', {});
+    online();
+
+    const result = await drain(WS);
+
+    expect(result.sent).toBe(2);
+    expect(mockFetch).toHaveBeenCalledWith(
+      '/notifications/notice-1/read',
+      expect.objectContaining({ method: 'POST', idempotencyKey: 'read-one' }),
+    );
+    expect(mockFetch).toHaveBeenCalledWith(
+      '/notifications/read-all',
+      expect.objectContaining({ method: 'POST', idempotencyKey: 'read-all' }),
+    );
+  });
+});
+
 describe('W4-2: app killed mid-queue → relaunch', () => {
   it('resumes and drains the survivors', async () => {
     offline();
@@ -124,7 +149,9 @@ describe('W4-2: app killed mid-queue → relaunch', () => {
     // The server DID receive it before the kill...
     serverEntries.add('reclaim-dup');
     const db = await getDb();
-    await db.runAsync(`UPDATE _mutation_queue SET status = 'IN_FLIGHT' WHERE id = ?`, ['reclaim-dup']);
+    await db.runAsync(`UPDATE _mutation_queue SET status = 'IN_FLIGHT' WHERE id = ?`, [
+      'reclaim-dup',
+    ]);
 
     // ...and the replay resolves to the same row, not a second one.
     await drain(WS);
@@ -202,7 +229,7 @@ describe('W4-4: rejected push surfaces, never silently merges (SYNC-02)', () => 
     const result = await drain(WS);
 
     expect(result.deferred).toBe(1); // stopped after the first failure
-    expect(result.parked).toBe(0);   // 5xx is retryable, not permanent
+    expect(result.parked).toBe(0); // 5xx is retryable, not permanent
     expect(await countPending(WS)).toBe(2);
   });
 });
@@ -213,7 +240,12 @@ describe('engine: push runs before pull', () => {
     mockFetch.mockImplementation(async (path: string, o?: { idempotencyKey?: string }) => {
       order.push(path.includes('/sync') ? 'PULL' : 'PUSH');
       if (path.includes('/sync')) {
-        return { cursor: '2026-01-01T00:00:00.000Z', has_more: false, server_time: '', changes: {} } as never;
+        return {
+          cursor: '2026-01-01T00:00:00.000Z',
+          has_more: false,
+          server_time: '',
+          changes: {},
+        } as never;
       }
       if (o?.idempotencyKey) serverEntries.add(o.idempotencyKey);
       return {} as never;
@@ -235,8 +267,14 @@ describe('engine: push runs before pull', () => {
   });
 
   it('advances and persists the cursor after a successful pull', async () => {
-    mockFetch.mockImplementation(async () =>
-      ({ cursor: '2026-08-04T10:00:00.000Z', has_more: false, server_time: '', changes: {} }) as never,
+    mockFetch.mockImplementation(
+      async () =>
+        ({
+          cursor: '2026-08-04T10:00:00.000Z',
+          has_more: false,
+          server_time: '',
+          changes: {},
+        }) as never,
     );
 
     await sync(WS);
@@ -289,19 +327,26 @@ describe('pull upserts are idempotent (at-least-once delivery)', () => {
       [WS],
     );
 
-    mockFetch.mockImplementation(async () =>
-      ({
-        cursor: '2026-08-04T02:00:00.000Z',
-        has_more: false,
-        server_time: '',
-        changes: {
-          journal_entries: [{
-            id: 'opt-1', workspace_id: WS, entry_type: 'EXPENSE',
-            occurred_at: '2026-08-04T00:00:00.000Z', local_date: '2026-08-04',
-            status: 'POSTED', updated_at: '2026-08-04T01:00:00.000Z',
-          }],
-        },
-      }) as never,
+    mockFetch.mockImplementation(
+      async () =>
+        ({
+          cursor: '2026-08-04T02:00:00.000Z',
+          has_more: false,
+          server_time: '',
+          changes: {
+            journal_entries: [
+              {
+                id: 'opt-1',
+                workspace_id: WS,
+                entry_type: 'EXPENSE',
+                occurred_at: '2026-08-04T00:00:00.000Z',
+                local_date: '2026-08-04',
+                status: 'POSTED',
+                updated_at: '2026-08-04T01:00:00.000Z',
+              },
+            ],
+          },
+        }) as never,
     );
 
     await sync(WS);

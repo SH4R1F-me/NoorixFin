@@ -11,7 +11,7 @@
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { AlertTriangle, Check, Loader2, Settings2, Trash2 } from 'lucide-react';
-import type { AppSetting } from '../../../lib/admin';
+import type { AppSetting } from '../../../lib/admin-types';
 import { Badge, Panel, T, formatTime, s } from '../ui';
 import { pruneEvents, saveSettings } from './actions';
 

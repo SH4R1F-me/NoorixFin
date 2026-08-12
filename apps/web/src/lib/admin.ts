@@ -38,6 +38,9 @@ export type {
   AnomalyNewDevice,
   AnomalyThrottleAbuser,
   Anomalies,
+  NotificationCampaign,
+  NotificationDeliveryStats,
+  NotificationTemplate,
 } from './admin-types';
 
 import type {
@@ -56,6 +59,9 @@ import type {
   AuthAuditEvent,
   DeviceSession,
   Anomalies,
+  NotificationCampaign,
+  NotificationDeliveryStats,
+  NotificationTemplate,
 } from './admin-types';
 
 // ─── Fetchers ───────────────────────────────────────────────────────────────
@@ -87,13 +93,13 @@ export const getPlatformStats = () => get<PlatformStats>('/admin/overview');
 export const getHealthReport = () => get<HealthReport>('/admin/health');
 export const getSettings = () => get<AppSetting[]>('/admin/settings');
 export const getBroadcasts = () => get<AdminBroadcast[]>('/admin/broadcasts');
+export const getNotificationCampaigns = () => get<NotificationCampaign[]>('/admin/notifications');
+export const getNotificationTemplates = () =>
+  get<NotificationTemplate[]>('/admin/notifications/templates');
+export const getNotificationDeliveryStats = (id: string) =>
+  get<NotificationDeliveryStats>(`/admin/notifications/${id}/deliveries`);
 
-export function getEvents(params: {
-  level?: string;
-  q?: string;
-  limit?: number;
-  offset?: number;
-}) {
+export function getEvents(params: { level?: string; q?: string; limit?: number; offset?: number }) {
   const search = new URLSearchParams();
   if (params.level) search.set('level', params.level);
   if (params.q) search.set('q', params.q);
@@ -137,8 +143,7 @@ export const getPerformanceMetrics = (windowHours = 1) =>
 
 // ─── Phase 2: Scheduled jobs ─────────────────────────────────────────────────
 
-export const getScheduledJobs = () =>
-  get<{ jobs: ScheduledJob[]; run_at: string }>('/admin/jobs');
+export const getScheduledJobs = () => get<{ jobs: ScheduledJob[]; run_at: string }>('/admin/jobs');
 
 // ─── Phase 2: Alerts ─────────────────────────────────────────────────────────
 
@@ -146,9 +151,12 @@ export const getAlerts = () => get<AlertState[]>('/admin/alerts');
 
 export async function acknowledgeAlert(alertKey: string): Promise<Result<AlertState>> {
   try {
-    const data = await apiFetch<AlertState>(`/admin/alerts/${encodeURIComponent(alertKey)}/acknowledge`, {
-      method: 'POST',
-    });
+    const data = await apiFetch<AlertState>(
+      `/admin/alerts/${encodeURIComponent(alertKey)}/acknowledge`,
+      {
+        method: 'POST',
+      },
+    );
     return { ok: true, data };
   } catch (err) {
     if (err instanceof ApiError) return { ok: false, error: `${err.code}: ${err.message}` };
@@ -158,11 +166,7 @@ export async function acknowledgeAlert(alertKey: string): Promise<Result<AlertSt
 
 // ─── Phase 2: Security — Auth events ─────────────────────────────────────────
 
-export function getAuthEvents(params: {
-  platform?: string;
-  limit?: number;
-  offset?: number;
-}) {
+export function getAuthEvents(params: { platform?: string; limit?: number; offset?: number }) {
   const q = new URLSearchParams();
   if (params.platform) q.set('platform', params.platform);
   q.set('limit', String(params.limit ?? 50));
@@ -172,11 +176,7 @@ export function getAuthEvents(params: {
 
 // ─── Phase 2: Security — Active sessions ─────────────────────────────────────
 
-export function getActiveSessions(params: {
-  platform?: string;
-  limit?: number;
-  offset?: number;
-}) {
+export function getActiveSessions(params: { platform?: string; limit?: number; offset?: number }) {
   const q = new URLSearchParams();
   if (params.platform) q.set('platform', params.platform);
   q.set('limit', String(params.limit ?? 50));
@@ -186,9 +186,12 @@ export function getActiveSessions(params: {
 
 export async function revokeSession(deviceId: string): Promise<Result<{ revoked: boolean }>> {
   try {
-    const data = await apiFetch<{ revoked: boolean }>(`/admin/security/sessions/${deviceId}/revoke`, {
-      method: 'POST',
-    });
+    const data = await apiFetch<{ revoked: boolean }>(
+      `/admin/security/sessions/${deviceId}/revoke`,
+      {
+        method: 'POST',
+      },
+    );
     return { ok: true, data };
   } catch (err) {
     if (err instanceof ApiError) return { ok: false, error: `${err.code}: ${err.message}` };
@@ -198,9 +201,12 @@ export async function revokeSession(deviceId: string): Promise<Result<{ revoked:
 
 export async function revokeAllSessions(userId: string): Promise<Result<{ revoked: number }>> {
   try {
-    const data = await apiFetch<{ revoked: number }>(`/admin/security/sessions/revoke-all/${userId}`, {
-      method: 'POST',
-    });
+    const data = await apiFetch<{ revoked: number }>(
+      `/admin/security/sessions/revoke-all/${userId}`,
+      {
+        method: 'POST',
+      },
+    );
     return { ok: true, data };
   } catch (err) {
     if (err instanceof ApiError) return { ok: false, error: `${err.code}: ${err.message}` };

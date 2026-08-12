@@ -3,8 +3,14 @@
  */
 import { useCallback, useState } from 'react';
 import {
-  View, Text, ScrollView, StyleSheet, TouchableOpacity,
-  ActivityIndicator, Alert, SafeAreaView,
+  View,
+  Text,
+  ScrollView,
+  StyleSheet,
+  TouchableOpacity,
+  ActivityIndicator,
+  Alert,
+  SafeAreaView,
 } from 'react-native';
 import { useFocusEffect } from 'expo-router';
 import { apiFetch } from '../../src/lib/api';
@@ -34,8 +40,8 @@ export default function SecurityScreen() {
 
   const load = useCallback(async () => {
     try {
-      const data = await apiFetch<{ items: Device[] }>('/me/devices');
-      setDevices(data.items);
+      const data = await apiFetch<Device[]>('/me/devices');
+      setDevices(data);
     } catch (e) {
       Alert.alert('Error', 'Failed to load sessions.');
     } finally {
@@ -43,13 +49,18 @@ export default function SecurityScreen() {
     }
   }, []);
 
-  useFocusEffect(useCallback(() => { void load(); }, [load]));
+  useFocusEffect(
+    useCallback(() => {
+      void load();
+    }, [load]),
+  );
 
   async function handleRevoke(deviceId: string) {
     Alert.alert('Revoke Session', 'This device will be signed out. Continue?', [
       { text: 'Cancel', style: 'cancel' },
       {
-        text: 'Revoke', style: 'destructive',
+        text: 'Revoke',
+        style: 'destructive',
         onPress: async () => {
           setRevoking(deviceId);
           try {
@@ -93,16 +104,29 @@ export default function SecurityScreen() {
           devices.map((device) => (
             <View key={device.id} style={styles.deviceCard}>
               <View style={styles.deviceHeader}>
-                <Smartphone size={18} color={PLATFORM_COLOR[device.platform] ?? Colors.textDim} strokeWidth={2} />
-                <Text style={[styles.platform, { color: PLATFORM_COLOR[device.platform] ?? Colors.textDim }]}>
+                <Smartphone
+                  size={18}
+                  color={PLATFORM_COLOR[device.platform] ?? Colors.textDim}
+                  strokeWidth={2}
+                />
+                <Text
+                  style={[
+                    styles.platform,
+                    { color: PLATFORM_COLOR[device.platform] ?? Colors.textDim },
+                  ]}
+                >
                   {device.platform.toUpperCase()}
                 </Text>
                 <Text style={styles.deviceName}>{device.device_name ?? 'Unknown device'}</Text>
               </View>
               <View style={styles.deviceMeta}>
-                <Text style={styles.metaText}>Last seen: {formatRelative(device.last_seen_at)}</Text>
+                <Text style={styles.metaText}>
+                  Last seen: {formatRelative(device.last_seen_at)}
+                </Text>
                 {device.last_ip && <Text style={styles.metaText}>IP: {device.last_ip}</Text>}
-                {device.app_version && <Text style={styles.metaText}>Version: {device.app_version}</Text>}
+                {device.app_version && (
+                  <Text style={styles.metaText}>Version: {device.app_version}</Text>
+                )}
               </View>
               <TouchableOpacity
                 onPress={() => handleRevoke(device.id)}
@@ -130,29 +154,46 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.bg },
   content: { padding: Spacing.lg, paddingBottom: Spacing.xxl, gap: Spacing.md },
   infoBox: {
-    flexDirection: 'row', alignItems: 'flex-start', gap: Spacing.sm,
-    backgroundColor: Colors.accentLight, borderRadius: Radius.md,
-    padding: Spacing.md, borderWidth: 1, borderColor: 'rgba(91,127,255,0.3)',
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: Spacing.sm,
+    backgroundColor: Colors.accentLight,
+    borderRadius: Radius.md,
+    padding: Spacing.md,
+    borderWidth: 1,
+    borderColor: 'rgba(91,127,255,0.3)',
   },
   infoText: { flex: 1, ...Typography.caption, color: Colors.textDim, lineHeight: 18 },
   sectionTitle: { ...Typography.label, marginTop: Spacing.sm },
   empty: { ...Typography.bodyDim, textAlign: 'center', marginTop: Spacing.xl },
   deviceCard: {
-    backgroundColor: Colors.bgCard, borderRadius: Radius.lg,
-    padding: Spacing.md, borderWidth: 1, borderColor: Colors.border, gap: Spacing.xs,
+    backgroundColor: Colors.bgCard,
+    borderRadius: Radius.lg,
+    padding: Spacing.md,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    gap: Spacing.xs,
   },
   deviceHeader: {
-    flexDirection: 'row', alignItems: 'center', gap: Spacing.xs,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.xs,
   },
   platform: { fontSize: 10, fontWeight: '800', letterSpacing: 0.5 },
   deviceName: { ...Typography.body, fontWeight: '600', flex: 1 },
   deviceMeta: { gap: 2 },
   metaText: { ...Typography.caption },
   revokeBtn: {
-    flexDirection: 'row', alignItems: 'center', gap: 6,
-    alignSelf: 'flex-end', paddingHorizontal: Spacing.sm, paddingVertical: 6,
-    borderRadius: Radius.sm, borderWidth: 1,
-    borderColor: 'rgba(239,68,68,0.3)', backgroundColor: 'rgba(239,68,68,0.08)',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    alignSelf: 'flex-end',
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: 6,
+    borderRadius: Radius.sm,
+    borderWidth: 1,
+    borderColor: 'rgba(239,68,68,0.3)',
+    backgroundColor: 'rgba(239,68,68,0.08)',
     marginTop: 4,
   },
   revokeBtnText: { fontSize: 13, color: Colors.error, fontWeight: '600' },

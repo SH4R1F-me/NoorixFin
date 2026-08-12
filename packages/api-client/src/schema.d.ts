@@ -4,2880 +4,3987 @@
  */
 
 export interface paths {
-    "/v1/workspaces/{workspaceId}/sync": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Delta sync — all rows changed since the given cursor
-         * @description Omit `since` for a full initial pull. Delivery is at-least-once: boundary rows may repeat, so the client must upsert by primary key. Advance your stored cursor only when `has_more` is false.
-         */
-        get: operations["SyncController_delta_v1"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+  '/v1/workspaces/{workspaceId}/sync': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/v1/health": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Liveness probe — process is up. Touches no dependency. */
-        get: operations["HealthController_check_v1"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /**
+     * Delta sync — all rows changed since the given cursor
+     * @description Omit `since` for a full initial pull. Delivery is at-least-once: boundary rows may repeat, so the client must upsert by primary key. Advance your stored cursor only when `has_more` is false.
+     */
+    get: operations['SyncController_delta_v1'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/notifications': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/v1/health/live": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Liveness probe (alias of GET /health) */
-        get: operations["HealthController_live_v1"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /** List the current user's notifications */
+    get: operations['NotificationsController_list_v1'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/notifications/unread-count': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/v1/health/ready": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Readiness probe — checks database and auth. 503 when not ready. */
-        get: operations["HealthController_ready_v1"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /** Unread notification badge count */
+    get: operations['NotificationsController_unreadCount_v1'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/notifications/read-all': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/v1/me": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get current user profile */
-        get: operations["ProfilesController_getProfile_v1"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put?: never;
+    /** Mark every notification as read */
+    post: operations['NotificationsController_markAllRead_v1'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/notifications/{id}/read': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/v1/me/preferences": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        /** Update user preferences */
-        patch: operations["ProfilesController_updatePreferences_v1"];
-        trace?: never;
+    get?: never;
+    put?: never;
+    /** Mark one notification as read */
+    post: operations['NotificationsController_markRead_v1'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/notifications/{id}/archive': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/v1/me/onboarding": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        /**
-         * Advance the §5.2 onboarding state machine
-         * @description Separate from /me/preferences: preferences are freely editable, this is a monotonic progression. Moving backwards is silently ignored so a reloaded step cannot drag a finished user back into onboarding.
-         */
-        patch: operations["ProfilesController_updateOnboarding_v1"];
-        trace?: never;
+    get?: never;
+    put?: never;
+    /** Archive one notification */
+    post: operations['NotificationsController_archive_v1'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/notifications/{id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/v1/workspaces": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** List user workspaces */
-        get: operations["WorkspacesController_list_v1"];
-        put?: never;
-        /** Create a new personal workspace */
-        post: operations["WorkspacesController_create_v1"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put?: never;
+    post?: never;
+    /** Delete one notification */
+    delete: operations['NotificationsController_delete_v1'];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/me/notification-preferences': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/v1/workspaces/{workspaceId}/summary": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Dashboard summary — net worth, month income/expense/net, prior month
-         * @description Single aggregated payload (DEC-011). Amounts are minor units. Percentage deltas are NOT returned: with a zero prior month a change is undefined rather than +100%, so the client decides how to render that.
-         */
-        get: operations["WorkspacesController_summary_v1"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /** Get channel preferences and quiet hours */
+    get: operations['NotificationPreferencesController_get_v1'];
+    /** Update channel preferences and quiet hours */
+    put: operations['NotificationPreferencesController_update_v1'];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/admin/notifications': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/v1/workspaces/{workspaceId}/accounts": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** List workspace accounts with balances */
-        get: operations["AccountsController_list_v1"];
-        put?: never;
-        /** Create a new ledger account */
-        post: operations["AccountsController_create_v1"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /** List operator-authored notification campaigns */
+    get: operations['AdminNotificationsController_listCampaigns_v1'];
+    put?: never;
+    /** Compose, target, and optionally schedule a campaign */
+    post: operations['AdminNotificationsController_compose_v1'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/admin/notifications/templates': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/v1/workspaces/{workspaceId}/accounts/{id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        /** Update an account (name, flags, archive) */
-        patch: operations["AccountsController_update_v1"];
-        trace?: never;
+    /** List reusable notification templates */
+    get: operations['AdminNotificationsController_templates_v1'];
+    put?: never;
+    /** Create or update a notification template by key */
+    post: operations['AdminNotificationsController_saveTemplate_v1'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/admin/notifications/templates/{id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/v1/workspaces/{workspaceId}/transactions": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** List transactions with cursor pagination */
-        get: operations["TransactionsController_list_v1"];
-        put?: never;
-        /** Create a new transaction (income/expense/transfer) */
-        post: operations["TransactionsController_create_v1"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put?: never;
+    post?: never;
+    /** Delete a notification template */
+    delete: operations['AdminNotificationsController_deleteTemplate_v1'];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/admin/notifications/{id}/deliveries': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/v1/workspaces/{workspaceId}/tags": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Every tag in the workspace, with usage counts
-         * @description The count distinguishes a label in active use from one left behind by a typo — which is the decision this list exists to support.
-         */
-        get: operations["TransactionsController_listTags_v1"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /** Aggregate per-channel delivery outcomes */
+    get: operations['AdminNotificationsController_deliveries_v1'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/health': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/v1/workspaces/{workspaceId}/tags/{tagId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        /**
-         * Delete a tag
-         * @description Detaches it from every entry and alters no posting — a tag is a label, not a fact about the money.
-         */
-        delete: operations["TransactionsController_deleteTag_v1"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /** Liveness probe — process is up. Touches no dependency. */
+    get: operations['HealthController_check_v1'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/health/live': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/v1/workspaces/{workspaceId}/transactions/{id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get transaction detail with postings */
-        get: operations["TransactionsController_getOne_v1"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /** Liveness probe (alias of GET /health) */
+    get: operations['HealthController_live_v1'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/health/ready': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/v1/workspaces/{workspaceId}/transactions/{id}/reverse": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Reverse a posted transaction */
-        post: operations["TransactionsController_reverse_v1"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /** Readiness probe — checks database and auth. 503 when not ready. */
+    get: operations['HealthController_ready_v1'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/me': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/v1/workspaces/{workspaceId}/categories": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** List categories (auto-seeds system categories) */
-        get: operations["CategoriesController_list_v1"];
-        put?: never;
-        /** Create a custom category */
-        post: operations["CategoriesController_create_v1"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /** Get current user profile */
+    get: operations['ProfilesController_getProfile_v1'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/me/preferences': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/v1/workspaces/{workspaceId}/categories/{id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        /** Update a category (renaming a system category sets custom_name) */
-        patch: operations["CategoriesController_update_v1"];
-        trace?: never;
+    get?: never;
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    /** Update user preferences */
+    patch: operations['ProfilesController_updatePreferences_v1'];
+    trace?: never;
+  };
+  '/v1/me/onboarding': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/v1/workspaces/{workspaceId}/budget": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Budget status: planned vs actual for the current period */
-        get: operations["PlanningController_getBudget_v1"];
-        /** Create or replace the budget and all of its lines */
-        put: operations["PlanningController_upsertBudget_v1"];
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    /**
+     * Advance the §5.2 onboarding state machine
+     * @description Separate from /me/preferences: preferences are freely editable, this is a monotonic progression. Moving backwards is silently ignored so a reloaded step cannot drag a finished user back into onboarding.
+     */
+    patch: operations['ProfilesController_updateOnboarding_v1'];
+    trace?: never;
+  };
+  '/v1/workspaces': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/v1/workspaces/{workspaceId}/budget/{id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        /** Delete a budget */
-        delete: operations["PlanningController_deleteBudget_v1"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /** List user workspaces */
+    get: operations['WorkspacesController_list_v1'];
+    put?: never;
+    /** Create a new personal workspace */
+    post: operations['WorkspacesController_create_v1'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/workspaces/{workspaceId}/summary': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/v1/workspaces/{workspaceId}/goals": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Savings goals and debt summary, progress read from the ledger */
-        get: operations["PlanningController_getGoals_v1"];
-        put?: never;
-        /** Create a savings goal */
-        post: operations["PlanningController_createGoal_v1"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /**
+     * Dashboard summary — net worth, month income/expense/net, prior month
+     * @description Single aggregated payload (DEC-011). Amounts are minor units. Percentage deltas are NOT returned: with a zero prior month a change is undefined rather than +100%, so the client decides how to render that.
+     */
+    get: operations['WorkspacesController_summary_v1'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/workspaces/{workspaceId}/accounts': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/v1/workspaces/{workspaceId}/goals/{id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        /** Delete a savings goal */
-        delete: operations["PlanningController_deleteGoal_v1"];
-        options?: never;
-        head?: never;
-        /** Update a savings goal (progress is not writable) */
-        patch: operations["PlanningController_updateGoal_v1"];
-        trace?: never;
+    /** List workspace accounts with balances */
+    get: operations['AccountsController_list_v1'];
+    put?: never;
+    /** Create a new ledger account */
+    post: operations['AccountsController_create_v1'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/workspaces/{workspaceId}/accounts/{id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/v1/workspaces/{workspaceId}/debts": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        /** Attach or replace repayment terms on a liability account */
-        put: operations["PlanningController_upsertDebt_v1"];
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    /** Update an account (name, flags, archive) */
+    patch: operations['AccountsController_update_v1'];
+    trace?: never;
+  };
+  '/v1/workspaces/{workspaceId}/transactions': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/v1/workspaces/{workspaceId}/calendar": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Upcoming, due and overdue events */
-        get: operations["PlanningController_getCalendar_v1"];
-        put?: never;
-        /** Create a bill, expected income or reminder */
-        post: operations["PlanningController_createEvent_v1"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /** List transactions with cursor pagination */
+    get: operations['TransactionsController_list_v1'];
+    put?: never;
+    /** Create a new transaction (income/expense/transfer) */
+    post: operations['TransactionsController_create_v1'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/workspaces/{workspaceId}/tags': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/v1/workspaces/{workspaceId}/calendar/{id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        /** Delete a calendar event */
-        delete: operations["PlanningController_deleteEvent_v1"];
-        options?: never;
-        head?: never;
-        /** Mark paid or skipped, or edit an event */
-        patch: operations["PlanningController_updateEvent_v1"];
-        trace?: never;
+    /**
+     * Every tag in the workspace, with usage counts
+     * @description The count distinguishes a label in active use from one left behind by a typo — which is the decision this list exists to support.
+     */
+    get: operations['TransactionsController_listTags_v1'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/workspaces/{workspaceId}/tags/{tagId}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/v1/workspaces/{workspaceId}/recurring": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** List recurring rules */
-        get: operations["PlanningController_listRules_v1"];
-        put?: never;
-        /** Create a recurring rule (never auto-posts — §9.4) */
-        post: operations["PlanningController_createRule_v1"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put?: never;
+    post?: never;
+    /**
+     * Delete a tag
+     * @description Detaches it from every entry and alters no posting — a tag is a label, not a fact about the money.
+     */
+    delete: operations['TransactionsController_deleteTag_v1'];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/workspaces/{workspaceId}/transactions/{id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/v1/workspaces/{workspaceId}/recurring/{id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        /** Delete a recurring rule */
-        delete: operations["PlanningController_deleteRule_v1"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /** Get transaction detail with postings */
+    get: operations['TransactionsController_getOne_v1'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/workspaces/{workspaceId}/transactions/{id}/reverse': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/v1/workspaces/{workspaceId}/reports/categories": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Category breakdown and 6-month trend (§11.3 contract) */
-        get: operations["PlanningController_getReport_v1"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put?: never;
+    /** Reverse a posted transaction */
+    post: operations['TransactionsController_reverse_v1'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/workspaces/{workspaceId}/categories': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/v1/admin/overview": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Platform-wide counts, uptime and DB latency */
-        get: operations["AdminController_overview_v1"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /** List categories (auto-seeds system categories) */
+    get: operations['CategoriesController_list_v1'];
+    put?: never;
+    /** Create a custom category */
+    post: operations['CategoriesController_create_v1'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/workspaces/{workspaceId}/categories/{id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/v1/admin/health": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Deep health check — probes Postgres, Auth and Storage
-         * @description Unlike GET /v1/health, which reports that the process is up, this one actually reaches each dependency and reports per-check latency.
-         */
-        get: operations["AdminController_health_v1"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    /** Update a category (renaming a system category sets custom_name) */
+    patch: operations['CategoriesController_update_v1'];
+    trace?: never;
+  };
+  '/v1/workspaces/{workspaceId}/budget': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/v1/admin/events": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Paginated operational event log */
-        get: operations["AdminController_listEvents_v1"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /** Budget status: planned vs actual for the current period */
+    get: operations['PlanningController_getBudget_v1'];
+    /** Create or replace the budget and all of its lines */
+    put: operations['PlanningController_upsertBudget_v1'];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/workspaces/{workspaceId}/budget/{id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/v1/admin/events/stream": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Live event feed (SSE) */
-        get: operations["AdminController_streamEvents_v1"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put?: never;
+    post?: never;
+    /** Delete a budget */
+    delete: operations['PlanningController_deleteBudget_v1'];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/workspaces/{workspaceId}/goals': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/v1/admin/jobs": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Scheduled jobs and their last run outcome
-         * @description A scheduler nobody can inspect is a scheduler nobody trusts. The case that matters is FAILURE: a purge that has been erroring for a week looks exactly like a purge with nothing to do unless the run log is visible.
-         */
-        get: operations["AdminController_scheduledJobs_v1"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /** Savings goals and debt summary, progress read from the ledger */
+    get: operations['PlanningController_getGoals_v1'];
+    put?: never;
+    /** Create a savings goal */
+    post: operations['PlanningController_createGoal_v1'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/workspaces/{workspaceId}/goals/{id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/v1/admin/tracing": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Whether the request-trace window is open, and until when */
-        get: operations["AdminController_tracingStatus_v1"];
-        put?: never;
-        /**
-         * Open a time-boxed request-trace window
-         * @description Records EVERY request to system_events so one user's request can be followed end to end. Expires on its own — a trace that must be switched off by hand becomes a permanent activity log of every user, which DEC-016 does not permit an operator to keep.
-         */
-        post: operations["AdminController_enableTracing_v1"];
-        /** Close the trace window early */
-        delete: operations["AdminController_disableTracing_v1"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put?: never;
+    post?: never;
+    /** Delete a savings goal */
+    delete: operations['PlanningController_deleteGoal_v1'];
+    options?: never;
+    head?: never;
+    /** Update a savings goal (progress is not writable) */
+    patch: operations['PlanningController_updateGoal_v1'];
+    trace?: never;
+  };
+  '/v1/workspaces/{workspaceId}/debts': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/v1/admin/events/prune": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Drop events past the retention window */
-        post: operations["AdminController_pruneEvents_v1"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    /** Attach or replace repayment terms on a liability account */
+    put: operations['PlanningController_upsertDebt_v1'];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/workspaces/{workspaceId}/calendar': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/v1/admin/audit": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Global audit trail */
-        get: operations["AdminController_listAudit_v1"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /** Upcoming, due and overdue events */
+    get: operations['PlanningController_getCalendar_v1'];
+    put?: never;
+    /** Create a bill, expected income or reminder */
+    post: operations['PlanningController_createEvent_v1'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/workspaces/{workspaceId}/calendar/{id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/v1/admin/users": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * User metadata list
-         * @description Platform metadata and activity COUNTS only. This endpoint cannot return a balance, amount, payee or note — operators have no access to any user's financial rows (DEC-002 #12, DEC-007).
-         */
-        get: operations["AdminController_listUsers_v1"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put?: never;
+    post?: never;
+    /** Delete a calendar event */
+    delete: operations['PlanningController_deleteEvent_v1'];
+    options?: never;
+    head?: never;
+    /** Mark paid or skipped, or edit an event */
+    patch: operations['PlanningController_updateEvent_v1'];
+    trace?: never;
+  };
+  '/v1/workspaces/{workspaceId}/recurring': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/v1/admin/users/{userId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Single user metadata */
-        get: operations["AdminController_getUser_v1"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        /**
-         * Update the operator-editable subset of a profile
-         * @description Allowlist: display_name, locale, timezone. is_super_admin is deliberately not editable here — promotion is a service-role SQL operation (DEC-013).
-         */
-        patch: operations["AdminController_updateUser_v1"];
-        trace?: never;
+    /** List recurring rules */
+    get: operations['PlanningController_listRules_v1'];
+    put?: never;
+    /** Create a recurring rule (never auto-posts — §9.4) */
+    post: operations['PlanningController_createRule_v1'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/workspaces/{workspaceId}/recurring/{id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/v1/admin/users/{userId}/suspend": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Suspend an account (Auth ban + status) */
-        post: operations["AdminController_suspendUser_v1"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put?: never;
+    post?: never;
+    /** Delete a recurring rule */
+    delete: operations['PlanningController_deleteRule_v1'];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/workspaces/{workspaceId}/reports/categories': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/v1/admin/users/{userId}/reinstate": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Lift a suspension, and cancel any pending deletion */
-        post: operations["AdminController_reinstateUser_v1"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /** Category breakdown and 6-month trend (§11.3 contract) */
+    get: operations['PlanningController_getReport_v1'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/admin/overview': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/v1/admin/purge": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Run the deletion purge for expired grace periods
-         * @description Irreversible. Removes application data in FK dependency order, then the auth user. Only touches accounts whose 30-day grace has already expired.
-         */
-        post: operations["AdminController_runPurge_v1"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /** Platform-wide counts, uptime and DB latency */
+    get: operations['AdminController_overview_v1'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/admin/health': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/v1/admin/settings": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** All global settings, public and private */
-        get: operations["AdminController_listSettings_v1"];
-        /** Update one or more known settings */
-        put: operations["AdminController_updateSettings_v1"];
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /**
+     * Deep health check — probes Postgres, Auth and Storage
+     * @description Unlike GET /v1/health, which reports that the process is up, this one actually reaches each dependency and reports per-check latency.
+     */
+    get: operations['AdminController_health_v1'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/admin/events': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/v1/admin/broadcasts": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** All broadcasts with aggregate delivery stats */
-        get: operations["AdminController_listBroadcasts_v1"];
-        put?: never;
-        /** Compose a broadcast (always created as DRAFT) */
-        post: operations["AdminController_createBroadcast_v1"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /** Paginated operational event log */
+    get: operations['AdminController_listEvents_v1'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/admin/events/stream': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/v1/admin/broadcasts/{broadcastId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        /** Edit a broadcast */
-        patch: operations["AdminController_updateBroadcast_v1"];
-        trace?: never;
+    /** Live event feed (SSE) */
+    get: operations['AdminController_streamEvents_v1'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/admin/jobs': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/v1/admin/broadcasts/{broadcastId}/publish": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Publish — makes it visible to its audience */
-        post: operations["AdminController_publishBroadcast_v1"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /**
+     * Scheduled jobs and their last run outcome
+     * @description A scheduler nobody can inspect is a scheduler nobody trusts. The case that matters is FAILURE: a purge that has been erroring for a week looks exactly like a purge with nothing to do unless the run log is visible.
+     */
+    get: operations['AdminController_scheduledJobs_v1'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/admin/tracing': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/v1/admin/broadcasts/{broadcastId}/archive": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Archive — withdraws it from every user */
-        post: operations["AdminController_archiveBroadcast_v1"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /** Whether the request-trace window is open, and until when */
+    get: operations['AdminController_tracingStatus_v1'];
+    put?: never;
+    /**
+     * Open a time-boxed request-trace window
+     * @description Records EVERY request to system_events so one user's request can be followed end to end. Expires on its own — a trace that must be switched off by hand becomes a permanent activity log of every user, which DEC-016 does not permit an operator to keep.
+     */
+    post: operations['AdminController_enableTracing_v1'];
+    /** Close the trace window early */
+    delete: operations['AdminController_disableTracing_v1'];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/admin/events/prune': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/v1/me/export": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Export every row this account owns (§15.3)
-         * @description Runs on the USER's client, so RLS is the scope boundary and a bug here cannot widen it. Operational logs are excluded: an audit trail a user can export is an audit trail an attacker can read after taking an account.
-         */
-        get: operations["AccountController_exportData_v1"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put?: never;
+    /** Drop events past the retention window */
+    post: operations['AdminController_pruneEvents_v1'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/admin/audit': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/v1/me/deletion-request": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Schedule this account for deletion after a 30-day grace period
-         * @description Nothing is deleted now. The account is banned and marked PENDING_DELETION; data is removed only when the grace period expires and the purge runs. Reversible by an operator until then (DEC-017).
-         */
-        post: operations["AccountController_requestDeletion_v1"];
-        /**
-         * Cancel a pending deletion
-         * @description Not reachable by the requesting user in practice: requesting deletion bans the account, so their session is dead. Cancellation is an operator action via POST /v1/admin/users/:id/reinstate. This route exists for the case where the ban failed but the marking succeeded.
-         */
-        delete: operations["AccountController_cancelDeletion_v1"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /** Global audit trail */
+    get: operations['AdminController_listAudit_v1'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/admin/users': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/v1/me/broadcasts": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Live broadcasts this user has not dismissed */
-        get: operations["AccountController_listBroadcasts_v1"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /**
+     * User metadata list
+     * @description Platform metadata and activity COUNTS only. This endpoint cannot return a balance, amount, payee or note — operators have no access to any user's financial rows (DEC-002 #12, DEC-007).
+     */
+    get: operations['AdminController_listUsers_v1'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/admin/users/{userId}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/v1/me/broadcasts/{broadcastId}/dismiss": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Dismiss a broadcast for this user */
-        post: operations["AccountController_dismissBroadcast_v1"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /** Single user metadata */
+    get: operations['AdminController_getUser_v1'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    /**
+     * Update the operator-editable subset of a profile
+     * @description Allowlist: display_name, locale, timezone. is_super_admin is deliberately not editable here — promotion is a service-role SQL operation (DEC-013).
+     */
+    patch: operations['AdminController_updateUser_v1'];
+    trace?: never;
+  };
+  '/v1/admin/users/{userId}/suspend': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/v1/settings/public": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Global settings any signed-in user may read
-         * @description Maintenance mode, whether signups are open, app version, donation link, support address. Private operator settings are excluded by RLS.
-         */
-        get: operations["PublicSettingsController_getPublicSettings_v1"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put?: never;
+    /** Suspend an account (Auth ban + status) */
+    post: operations['AdminController_suspendUser_v1'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/admin/users/{userId}/reinstate': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
+    get?: never;
+    put?: never;
+    /** Lift a suspension, and cancel any pending deletion */
+    post: operations['AdminController_reinstateUser_v1'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/admin/purge': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Run the deletion purge for expired grace periods
+     * @description Irreversible. Removes application data in FK dependency order, then the auth user. Only touches accounts whose 30-day grace has already expired.
+     */
+    post: operations['AdminController_runPurge_v1'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/admin/settings': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** All global settings, public and private */
+    get: operations['AdminController_listSettings_v1'];
+    /** Update one or more known settings */
+    put: operations['AdminController_updateSettings_v1'];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/admin/broadcasts': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** All broadcasts with aggregate delivery stats */
+    get: operations['AdminController_listBroadcasts_v1'];
+    put?: never;
+    /** Compose a broadcast (always created as DRAFT) */
+    post: operations['AdminController_createBroadcast_v1'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/admin/broadcasts/{broadcastId}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    /** Edit a broadcast */
+    patch: operations['AdminController_updateBroadcast_v1'];
+    trace?: never;
+  };
+  '/v1/admin/broadcasts/{broadcastId}/publish': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Publish — makes it visible to its audience */
+    post: operations['AdminController_publishBroadcast_v1'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/admin/broadcasts/{broadcastId}/archive': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Archive — withdraws it from every user */
+    post: operations['AdminController_archiveBroadcast_v1'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/admin/metrics/performance': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** p50/p95/p99 latency, error rate, request volume from system_events */
+    get: operations['AdminController_getPerformanceMetrics_v1'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/admin/alerts': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Current state of all alert rules */
+    get: operations['AdminController_getAlerts_v1'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/admin/alerts/{alertKey}/acknowledge': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Acknowledge (resolve) a firing alert */
+    post: operations['AdminController_acknowledgeAlert_v1'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/admin/security/auth-events': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Auth-related audit events (logins, MFA, suspensions) */
+    get: operations['AdminController_getAuthEvents_v1'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/admin/security/sessions': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** All active (non-revoked) device sessions platform-wide */
+    get: operations['AdminController_getActiveSessions_v1'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/admin/security/sessions/{deviceId}/revoke': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Force-revoke a single device session */
+    post: operations['AdminController_revokeSession_v1'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/admin/security/sessions/revoke-all/{userId}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Force-revoke all sessions for a given user */
+    post: operations['AdminController_revokeAllUserSessions_v1'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/admin/security/anomalies': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Heuristic security signals: new devices, throttle abusers */
+    get: operations['AdminController_getAnomalies_v1'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/admin/events/trace/{requestId}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** All system_events for a single X-Request-ID (correlated trace) */
+    get: operations['AdminController_getEventTrace_v1'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/me/export': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Export every row this account owns (§15.3)
+     * @description Runs on the USER's client, so RLS is the scope boundary and a bug here cannot widen it. Operational logs are excluded: an audit trail a user can export is an audit trail an attacker can read after taking an account.
+     */
+    get: operations['AccountController_exportData_v1'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/me/deletion-request': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Schedule this account for deletion after a 30-day grace period
+     * @description Nothing is deleted now. The account is banned and marked PENDING_DELETION; data is removed only when the grace period expires and the purge runs. Reversible by an operator until then (DEC-017).
+     */
+    post: operations['AccountController_requestDeletion_v1'];
+    /**
+     * Cancel a pending deletion
+     * @description Not reachable by the requesting user in practice: requesting deletion bans the account, so their session is dead. Cancellation is an operator action via POST /v1/admin/users/:id/reinstate. This route exists for the case where the ban failed but the marking succeeded.
+     */
+    delete: operations['AccountController_cancelDeletion_v1'];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/me/broadcasts': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Live broadcasts this user has not dismissed */
+    get: operations['AccountController_listBroadcasts_v1'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/me/broadcasts/{broadcastId}/dismiss': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Dismiss a broadcast for this user */
+    post: operations['AccountController_dismissBroadcast_v1'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/settings/public': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Global settings any signed-in user may read
+     * @description Maintenance mode, whether signups are open, app version, donation link, support address. Private operator settings are excluded by RLS.
+     */
+    get: operations['PublicSettingsController_getPublicSettings_v1'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/me/devices': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** List active devices for the current user */
+    get: operations['DevicesController_list_v1'];
+    put?: never;
+    /** Register or update a device (upsert on device_id) */
+    post: operations['DevicesController_register_v1'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/me/devices/current/{opaqueDeviceId}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    /** Revoke the caller device by its app-generated device_id */
+    delete: operations['DevicesController_revokeCurrent_v1'];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/me/devices/{deviceId}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    /** Revoke a specific device / sign out of that session */
+    delete: operations['DevicesController_revoke_v1'];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/me/devices/revoke-all': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Sign out of all other devices */
+    post: operations['DevicesController_revokeAll_v1'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
 }
 export type webhooks = Record<string, never>;
 export interface components {
-    schemas: {
-        SyncResponseDto: {
-            /** @description Cursor to pass as `since` on the next pull. Advance it ONLY when has_more is false — see the partial-page note in the service. */
-            cursor: string;
-            /** @description True if any table hit the row limit. Call again with the same cursor to drain the remainder. */
-            has_more: boolean;
-            /** @description Server time when this delta was computed (ISO-8601). */
-            server_time: string;
-            /** @description Changed rows per table, keyed by table name. */
-            changes: Record<string, never>;
-        };
-        ProfileResponseDto: {
-            /** @example 550e8400-e29b-41d4-a716-446655440000 */
-            id: string;
-            /** @example Sharif */
-            display_name: string;
-            /** @example null */
-            avatar_path?: Record<string, never>;
-            /** @example bn */
-            locale: string;
-            /** @example Asia/Dhaka */
-            timezone: string;
-            /** @example BDT */
-            base_currency: string;
-            /** @example 0 */
-            week_starts_on: number;
-            /** @example false */
-            amount_privacy_default: boolean;
-            /** @example COMPLETED */
-            onboarding_status: string;
-            /**
-             * @description Null until the user reaches §5.2 step 4.
-             * @example INDIVIDUAL
-             * @enum {string}
-             */
-            persona?: "INDIVIDUAL" | "STUDENT" | "FREELANCER";
-            /**
-             * @description Platform operator flag (DEC-007). The web shell uses this to decide whether to render the System Admin switch. It grants METADATA access only — never access to another user's financial rows.
-             * @example false
-             */
-            is_super_admin: boolean;
-            /**
-             * @description Account lifecycle state (DEC-017).
-             * @example ACTIVE
-             * @enum {string}
-             */
-            status: "ACTIVE" | "SUSPENDED" | "PENDING_DELETION";
-            /** @description Set when status is PENDING_DELETION — when the purge runs. */
-            deletion_scheduled_for?: Record<string, never>;
-            email: string;
-            created_at: string;
-            updated_at: string;
-        };
-        UpdatePreferencesDto: {
-            /**
-             * @description User locale: bn or en
-             * @example bn
-             */
-            locale?: string;
-            /**
-             * @description IANA timezone name
-             * @example Asia/Dhaka
-             */
-            timezone?: string;
-            /**
-             * @description ISO 4217 currency code
-             * @example BDT
-             */
-            base_currency?: string;
-            /**
-             * @description Week start day: 0=Sun, 1=Mon, ..., 6=Sat
-             * @example 0
-             */
-            week_starts_on?: number;
-            /** @description Default privacy mode for amounts */
-            amount_privacy_default?: boolean;
-            /**
-             * @description Display name
-             * @example Sharif
-             */
-            display_name?: string;
-        };
-        UpdateOnboardingDto: {
-            /**
-             * @description The step just finished. ACCOUNT_CREATED is absent because it is the initial state — a client asking to move BACK to it is a bug, not a step.
-             * @example PERSONA_SELECTED
-             * @enum {string}
-             */
-            onboarding_status?: "LANGUAGE_SELECTED" | "PREFERENCES_SET" | "PERSONA_SELECTED" | "WORKSPACE_CREATED" | "FIRST_ACCOUNT_ADDED" | "COMPLETED";
-            /**
-             * @description Blueprint §5.2 step 4. FAMILY is deliberately absent — DEC-007 dropped family workspaces, and offering a persona the product cannot honour would be the blueprint outvoting a later decision.
-             * @example INDIVIDUAL
-             * @enum {string}
-             */
-            persona?: "INDIVIDUAL" | "STUDENT" | "FREELANCER";
-        };
-        CreateWorkspaceDto: {
-            /** @example My Personal Finance */
-            name: string;
-            /** @example BDT */
-            base_currency?: string;
-            /** @example Asia/Dhaka */
-            timezone?: string;
-        };
-        WorkspaceResponseDto: {
-            id: string;
-            /** @enum {string} */
-            type: "PERSONAL";
-            name: string;
-            base_currency: string;
-            timezone: string;
-            created_by: string;
-            /** @enum {string} */
-            status: "ACTIVE" | "PENDING_DELETION" | "DELETED";
-            created_at: string;
-            updated_at: string;
-            /** @description Current user role (always OWNER) */
-            role?: string;
-        };
-        CreateAccountDto: {
-            /** @example Cash in Hand */
-            name: string;
-            /**
-             * @example ASSET
-             * @enum {string}
-             */
-            class: "ASSET" | "LIABILITY" | "INCOME" | "EXPENSE" | "EQUITY";
-            /**
-             * @example CASH
-             * @enum {string}
-             */
-            subtype: "CASH" | "BANK" | "MOBILE_WALLET" | "CREDIT_CARD" | "LOAN" | "SAVINGS" | "CATEGORY" | "SYSTEM";
-            /** @example BDT */
-            currency_code?: string;
-            /**
-             * @example DEBIT
-             * @enum {string}
-             */
-            normal_balance?: "DEBIT" | "CREDIT";
-            /** @example true */
-            include_in_budget?: boolean;
-            /** @example true */
-            include_in_net_worth?: boolean;
-            /** @example 2026-01-01 */
-            opening_date?: string;
-            /**
-             * @description Opening balance as minor-unit decimal string (e.g., "50000" = 500.00 BDT)
-             * @example 50000
-             */
-            opening_balance?: string;
-        };
-        AccountResponseDto: {
-            id: string;
-            workspace_id: string;
-            name: string;
-            class: string;
-            subtype: string;
-            currency_code: string;
-            normal_balance: string;
-            include_in_budget: boolean;
-            include_in_net_worth: boolean;
-            opening_date?: string;
-            archived_at?: Record<string, never>;
-            created_by: string;
-            version: number;
-            created_at: string;
-            updated_at: string;
-        };
-        UpdateAccountDto: {
-            /** @example Updated Account Name */
-            name?: string;
-            /** @example true */
-            include_in_budget?: boolean;
-            /** @example true */
-            include_in_net_worth?: boolean;
-            /**
-             * @description Set to true to archive the account
-             * @example false
-             */
-            archived?: boolean;
-        };
-        CreateTransactionDto: {
-            /**
-             * @example EXPENSE
-             * @enum {string}
-             */
-            type: "INCOME" | "EXPENSE" | "TRANSFER";
-            /**
-             * @description Amount in minor units as decimal string (e.g., "125000" = ৳1,250.00)
-             * @example 125000
-             */
-            amount: string;
-            /**
-             * @description Primary account ID
-             * @example 550e8400-e29b-41d4-a716-446655440000
-             */
-            account_id: string;
-            /** @description Category account ID (for income/expense) or destination account (for transfer) */
-            category_id?: string;
-            /** @description Destination account ID (for transfers) */
-            transfer_to_account_id?: string;
-            /** @example 2026-08-01T12:00:00Z */
-            occurred_at?: string;
-            /** @example Grocery store */
-            payee?: string;
-            /** @example Weekly groceries */
-            note?: string;
-            /**
-             * @example [
-             *       "groceries",
-             *       "weekly"
-             *     ]
-             */
-            tags?: string[];
-            /**
-             * @description Client-generated idempotency key (UUID)
-             * @example 550e8400-e29b-41d4-a716-446655440001
-             */
-            idempotency_key: string;
-        };
-        TransactionResponseDto: {
-            id: string;
-            workspace_id: string;
-            entry_type: string;
-            occurred_at: string;
-            local_date: string;
-            payee?: string;
-            note?: string;
-            status: string;
-            source: string;
-            created_by: string;
-            version: number;
-            created_at: string;
-            postings?: string[];
-        };
-        CategoryResponseDto: {
-            id: string;
-            workspace_id: string;
-            /** @description Backing ledger account. Postings reference THIS, not `id`. */
-            ledger_account_id: string;
-            /** @enum {string} */
-            kind: "INCOME" | "EXPENSE";
-            /**
-             * @description Set for system categories. Translate it for display; also marks the row as system-provided.
-             * @example cat.food_dining
-             */
-            translation_key?: Record<string, never>;
-            /** @description User-supplied name. Overrides translation_key when present. */
-            custom_name?: Record<string, never>;
-            parent_id?: Record<string, never>;
-            icon: string;
-            color: string;
-            sort_order: number;
-            archived_at?: Record<string, never>;
-            deleted_at?: Record<string, never>;
-            created_at: string;
-            updated_at: string;
-        };
-        CreateCategoryDto: {
-            /**
-             * @description Display name. Stored as `custom_name`; also names the backing ledger account.
-             * @example Food & Dining
-             */
-            name: string;
-            /**
-             * @description Category kind — matches the backing ledger account class
-             * @enum {string}
-             */
-            kind: "INCOME" | "EXPENSE";
-            /**
-             * @description Emoji icon
-             * @example 🍕
-             */
-            icon?: string;
-            /**
-             * @description Hex color for the category
-             * @example #10b981
-             */
-            color?: string;
-            /** @description Parent category ID for hierarchy */
-            parent_id?: string;
-            /**
-             * @description Sort order within siblings
-             * @example 0
-             */
-            sort_order?: number;
-        };
-        UpdateCategoryDto: {
-            name?: string;
-            icon?: string;
-            color?: string;
-            parent_id?: string;
-            sort_order?: number;
-            /** @description Archive this category */
-            archived?: boolean;
-        };
-        BudgetLineInputDto: {
-            /** @description Category this limit applies to */
-            category_id: string;
-            /**
-             * @description Planned limit, minor units
-             * @example 2000000
-             */
-            planned_minor: string;
-            /**
-             * @description Warn at this % of the limit. 0 disables.
-             * @example 80
-             */
-            alert_threshold_pct?: number;
-        };
-        UpsertBudgetDto: {
-            /** @example Monthly budget */
-            name?: string;
-            /** @enum {string} */
-            cadence?: "MONTHLY" | "WEEKLY";
-            /** @description Whether unspent limit carries into the next period */
-            rollover?: boolean;
-            lines: components["schemas"]["BudgetLineInputDto"][];
-        };
-        CreateGoalDto: {
-            /** @example Emergency fund */
-            name: string;
-            /**
-             * @description Target, minor units
-             * @example 10000000
-             */
-            target_minor: string;
-            /** @example BDT */
-            currency_code?: string;
-            /** @example 2027-01-01 */
-            target_date?: string;
-            /** @description Account whose balance IS the progress */
-            linked_account_id?: string;
-            /** @example 0 */
-            priority?: number;
-        };
-        UpdateGoalDto: {
-            name?: string;
-            target_minor?: string;
-            target_date?: string;
-            linked_account_id?: string;
-            priority?: number;
-            /** @enum {string} */
-            status?: "ACTIVE" | "ACHIEVED" | "ABANDONED";
-        };
-        UpsertDebtDto: {
-            /** @description The LIABILITY ledger account these terms describe */
-            ledger_account_id: string;
-            /**
-             * @description Original principal, minor units
-             * @example 30000000
-             */
-            principal_minor: string;
-            /**
-             * @description Annual rate in basis points
-             * @example 950
-             */
-            annual_rate_bps?: number;
-            /** @example 150000 */
-            minimum_payment_minor?: string;
-            /**
-             * @description Day of month the payment is due
-             * @example 5
-             */
-            due_day?: number;
-        };
-        CreateCalendarEventDto: {
-            /** @enum {string} */
-            type: "BILL" | "INCOME" | "GOAL" | "CUSTOM";
-            /** @example Electricity bill */
-            title: string;
-            /** @example 120000 */
-            amount_minor?: string;
-            /** @example BDT */
-            currency_code?: string;
-            /**
-             * @description Due date in the workspace timezone
-             * @example 2026-08-10
-             */
-            due_date: string;
-            /**
-             * @description Remind this many minutes before the due time
-             * @example [
-             *       1440,
-             *       60
-             *     ]
-             */
-            reminder_offsets?: number[];
-        };
-        UpdateCalendarEventDto: {
-            title?: string;
-            amount_minor?: string;
-            due_date?: string;
-            /** @enum {string} */
-            status?: "UPCOMING" | "PAID" | "SKIPPED";
-            /** @description The transaction that settled this event */
-            journal_entry_id?: string;
-        };
-        CreateRecurringRuleDto: {
-            /** @example Rent */
-            name: string;
-            /** @enum {string} */
-            entry_type: "INCOME" | "EXPENSE" | "TRANSFER";
-            /** @example 1500000 */
-            amount_minor: string;
-            /** @example BDT */
-            currency_code?: string;
-            account_id?: string;
-            category_id?: string;
-            payee?: string;
-            /** @enum {string} */
-            frequency: "DAILY" | "WEEKLY" | "MONTHLY" | "YEARLY";
-            /** @example 1 */
-            interval_count?: number;
-            /** @example 2026-09-01 */
-            next_occurrence: string;
-            /** @example 2027-09-01 */
-            ends_at?: string;
-            /** @enum {string} */
-            behavior?: "REMIND_ONLY" | "AUTO_CREATE_DRAFT";
-        };
-        EnableTracingDto: {
-            /**
-             * @description How long to trace for. Clamped server-side to at most 60 minutes.
-             * @example 15
-             */
-            minutes?: number;
-        };
-        AdminUpdateUserDto: {
-            /** @example Sharif */
-            display_name?: string;
-            /** @enum {string} */
-            locale?: "bn" | "en";
-            /** @example Asia/Dhaka */
-            timezone?: string;
-        };
-        SuspendUserDto: {
-            /** @example Terms of service violation — ticket #412 */
-            reason: string;
-        };
-        UpdateSettingDto: {
-            /** @example maintenance_mode */
-            key: string;
-            /**
-             * @description JSON value for the setting. Shape is per-key.
-             * @example {
-             *       "enabled": false
-             *     }
-             */
-            value: Record<string, never>;
-        };
-        UpdateSettingsDto: {
-            settings: components["schemas"]["UpdateSettingDto"][];
-        };
-        CreateBroadcastDto: {
-            /** @example Scheduled maintenance */
-            title_en: string;
-            /** @example নির্ধারিত রক্ষণাবেক্ষণ */
-            title_bn: string;
-            body_en?: string;
-            body_bn?: string;
-            /** @enum {string} */
-            severity?: "INFO" | "SUCCESS" | "WARNING" | "CRITICAL";
-            /** @enum {string} */
-            audience?: "ALL" | "SUPER_ADMINS";
-            link_url?: string;
-            /** @default true */
-            dismissible: boolean;
-            /** @description ISO timestamp; defaults to publish time */
-            publish_at?: string;
-            /** @description ISO timestamp; null means no expiry */
-            expires_at?: string;
-        };
-        UpdateBroadcastDto: {
-            /** @example Scheduled maintenance */
-            title_en?: string;
-            /** @example নির্ধারিত রক্ষণাবেক্ষণ */
-            title_bn?: string;
-            body_en?: string;
-            body_bn?: string;
-            /** @enum {string} */
-            severity?: "INFO" | "SUCCESS" | "WARNING" | "CRITICAL";
-            /** @enum {string} */
-            audience?: "ALL" | "SUPER_ADMINS";
-            link_url?: string;
-            /** @default true */
-            dismissible: boolean;
-            /** @description ISO timestamp; defaults to publish time */
-            publish_at?: string;
-            /** @description ISO timestamp; null means no expiry */
-            expires_at?: string;
-        };
-        RequestDeletionDto: {
-            /**
-             * @description Must exactly equal the signed-in account's email address. A typed confirmation, so an accidental or CSRF-driven POST cannot schedule the deletion of an entire ledger.
-             * @example me@example.com
-             */
-            confirm_email: string;
-            /**
-             * @description Optional free-text reason, retained on the audit event.
-             * @example No longer needed
-             */
-            reason?: string;
-        };
-        /** @description The shape of every failure, produced by GlobalHttpExceptionFilter. `code` is the stable identifier — branch on it, not on `message`, which is prose and may be reworded or translated. */
-        ApiErrorBody: {
-            /** @example 404 */
-            statusCode: number;
-            /**
-             * @example TRANSACTION_NOT_FOUND
-             * @enum {string}
-             */
-            code: "MISSING_TOKEN" | "INVALID_TOKEN" | "AUTH_FAILED" | "NOT_WORKSPACE_MEMBER" | "NOT_SUPER_ADMIN" | "MFA_REQUIRED" | "ACCOUNT_NOT_ACTIVE" | "NOT_AUTHENTICATED" | "AUTHZ_CHECK_FAILED" | "IDEMPOTENCY_KEY_REQUIRED" | "IDEMPOTENCY_KEY_REUSED" | "IDEMPOTENCY_KEY_TOO_LONG" | "IDEMPOTENCY_IN_PROGRESS" | "NOT_FOUND" | "WORKSPACE_NOT_FOUND" | "ACCOUNT_NOT_FOUND" | "CATEGORY_NOT_FOUND" | "PARENT_CATEGORY_NOT_FOUND" | "TRANSACTION_NOT_FOUND" | "TAG_NOT_FOUND" | "GOAL_NOT_FOUND" | "EVENT_NOT_FOUND" | "USER_NOT_FOUND" | "TRANSACTION_NOT_REVERSIBLE" | "PERSONAL_WORKSPACE_EXISTS" | "INVALID_AMOUNT" | "AMOUNT_TOO_LARGE" | "INVALID_TYPE" | "INVALID_VALUE" | "INVALID_REFERENCE" | "CATEGORY_REQUIRED" | "CATEGORY_KIND_MISMATCH" | "DESTINATION_REQUIRED" | "NOT_A_LIABILITY" | "NO_POSTINGS" | "ALREADY_REVERSED" | "EMPTY_PATCH" | "NO_CHANGES" | "ALREADY_PENDING" | "NOT_PENDING" | "CONFIRMATION_MISMATCH" | "CANNOT_SUSPEND_SELF" | "LAST_SUPER_ADMIN" | "UNKNOWN_SETTING" | "SYNC_CURSOR_STALLED" | "SYNC_FAILED" | "REVERSAL_FAILED" | "SUMMARY_FAILED" | "AGGREGATION_FAILED" | "PLANNING_WRITE_FAILED" | "CATEGORY_CREATE_FAILED" | "CATEGORY_SEED_FAILED" | "ONBOARDING_UPDATE_FAILED" | "DELETION_REQUEST_FAILED" | "CANCEL_FAILED" | "SUSPEND_FAILED" | "REINSTATE_FAILED" | "DISMISS_FAILED" | "BROADCASTS_UNAVAILABLE";
-            message: string;
-            /** @description Echo of X-Request-ID — quote it when reporting a failure. */
-            requestId: string;
-            /** Format: date-time */
-            timestamp: string;
-            path: string;
-            /** @description Present only on validation failures. */
-            fieldErrors?: {
-                [key: string]: string[];
-            } | null;
-        };
+  schemas: {
+    SyncResponseDto: {
+      /** @description Cursor to pass as `since` on the next pull. Advance it ONLY when has_more is false — see the partial-page note in the service. */
+      cursor: string;
+      /** @description True if any table hit the row limit. Call again with the same cursor to drain the remainder. */
+      has_more: boolean;
+      /** @description Server time when this delta was computed (ISO-8601). */
+      server_time: string;
+      /** @description Changed rows per table, keyed by table name. */
+      changes: Record<string, never>;
     };
-    responses: never;
-    parameters: never;
-    requestBodies: never;
-    headers: never;
-    pathItems: never;
+    NotificationPreferenceDto: {
+      /** @enum {string} */
+      category:
+        | 'security'
+        | 'budget'
+        | 'goal'
+        | 'recurring'
+        | 'transaction'
+        | 'sync'
+        | 'account'
+        | 'system'
+        | 'operator';
+      in_app: boolean;
+      push: boolean;
+      email: boolean;
+      /** @enum {string} */
+      digest: 'NONE' | 'DAILY' | 'WEEKLY';
+    };
+    UpdateNotificationPreferencesDto: {
+      preferences: components['schemas']['NotificationPreferenceDto'][];
+      /** @example 22:00 */
+      quiet_hours_start?: Record<string, never> | null;
+      /** @example 07:00 */
+      quiet_hours_end?: Record<string, never> | null;
+      /** @example Asia/Riyadh */
+      quiet_hours_tz?: Record<string, never> | null;
+    };
+    ComposeNotificationDto: {
+      /** @enum {string} */
+      audience: 'ALL' | 'OPERATORS';
+      /** @enum {string} */
+      category: 'system' | 'operator';
+      /** @enum {string} */
+      severity: 'INFO' | 'SUCCESS' | 'WARNING' | 'CRITICAL';
+      title_en: string;
+      title_bn?: string;
+      body_en: string;
+      body_bn?: string;
+      action_url?: string;
+      /** @description ISO timestamp; defaults to now */
+      scheduled_for?: string;
+      expires_at?: string;
+    };
+    NotificationTemplateDto: {
+      /** @example planned-maintenance */
+      key: string;
+      /** @enum {string} */
+      category:
+        | 'security'
+        | 'budget'
+        | 'goal'
+        | 'recurring'
+        | 'transaction'
+        | 'sync'
+        | 'account'
+        | 'system'
+        | 'operator';
+      title_en: string;
+      title_bn?: string;
+      body_en: string;
+      body_bn?: string;
+      action_url?: string;
+    };
+    ProfileResponseDto: {
+      /** @example 550e8400-e29b-41d4-a716-446655440000 */
+      id: string;
+      /** @example Sharif */
+      display_name: string;
+      /** @example null */
+      avatar_path?: Record<string, never>;
+      /** @example bn */
+      locale: string;
+      /** @example Asia/Dhaka */
+      timezone: string;
+      /** @example BDT */
+      base_currency: string;
+      /** @example 0 */
+      week_starts_on: number;
+      /** @example false */
+      amount_privacy_default: boolean;
+      /** @example COMPLETED */
+      onboarding_status: string;
+      /**
+       * @description Null until the user reaches §5.2 step 4.
+       * @example INDIVIDUAL
+       * @enum {string}
+       */
+      persona?: 'INDIVIDUAL' | 'STUDENT' | 'FREELANCER';
+      /**
+       * @description Platform operator flag (DEC-007). The web shell uses this to decide whether to render the System Admin switch. It grants METADATA access only — never access to another user's financial rows.
+       * @example false
+       */
+      is_super_admin: boolean;
+      /**
+       * @description Account lifecycle state (DEC-017).
+       * @example ACTIVE
+       * @enum {string}
+       */
+      status: 'ACTIVE' | 'SUSPENDED' | 'PENDING_DELETION';
+      /** @description Set when status is PENDING_DELETION — when the purge runs. */
+      deletion_scheduled_for?: Record<string, never>;
+      email: string;
+      created_at: string;
+      updated_at: string;
+    };
+    UpdatePreferencesDto: {
+      /**
+       * @description User locale: bn or en
+       * @example bn
+       */
+      locale?: string;
+      /**
+       * @description IANA timezone name
+       * @example Asia/Dhaka
+       */
+      timezone?: string;
+      /**
+       * @description ISO 4217 currency code
+       * @example BDT
+       */
+      base_currency?: string;
+      /**
+       * @description Week start day: 0=Sun, 1=Mon, ..., 6=Sat
+       * @example 0
+       */
+      week_starts_on?: number;
+      /** @description Default privacy mode for amounts */
+      amount_privacy_default?: boolean;
+      /**
+       * @description Display name
+       * @example Sharif
+       */
+      display_name?: string;
+    };
+    UpdateOnboardingDto: {
+      /**
+       * @description The step just finished. ACCOUNT_CREATED is absent because it is the initial state — a client asking to move BACK to it is a bug, not a step.
+       * @example PERSONA_SELECTED
+       * @enum {string}
+       */
+      onboarding_status?:
+        | 'LANGUAGE_SELECTED'
+        | 'PREFERENCES_SET'
+        | 'PERSONA_SELECTED'
+        | 'WORKSPACE_CREATED'
+        | 'FIRST_ACCOUNT_ADDED'
+        | 'COMPLETED';
+      /**
+       * @description Blueprint §5.2 step 4. FAMILY is deliberately absent — DEC-007 dropped family workspaces, and offering a persona the product cannot honour would be the blueprint outvoting a later decision.
+       * @example INDIVIDUAL
+       * @enum {string}
+       */
+      persona?: 'INDIVIDUAL' | 'STUDENT' | 'FREELANCER';
+    };
+    CreateWorkspaceDto: {
+      /** @example My Personal Finance */
+      name: string;
+      /** @example BDT */
+      base_currency?: string;
+      /** @example Asia/Dhaka */
+      timezone?: string;
+    };
+    WorkspaceResponseDto: {
+      id: string;
+      /** @enum {string} */
+      type: 'PERSONAL';
+      name: string;
+      base_currency: string;
+      timezone: string;
+      created_by: string;
+      /** @enum {string} */
+      status: 'ACTIVE' | 'PENDING_DELETION' | 'DELETED';
+      created_at: string;
+      updated_at: string;
+      /** @description Current user role (always OWNER) */
+      role?: string;
+    };
+    CreateAccountDto: {
+      /** @example Cash in Hand */
+      name: string;
+      /**
+       * @example ASSET
+       * @enum {string}
+       */
+      class: 'ASSET' | 'LIABILITY' | 'INCOME' | 'EXPENSE' | 'EQUITY';
+      /**
+       * @example CASH
+       * @enum {string}
+       */
+      subtype:
+        | 'CASH'
+        | 'BANK'
+        | 'MOBILE_WALLET'
+        | 'CREDIT_CARD'
+        | 'LOAN'
+        | 'SAVINGS'
+        | 'CATEGORY'
+        | 'SYSTEM';
+      /** @example BDT */
+      currency_code?: string;
+      /**
+       * @example DEBIT
+       * @enum {string}
+       */
+      normal_balance?: 'DEBIT' | 'CREDIT';
+      /** @example true */
+      include_in_budget?: boolean;
+      /** @example true */
+      include_in_net_worth?: boolean;
+      /** @example 2026-01-01 */
+      opening_date?: string;
+      /**
+       * @description Opening balance as minor-unit decimal string (e.g., "50000" = 500.00 BDT)
+       * @example 50000
+       */
+      opening_balance?: string;
+    };
+    AccountResponseDto: {
+      id: string;
+      workspace_id: string;
+      name: string;
+      class: string;
+      subtype: string;
+      currency_code: string;
+      normal_balance: string;
+      include_in_budget: boolean;
+      include_in_net_worth: boolean;
+      opening_date?: string;
+      archived_at?: Record<string, never>;
+      created_by: string;
+      version: number;
+      created_at: string;
+      updated_at: string;
+    };
+    UpdateAccountDto: {
+      /** @example Updated Account Name */
+      name?: string;
+      /** @example true */
+      include_in_budget?: boolean;
+      /** @example true */
+      include_in_net_worth?: boolean;
+      /**
+       * @description Set to true to archive the account
+       * @example false
+       */
+      archived?: boolean;
+    };
+    CreateTransactionDto: {
+      /**
+       * @example EXPENSE
+       * @enum {string}
+       */
+      type: 'INCOME' | 'EXPENSE' | 'TRANSFER';
+      /**
+       * @description Amount in minor units as decimal string (e.g., "125000" = ৳1,250.00)
+       * @example 125000
+       */
+      amount: string;
+      /**
+       * @description Primary account ID
+       * @example 550e8400-e29b-41d4-a716-446655440000
+       */
+      account_id: string;
+      /** @description Category account ID (for income/expense) or destination account (for transfer) */
+      category_id?: string;
+      /** @description Destination account ID (for transfers) */
+      transfer_to_account_id?: string;
+      /** @example 2026-08-01T12:00:00Z */
+      occurred_at?: string;
+      /** @example Grocery store */
+      payee?: string;
+      /** @example Weekly groceries */
+      note?: string;
+      /**
+       * @example [
+       *       "groceries",
+       *       "weekly"
+       *     ]
+       */
+      tags?: string[];
+      /**
+       * @description Client-generated idempotency key (UUID)
+       * @example 550e8400-e29b-41d4-a716-446655440001
+       */
+      idempotency_key: string;
+    };
+    TransactionResponseDto: {
+      id: string;
+      workspace_id: string;
+      entry_type: string;
+      occurred_at: string;
+      local_date: string;
+      payee?: string;
+      note?: string;
+      status: string;
+      source: string;
+      created_by: string;
+      version: number;
+      created_at: string;
+      postings?: string[];
+    };
+    CategoryResponseDto: {
+      id: string;
+      workspace_id: string;
+      /** @description Backing ledger account. Postings reference THIS, not `id`. */
+      ledger_account_id: string;
+      /** @enum {string} */
+      kind: 'INCOME' | 'EXPENSE';
+      /**
+       * @description Set for system categories. Translate it for display; also marks the row as system-provided.
+       * @example cat.food_dining
+       */
+      translation_key?: Record<string, never>;
+      /** @description User-supplied name. Overrides translation_key when present. */
+      custom_name?: Record<string, never>;
+      parent_id?: Record<string, never>;
+      icon: string;
+      color: string;
+      sort_order: number;
+      archived_at?: Record<string, never>;
+      deleted_at?: Record<string, never>;
+      created_at: string;
+      updated_at: string;
+    };
+    CreateCategoryDto: {
+      /**
+       * @description Display name. Stored as `custom_name`; also names the backing ledger account.
+       * @example Food & Dining
+       */
+      name: string;
+      /**
+       * @description Category kind — matches the backing ledger account class
+       * @enum {string}
+       */
+      kind: 'INCOME' | 'EXPENSE';
+      /**
+       * @description Emoji icon
+       * @example 🍕
+       */
+      icon?: string;
+      /**
+       * @description Hex color for the category
+       * @example #10b981
+       */
+      color?: string;
+      /** @description Parent category ID for hierarchy */
+      parent_id?: string;
+      /**
+       * @description Sort order within siblings
+       * @example 0
+       */
+      sort_order?: number;
+    };
+    UpdateCategoryDto: {
+      name?: string;
+      icon?: string;
+      color?: string;
+      parent_id?: string;
+      sort_order?: number;
+      /** @description Archive this category */
+      archived?: boolean;
+    };
+    BudgetLineInputDto: {
+      /** @description Category this limit applies to */
+      category_id: string;
+      /**
+       * @description Planned limit, minor units
+       * @example 2000000
+       */
+      planned_minor: string;
+      /**
+       * @description Warn at this % of the limit. 0 disables.
+       * @example 80
+       */
+      alert_threshold_pct?: number;
+    };
+    UpsertBudgetDto: {
+      /** @example Monthly budget */
+      name?: string;
+      /** @enum {string} */
+      cadence?: 'MONTHLY' | 'WEEKLY';
+      /** @description Whether unspent limit carries into the next period */
+      rollover?: boolean;
+      lines: components['schemas']['BudgetLineInputDto'][];
+    };
+    CreateGoalDto: {
+      /** @example Emergency fund */
+      name: string;
+      /**
+       * @description Target, minor units
+       * @example 10000000
+       */
+      target_minor: string;
+      /** @example BDT */
+      currency_code?: string;
+      /** @example 2027-01-01 */
+      target_date?: string;
+      /** @description Account whose balance IS the progress */
+      linked_account_id?: string;
+      /** @example 0 */
+      priority?: number;
+    };
+    UpdateGoalDto: {
+      name?: string;
+      target_minor?: string;
+      target_date?: string;
+      linked_account_id?: string;
+      priority?: number;
+      /** @enum {string} */
+      status?: 'ACTIVE' | 'ACHIEVED' | 'ABANDONED';
+    };
+    UpsertDebtDto: {
+      /** @description The LIABILITY ledger account these terms describe */
+      ledger_account_id: string;
+      /**
+       * @description Original principal, minor units
+       * @example 30000000
+       */
+      principal_minor: string;
+      /**
+       * @description Annual rate in basis points
+       * @example 950
+       */
+      annual_rate_bps?: number;
+      /** @example 150000 */
+      minimum_payment_minor?: string;
+      /**
+       * @description Day of month the payment is due
+       * @example 5
+       */
+      due_day?: number;
+    };
+    CreateCalendarEventDto: {
+      /** @enum {string} */
+      type: 'BILL' | 'INCOME' | 'GOAL' | 'CUSTOM';
+      /** @example Electricity bill */
+      title: string;
+      /** @example 120000 */
+      amount_minor?: string;
+      /** @example BDT */
+      currency_code?: string;
+      /**
+       * @description Due date in the workspace timezone
+       * @example 2026-08-10
+       */
+      due_date: string;
+      /**
+       * @description Remind this many minutes before the due time
+       * @example [
+       *       1440,
+       *       60
+       *     ]
+       */
+      reminder_offsets?: number[];
+    };
+    UpdateCalendarEventDto: {
+      title?: string;
+      amount_minor?: string;
+      due_date?: string;
+      /** @enum {string} */
+      status?: 'UPCOMING' | 'PAID' | 'SKIPPED';
+      /** @description The transaction that settled this event */
+      journal_entry_id?: string;
+    };
+    CreateRecurringRuleDto: {
+      /** @example Rent */
+      name: string;
+      /** @enum {string} */
+      entry_type: 'INCOME' | 'EXPENSE' | 'TRANSFER';
+      /** @example 1500000 */
+      amount_minor: string;
+      /** @example BDT */
+      currency_code?: string;
+      account_id?: string;
+      category_id?: string;
+      payee?: string;
+      /** @enum {string} */
+      frequency: 'DAILY' | 'WEEKLY' | 'MONTHLY' | 'YEARLY';
+      /** @example 1 */
+      interval_count?: number;
+      /** @example 2026-09-01 */
+      next_occurrence: string;
+      /** @example 2027-09-01 */
+      ends_at?: string;
+      /** @enum {string} */
+      behavior?: 'REMIND_ONLY' | 'AUTO_CREATE_DRAFT';
+    };
+    EnableTracingDto: {
+      /**
+       * @description How long to trace for. Clamped server-side to at most 60 minutes.
+       * @example 15
+       */
+      minutes?: number;
+    };
+    AdminUpdateUserDto: {
+      /** @example Sharif */
+      display_name?: string;
+      /** @enum {string} */
+      locale?: 'bn' | 'en';
+      /** @example Asia/Dhaka */
+      timezone?: string;
+    };
+    SuspendUserDto: {
+      /** @example Terms of service violation — ticket #412 */
+      reason: string;
+    };
+    UpdateSettingDto: {
+      /** @example maintenance_mode */
+      key: string;
+      /**
+       * @description JSON value for the setting. Shape is per-key.
+       * @example {
+       *       "enabled": false
+       *     }
+       */
+      value: Record<string, never>;
+    };
+    UpdateSettingsDto: {
+      settings: components['schemas']['UpdateSettingDto'][];
+    };
+    CreateBroadcastDto: {
+      /** @example Scheduled maintenance */
+      title_en: string;
+      /** @example নির্ধারিত রক্ষণাবেক্ষণ */
+      title_bn: string;
+      body_en?: string;
+      body_bn?: string;
+      /** @enum {string} */
+      severity?: 'INFO' | 'SUCCESS' | 'WARNING' | 'CRITICAL';
+      /** @enum {string} */
+      audience?: 'ALL' | 'SUPER_ADMINS';
+      link_url?: string;
+      /** @default true */
+      dismissible: boolean;
+      /** @description ISO timestamp; defaults to publish time */
+      publish_at?: string;
+      /** @description ISO timestamp; null means no expiry */
+      expires_at?: string;
+    };
+    UpdateBroadcastDto: {
+      /** @example Scheduled maintenance */
+      title_en?: string;
+      /** @example নির্ধারিত রক্ষণাবেক্ষণ */
+      title_bn?: string;
+      body_en?: string;
+      body_bn?: string;
+      /** @enum {string} */
+      severity?: 'INFO' | 'SUCCESS' | 'WARNING' | 'CRITICAL';
+      /** @enum {string} */
+      audience?: 'ALL' | 'SUPER_ADMINS';
+      link_url?: string;
+      /** @default true */
+      dismissible: boolean;
+      /** @description ISO timestamp; defaults to publish time */
+      publish_at?: string;
+      /** @description ISO timestamp; null means no expiry */
+      expires_at?: string;
+    };
+    RequestDeletionDto: {
+      /**
+       * @description Must exactly equal the signed-in account's email address. A typed confirmation, so an accidental or CSRF-driven POST cannot schedule the deletion of an entire ledger.
+       * @example me@example.com
+       */
+      confirm_email: string;
+      /**
+       * @description Optional free-text reason, retained on the audit event.
+       * @example No longer needed
+       */
+      reason?: string;
+    };
+    RegisterDeviceDto: {
+      /** @description Opaque app-generated UUID stored in SecureStore/sessionStorage */
+      deviceId: string;
+      /** @description User-editable device label, e.g. "Sharif's Pixel" */
+      deviceName?: string;
+      /** @description Push token or serialized Web Push subscription */
+      pushToken?: string;
+      /** @enum {string} */
+      pushProvider?: 'expo' | 'fcm' | 'apns' | 'webpush';
+    };
+    RevokeAllDto: {
+      /** @description Keep this device_id active (the caller's own device) */
+      currentDeviceId?: string;
+    };
+    /** @description The shape of every failure, produced by GlobalHttpExceptionFilter. `code` is the stable identifier — branch on it, not on `message`, which is prose and may be reworded or translated. */
+    ApiErrorBody: {
+      /** @example 404 */
+      statusCode: number;
+      /**
+       * @example TRANSACTION_NOT_FOUND
+       * @enum {string}
+       */
+      code:
+        | 'MISSING_TOKEN'
+        | 'INVALID_TOKEN'
+        | 'AUTH_FAILED'
+        | 'NOT_WORKSPACE_MEMBER'
+        | 'NOT_SUPER_ADMIN'
+        | 'MFA_REQUIRED'
+        | 'ACCOUNT_NOT_ACTIVE'
+        | 'NOT_AUTHENTICATED'
+        | 'AUTHZ_CHECK_FAILED'
+        | 'IDEMPOTENCY_KEY_REQUIRED'
+        | 'IDEMPOTENCY_KEY_REUSED'
+        | 'IDEMPOTENCY_KEY_TOO_LONG'
+        | 'IDEMPOTENCY_IN_PROGRESS'
+        | 'NOT_FOUND'
+        | 'WORKSPACE_NOT_FOUND'
+        | 'ACCOUNT_NOT_FOUND'
+        | 'CATEGORY_NOT_FOUND'
+        | 'PARENT_CATEGORY_NOT_FOUND'
+        | 'TRANSACTION_NOT_FOUND'
+        | 'TAG_NOT_FOUND'
+        | 'GOAL_NOT_FOUND'
+        | 'EVENT_NOT_FOUND'
+        | 'USER_NOT_FOUND'
+        | 'DEVICE_NOT_FOUND'
+        | 'TRANSACTION_NOT_REVERSIBLE'
+        | 'PERSONAL_WORKSPACE_EXISTS'
+        | 'INVALID_AMOUNT'
+        | 'AMOUNT_TOO_LARGE'
+        | 'INVALID_TYPE'
+        | 'INVALID_VALUE'
+        | 'INVALID_REFERENCE'
+        | 'CATEGORY_REQUIRED'
+        | 'CATEGORY_KIND_MISMATCH'
+        | 'DESTINATION_REQUIRED'
+        | 'NOT_A_LIABILITY'
+        | 'NO_POSTINGS'
+        | 'ALREADY_REVERSED'
+        | 'EMPTY_PATCH'
+        | 'NO_CHANGES'
+        | 'ALREADY_PENDING'
+        | 'NOT_PENDING'
+        | 'CONFIRMATION_MISMATCH'
+        | 'CANNOT_SUSPEND_SELF'
+        | 'LAST_SUPER_ADMIN'
+        | 'UNKNOWN_SETTING'
+        | 'SYNC_CURSOR_STALLED'
+        | 'SYNC_FAILED'
+        | 'REVERSAL_FAILED'
+        | 'SUMMARY_FAILED'
+        | 'AGGREGATION_FAILED'
+        | 'PLANNING_WRITE_FAILED'
+        | 'CATEGORY_CREATE_FAILED'
+        | 'CATEGORY_SEED_FAILED'
+        | 'ONBOARDING_UPDATE_FAILED'
+        | 'DELETION_REQUEST_FAILED'
+        | 'CANCEL_FAILED'
+        | 'SUSPEND_FAILED'
+        | 'REINSTATE_FAILED'
+        | 'DISMISS_FAILED'
+        | 'BROADCASTS_UNAVAILABLE';
+      message: string;
+      /** @description Echo of X-Request-ID — quote it when reporting a failure. */
+      requestId: string;
+      /** Format: date-time */
+      timestamp: string;
+      path: string;
+      /** @description Present only on validation failures. */
+      fieldErrors?: {
+        [key: string]: string[];
+      } | null;
+    };
+  };
+  responses: never;
+  parameters: never;
+  requestBodies: never;
+  headers: never;
+  pathItems: never;
 }
 export type $defs = Record<string, never>;
 export interface operations {
-    SyncController_delta_v1: {
-        parameters: {
-            query?: {
-                /** @description ISO-8601 timestamp cursor. Returns rows with updated_at > since. Omit for a full initial pull. */
-                since?: string;
-                /** @description Max rows per table in one page. The response says whether more remain. */
-                limit?: number;
-            };
-            header?: never;
-            path: {
-                workspaceId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["SyncResponseDto"];
-                };
-            };
-        };
-    };
-    HealthController_check_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Service is alive */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        /** @example ok */
-                        status?: string;
-                        /** @example 2026-08-01T00:00:00.000Z */
-                        timestamp?: string;
-                        /** @example 0.1.0 */
-                        version?: string;
-                    };
-                };
-            };
-        };
-    };
-    HealthController_live_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    HealthController_ready_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Every dependency answered */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description A dependency is failing, or the process is draining */
-            503: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    ProfilesController_getProfile_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ProfileResponseDto"];
-                };
-            };
-        };
-    };
-    ProfilesController_updatePreferences_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["UpdatePreferencesDto"];
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ProfileResponseDto"];
-                };
-            };
-        };
-    };
-    ProfilesController_updateOnboarding_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["UpdateOnboardingDto"];
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ProfileResponseDto"];
-                };
-            };
-        };
-    };
-    WorkspacesController_list_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["WorkspaceResponseDto"][];
-                };
-            };
-        };
-    };
-    WorkspacesController_create_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CreateWorkspaceDto"];
-            };
-        };
-        responses: {
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["WorkspaceResponseDto"];
-                };
-            };
-        };
-    };
-    WorkspacesController_summary_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                workspaceId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    AccountsController_list_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                workspaceId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["AccountResponseDto"][];
-                };
-            };
-        };
-    };
-    AccountsController_create_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                workspaceId: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CreateAccountDto"];
-            };
-        };
-        responses: {
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["AccountResponseDto"];
-                };
-            };
-        };
-    };
-    AccountsController_update_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                workspaceId: string;
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["UpdateAccountDto"];
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["AccountResponseDto"];
-                };
-            };
-        };
-    };
-    TransactionsController_list_v1: {
-        parameters: {
-            query?: {
-                cursor?: string;
-                limit?: number;
-                /** @description Drill-down filter (§5.3) — only entries posting against this category. This is what turns a budget line or a report slice into the transactions behind it. */
-                category?: string;
-                /** @description Only entries carrying this tag. Intersects with `category`. */
-                tag?: string;
-            };
-            header?: never;
-            path: {
-                workspaceId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["TransactionResponseDto"];
-                };
-            };
-        };
-    };
-    TransactionsController_create_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                workspaceId: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CreateTransactionDto"];
-            };
-        };
-        responses: {
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["TransactionResponseDto"];
-                };
-            };
-        };
-    };
-    TransactionsController_listTags_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                workspaceId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    TransactionsController_deleteTag_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                workspaceId: string;
-                tagId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    TransactionsController_getOne_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                workspaceId: string;
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["TransactionResponseDto"];
-                };
-            };
-        };
-    };
-    TransactionsController_reverse_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                workspaceId: string;
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["TransactionResponseDto"];
-                };
-            };
-        };
-    };
-    CategoriesController_list_v1: {
-        parameters: {
-            query?: {
-                kind?: "INCOME" | "EXPENSE";
-            };
-            header?: never;
-            path: {
-                workspaceId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["CategoryResponseDto"][];
-                };
-            };
-        };
-    };
-    CategoriesController_create_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                workspaceId: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CreateCategoryDto"];
-            };
-        };
-        responses: {
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["CategoryResponseDto"];
-                };
-            };
-        };
-    };
-    CategoriesController_update_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                workspaceId: string;
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["UpdateCategoryDto"];
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["CategoryResponseDto"];
-                };
-            };
-        };
-    };
-    PlanningController_getBudget_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                workspaceId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description One payload per DEC-011; spend derived from postings */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    PlanningController_upsertBudget_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                workspaceId: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["UpsertBudgetDto"];
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    PlanningController_deleteBudget_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                workspaceId: string;
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    PlanningController_getGoals_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                workspaceId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    PlanningController_createGoal_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                workspaceId: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CreateGoalDto"];
-            };
-        };
-        responses: {
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    PlanningController_deleteGoal_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                workspaceId: string;
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    PlanningController_updateGoal_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                workspaceId: string;
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["UpdateGoalDto"];
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    PlanningController_upsertDebt_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                workspaceId: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["UpsertDebtDto"];
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    PlanningController_getCalendar_v1: {
-        parameters: {
-            query?: {
-                days?: number;
-            };
-            header?: never;
-            path: {
-                workspaceId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    PlanningController_createEvent_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                workspaceId: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CreateCalendarEventDto"];
-            };
-        };
-        responses: {
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    PlanningController_deleteEvent_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                workspaceId: string;
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    PlanningController_updateEvent_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                workspaceId: string;
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["UpdateCalendarEventDto"];
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    PlanningController_listRules_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                workspaceId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    PlanningController_createRule_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                workspaceId: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CreateRecurringRuleDto"];
-            };
-        };
-        responses: {
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    PlanningController_deleteRule_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                workspaceId: string;
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    PlanningController_getReport_v1: {
-        parameters: {
-            query?: {
-                from?: string;
-                to?: string;
-            };
-            header?: never;
-            path: {
-                workspaceId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    AdminController_overview_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    AdminController_health_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    AdminController_listEvents_v1: {
-        parameters: {
-            query?: {
-                level?: "DEBUG" | "INFO" | "WARN" | "ERROR" | "FATAL";
-                source?: string;
-                /** @description Free-text match on message or event code */
-                q?: string;
-                /** @description ISO timestamp lower bound */
-                since?: string;
-                /** @description Return only events with id greater than this — the live-tail cursor */
-                afterId?: number;
-                limit?: number;
-                offset?: number;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    AdminController_streamEvents_v1: {
-        parameters: {
-            query: {
-                afterId: string;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    AdminController_scheduledJobs_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    AdminController_tracingStatus_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    AdminController_enableTracing_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["EnableTracingDto"];
-            };
-        };
-        responses: {
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    AdminController_disableTracing_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    AdminController_pruneEvents_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    AdminController_listAudit_v1: {
-        parameters: {
-            query?: {
-                action?: string;
-                resourceType?: string;
-                actorId?: string;
-                limit?: number;
-                offset?: number;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    AdminController_listUsers_v1: {
-        parameters: {
-            query?: {
-                /** @description Matches email or display name */
-                search?: string;
-                status?: "ACTIVE" | "SUSPENDED" | "PENDING_DELETION";
-                limit?: number;
-                offset?: number;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Metadata and counts; never financial data */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    AdminController_getUser_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                userId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    AdminController_updateUser_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                userId: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["AdminUpdateUserDto"];
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    AdminController_suspendUser_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                userId: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["SuspendUserDto"];
-            };
-        };
-        responses: {
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    AdminController_reinstateUser_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                userId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    AdminController_runPurge_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    AdminController_listSettings_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    AdminController_updateSettings_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["UpdateSettingsDto"];
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    AdminController_listBroadcasts_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    AdminController_createBroadcast_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CreateBroadcastDto"];
-            };
-        };
-        responses: {
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    AdminController_updateBroadcast_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                broadcastId: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["UpdateBroadcastDto"];
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    AdminController_publishBroadcast_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                broadcastId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    AdminController_archiveBroadcast_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                broadcastId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    AccountController_exportData_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description A single JSON document. See ExportService for the shape. */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    AccountController_requestDeletion_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["RequestDeletionDto"];
-            };
-        };
-        responses: {
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    AccountController_cancelDeletion_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    AccountController_listBroadcasts_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Bilingual broadcast payloads */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    AccountController_dismissBroadcast_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                broadcastId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    PublicSettingsController_getPublicSettings_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
+  SyncController_delta_v1: {
+    parameters: {
+      query?: {
+        /** @description ISO-8601 timestamp cursor. Returns rows with updated_at > since. Omit for a full initial pull. */
+        since?: string;
+        /** @description Max rows per table in one page. The response says whether more remain. */
+        limit?: number;
+      };
+      header?: never;
+      path: {
+        workspaceId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['SyncResponseDto'];
+        };
+      };
+    };
+  };
+  NotificationsController_list_v1: {
+    parameters: {
+      query?: {
+        status?: 'unread' | 'all' | 'archived';
+        category?:
+          | 'security'
+          | 'budget'
+          | 'goal'
+          | 'recurring'
+          | 'transaction'
+          | 'sync'
+          | 'account'
+          | 'system'
+          | 'operator';
+        /** @description Opaque cursor returned by the previous page */
+        cursor?: string;
+        limit?: number;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  NotificationsController_unreadCount_v1: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  NotificationsController_markAllRead_v1: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  NotificationsController_markRead_v1: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  NotificationsController_archive_v1: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  NotificationsController_delete_v1: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  NotificationPreferencesController_get_v1: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  NotificationPreferencesController_update_v1: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['UpdateNotificationPreferencesDto'];
+      };
+    };
+    responses: {
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  AdminNotificationsController_listCampaigns_v1: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  AdminNotificationsController_compose_v1: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['ComposeNotificationDto'];
+      };
+    };
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  AdminNotificationsController_templates_v1: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  AdminNotificationsController_saveTemplate_v1: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['NotificationTemplateDto'];
+      };
+    };
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  AdminNotificationsController_deleteTemplate_v1: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  AdminNotificationsController_deliveries_v1: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  HealthController_check_v1: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Service is alive */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** @example ok */
+            status?: string;
+            /** @example 2026-08-01T00:00:00.000Z */
+            timestamp?: string;
+            /** @example 0.1.0 */
+            version?: string;
+          };
+        };
+      };
+    };
+  };
+  HealthController_live_v1: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  HealthController_ready_v1: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Every dependency answered */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description A dependency is failing, or the process is draining */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  ProfilesController_getProfile_v1: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ProfileResponseDto'];
+        };
+      };
+    };
+  };
+  ProfilesController_updatePreferences_v1: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['UpdatePreferencesDto'];
+      };
+    };
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ProfileResponseDto'];
+        };
+      };
+    };
+  };
+  ProfilesController_updateOnboarding_v1: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['UpdateOnboardingDto'];
+      };
+    };
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ProfileResponseDto'];
+        };
+      };
+    };
+  };
+  WorkspacesController_list_v1: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['WorkspaceResponseDto'][];
+        };
+      };
+    };
+  };
+  WorkspacesController_create_v1: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CreateWorkspaceDto'];
+      };
+    };
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['WorkspaceResponseDto'];
+        };
+      };
+    };
+  };
+  WorkspacesController_summary_v1: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        workspaceId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  AccountsController_list_v1: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        workspaceId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['AccountResponseDto'][];
+        };
+      };
+    };
+  };
+  AccountsController_create_v1: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        workspaceId: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CreateAccountDto'];
+      };
+    };
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['AccountResponseDto'];
+        };
+      };
+    };
+  };
+  AccountsController_update_v1: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        workspaceId: string;
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['UpdateAccountDto'];
+      };
+    };
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['AccountResponseDto'];
+        };
+      };
+    };
+  };
+  TransactionsController_list_v1: {
+    parameters: {
+      query?: {
+        cursor?: string;
+        limit?: number;
+        /** @description Drill-down filter (§5.3) — only entries posting against this category. This is what turns a budget line or a report slice into the transactions behind it. */
+        category?: string;
+        /** @description Only entries carrying this tag. Intersects with `category`. */
+        tag?: string;
+      };
+      header?: never;
+      path: {
+        workspaceId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['TransactionResponseDto'];
+        };
+      };
+    };
+  };
+  TransactionsController_create_v1: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        workspaceId: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CreateTransactionDto'];
+      };
+    };
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['TransactionResponseDto'];
+        };
+      };
+    };
+  };
+  TransactionsController_listTags_v1: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        workspaceId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  TransactionsController_deleteTag_v1: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        workspaceId: string;
+        tagId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  TransactionsController_getOne_v1: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        workspaceId: string;
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['TransactionResponseDto'];
+        };
+      };
+    };
+  };
+  TransactionsController_reverse_v1: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        workspaceId: string;
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['TransactionResponseDto'];
+        };
+      };
+    };
+  };
+  CategoriesController_list_v1: {
+    parameters: {
+      query?: {
+        kind?: 'INCOME' | 'EXPENSE';
+      };
+      header?: never;
+      path: {
+        workspaceId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['CategoryResponseDto'][];
+        };
+      };
+    };
+  };
+  CategoriesController_create_v1: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        workspaceId: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CreateCategoryDto'];
+      };
+    };
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['CategoryResponseDto'];
+        };
+      };
+    };
+  };
+  CategoriesController_update_v1: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        workspaceId: string;
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['UpdateCategoryDto'];
+      };
+    };
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['CategoryResponseDto'];
+        };
+      };
+    };
+  };
+  PlanningController_getBudget_v1: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        workspaceId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description One payload per DEC-011; spend derived from postings */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  PlanningController_upsertBudget_v1: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        workspaceId: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['UpsertBudgetDto'];
+      };
+    };
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  PlanningController_deleteBudget_v1: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        workspaceId: string;
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  PlanningController_getGoals_v1: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        workspaceId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  PlanningController_createGoal_v1: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        workspaceId: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CreateGoalDto'];
+      };
+    };
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  PlanningController_deleteGoal_v1: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        workspaceId: string;
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  PlanningController_updateGoal_v1: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        workspaceId: string;
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['UpdateGoalDto'];
+      };
+    };
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  PlanningController_upsertDebt_v1: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        workspaceId: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['UpsertDebtDto'];
+      };
+    };
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  PlanningController_getCalendar_v1: {
+    parameters: {
+      query?: {
+        days?: number;
+      };
+      header?: never;
+      path: {
+        workspaceId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  PlanningController_createEvent_v1: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        workspaceId: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CreateCalendarEventDto'];
+      };
+    };
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  PlanningController_deleteEvent_v1: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        workspaceId: string;
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  PlanningController_updateEvent_v1: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        workspaceId: string;
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['UpdateCalendarEventDto'];
+      };
+    };
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  PlanningController_listRules_v1: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        workspaceId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  PlanningController_createRule_v1: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        workspaceId: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CreateRecurringRuleDto'];
+      };
+    };
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  PlanningController_deleteRule_v1: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        workspaceId: string;
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  PlanningController_getReport_v1: {
+    parameters: {
+      query?: {
+        from?: string;
+        to?: string;
+      };
+      header?: never;
+      path: {
+        workspaceId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  AdminController_overview_v1: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  AdminController_health_v1: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  AdminController_listEvents_v1: {
+    parameters: {
+      query?: {
+        level?: 'DEBUG' | 'INFO' | 'WARN' | 'ERROR' | 'FATAL';
+        source?: string;
+        /** @description Free-text match on message or event code */
+        q?: string;
+        /** @description ISO timestamp lower bound */
+        since?: string;
+        /** @description Return only events with id greater than this — the live-tail cursor */
+        afterId?: number;
+        limit?: number;
+        offset?: number;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  AdminController_streamEvents_v1: {
+    parameters: {
+      query: {
+        afterId: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  AdminController_scheduledJobs_v1: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  AdminController_tracingStatus_v1: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  AdminController_enableTracing_v1: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['EnableTracingDto'];
+      };
+    };
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  AdminController_disableTracing_v1: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  AdminController_pruneEvents_v1: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  AdminController_listAudit_v1: {
+    parameters: {
+      query?: {
+        action?: string;
+        resourceType?: string;
+        actorId?: string;
+        limit?: number;
+        offset?: number;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  AdminController_listUsers_v1: {
+    parameters: {
+      query?: {
+        /** @description Matches email or display name */
+        search?: string;
+        status?: 'ACTIVE' | 'SUSPENDED' | 'PENDING_DELETION';
+        limit?: number;
+        offset?: number;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Metadata and counts; never financial data */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  AdminController_getUser_v1: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        userId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  AdminController_updateUser_v1: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        userId: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['AdminUpdateUserDto'];
+      };
+    };
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  AdminController_suspendUser_v1: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        userId: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['SuspendUserDto'];
+      };
+    };
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  AdminController_reinstateUser_v1: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        userId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  AdminController_runPurge_v1: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  AdminController_listSettings_v1: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  AdminController_updateSettings_v1: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['UpdateSettingsDto'];
+      };
+    };
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  AdminController_listBroadcasts_v1: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  AdminController_createBroadcast_v1: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CreateBroadcastDto'];
+      };
+    };
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  AdminController_updateBroadcast_v1: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        broadcastId: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['UpdateBroadcastDto'];
+      };
+    };
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  AdminController_publishBroadcast_v1: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        broadcastId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  AdminController_archiveBroadcast_v1: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        broadcastId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  AdminController_getPerformanceMetrics_v1: {
+    parameters: {
+      query: {
+        window: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  AdminController_getAlerts_v1: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  AdminController_acknowledgeAlert_v1: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        alertKey: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  AdminController_getAuthEvents_v1: {
+    parameters: {
+      query: {
+        limit: string;
+        offset: string;
+        platform: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  AdminController_getActiveSessions_v1: {
+    parameters: {
+      query: {
+        limit: string;
+        offset: string;
+        platform: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  AdminController_revokeSession_v1: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        deviceId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  AdminController_revokeAllUserSessions_v1: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        userId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  AdminController_getAnomalies_v1: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  AdminController_getEventTrace_v1: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        requestId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  AccountController_exportData_v1: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description A single JSON document. See ExportService for the shape. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  AccountController_requestDeletion_v1: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['RequestDeletionDto'];
+      };
+    };
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  AccountController_cancelDeletion_v1: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  AccountController_listBroadcasts_v1: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Bilingual broadcast payloads */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  AccountController_dismissBroadcast_v1: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        broadcastId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  PublicSettingsController_getPublicSettings_v1: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  DevicesController_list_v1: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Active sessions across all platforms */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  DevicesController_register_v1: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['RegisterDeviceDto'];
+      };
+    };
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  DevicesController_revokeCurrent_v1: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        opaqueDeviceId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  DevicesController_revoke_v1: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        deviceId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  DevicesController_revokeAll_v1: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['RevokeAllDto'];
+      };
+    };
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
 }

@@ -35,6 +35,8 @@ import {
   LogIn,
   Smartphone,
   AlertTriangle,
+  FileText,
+  RadioTower,
 } from 'lucide-react';
 
 type NavItem = {
@@ -52,15 +54,18 @@ type NavSection = {
 
 const NAV_SECTIONS: NavSection[] = [
   {
-    items: [
-      { id: 'overview', key: 'admin.overview', icon: ShieldAlert, href: '/admin' },
-    ],
+    items: [{ id: 'overview', key: 'admin.overview', icon: ShieldAlert, href: '/admin' }],
   },
   {
     label: 'admin.monitoring',
     items: [
       { id: 'monitoring', key: 'admin.monitoring', icon: Activity, href: '/admin/monitoring' },
-      { id: 'performance', key: 'admin.performance.title', icon: BarChart2, href: '/admin/monitoring/performance' },
+      {
+        id: 'performance',
+        key: 'admin.performance.title',
+        icon: BarChart2,
+        href: '/admin/monitoring/performance',
+      },
       { id: 'jobs', key: 'admin.jobs.title', icon: Clock, href: '/admin/monitoring/jobs' },
       { id: 'alerts', key: 'admin.alerts.title', icon: Bell, href: '/admin/monitoring/alerts' },
     ],
@@ -69,9 +74,24 @@ const NAV_SECTIONS: NavSection[] = [
     label: 'admin.security.title',
     items: [
       { id: 'security', key: 'admin.security.title', icon: Shield, href: '/admin/security' },
-      { id: 'auth-events', key: 'admin.security.authEvents', icon: LogIn, href: '/admin/security/auth-events' },
-      { id: 'sessions', key: 'admin.security.sessions', icon: Smartphone, href: '/admin/security/sessions' },
-      { id: 'anomalies', key: 'admin.security.anomalies', icon: AlertTriangle, href: '/admin/security/anomalies' },
+      {
+        id: 'auth-events',
+        key: 'admin.security.authEvents',
+        icon: LogIn,
+        href: '/admin/security/auth-events',
+      },
+      {
+        id: 'sessions',
+        key: 'admin.security.sessions',
+        icon: Smartphone,
+        href: '/admin/security/sessions',
+      },
+      {
+        id: 'anomalies',
+        key: 'admin.security.anomalies',
+        icon: AlertTriangle,
+        href: '/admin/security/anomalies',
+      },
     ],
   },
   {
@@ -79,7 +99,25 @@ const NAV_SECTIONS: NavSection[] = [
       { id: 'users', key: 'admin.users', icon: Users, href: '/admin/users' },
       { id: 'audit', key: 'admin.audit', icon: ScrollText, href: '/admin/audit' },
       { id: 'broadcasts', key: 'admin.broadcasts', icon: Megaphone, href: '/admin/broadcasts' },
-      { id: 'site-settings', key: 'admin.siteSettings', icon: Globe2, href: '/admin/site-settings' },
+      { id: 'notifications', key: 'admin.notifications', icon: Bell, href: '/admin/notifications' },
+      {
+        id: 'notification-templates',
+        key: 'admin.notificationTemplates',
+        icon: FileText,
+        href: '/admin/notifications/templates',
+      },
+      {
+        id: 'notification-delivery',
+        key: 'admin.notificationDelivery',
+        icon: RadioTower,
+        href: '/admin/notifications/delivery',
+      },
+      {
+        id: 'site-settings',
+        key: 'admin.siteSettings',
+        icon: Globe2,
+        href: '/admin/site-settings',
+      },
       { id: 'settings', key: 'admin.globalSettings', icon: Settings2, href: '/admin/settings' },
     ],
   },
@@ -111,11 +149,7 @@ export default function AdminShell({
   return (
     <div style={styles.wrapper}>
       {mobileOpen && (
-        <div
-          className="nf-overlay"
-          style={styles.overlay}
-          onClick={() => setMobileOpen(false)}
-        />
+        <div className="nf-overlay" style={styles.overlay} onClick={() => setMobileOpen(false)} />
       )}
 
       <aside
@@ -150,9 +184,7 @@ export default function AdminShell({
               {section.label && !collapsed && (
                 <div style={styles.sectionLabel}>{t(section.label as Parameters<typeof t>[0])}</div>
               )}
-              {section.label && !collapsed && si > 0 && (
-                <div style={styles.sectionDivider} />
-              )}
+              {section.label && !collapsed && si > 0 && <div style={styles.sectionDivider} />}
               {section.items.map((item) => {
                 const isActive = activeId === item.id;
                 const Icon = item.icon;
@@ -231,7 +263,9 @@ export default function AdminShell({
           <span style={styles.operatorBandText}>{t('admin.operatorMode')}</span>
         </div>
 
-        <div className="nf-page-content" style={styles.pageContent}>{children}</div>
+        <div className="nf-page-content" style={styles.pageContent}>
+          {children}
+        </div>
       </main>
     </div>
   );

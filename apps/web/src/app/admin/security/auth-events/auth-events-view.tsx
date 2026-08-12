@@ -7,8 +7,8 @@
 import { useRouter } from 'next/navigation';
 import { useTransition } from 'react';
 import { LogIn, RefreshCw, ChevronLeft, ChevronRight } from 'lucide-react';
-import type { AuthAuditEvent, Page } from '../../../../lib/admin';
-import { Panel, Badge, EmptyState, ErrorState, T, s, formatTime } from '../../ui';
+import type { AuthAuditEvent, Page } from '../../../../lib/admin-types';
+import { Panel, EmptyState, ErrorState, T, s, formatTime } from '../../ui';
 import { useLocale } from '../../../../lib/i18n/locale-provider';
 
 const ACTION_COLOR: Record<string, string> = {
@@ -54,17 +54,43 @@ export default function AuthEventsView({
 
   return (
     <div>
-      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '1.75rem', flexWrap: 'wrap', gap: '1rem' }}>
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'flex-start',
+          justifyContent: 'space-between',
+          marginBottom: '1.75rem',
+          flexWrap: 'wrap',
+          gap: '1rem',
+        }}
+      >
         <div>
           <h1 style={s.title}>
-            <LogIn size={22} style={{ display: 'inline', marginRight: 8, verticalAlign: 'middle', color: T.accent }} />
+            <LogIn
+              size={22}
+              style={{
+                display: 'inline',
+                marginRight: 8,
+                verticalAlign: 'middle',
+                color: T.accent,
+              }}
+            />
             {t('admin.security.authEvents')}
           </h1>
-          <p style={s.subtitle}>Login, signup, MFA, and account change events with device context</p>
+          <p style={s.subtitle}>
+            Login, signup, MFA, and account change events with device context
+          </p>
         </div>
         <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
           {/* Platform filter */}
-          <div style={{ display: 'flex', background: 'rgba(255,255,255,0.05)', borderRadius: 8, padding: 2 }}>
+          <div
+            style={{
+              display: 'flex',
+              background: 'rgba(255,255,255,0.05)',
+              borderRadius: 8,
+              padding: 2,
+            }}
+          >
             {PLATFORMS.map((p) => (
               <button
                 key={p}
@@ -86,8 +112,15 @@ export default function AuthEventsView({
               </button>
             ))}
           </div>
-          <button onClick={() => startTransition(() => router.refresh())} disabled={pending} style={s.btnGhost}>
-            <RefreshCw size={14} style={{ animation: pending ? 'spin 1s linear infinite' : 'none' }} />
+          <button
+            onClick={() => startTransition(() => router.refresh())}
+            disabled={pending}
+            style={s.btnGhost}
+          >
+            <RefreshCw
+              size={14}
+              style={{ animation: pending ? 'spin 1s linear infinite' : 'none' }}
+            />
             Refresh
           </button>
         </div>
@@ -116,19 +149,65 @@ export default function AuthEventsView({
                   {items.map((ev: AuthAuditEvent) => (
                     <tr key={ev.id}>
                       <td style={s.td}>
-                        <span style={{ color: ACTION_COLOR[ev.action] ?? T.textDim, fontWeight: 600, fontSize: '0.8125rem' }}>
+                        <span
+                          style={{
+                            color: ACTION_COLOR[ev.action] ?? T.textDim,
+                            fontWeight: 600,
+                            fontSize: '0.8125rem',
+                          }}
+                        >
                           {ev.action.replace(/_/g, ' ')}
                         </span>
                       </td>
-                      <td style={{ ...s.td, fontFamily: 'monospace', fontSize: '0.75rem', maxWidth: 120, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: T.textFaint }}>
+                      <td
+                        style={{
+                          ...s.td,
+                          fontFamily: 'monospace',
+                          fontSize: '0.75rem',
+                          maxWidth: 120,
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap',
+                          color: T.textFaint,
+                        }}
+                      >
                         {ev.actor_id ? ev.actor_id.slice(0, 8) + '…' : '—'}
                       </td>
-                      <td style={{ ...s.td, textTransform: 'capitalize', color: T.textDim }}>{ev.platform ?? '—'}</td>
-                      <td style={{ ...s.td, fontFamily: 'monospace', fontSize: '0.75rem', color: T.textFaint }}>{ev.ip_address ?? '—'}</td>
-                      <td style={{ ...s.td, fontSize: '0.75rem', maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: T.textFaint }}>
+                      <td style={{ ...s.td, textTransform: 'capitalize', color: T.textDim }}>
+                        {ev.platform ?? '—'}
+                      </td>
+                      <td
+                        style={{
+                          ...s.td,
+                          fontFamily: 'monospace',
+                          fontSize: '0.75rem',
+                          color: T.textFaint,
+                        }}
+                      >
+                        {ev.ip_address ?? '—'}
+                      </td>
+                      <td
+                        style={{
+                          ...s.td,
+                          fontSize: '0.75rem',
+                          maxWidth: 200,
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap',
+                          color: T.textFaint,
+                        }}
+                      >
                         {ev.user_agent ?? '—'}
                       </td>
-                      <td style={{ ...s.td, fontFamily: 'monospace', fontSize: '0.75rem', color: T.textFaint, whiteSpace: 'nowrap' }}>
+                      <td
+                        style={{
+                          ...s.td,
+                          fontFamily: 'monospace',
+                          fontSize: '0.75rem',
+                          color: T.textFaint,
+                          whiteSpace: 'nowrap',
+                        }}
+                      >
                         {formatTime(ev.created_at)}
                       </td>
                     </tr>
@@ -138,7 +217,15 @@ export default function AuthEventsView({
             </div>
 
             {/* Pagination */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.75rem 1.25rem', borderTop: `1px solid ${T.border}` }}>
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                padding: '0.75rem 1.25rem',
+                borderTop: `1px solid ${T.border}`,
+              }}
+            >
               <span style={{ fontSize: '0.8125rem', color: T.textFaint }}>
                 {page * limit + 1}–{Math.min((page + 1) * limit, total)} of {total}
               </span>

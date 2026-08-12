@@ -6,7 +6,7 @@
 import { useRouter } from 'next/navigation';
 import { useTransition } from 'react';
 import { AlertTriangle, RefreshCw, Smartphone, Zap } from 'lucide-react';
-import type { Anomalies, AnomalyNewDevice, AnomalyThrottleAbuser } from '../../../../lib/admin';
+import type { Anomalies, AnomalyNewDevice, AnomalyThrottleAbuser } from '../../../../lib/admin-types';
 import { Panel, EmptyState, ErrorState, T, s, formatTime } from '../../ui';
 import { useLocale } from '../../../../lib/i18n/locale-provider';
 

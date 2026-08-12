@@ -55,6 +55,7 @@ async function bootstrap() {
       'X-Request-ID',
       'Idempotency-Key',
       'If-Match',
+      'X-Client-Info',
     ],
     exposedHeaders: ['X-Request-ID', 'ETag'],
   });

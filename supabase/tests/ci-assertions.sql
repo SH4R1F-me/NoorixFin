@@ -284,5 +284,90 @@ BEGIN
 END;
 $$;
 
+-- ── Durable notifications and payload-free invalidation (§5) ────────────────
+DO $$
+DECLARE
+  v_count BIGINT;
+  v_started TIMESTAMPTZ := clock_timestamp();
+BEGIN
+  RAISE NOTICE '── Notification isolation and hint aperture (§5) ──';
+
+  INSERT INTO notifications (id, user_id, category, title_en, body_en) VALUES
+    ('e0000000-0000-0000-0000-000000000011','aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa','security','Alice only','private body'),
+    ('e0000000-0000-0000-0000-000000000012','bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb','system','Bob only','private body');
+
+  SET LOCAL ROLE authenticated;
+  PERFORM set_config('request.jwt.claim.sub', 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', true);
+
+  SELECT count(*) INTO v_count FROM notifications
+   WHERE id IN ('e0000000-0000-0000-0000-000000000011','e0000000-0000-0000-0000-000000000012');
+  IF v_count <> 1 THEN
+    RAISE EXCEPTION 'NOTIF-01 FAILED: Bob sees % of 2 cross-user notifications (expected own row only)', v_count;
+  END IF;
+
+  BEGIN
+    INSERT INTO notifications (user_id, category, title_en, body_en)
+    VALUES ('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb','security','forged','forged');
+    RAISE EXCEPTION 'NOTIF-02 FAILED: authenticated user forged a notification';
+  EXCEPTION WHEN insufficient_privilege THEN NULL;
+  END;
+
+  UPDATE notifications SET read_at = NOW()
+   WHERE id = 'e0000000-0000-0000-0000-000000000011';
+  GET DIAGNOSTICS v_count = ROW_COUNT;
+  IF v_count <> 0 THEN
+    RAISE EXCEPTION 'NOTIF-03 FAILED: Bob updated Alice''s notification';
+  END IF;
+
+  SELECT count(*) INTO v_count FROM notification_hints
+   WHERE created_at >= v_started AND user_id <> 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb';
+  IF v_count <> 0 THEN
+    RAISE EXCEPTION 'NOTIF-HINT FAILED: Bob sees another user''s invalidation hint';
+  END IF;
+
+  EXECUTE 'RESET ROLE';
+
+  SELECT count(*) INTO v_count FROM information_schema.columns
+   WHERE table_schema = 'public' AND table_name = 'notification_hints'
+     AND column_name IN ('title_en','body_en','action_url','metadata','notification_id');
+  IF v_count <> 0 THEN
+    RAISE EXCEPTION 'NOTIF-HINT FAILED: Realtime hint table contains notification payload columns';
+  END IF;
+
+  SELECT count(*) INTO v_count
+    FROM pg_publication_tables
+   WHERE pubname = 'supabase_realtime' AND schemaname = 'public' AND tablename = 'notifications';
+  IF v_count <> 0 THEN
+    RAISE EXCEPTION 'NOTIF-HINT FAILED: notification content table is in the Realtime publication';
+  END IF;
+
+  SELECT count(*) INTO v_count
+    FROM pg_publication_tables
+   WHERE pubname = 'supabase_realtime' AND schemaname = 'public' AND tablename = 'notification_hints';
+  IF v_count <> 1 THEN
+    RAISE EXCEPTION 'NOTIF-HINT FAILED: payload-free hint table is absent from Realtime';
+  END IF;
+
+  DELETE FROM notifications WHERE id IN
+    ('e0000000-0000-0000-0000-000000000011','e0000000-0000-0000-0000-000000000012');
+  DELETE FROM notification_hints WHERE created_at >= v_started;
+
+  RAISE NOTICE '   notification RLS and payload-free Realtime aperture enforced';
+END;
+$$;
+
+DO $$
+DECLARE v_count INT;
+BEGIN
+  IF current_setting('cron.database_name', true) = current_database() THEN
+    SELECT count(*) INTO v_count FROM cron.job
+     WHERE jobname = 'notification-digests' AND active;
+    IF v_count <> 1 THEN
+      RAISE EXCEPTION 'NOTIF-DIGEST FAILED: expected one active digest schedule, found %', v_count;
+    END IF;
+  END IF;
+END;
+$$;
+
 \echo ''
 \echo '✓ All CI invariants hold.'

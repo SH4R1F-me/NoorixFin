@@ -20,6 +20,8 @@ import { Request } from 'express';
 import { SyncService } from './sync.service';
 import { SyncQueryDto, SyncResponseDto } from './dto/sync.dto';
 import { WorkspaceMemberGuard } from '../auth/guards/workspace-member.guard';
+import { CurrentUser } from '../common/decorators/current-user.decorator';
+import type { AuthenticatedUser } from '../common/decorators/current-user.decorator';
 
 @ApiTags('Sync')
 @ApiBearerAuth('supabase-auth')
@@ -40,8 +42,18 @@ export class SyncController {
   async delta(
     @Param('workspaceId') workspaceId: string,
     @Req() req: Request & { accessToken: string },
+    @CurrentUser() user: AuthenticatedUser,
     @Query() query: SyncQueryDto,
   ) {
-    return this.syncService.getDelta(workspaceId, req.accessToken, query);
+    try {
+      return await this.syncService.getDelta(
+        workspaceId,
+        req.accessToken,
+        query,
+      );
+    } catch (error) {
+      await this.syncService.reportFailure(user.id, workspaceId, error);
+      throw error;
+    }
   }
 }

@@ -33,6 +33,7 @@ import { SupabaseService } from '../supabase/supabase.service';
 import type { Json, Updatable } from '@noorixfin/db-types';
 import { AuditService } from '../observability/audit.service';
 import { SystemEventsService } from '../observability/system-events.service';
+import { NotificationsService } from '../notifications/notifications.service';
 import {
   AdminUpdateUserDto,
   CreateBroadcastDto,
@@ -100,6 +101,7 @@ export class AdminService {
     private readonly supabaseService: SupabaseService,
     private readonly audit: AuditService,
     private readonly systemEvents: SystemEventsService,
+    private readonly notifications: NotificationsService,
   ) {}
 
   // ─── Overview & health ────────────────────────────────────────────────────
@@ -453,6 +455,19 @@ export class AdminService {
       actorId,
       metadata: { reason },
     });
+    await this.notifications.create({
+      userId,
+      category: 'security',
+      severity: 'CRITICAL',
+      titleEn: 'Your NoorixFin account was suspended',
+      titleBn: 'আপনার NoorixFin অ্যাকাউন্ট স্থগিত করা হয়েছে',
+      bodyEn:
+        'An operator suspended your account. Contact support if you believe this is a mistake.',
+      bodyBn:
+        'একজন অপারেটর আপনার অ্যাকাউন্ট স্থগিত করেছেন। এটি ভুল হলে সহায়তার সাথে যোগাযোগ করুন।',
+      actionUrl: '/dashboard/settings',
+      dedupeKey: `account-suspended:${userId}:${new Date().toISOString()}`,
+    });
 
     return this.getUser(accessToken, userId);
   }
@@ -801,6 +816,10 @@ export class AdminService {
       actorId,
     });
 
+    if (status === 'PUBLISHED') {
+      await this.notifications.notifyBroadcast(data);
+    }
+
     return data;
   }
 
@@ -811,16 +830,17 @@ export class AdminService {
    * All aggregations run on the service role so RLS on system_events (which is
    * operator-only) does not block them.
    */
-  async getPerformanceMetrics(
-    _accessToken: string,
-    windowHours: number = 1,
-  ) {
+  async getPerformanceMetrics(_accessToken: string, windowHours: number = 1) {
     const client = this.supabaseService.getServiceClient();
-    const since = new Date(Date.now() - windowHours * 60 * 60 * 1000).toISOString();
+    const since = new Date(
+      Date.now() - windowHours * 60 * 60 * 1000,
+    ).toISOString();
 
     const { data, error } = await client
       .from('system_events')
-      .select('latency_ms, status_code, platform, route, method, created_at, event_code')
+      .select(
+        'latency_ms, status_code, platform, route, method, created_at, event_code',
+      )
       .gte('created_at', since)
       .not('latency_ms', 'is', null);
 
@@ -841,11 +861,12 @@ export class AdminService {
       (r) => r.status_code !== null && r.status_code >= 500,
     ).length;
     const client4xx = rows.filter(
-      (r) => r.status_code !== null && r.status_code >= 400 && r.status_code < 500,
+      (r) =>
+        r.status_code !== null && r.status_code >= 400 && r.status_code < 500,
     ).length;
 
     const pct = (n: number) =>
-      total === 0 ? 0 : latencies[Math.floor((n / 100) * total)] ?? 0;
+      total === 0 ? 0 : (latencies[Math.floor((n / 100) * total)] ?? 0);
 
     // Per-route aggregation (top 10 slowest by p95)
     const routeMap = new Map<
@@ -902,6 +923,7 @@ export class AdminService {
   // ─── Phase 2: Alerts ──────────────────────────────────────────────────────
 
   async getAlerts(_accessToken: string) {
+    void _accessToken;
     const client = this.supabaseService.getServiceClient();
     const { data, error } = await client
       .from('alert_state')
@@ -940,6 +962,18 @@ export class AdminService {
       actorId,
     });
 
+    await this.notifications.notifyOperators({
+      severity: 'SUCCESS',
+      titleEn: 'Operator alert resolved',
+      titleBn: 'অপারেটর সতর্কতা সমাধান হয়েছে',
+      bodyEn: `${alertKey} was acknowledged and resolved.`,
+      bodyBn: `${alertKey} স্বীকৃত ও সমাধান করা হয়েছে।`,
+      actionUrl: '/admin/monitoring/alerts',
+      resourceType: 'alert_state',
+      metadata: { alert_key: alertKey, resolved_by: actorId },
+      dedupeKey: `alert-resolved:${alertKey}:${data.updated_at}`,
+    });
+
     return data;
   }
 
@@ -974,7 +1008,10 @@ export class AdminService {
 
     if (query.platform) builder = builder.eq('platform', query.platform);
 
-    const { data, error, count } = await builder.range(offset, offset + limit - 1);
+    const { data, error, count } = await builder.range(
+      offset,
+      offset + limit - 1,
+    );
     if (error) throw this.translate(error);
 
     return { items: data ?? [], total: count ?? 0, limit, offset };
@@ -992,13 +1029,19 @@ export class AdminService {
 
     let builder = client
       .from('user_devices')
-      .select('id, user_id, device_id, platform, device_name, os_version, app_version, last_seen_at, last_ip, first_seen_at', { count: 'exact' })
+      .select(
+        'id, user_id, device_id, platform, device_name, os_version, app_version, last_seen_at, last_ip, first_seen_at',
+        { count: 'exact' },
+      )
       .is('revoked_at', null)
       .order('last_seen_at', { ascending: false });
 
     if (query.platform) builder = builder.eq('platform', query.platform);
 
-    const { data, error, count } = await builder.range(offset, offset + limit - 1);
+    const { data, error, count } = await builder.range(
+      offset,
+      offset + limit - 1,
+    );
     if (error) throw this.translate(error);
 
     return { items: data ?? [], total: count ?? 0, limit, offset };
@@ -1015,7 +1058,10 @@ export class AdminService {
       .single();
 
     if (error || !data) {
-      throw new NotFoundException({ code: 'DEVICE_NOT_FOUND', message: 'Device not found or already revoked' });
+      throw new NotFoundException({
+        code: 'DEVICE_NOT_FOUND',
+        message: 'Device not found or already revoked',
+      });
     }
 
     await this.audit.write({
@@ -1024,6 +1070,19 @@ export class AdminService {
       resourceType: 'user_devices',
       resourceId: deviceRowId,
       metadata: { target_user: data.user_id, platform: data.platform },
+    });
+    await this.notifications.create({
+      userId: data.user_id,
+      category: 'security',
+      severity: 'WARNING',
+      titleEn: 'A device session was revoked',
+      titleBn: 'একটি ডিভাইস সেশন বাতিল করা হয়েছে',
+      bodyEn: `An operator revoked an active ${data.platform} session.`,
+      bodyBn: `একজন অপারেটর একটি সক্রিয় ${data.platform} সেশন বাতিল করেছেন।`,
+      actionUrl: '/dashboard/settings/sessions',
+      resourceType: 'user_device',
+      resourceId: deviceRowId,
+      dedupeKey: `session-revoked:${deviceRowId}`,
     });
 
     return { revoked: true, device_id: deviceRowId };
@@ -1046,6 +1105,18 @@ export class AdminService {
       resourceId: userId,
       metadata: { target_user: userId },
     });
+    await this.notifications.create({
+      userId,
+      category: 'security',
+      severity: 'CRITICAL',
+      titleEn: 'All device sessions were revoked',
+      titleBn: 'সব ডিভাইস সেশন বাতিল করা হয়েছে',
+      bodyEn: 'An operator signed your account out on every registered device.',
+      bodyBn:
+        'একজন অপারেটর সব নিবন্ধিত ডিভাইসে আপনার অ্যাকাউন্ট সাইন আউট করেছেন।',
+      actionUrl: '/dashboard/settings/sessions',
+      dedupeKey: `all-sessions-revoked:${userId}:${new Date().toISOString()}`,
+    });
 
     return { revoked: true };
   }
@@ -1063,6 +1134,7 @@ export class AdminService {
    *   - Accounts with > N platforms (web + ios + android at once)
    */
   async getAnomalies(_accessToken: string) {
+    void _accessToken;
     const client = this.supabaseService.getServiceClient();
     const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
 
@@ -1080,7 +1152,12 @@ export class AdminService {
     const { data: throttleEvents } = await client
       .from('system_events')
       .select('actor_id, created_at, route, metadata')
-      .in('event_code', ['THROTTLE_SHORT', 'THROTTLE_MEDIUM', 'THROTTLE_LONG', 'RATE_LIMIT_EXCEEDED'])
+      .in('event_code', [
+        'THROTTLE_SHORT',
+        'THROTTLE_MEDIUM',
+        'THROTTLE_LONG',
+        'RATE_LIMIT_EXCEEDED',
+      ])
       .gte('created_at', oneHourAgo)
       .not('actor_id', 'is', null)
       .limit(100);

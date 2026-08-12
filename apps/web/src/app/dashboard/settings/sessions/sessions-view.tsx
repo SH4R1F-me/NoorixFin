@@ -9,10 +9,17 @@
  */
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
-import { Smartphone, Globe, Monitor, RefreshCw, ShieldOff, AlertTriangle, CheckCircle } from 'lucide-react';
+import {
+  Smartphone,
+  Globe,
+  Monitor,
+  RefreshCw,
+  ShieldOff,
+  AlertTriangle,
+  CheckCircle,
+} from 'lucide-react';
 import type { UserDevice } from './actions';
 import { revokeMyDevice, revokeAllMyDevices } from './actions';
-import { useLocale } from '../../../../lib/i18n/locale-provider';
 
 function PlatformIcon({ platform }: { platform: string }) {
   if (platform === 'ios' || platform === 'android') return <Smartphone size={16} />;
@@ -34,7 +41,6 @@ const PLATFORM_COLOR: Record<string, string> = {
 };
 
 export default function SessionsView({ devices }: { devices: UserDevice[] }) {
-  const { t } = useLocale();
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [revoking, setRevoking] = useState<string | null>(null);
@@ -64,32 +70,39 @@ export default function SessionsView({ devices }: { devices: UserDevice[] }) {
       {/* Header */}
       <div style={s.hdr}>
         <h1 style={s.title}>Sessions & Devices</h1>
-        <p style={s.sub}>Every device where you are currently signed in. Revoke any session you do not recognise.</p>
+        <p style={s.sub}>
+          Every device where you are currently signed in. Revoke any session you do not recognise.
+        </p>
       </div>
 
       {notice && (
         <div style={notice.ok ? s.noticeOk : s.noticeBad} role="status">
-          {notice.ok ? <CheckCircle size={14} style={{ display: 'inline', marginRight: 6 }} /> : <AlertTriangle size={14} style={{ display: 'inline', marginRight: 6 }} />}
+          {notice.ok ? (
+            <CheckCircle size={14} style={{ display: 'inline', marginRight: 6 }} />
+          ) : (
+            <AlertTriangle size={14} style={{ display: 'inline', marginRight: 6 }} />
+          )}
           {notice.text}
         </div>
       )}
 
       {/* Actions bar */}
-      <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '1rem', gap: '0.5rem' }}>
+      <div
+        style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '1rem', gap: '0.5rem' }}
+      >
         <button
           onClick={() => startTransition(() => router.refresh())}
           disabled={pending}
           style={s.ghostBtn}
         >
-          <RefreshCw size={14} style={{ animation: pending ? 'spin 1s linear infinite' : 'none' }} />
+          <RefreshCw
+            size={14}
+            style={{ animation: pending ? 'spin 1s linear infinite' : 'none' }}
+          />
           Refresh
         </button>
         {devices.length > 1 && (
-          <button
-            onClick={handleRevokeAll}
-            disabled={revoking === 'all'}
-            style={s.dangerBtn}
-          >
+          <button onClick={handleRevokeAll} disabled={revoking === 'all'} style={s.dangerBtn}>
             <ShieldOff size={14} />
             {revoking === 'all' ? 'Signing out…' : 'Sign out all other devices'}
           </button>
@@ -100,28 +113,82 @@ export default function SessionsView({ devices }: { devices: UserDevice[] }) {
       <div style={s.sections}>
         {devices.length === 0 ? (
           <div style={s.section}>
-            <div style={{ padding: '2rem', textAlign: 'center', color: '#8b9ab0', fontSize: '0.8125rem' }}>
+            <div
+              style={{
+                padding: '2rem',
+                textAlign: 'center',
+                color: '#8b9ab0',
+                fontSize: '0.8125rem',
+              }}
+            >
               No active sessions found. This may mean your device tracking is not yet registered.
             </div>
           </div>
         ) : (
           devices.map((device) => (
             <div key={device.id} style={s.section}>
-              <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '1rem', padding: '1.125rem 1.25rem', flexWrap: 'wrap' }}>
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'flex-start',
+                  justifyContent: 'space-between',
+                  gap: '1rem',
+                  padding: '1.125rem 1.25rem',
+                  flexWrap: 'wrap',
+                }}
+              >
                 <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.875rem' }}>
-                  <div style={{ width: 40, height: 40, borderRadius: '0.625rem', background: `${PLATFORM_COLOR[device.platform] ?? '#38bdf8'}18`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: PLATFORM_COLOR[device.platform] ?? '#38bdf8', flexShrink: 0 }}>
+                  <div
+                    style={{
+                      width: 40,
+                      height: 40,
+                      borderRadius: '0.625rem',
+                      background: `${PLATFORM_COLOR[device.platform] ?? '#38bdf8'}18`,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      color: PLATFORM_COLOR[device.platform] ?? '#38bdf8',
+                      flexShrink: 0,
+                    }}
+                  >
                     <PlatformIcon platform={device.platform} />
                   </div>
                   <div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: 2 }}>
+                    <div
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.5rem',
+                        marginBottom: 2,
+                      }}
+                    >
                       <span style={{ fontSize: '0.9375rem', fontWeight: 600, color: '#f8fafc' }}>
-                        {device.device_name ?? `${device.platform.charAt(0).toUpperCase() + device.platform.slice(1)} Device`}
+                        {device.device_name ??
+                          `${device.platform.charAt(0).toUpperCase() + device.platform.slice(1)} Device`}
                       </span>
-                      <span style={{ fontSize: '0.6875rem', textTransform: 'capitalize', padding: '0.1rem 0.45rem', background: `${PLATFORM_COLOR[device.platform] ?? '#38bdf8'}18`, color: PLATFORM_COLOR[device.platform] ?? '#38bdf8', borderRadius: 4, fontWeight: 600 }}>
+                      <span
+                        style={{
+                          fontSize: '0.6875rem',
+                          textTransform: 'capitalize',
+                          padding: '0.1rem 0.45rem',
+                          background: `${PLATFORM_COLOR[device.platform] ?? '#38bdf8'}18`,
+                          color: PLATFORM_COLOR[device.platform] ?? '#38bdf8',
+                          borderRadius: 4,
+                          fontWeight: 600,
+                        }}
+                      >
                         {device.platform}
                       </span>
                     </div>
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', fontSize: '0.75rem', color: '#8b9ab0' }}>
+                    <div
+                      style={{
+                        display: 'flex',
+                        flexWrap: 'wrap',
+                        gap: '0.75rem',
+                        fontSize: '0.75rem',
+                        color: '#8b9ab0',
+                      }}
+                    >
                       {device.app_version && <span>v{device.app_version}</span>}
                       {device.os_version && <span>{device.os_version}</span>}
                       {device.last_ip && <span>{device.last_ip}</span>}
@@ -146,7 +213,9 @@ export default function SessionsView({ devices }: { devices: UserDevice[] }) {
       </div>
 
       <p style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '1rem', maxWidth: 760 }}>
-        Device tracking uses an opaque app-generated ID stored in your device — not an advertising ID or hardware serial. Revoking a session prevents it from making new requests but does not delete any financial data.
+        Device tracking uses an opaque app-generated ID stored in your device — not an advertising
+        ID or hardware serial. Revoking a session prevents it from making new requests but does not
+        delete any financial data.
       </p>
 
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>

@@ -1,13 +1,13 @@
 # NoorixFin — DECISIONS LOG
 
-**Last updated:** 2026-08-08 (enterprise audit — DEC-025 raised, still open)
+**Last updated:** 2026-08-13 (Phase 4 notification transport decisions)
 **Product name:** NoorixFin (renamed from MyFin — see DEC-008)
 
 > **Numbering gap:** `DEC-021` (server-side locale resolution) and `DEC-022`
 > (budget figures recomputed from the ledger) are cited by ~10 source files but
 > were never written up here. Their rationale is recoverable only from the code
 > that cites them, so they are recorded as missing rather than reconstructed
-> from guesswork. Next free id is **DEC-026**.
+> from guesswork. Next free id is **DEC-028**.
 
 ---
 
@@ -696,3 +696,51 @@ amended in the same commit rather than left contradicting it.
 
 **Status:** **OPEN.** Assumed-A for planning purposes only. No code depends on
 this entry today.
+
+---
+
+## DEC-026: Realtime carries notification invalidation, never notification content
+
+**Date:** 2026-08-13 (Phase 4)
+
+**Decision:** Supabase Realtime publishes `notification_hints`, whose rows carry
+only `user_id`, a monotonic id and a timestamp. It does not publish the
+`notifications` table. A matching hint tells the authenticated client to fetch
+through `GET /v1/notifications` or the workspace delta-sync endpoint.
+
+**Rationale:** notification bodies can describe security events and financial
+activity. Putting them in a Realtime change payload creates a second content
+transport with different caching, observability and authorization behaviour.
+The hint preserves low-latency badges without widening that aperture. RLS still
+limits hints to their owner, and CI asserts both the table shape and publication
+membership.
+
+**Alternative rejected:** subscribing directly to `notifications`. It is
+simpler, but contradicts DEC-011's invalidation-only Realtime rule and leaks the
+full row over a channel that only needs to say “fetch again.”
+
+**Status:** Confirmed — migration 00023 and SQL invariants enforce it.
+
+---
+
+## DEC-027: The durable notification row is authoritative; channels are pointers
+
+**Date:** 2026-08-13 (Phase 4)
+
+**Decision:** every event creates `notifications` first. In-app, Expo Push, Web
+Push and SMTP are independent `notification_deliveries` attempts pointing to
+that row. Provider failure never deletes or rolls back the notification.
+
+**Rationale:** push and email providers are best-effort systems. Treating a
+successful provider request as the record of the event loses notifications
+during provider outages and makes delivery state impossible to audit. The
+durable-first order gives web and offline mobile the same source of truth,
+supports retries and receipts, and lets an operator inspect aggregate outcomes
+without seeing recipient content.
+
+**Alternative rejected:** send first, insert after success. It makes the least
+reliable component responsible for durability and cannot represent suppressed,
+deferred or failed channels honestly.
+
+**Status:** Confirmed — implemented by `NotificationsService` and migration
+00023.

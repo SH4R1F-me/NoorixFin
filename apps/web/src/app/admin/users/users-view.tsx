@@ -21,7 +21,7 @@ import {
   Trash2,
   X,
 } from 'lucide-react';
-import type { AdminUser } from '../../../lib/admin';
+import type { AdminUser } from '../../../lib/admin-types';
 import { Badge, EmptyState, STATUS_COLOR, T, formatTime, s } from '../ui';
 import { reinstateUser, runPurge, suspendUser, updateUserProfile } from './actions';
 

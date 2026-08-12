@@ -31,7 +31,7 @@ type AuthedRequest = Request & { accessToken: string };
 
 @ApiTags('Devices & Sessions')
 @ApiBearerAuth()
-@Controller('v1/me/devices')
+@Controller('me/devices')
 export class DevicesController {
   constructor(private readonly devices: DevicesService) {}
 
@@ -43,7 +43,9 @@ export class DevicesController {
   }
 
   @Post()
-  @ApiOperation({ summary: 'Register or update a device (upsert on device_id)' })
+  @ApiOperation({
+    summary: 'Register or update a device (upsert on device_id)',
+  })
   register(
     @Req() req: AuthedRequest & ClientContextRequest,
     @CurrentUser() user: AuthenticatedUser,
@@ -57,8 +59,26 @@ export class DevicesController {
     );
   }
 
+  @Delete('current/:opaqueDeviceId')
+  @ApiOperation({
+    summary: 'Revoke the caller device by its app-generated device_id',
+  })
+  revokeCurrent(
+    @Req() req: AuthedRequest,
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('opaqueDeviceId', ParseUUIDPipe) opaqueDeviceId: string,
+  ) {
+    return this.devices.revokeCurrentDevice(
+      req.accessToken,
+      user.id,
+      opaqueDeviceId,
+    );
+  }
+
   @Delete(':deviceId')
-  @ApiOperation({ summary: 'Revoke a specific device / sign out of that session' })
+  @ApiOperation({
+    summary: 'Revoke a specific device / sign out of that session',
+  })
   revoke(
     @Req() req: AuthedRequest,
     @CurrentUser() user: AuthenticatedUser,

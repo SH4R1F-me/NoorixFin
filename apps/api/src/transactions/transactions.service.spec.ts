@@ -15,6 +15,7 @@ import { TransactionsService } from './transactions.service';
 import type { SupabaseService } from '../supabase/supabase.service';
 import type { CategoriesService } from '../categories/categories.service';
 import type { CreateTransactionDto } from './dto/transaction.dto';
+import type { NotificationsService } from '../notifications/notifications.service';
 
 const WORKSPACE = '11111111-1111-1111-1111-111111111111';
 const USER = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa';
@@ -125,9 +126,13 @@ function makeService(categoryAccountId: string | null = CATEGORY_ACCOUNT) {
       return categoryAccountId;
     }),
   } as unknown as CategoriesService;
+  const notifications = {
+    create: jest.fn().mockResolvedValue(null),
+    evaluateFinancialRules: jest.fn().mockResolvedValue(undefined),
+  } as unknown as NotificationsService;
 
   return {
-    service: new TransactionsService(supabase, categories),
+    service: new TransactionsService(supabase, categories, notifications),
     mock,
     categories,
   };

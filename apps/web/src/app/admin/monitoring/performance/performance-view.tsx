@@ -8,8 +8,8 @@
  */
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
-import { BarChart2, RefreshCw, AlertTriangle, CheckCircle } from 'lucide-react';
-import type { PerformanceMetrics } from '../../../../lib/admin';
+import { BarChart2, RefreshCw, CheckCircle } from 'lucide-react';
+import type { PerformanceMetrics } from '../../../../lib/admin-types';
 import { StatTile, Panel, Badge, EmptyState, ErrorState, T, s, formatTime } from '../../ui';
 import { useLocale } from '../../../../lib/i18n/locale-provider';
 
@@ -62,17 +62,32 @@ export default function PerformanceView({
     startTransition(() => router.refresh());
   }
 
-  const maxP95 = metrics
-    ? Math.max(...metrics.slowest_routes.map((r) => r.p95), 1)
-    : 1;
+  const maxP95 = metrics ? Math.max(...metrics.slowest_routes.map((r) => r.p95), 1) : 1;
 
   return (
     <div>
       {/* Header */}
-      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '1.75rem', flexWrap: 'wrap', gap: '1rem' }}>
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'flex-start',
+          justifyContent: 'space-between',
+          marginBottom: '1.75rem',
+          flexWrap: 'wrap',
+          gap: '1rem',
+        }}
+      >
         <div>
           <h1 style={s.title}>
-            <BarChart2 size={22} style={{ display: 'inline', marginRight: 8, verticalAlign: 'middle', color: T.accent }} />
+            <BarChart2
+              size={22}
+              style={{
+                display: 'inline',
+                marginRight: 8,
+                verticalAlign: 'middle',
+                color: T.accent,
+              }}
+            />
             {t('admin.performance.title')}
           </h1>
           <p style={s.subtitle}>{t('admin.performance.subtitle')}</p>
@@ -80,7 +95,14 @@ export default function PerformanceView({
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
           {/* Time window selector */}
-          <div style={{ display: 'flex', background: 'rgba(255,255,255,0.05)', borderRadius: 8, padding: 2 }}>
+          <div
+            style={{
+              display: 'flex',
+              background: 'rgba(255,255,255,0.05)',
+              borderRadius: 8,
+              padding: 2,
+            }}
+          >
             {WINDOWS.map((w) => (
               <button
                 key={w}
@@ -102,12 +124,11 @@ export default function PerformanceView({
             ))}
           </div>
 
-          <button
-            onClick={handleRefresh}
-            disabled={pending}
-            style={{ ...s.btnGhost }}
-          >
-            <RefreshCw size={14} style={{ animation: pending ? 'spin 1s linear infinite' : 'none' }} />
+          <button onClick={handleRefresh} disabled={pending} style={{ ...s.btnGhost }}>
+            <RefreshCw
+              size={14}
+              style={{ animation: pending ? 'spin 1s linear infinite' : 'none' }}
+            />
             Refresh
           </button>
         </div>
@@ -132,7 +153,11 @@ export default function PerformanceView({
               hint={`${metrics.error_count} 5xx · ${metrics.client_error_count} 4xx`}
               tone={metrics.error_rate > 5 ? T.error : metrics.error_rate > 1 ? T.warn : T.ok}
             />
-            <StatTile label={t('admin.performance.p50')} value={`${metrics.p50}ms`} hint="Median latency" />
+            <StatTile
+              label={t('admin.performance.p50')}
+              value={`${metrics.p50}ms`}
+              hint="Median latency"
+            />
             <StatTile
               label={t('admin.performance.p95')}
               value={`${metrics.p95}ms`}
@@ -162,19 +187,41 @@ export default function PerformanceView({
                     <thead>
                       <tr>
                         <th style={s.th}>Route</th>
-                        <th style={{ ...s.th, textAlign: 'right' }}>{t('admin.performance.requestCount')}</th>
-                        <th style={{ ...s.th, textAlign: 'right' }}>{t('admin.performance.errorCount')}</th>
+                        <th style={{ ...s.th, textAlign: 'right' }}>
+                          {t('admin.performance.requestCount')}
+                        </th>
+                        <th style={{ ...s.th, textAlign: 'right' }}>
+                          {t('admin.performance.errorCount')}
+                        </th>
                         <th style={{ ...s.th, minWidth: 180 }}>p95 latency</th>
                       </tr>
                     </thead>
                     <tbody>
                       {metrics.slowest_routes.map((r) => (
                         <tr key={r.route}>
-                          <td style={{ ...s.td, fontFamily: 'monospace', fontSize: '0.75rem', maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          <td
+                            style={{
+                              ...s.td,
+                              fontFamily: 'monospace',
+                              fontSize: '0.75rem',
+                              maxWidth: 200,
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                              whiteSpace: 'nowrap',
+                            }}
+                          >
                             {r.route}
                           </td>
-                          <td style={{ ...s.td, textAlign: 'right', color: T.textDim }}>{r.count}</td>
-                          <td style={{ ...s.td, textAlign: 'right', color: r.error_count > 0 ? T.error : T.textFaint }}>
+                          <td style={{ ...s.td, textAlign: 'right', color: T.textDim }}>
+                            {r.count}
+                          </td>
+                          <td
+                            style={{
+                              ...s.td,
+                              textAlign: 'right',
+                              color: r.error_count > 0 ? T.error : T.textFaint,
+                            }}
+                          >
                             {r.error_count}
                           </td>
                           <td style={s.td}>
@@ -207,22 +254,57 @@ export default function PerformanceView({
                           : Math.round((count / metrics.total_requests) * 100);
                       return (
                         <div key={platform}>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-                            <span style={{ fontSize: '0.8125rem', color: T.text, textTransform: 'capitalize' }}>
+                          <div
+                            style={{
+                              display: 'flex',
+                              justifyContent: 'space-between',
+                              marginBottom: 4,
+                            }}
+                          >
+                            <span
+                              style={{
+                                fontSize: '0.8125rem',
+                                color: T.text,
+                                textTransform: 'capitalize',
+                              }}
+                            >
                               {platform}
                             </span>
                             <span style={{ fontSize: '0.8125rem', color: T.textDim }}>
                               {count.toLocaleString()} ({pct}%)
                             </span>
                           </div>
-                          <div style={{ height: 6, background: 'rgba(255,255,255,0.07)', borderRadius: 99, overflow: 'hidden' }}>
-                            <div style={{ width: `${pct}%`, height: '100%', background: T.accent, borderRadius: 99 }} />
+                          <div
+                            style={{
+                              height: 6,
+                              background: 'rgba(255,255,255,0.07)',
+                              borderRadius: 99,
+                              overflow: 'hidden',
+                            }}
+                          >
+                            <div
+                              style={{
+                                width: `${pct}%`,
+                                height: '100%',
+                                background: T.accent,
+                                borderRadius: 99,
+                              }}
+                            />
                           </div>
                         </div>
                       );
                     })}
 
-                  <div style={{ marginTop: '0.5rem', paddingTop: '0.875rem', borderTop: `1px solid ${T.border}`, display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <div
+                    style={{
+                      marginTop: '0.5rem',
+                      paddingTop: '0.875rem',
+                      borderTop: `1px solid ${T.border}`,
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 6,
+                    }}
+                  >
                     <CheckCircle size={13} color={T.ok} />
                     <span style={{ fontSize: '0.75rem', color: T.textFaint }}>
                       {t('admin.performance.computedAt')} {formatTime(metrics.computed_at)}

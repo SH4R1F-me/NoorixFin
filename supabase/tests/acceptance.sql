@@ -281,3 +281,60 @@ SELECT prune_system_events(30) AS pruned_rows;
 SELECT count(*) AS recent_rows_kept FROM system_events WHERE event_code = 'NEW';
 SELECT count(*) AS old_rows_remaining FROM system_events WHERE event_code = 'OLD';
 ROLLBACK;
+
+-- ============================================================================
+-- GLOBAL NOTIFICATIONS (§5) — migration 00023
+-- ============================================================================
+
+\echo '── NOTIF-01: users see only their own durable notifications ──'
+BEGIN;
+SET LOCAL ROLE postgres;
+INSERT INTO notifications (id, user_id, category, title_en, body_en) VALUES
+  ('e0000000-0000-0000-0000-000000000001','aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa','security','Alice only','private'),
+  ('e0000000-0000-0000-0000-000000000002','bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb','system','Bob only','private');
+SET LOCAL ROLE authenticated;
+SET LOCAL request.jwt.claim.sub = 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb';
+SELECT count(*) AS notifications_visible_to_bob,
+       string_agg(title_en, ',') AS which
+  FROM notifications
+ WHERE id IN ('e0000000-0000-0000-0000-000000000001',
+              'e0000000-0000-0000-0000-000000000002');
+ROLLBACK;
+
+\echo '── NOTIF-02: a user cannot forge a notification, even for themselves ──'
+BEGIN;
+SET LOCAL ROLE authenticated;
+SET LOCAL request.jwt.claim.sub = 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb';
+INSERT INTO notifications (user_id, category, title_en, body_en)
+VALUES ('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb','security','Forged','not allowed');
+ROLLBACK;
+
+\echo '── NOTIF-03: a user cannot mark another user''s notification read ──'
+BEGIN;
+SET LOCAL ROLE postgres;
+INSERT INTO notifications (id, user_id, category, title_en, body_en)
+VALUES ('e0000000-0000-0000-0000-000000000003','aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa','security','Alice only','private');
+SET LOCAL ROLE authenticated;
+SET LOCAL request.jwt.claim.sub = 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb';
+UPDATE notifications SET read_at = NOW()
+ WHERE id = 'e0000000-0000-0000-0000-000000000003';
+SET LOCAL ROLE postgres;
+SELECT count(*) AS alice_notification_still_unread
+  FROM notifications
+ WHERE id = 'e0000000-0000-0000-0000-000000000003'
+   AND read_at IS NULL;
+ROLLBACK;
+
+\echo '── NOTIF-04: invalid categories and delivery states are rejected ──'
+BEGIN;
+INSERT INTO notifications (user_id, category, title_en, body_en)
+VALUES ('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb','marketing','Invalid','must fail');
+ROLLBACK;
+
+\echo '── NOTIF-05: campaign/template content is service-role only ──'
+BEGIN;
+SET LOCAL ROLE authenticated;
+SET LOCAL request.jwt.claim.sub = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa';
+SELECT count(*) AS campaigns_visible_to_operator FROM notification_campaigns;
+SELECT count(*) AS templates_visible_to_operator FROM notification_templates;
+ROLLBACK;

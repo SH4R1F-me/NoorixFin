@@ -27,6 +27,7 @@ import { PlanningModule } from './planning/planning.module';
 import { AdminModule } from './admin/admin.module';
 import { AccountModule } from './account/account.module';
 import { DevicesModule } from './devices/devices.module';
+import { NotificationsModule } from './notifications/notifications.module';
 
 // Middleware, Filters & Interceptors
 import { RequestIdMiddleware } from './common/middleware/request-id.middleware';
@@ -84,6 +85,8 @@ import { IdentityThrottlerGuard } from './common/guards/identity-throttler.guard
     AccountModule,
     // Phase 2 — session & device management (gap S2)
     DevicesModule,
+    // Phase 4 — global notification system (§5)
+    NotificationsModule,
   ],
   providers: [
     // Global auth guard (skip with @Public())

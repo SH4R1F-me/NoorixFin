@@ -13,6 +13,7 @@
 import { Injectable, Logger, BadRequestException } from '@nestjs/common';
 import { SupabaseService } from '../supabase/supabase.service';
 import { SyncQueryDto } from './dto/sync.dto';
+import { NotificationsService } from '../notifications/notifications.service';
 
 /** Explicit column lists — never `SELECT *` on a sync path (DEC-011). */
 const TABLES = {
@@ -27,6 +28,8 @@ const TABLES = {
   tags: 'id, workspace_id, name, deleted_at, created_at, updated_at',
   journal_entry_tags:
     'journal_entry_id, tag_id, workspace_id, created_at, updated_at',
+  notifications:
+    'id, user_id, workspace_id, category, severity, title_en, title_bn, body_en, body_bn, action_url, resource_type, resource_id, metadata, read_at, archived_at, expires_at, created_at, updated_at, deleted_at',
 } as const;
 
 type TableName = keyof typeof TABLES;
@@ -37,7 +40,43 @@ const DEFAULT_LIMIT = 500;
 export class SyncService {
   private readonly logger = new Logger(SyncService.name);
 
-  constructor(private readonly supabaseService: SupabaseService) {}
+  constructor(
+    private readonly supabaseService: SupabaseService,
+    private readonly notifications: NotificationsService,
+  ) {}
+
+  async reportFailure(
+    userId: string,
+    workspaceId: string,
+    cause: unknown,
+  ): Promise<void> {
+    try {
+      await this.notifications.create({
+        userId,
+        workspaceId,
+        category: 'sync',
+        severity: 'WARNING',
+        titleEn: 'Sync needs attention',
+        titleBn: 'সিঙ্কে মনোযোগ প্রয়োজন',
+        bodyEn:
+          'Your latest sync could not finish. Your local changes remain queued safely.',
+        bodyBn:
+          'আপনার সর্বশেষ সিঙ্ক সম্পন্ন হয়নি। স্থানীয় পরিবর্তনগুলো নিরাপদে সারিতে আছে।',
+        actionUrl: '/dashboard/settings',
+        metadata: {
+          error:
+            cause instanceof Error
+              ? cause.message.slice(0, 200)
+              : 'sync_failed',
+        },
+        dedupeKey: `sync-failed:${workspaceId}:${new Date().toISOString().slice(0, 10)}`,
+      });
+    } catch (notificationError) {
+      this.logger.warn(
+        `Could not record sync failure notification: ${notificationError instanceof Error ? notificationError.message : String(notificationError)}`,
+      );
+    }
+  }
 
   async getDelta(
     workspaceId: string,
@@ -59,7 +98,10 @@ export class SyncService {
     // alternative is skipping rows.
     let truncatedWatermark: string | null = null;
 
-    for (const table of Object.keys(TABLES) as TableName[]) {
+    const workspaceTables = (Object.keys(TABLES) as TableName[]).filter(
+      (table) => table !== 'notifications',
+    );
+    for (const table of workspaceTables) {
       const { data, error } = await client
         .from(table)
         .select(TABLES[table])
@@ -128,6 +170,35 @@ export class SyncService {
       ...(changes.categories ?? []),
       ...(systemCategories ?? []),
     ];
+
+    // Notifications are user-scoped by RLS and may either belong to this
+    // workspace or be global (security, account, system, operator). Keeping
+    // them in this delta avoids a second mobile polling loop (§5.5).
+    const { data: notifications, error: notificationError } = await client
+      .from('notifications')
+      .select(TABLES.notifications)
+      .or(`workspace_id.eq.${workspaceId},workspace_id.is.null`)
+      .gte('updated_at', since)
+      .order('updated_at', { ascending: true })
+      .limit(limit);
+
+    if (notificationError) {
+      this.logger.error(
+        `Sync failed for notifications: ${notificationError.message}`,
+      );
+      throw new BadRequestException({
+        code: 'SYNC_FAILED',
+        message: 'Failed to read notifications',
+      });
+    }
+    changes.notifications = notifications ?? [];
+    if ((notifications?.length ?? 0) === limit) {
+      hasMore = true;
+      const rows = notifications as Array<{ updated_at: string }>;
+      const last = rows[rows.length - 1].updated_at;
+      if (!truncatedWatermark || last < truncatedWatermark)
+        truncatedWatermark = last;
+    }
 
     return {
       cursor: truncatedWatermark ?? serverTime,

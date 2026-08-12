@@ -18,6 +18,11 @@ import type { Session } from '@supabase/supabase-js';
 import { supabase, startAuthAutoRefresh } from '../src/lib/supabase';
 import { getDb } from '../src/db';
 import { WorkspaceProvider, useWorkspace } from '../src/lib/WorkspaceContext';
+import {
+  registerDeviceAndExistingPushPermission,
+  subscribeToNotificationLifecycle,
+  subscribeToNotificationHints,
+} from '../src/lib/notifications';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -61,6 +66,23 @@ function NavigationGuard({ session }: { session: Session | null }) {
   return null;
 }
 
+function NotificationBridge({ session }: { session: Session | null }) {
+  const { workspaceId } = useWorkspace();
+  useEffect(() => {
+    if (!session) return;
+    void registerDeviceAndExistingPushPermission();
+    const stopLifecycle = subscribeToNotificationLifecycle();
+    const stopHints = workspaceId
+      ? subscribeToNotificationHints(session.user.id, workspaceId)
+      : () => undefined;
+    return () => {
+      stopLifecycle();
+      stopHints();
+    };
+  }, [session, workspaceId]);
+  return null;
+}
+
 export default function RootLayout() {
   const [ready, setReady] = useState(false);
   const [session, setSession] = useState<Session | null>(null);
@@ -95,14 +117,16 @@ export default function RootLayout() {
     <QueryClientProvider client={queryClient}>
       <WorkspaceProvider>
         <NavigationGuard session={session} />
+        <NotificationBridge session={session} />
         <Stack screenOptions={{ headerShown: false }}>
           <Stack.Screen name="(tabs)" />
           <Stack.Screen name="sign-in" />
           <Stack.Screen name="workspace-select" />
           <Stack.Screen
-            name="add-transaction"
-            options={{ presentation: 'modal' }}
+            name="notifications"
+            options={{ headerShown: true, title: 'Notifications' }}
           />
+          <Stack.Screen name="add-transaction" options={{ presentation: 'modal' }} />
         </Stack>
       </WorkspaceProvider>
     </QueryClientProvider>

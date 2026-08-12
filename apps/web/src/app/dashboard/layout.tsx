@@ -13,24 +13,27 @@
  */
 import { redirect } from 'next/navigation';
 import { getCurrentUser } from '../../lib/supabase/server';
-import { getSessionContext, getMyBroadcasts, getPublicSettings } from '../../lib/session';
+import {
+  getSessionContext,
+  getMyBroadcasts,
+  getPublicSettings,
+  getUnreadNotificationCount,
+} from '../../lib/session';
 import DashboardShell from './dashboard-shell';
 
-export default async function DashboardLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const user = await getCurrentUser();
   if (!user) redirect('/auth/login');
 
   // Fetched together; getSessionContext is React-cached so pages in the same
   // render reuse it rather than issuing another /me call (DEC-011).
-  const [{ profile, isSuperAdmin, apiReachable }, broadcasts, settings] = await Promise.all([
-    getSessionContext(),
-    getMyBroadcasts(),
-    getPublicSettings(),
-  ]);
+  const [{ profile, isSuperAdmin, apiReachable }, broadcasts, settings, unreadCount] =
+    await Promise.all([
+      getSessionContext(),
+      getMyBroadcasts(),
+      getPublicSettings(),
+      getUnreadNotificationCount(),
+    ]);
 
   return (
     <DashboardShell
@@ -44,6 +47,7 @@ export default async function DashboardLayout({
       maintenance={settings.maintenance_mode ?? null}
       donationUrl={settings.donation_url?.value ?? ''}
       appVersion={settings.app_version?.value ?? ''}
+      unreadNotificationCount={unreadCount}
     >
       {children}
     </DashboardShell>

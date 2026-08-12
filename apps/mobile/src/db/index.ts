@@ -34,6 +34,7 @@ export async function clearLocalData(): Promise<void> {
     DELETE FROM journal_entry_tags;
     DELETE FROM journal_postings;
     DELETE FROM journal_entries;
+    DELETE FROM notifications;
     DELETE FROM tags;
     DELETE FROM categories;
     DELETE FROM ledger_accounts;
@@ -93,8 +94,6 @@ export async function getLocalColumns(
   db: SQLite.SQLiteDatabase,
   table: string,
 ): Promise<Set<string>> {
-  const rows = await db.getAllAsync<{ name: string }>(
-    `PRAGMA table_info(${table})`,
-  );
+  const rows = await db.getAllAsync<{ name: string }>(`PRAGMA table_info(${table})`);
   return new Set(rows.map((r) => r.name));
 }

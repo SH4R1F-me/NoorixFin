@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { signOut } from '../auth/actions';
 import {
@@ -25,6 +25,7 @@ import {
   Heart,
   Wrench,
   PlugZap,
+  Bell,
 } from 'lucide-react';
 import BroadcastBanner from '../../components/broadcast-banner';
 import { useLocale } from '../../lib/i18n/locale-provider';
@@ -39,7 +40,12 @@ import type { Broadcast } from '../../lib/session';
  */
 const NAV_ITEMS = [
   { id: 'dashboard', key: 'nav.dashboard', icon: LayoutDashboard, href: '/dashboard' },
-  { id: 'transactions', key: 'nav.transactions', icon: ArrowLeftRight, href: '/dashboard/transactions' },
+  {
+    id: 'transactions',
+    key: 'nav.transactions',
+    icon: ArrowLeftRight,
+    href: '/dashboard/transactions',
+  },
   { id: 'accounts', key: 'nav.accounts', icon: Landmark, href: '/dashboard/accounts' },
   { id: 'categories', key: 'categories.title', icon: Tags, href: '/dashboard/categories' },
   { id: 'budgets', key: 'nav.budgets', icon: PiggyBank, href: '/dashboard/budgets' },
@@ -59,6 +65,7 @@ export default function DashboardShell({
   donationUrl = '',
   appVersion = '',
   apiReachable = true,
+  unreadNotificationCount = 0,
 }: {
   children: React.ReactNode;
   userEmail: string;
@@ -71,15 +78,37 @@ export default function DashboardShell({
   maintenance?: { enabled: boolean; message_en: string; message_bn: string } | null;
   donationUrl?: string;
   appVersion?: string;
+  unreadNotificationCount?: number;
 }) {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [privacyMode, setPrivacyMode] = useState(false);
+  const [notificationCount, setNotificationCount] = useState(unreadNotificationCount);
   // Shared locale (DEC-021). This used to be a private useState, so switching
   // here changed the sidebar and nothing else, and did not survive a reload.
   const { locale, toggleLocale, otherLanguageName, t } = useLocale();
   const pathname = usePathname();
   const router = useRouter();
+
+  useEffect(() => {
+    let active = true;
+    const refreshCount = () => {
+      void fetch('/api/notifications/unread-count', { cache: 'no-store' })
+        .then((response) => (response.ok ? (response.json() as Promise<{ count: number }>) : null))
+        .then((value) => {
+          if (active && value) setNotificationCount(value.count);
+        })
+        .catch(() => undefined);
+    };
+    const stream = new EventSource('/api/notification-hints');
+    stream.addEventListener('hint', refreshCount);
+    const poll = window.setInterval(refreshCount, 60_000);
+    return () => {
+      active = false;
+      stream.close();
+      window.clearInterval(poll);
+    };
+  }, []);
 
   // The email arrives from the server layout, which read it via getUser().
   // No client-side session check: proxy.ts already guarantees an authenticated
@@ -92,11 +121,7 @@ export default function DashboardShell({
     <div style={styles.wrapper}>
       {/* Mobile overlay */}
       {mobileOpen && (
-        <div
-          className="nf-overlay"
-          style={styles.overlay}
-          onClick={() => setMobileOpen(false)}
-        />
+        <div className="nf-overlay" style={styles.overlay} onClick={() => setMobileOpen(false)} />
       )}
 
       {/* Sidebar */}
@@ -118,9 +143,7 @@ export default function DashboardShell({
             <div style={styles.logoIcon}>
               <Wallet size={collapsed ? 20 : 22} color="white" />
             </div>
-            {!collapsed && (
-              <span style={styles.logoLabel}>NoorixFin</span>
-            )}
+            {!collapsed && <span style={styles.logoLabel}>NoorixFin</span>}
           </div>
           <button
             onClick={() => setCollapsed(!collapsed)}
@@ -159,10 +182,12 @@ export default function DashboardShell({
                   }}
                 />
                 {!collapsed && (
-                  <span style={{
-                    ...styles.navLabel,
-                    color: isActive ? '#f8fafc' : '#94a3b8',
-                  }}>
+                  <span
+                    style={{
+                      ...styles.navLabel,
+                      color: isActive ? '#f8fafc' : '#94a3b8',
+                    }}
+                  >
                     {t(item.key)}
                   </span>
                 )}
@@ -196,9 +221,7 @@ export default function DashboardShell({
               title="Switch to the System Admin control panel"
             >
               <ShieldAlert size={18} style={{ flexShrink: 0 }} />
-              {!collapsed && (
-                <span style={styles.adminSwitchLabel}>{t('nav.admin')}</span>
-              )}
+              {!collapsed && <span style={styles.adminSwitchLabel}>{t('nav.admin')}</span>}
             </a>
           )}
 
@@ -229,14 +252,9 @@ export default function DashboardShell({
           </button>
 
           {/* Language */}
-          <button
-            onClick={toggleLocale}
-            style={styles.footerBtn}
-          >
+          <button onClick={toggleLocale} style={styles.footerBtn}>
             <Globe size={18} />
-            {!collapsed && (
-              <span style={styles.footerBtnLabel}>{otherLanguageName}</span>
-            )}
+            {!collapsed && <span style={styles.footerBtnLabel}>{otherLanguageName}</span>}
           </button>
 
           {/* User & Logout */}
@@ -251,7 +269,9 @@ export default function DashboardShell({
               </div>
             )}
             <button
-              onClick={() => { void signOut(); }}
+              onClick={() => {
+                void signOut();
+              }}
               style={styles.logoutBtn}
               title="Logout"
             >
@@ -262,16 +282,34 @@ export default function DashboardShell({
       </aside>
 
       {/* Main Content */}
-      <main className="nf-main" style={{
-        ...styles.main,
-        marginLeft: collapsed ? 72 : 280,
-      }}>
+      <main
+        className="nf-main"
+        style={{
+          ...styles.main,
+          marginLeft: collapsed ? 72 : 280,
+        }}
+      >
+        <a
+          href="/dashboard/notifications"
+          onClick={(event) => {
+            event.preventDefault();
+            router.push('/dashboard/notifications');
+          }}
+          style={styles.notificationBell}
+          aria-label={
+            notificationCount > 0 ? `${notificationCount} unread notifications` : 'Notifications'
+          }
+        >
+          <Bell size={19} aria-hidden="true" />
+          {notificationCount > 0 && (
+            <span style={styles.notificationBadge} aria-live="polite">
+              {notificationCount > 99 ? '99+' : notificationCount}
+            </span>
+          )}
+        </a>
         {/* Mobile header */}
         <div className="nf-mobile-header" style={styles.mobileHeader}>
-          <button
-            onClick={() => setMobileOpen(true)}
-            style={styles.menuBtn}
-          >
+          <button onClick={() => setMobileOpen(true)} style={styles.menuBtn}>
             <Menu size={22} />
           </button>
           <div style={styles.mobileLogoContainer}>
@@ -509,6 +547,40 @@ const styles: Record<string, React.CSSProperties> = {
     borderTop: '1px solid #1e293b',
     color: '#8b9ab0',
     fontSize: '0.75rem',
+  },
+  notificationBell: {
+    position: 'fixed',
+    top: '0.9rem',
+    right: '1.25rem',
+    zIndex: 35,
+    width: 42,
+    height: 42,
+    borderRadius: '0.75rem',
+    border: '1px solid #334155',
+    background: '#0f172a',
+    color: '#cbd5e1',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    textDecoration: 'none',
+    boxShadow: '0 8px 24px rgba(2,6,23,0.28)',
+  },
+  notificationBadge: {
+    position: 'absolute',
+    top: -6,
+    right: -6,
+    minWidth: 20,
+    height: 20,
+    padding: '0 5px',
+    borderRadius: 999,
+    background: '#10b981',
+    color: '#022c22',
+    fontSize: '0.6875rem',
+    fontWeight: 800,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    border: '2px solid #020617',
   },
   userSection: {
     display: 'flex',

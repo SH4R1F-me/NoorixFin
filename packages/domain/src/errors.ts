@@ -126,11 +126,13 @@ export const API_ERRORS = {
   GOAL_NOT_FOUND: { status: 404, retryable: false, description: 'No such savings goal.' },
   EVENT_NOT_FOUND: { status: 404, retryable: false, description: 'No such calendar event.' },
   USER_NOT_FOUND: { status: 404, retryable: false, description: 'No such user profile.' },
+  DEVICE_NOT_FOUND: { status: 404, retryable: false, description: 'No such active user device.' },
   TRANSACTION_NOT_REVERSIBLE: {
     status: 404,
     retryable: false,
     // See KNOWN_STATUS_INCONSISTENCIES — this is a state conflict wearing a 404.
-    description: 'The entry exists but cannot be reversed (already reversed, or not an entry type that can be).',
+    description:
+      'The entry exists but cannot be reversed (already reversed, or not an entry type that can be).',
   },
 
   // ── Conflict (409) ──────────────────────────────────────────────────────
@@ -151,7 +153,11 @@ export const API_ERRORS = {
     retryable: false,
     description: 'Amount exceeded the maximum a bigint minor-unit column can hold.',
   },
-  INVALID_TYPE: { status: 400, retryable: false, description: 'Unrecognised entry or account type.' },
+  INVALID_TYPE: {
+    status: 400,
+    retryable: false,
+    description: 'Unrecognised entry or account type.',
+  },
   INVALID_VALUE: { status: 400, retryable: false, description: 'A field failed a domain rule.' },
   INVALID_REFERENCE: {
     status: 400,
@@ -186,10 +192,15 @@ export const API_ERRORS = {
   ALREADY_REVERSED: {
     status: 400,
     retryable: false,
-    description: 'This entry already has a reversal. History is append-only; there is nothing further to undo.',
+    description:
+      'This entry already has a reversal. History is append-only; there is nothing further to undo.',
   },
   EMPTY_PATCH: { status: 400, retryable: false, description: 'A PATCH body contained no fields.' },
-  NO_CHANGES: { status: 400, retryable: false, description: 'The patch matched the stored values.' },
+  NO_CHANGES: {
+    status: 400,
+    retryable: false,
+    description: 'The patch matched the stored values.',
+  },
   ALREADY_PENDING: {
     status: 400,
     retryable: false,
@@ -214,7 +225,8 @@ export const API_ERRORS = {
     status: 400,
     retryable: false,
     // See KNOWN_STATUS_INCONSISTENCIES — also thrown as 403 from another path.
-    description: 'The action would remove the last active operator, leaving the console unreachable.',
+    description:
+      'The action would remove the last active operator, leaving the console unreachable.',
   },
   UNKNOWN_SETTING: {
     status: 400,
@@ -232,19 +244,67 @@ export const API_ERRORS = {
   // but which is reported as 400 today rather than 5xx. Grouped so that is
   // visible rather than scattered.
   SYNC_FAILED: { status: 400, retryable: true, description: 'The delta-sync query failed.' },
-  REVERSAL_FAILED: { status: 400, retryable: true, description: 'The reversal transaction failed.' },
-  SUMMARY_FAILED: { status: 400, retryable: true, description: 'The workspace summary rollup failed.' },
-  AGGREGATION_FAILED: { status: 400, retryable: true, description: 'A reporting aggregation failed.' },
-  PLANNING_WRITE_FAILED: { status: 400, retryable: true, description: 'A budget/goal/calendar write failed.' },
-  CATEGORY_CREATE_FAILED: { status: 400, retryable: true, description: 'The category insert failed.' },
-  CATEGORY_SEED_FAILED: { status: 400, retryable: true, description: 'Seeding default categories failed.' },
-  ONBOARDING_UPDATE_FAILED: { status: 400, retryable: true, description: 'The onboarding state write failed.' },
-  DELETION_REQUEST_FAILED: { status: 400, retryable: true, description: 'Opening the deletion request failed.' },
-  CANCEL_FAILED: { status: 400, retryable: true, description: 'Cancelling the deletion request failed.' },
+  REVERSAL_FAILED: {
+    status: 400,
+    retryable: true,
+    description: 'The reversal transaction failed.',
+  },
+  SUMMARY_FAILED: {
+    status: 400,
+    retryable: true,
+    description: 'The workspace summary rollup failed.',
+  },
+  AGGREGATION_FAILED: {
+    status: 400,
+    retryable: true,
+    description: 'A reporting aggregation failed.',
+  },
+  PLANNING_WRITE_FAILED: {
+    status: 400,
+    retryable: true,
+    description: 'A budget/goal/calendar write failed.',
+  },
+  CATEGORY_CREATE_FAILED: {
+    status: 400,
+    retryable: true,
+    description: 'The category insert failed.',
+  },
+  CATEGORY_SEED_FAILED: {
+    status: 400,
+    retryable: true,
+    description: 'Seeding default categories failed.',
+  },
+  ONBOARDING_UPDATE_FAILED: {
+    status: 400,
+    retryable: true,
+    description: 'The onboarding state write failed.',
+  },
+  DELETION_REQUEST_FAILED: {
+    status: 400,
+    retryable: true,
+    description: 'Opening the deletion request failed.',
+  },
+  CANCEL_FAILED: {
+    status: 400,
+    retryable: true,
+    description: 'Cancelling the deletion request failed.',
+  },
   SUSPEND_FAILED: { status: 400, retryable: true, description: 'The suspension write failed.' },
-  REINSTATE_FAILED: { status: 400, retryable: true, description: 'The reinstatement write failed.' },
-  DISMISS_FAILED: { status: 400, retryable: true, description: 'Recording the broadcast dismissal failed.' },
-  BROADCASTS_UNAVAILABLE: { status: 400, retryable: true, description: 'Broadcasts could not be read.' },
+  REINSTATE_FAILED: {
+    status: 400,
+    retryable: true,
+    description: 'The reinstatement write failed.',
+  },
+  DISMISS_FAILED: {
+    status: 400,
+    retryable: true,
+    description: 'Recording the broadcast dismissal failed.',
+  },
+  BROADCASTS_UNAVAILABLE: {
+    status: 400,
+    retryable: true,
+    description: 'Broadcasts could not be read.',
+  },
 } as const satisfies Record<string, ApiErrorDefinition>;
 
 /** Every code the API can put in an error body. */

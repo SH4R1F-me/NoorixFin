@@ -117,3 +117,12 @@ export const getMyBroadcasts = cache(async (): Promise<Broadcast[]> => {
     return [];
   }
 });
+
+export const getUnreadNotificationCount = cache(async (): Promise<number> => {
+  try {
+    const result = await apiFetch<{ count: number }>('/notifications/unread-count');
+    return Number.isFinite(result.count) ? result.count : 0;
+  } catch {
+    return 0;
+  }
+});

@@ -391,13 +391,17 @@ export class AdminController {
   // ─── Phase 2: Performance ──────────────────────────────────
 
   @Get('metrics/performance')
-  @ApiOperation({ summary: 'p50/p95/p99 latency, error rate, request volume from system_events' })
+  @ApiOperation({
+    summary:
+      'p50/p95/p99 latency, error rate, request volume from system_events',
+  })
   getPerformanceMetrics(
     @Req() req: AuthedRequest,
     @Query('window') windowRaw?: string,
   ) {
     const window = Number.parseInt(windowRaw ?? '1', 10);
-    const hours = Number.isFinite(window) && window > 0 && window <= 168 ? window : 1;
+    const hours =
+      Number.isFinite(window) && window > 0 && window <= 168 ? window : 1;
     return this.adminService.getPerformanceMetrics(req.accessToken, hours);
   }
 
@@ -423,7 +427,9 @@ export class AdminController {
   // ─── Phase 2: Security ────────────────────────────────────
 
   @Get('security/auth-events')
-  @ApiOperation({ summary: 'Auth-related audit events (logins, MFA, suspensions)' })
+  @ApiOperation({
+    summary: 'Auth-related audit events (logins, MFA, suspensions)',
+  })
   getAuthEvents(
     @Req() req: AuthedRequest,
     @Query('limit') limitRaw?: string,
@@ -438,7 +444,9 @@ export class AdminController {
   }
 
   @Get('security/sessions')
-  @ApiOperation({ summary: 'All active (non-revoked) device sessions platform-wide' })
+  @ApiOperation({
+    summary: 'All active (non-revoked) device sessions platform-wide',
+  })
   getActiveSessions(
     @Req() req: AuthedRequest,
     @Query('limit') limitRaw?: string,
@@ -475,7 +483,9 @@ export class AdminController {
   }
 
   @Get('security/anomalies')
-  @ApiOperation({ summary: 'Heuristic security signals: new devices, throttle abusers' })
+  @ApiOperation({
+    summary: 'Heuristic security signals: new devices, throttle abusers',
+  })
   getAnomalies(@Req() req: AuthedRequest) {
     return this.adminService.getAnomalies(req.accessToken);
   }
@@ -483,7 +493,9 @@ export class AdminController {
   // ─── Phase 2: Correlated trace view ───────────────────────
 
   @Get('events/trace/:requestId')
-  @ApiOperation({ summary: 'All system_events for a single X-Request-ID (correlated trace)' })
+  @ApiOperation({
+    summary: 'All system_events for a single X-Request-ID (correlated trace)',
+  })
   getEventTrace(
     @Req() req: AuthedRequest,
     @Param('requestId') requestId: string,
@@ -491,4 +503,3 @@ export class AdminController {
     return this.adminService.getEventsByRequestId(req.accessToken, requestId);
   }
 }
-

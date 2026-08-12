@@ -15,7 +15,7 @@
  *  - Mirrored rows keep `updated_at` so the pull can upsert idempotently.
  */
 
-export const SCHEMA_VERSION = 1;
+export const SCHEMA_VERSION = 2;
 
 export const CREATE_TABLES = `
 PRAGMA journal_mode = WAL;
@@ -116,6 +116,31 @@ CREATE TABLE IF NOT EXISTS journal_entry_tags (
   PRIMARY KEY (journal_entry_id, tag_id)
 );
 
+CREATE TABLE IF NOT EXISTS notifications (
+  id TEXT PRIMARY KEY NOT NULL,
+  user_id TEXT NOT NULL,
+  workspace_id TEXT,
+  category TEXT NOT NULL,
+  severity TEXT NOT NULL,
+  title_en TEXT NOT NULL,
+  title_bn TEXT,
+  body_en TEXT NOT NULL,
+  body_bn TEXT,
+  action_url TEXT,
+  resource_type TEXT,
+  resource_id TEXT,
+  metadata TEXT NOT NULL DEFAULT '{}',
+  read_at TEXT,
+  archived_at TEXT,
+  expires_at TEXT,
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL,
+  deleted_at TEXT
+);
+CREATE INDEX IF NOT EXISTS idx_notifications_unread
+  ON notifications(created_at DESC)
+  WHERE read_at IS NULL AND archived_at IS NULL AND deleted_at IS NULL;
+
 -- ── Device-only tables ────────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS _sync_meta (
   workspace_id TEXT PRIMARY KEY NOT NULL,
@@ -150,6 +175,7 @@ export const SYNCABLE_TABLES = [
   'journal_postings',
   'tags',
   'journal_entry_tags',
+  'notifications',
 ] as const;
 
 export type SyncableTable = (typeof SYNCABLE_TABLES)[number];
@@ -162,4 +188,5 @@ export const PRIMARY_KEYS: Record<SyncableTable, string[]> = {
   journal_postings: ['id'],
   tags: ['id'],
   journal_entry_tags: ['journal_entry_id', 'tag_id'],
+  notifications: ['id'],
 };

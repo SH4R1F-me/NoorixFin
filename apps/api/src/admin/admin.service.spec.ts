@@ -16,6 +16,7 @@ import { AdminService } from './admin.service';
 import type { SupabaseService } from '../supabase/supabase.service';
 import type { AuditService } from '../observability/audit.service';
 import type { SystemEventsService } from '../observability/system-events.service';
+import type { NotificationsService } from '../notifications/notifications.service';
 
 const OPERATOR = 'op-1';
 const TARGET = 'user-2';
@@ -129,12 +130,18 @@ function makeHarness(
 
   const audit = { write: jest.fn().mockResolvedValue(true) };
   const systemEvents = { record: jest.fn(), pending: 0 };
+  const notifications = {
+    create: jest.fn().mockResolvedValue(null),
+    notifyBroadcast: jest.fn().mockResolvedValue(undefined),
+    notifyOperators: jest.fn().mockResolvedValue(undefined),
+  };
 
   return {
     service: new AdminService(
       supabase,
       audit as unknown as AuditService,
       systemEvents as unknown as SystemEventsService,
+      notifications as unknown as NotificationsService,
     ),
     audit,
     updates,

@@ -13,7 +13,8 @@ import type { SQLiteDatabase } from 'expo-sqlite';
 import { getDb } from '../db';
 import { apiFetch, ApiError } from '../lib/api';
 
-export type MutationKind = 'CREATE_TRANSACTION' | 'REVERSE_TRANSACTION';
+export type MutationKind =
+  'CREATE_TRANSACTION' | 'REVERSE_TRANSACTION' | 'READ_NOTIFICATION' | 'READ_ALL_NOTIFICATIONS';
 
 export type QueueStatus = 'PENDING' | 'IN_FLIGHT' | 'NEEDS_ATTENTION';
 
@@ -65,9 +66,7 @@ export async function countPending(workspaceId: string): Promise<number> {
   return row?.n ?? 0;
 }
 
-export async function listNeedingAttention(
-  workspaceId: string,
-): Promise<QueuedMutation[]> {
+export async function listNeedingAttention(workspaceId: string): Promise<QueuedMutation[]> {
   const db = await getDb();
   return db.getAllAsync<QueuedMutation>(
     `SELECT * FROM _mutation_queue
@@ -98,10 +97,7 @@ export async function discard(id: string): Promise<void> {
  * Drain is serialised per workspace (see engine.sync), so any IN_FLIGHT row
  * present when a drain starts is by definition left over from a previous run.
  */
-async function reclaimStranded(
-  db: SQLiteDatabase,
-  workspaceId: string,
-): Promise<number> {
+async function reclaimStranded(db: SQLiteDatabase, workspaceId: string): Promise<number> {
   const result = await db.runAsync(
     `UPDATE _mutation_queue
         SET status = 'PENDING', next_attempt_at = NULL
@@ -111,10 +107,7 @@ async function reclaimStranded(
   return result.changes ?? 0;
 }
 
-async function claimNext(
-  db: SQLiteDatabase,
-  workspaceId: string,
-): Promise<QueuedMutation | null> {
+async function claimNext(db: SQLiteDatabase, workspaceId: string): Promise<QueuedMutation | null> {
   const now = new Date().toISOString();
   return db.getFirstAsync<QueuedMutation>(
     `SELECT * FROM _mutation_queue
@@ -142,6 +135,10 @@ function endpointFor(m: QueuedMutation): { path: string; body: unknown } {
         path: `/workspaces/${m.workspace_id}/transactions/${String(payload.transaction_id)}/reverse`,
         body: {},
       };
+    case 'READ_NOTIFICATION':
+      return { path: `/notifications/${String(payload.notification_id)}/read`, body: {} };
+    case 'READ_ALL_NOTIFICATIONS':
+      return { path: '/notifications/read-all', body: {} };
   }
 }
 
@@ -171,10 +168,9 @@ export async function drain(workspaceId: string): Promise<DrainResult> {
     const mutation = await claimNext(db, workspaceId);
     if (!mutation) break;
 
-    await db.runAsync(
-      `UPDATE _mutation_queue SET status = 'IN_FLIGHT' WHERE id = ?`,
-      [mutation.id],
-    );
+    await db.runAsync(`UPDATE _mutation_queue SET status = 'IN_FLIGHT' WHERE id = ?`, [
+      mutation.id,
+    ]);
 
     const { path, body } = endpointFor(mutation);
 
@@ -213,12 +209,7 @@ export async function drain(workspaceId: string): Promise<DrainResult> {
         `UPDATE _mutation_queue
             SET status = 'PENDING', attempts = ?, next_attempt_at = ?, last_error = ?
           WHERE id = ?`,
-        [
-          attempts,
-          new Date(Date.now() + backoffMs(attempts)).toISOString(),
-          message,
-          mutation.id,
-        ],
+        [attempts, new Date(Date.now() + backoffMs(attempts)).toISOString(), message, mutation.id],
       );
       result.deferred += 1;
       break;

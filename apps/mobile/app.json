@@ -29,7 +29,14 @@
       "expo-sqlite",
       "expo-secure-store",
       "expo-localization",
-      "expo-local-authentication"
+      "expo-local-authentication",
+      [
+        "expo-notifications",
+        {
+          "color": "#10b981",
+          "defaultChannel": "system"
+        }
+      ]
     ]
   }
 }

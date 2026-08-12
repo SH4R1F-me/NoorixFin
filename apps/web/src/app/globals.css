@@ -12,7 +12,7 @@
    self-hosts them. There is deliberately no @import from fonts.googleapis.com
    here: it was render-blocking, it leaked every visitor's IP to a third party,
    and the Content-Security-Policy in src/proxy.ts blocks it. */
-@import "tailwindcss";
+@import 'tailwindcss';
 
 /* ─── CSS Custom Properties ─────────────────────────── */
 /* Design tokens (colours, spacing, radii, shadows, transitions, semantic
@@ -52,22 +52,35 @@ body {
 }
 
 /* Bangla text */
-[lang="bn"],
+[lang='bn'],
 .bn-text {
   font-family: var(--font-bangla);
 }
 
 /* ─── Typography ─────────────────────────────────────── */
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
   font-weight: 600;
   line-height: 1.3;
   color: var(--text-primary);
 }
 
-h1 { font-size: 2rem; }
-h2 { font-size: 1.5rem; }
-h3 { font-size: 1.25rem; }
-h4 { font-size: 1.125rem; }
+h1 {
+  font-size: 2rem;
+}
+h2 {
+  font-size: 1.5rem;
+}
+h3 {
+  font-size: 1.25rem;
+}
+h4 {
+  font-size: 1.125rem;
+}
 
 /* ─── Links ──────────────────────────────────────────── */
 a {
@@ -80,7 +93,9 @@ a:hover {
 }
 
 /* ─── Inputs ─────────────────────────────────────────── */
-input, select, textarea {
+input,
+select,
+textarea {
   font-family: inherit;
   font-size: 0.875rem;
   background: var(--bg-input);
@@ -88,12 +103,16 @@ input, select, textarea {
   border: 1px solid var(--border-primary);
   border-radius: var(--radius-lg);
   padding: var(--space-3) var(--space-4);
-  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+  transition:
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast);
   width: 100%;
   outline: none;
 }
 
-input:focus, select:focus, textarea:focus {
+input:focus,
+select:focus,
+textarea:focus {
   border-color: var(--color-primary-500);
   box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15);
 }
@@ -217,22 +236,41 @@ input::placeholder {
 
 /* ─── Animations ─────────────────────────────────────── */
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(8px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @keyframes slideIn {
-  from { opacity: 0; transform: translateX(-16px); }
-  to { opacity: 1; transform: translateX(0); }
+  from {
+    opacity: 0;
+    transform: translateX(-16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
 }
 
 @keyframes pulse-glow {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
-  50% { box-shadow: 0 0 20px 4px rgba(16, 185, 129, 0.15); }
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+  }
+  50% {
+    box-shadow: 0 0 20px 4px rgba(16, 185, 129, 0.15);
+  }
 }
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .animate-fade-in {
@@ -244,14 +282,28 @@ input::placeholder {
 }
 
 /* ─── Utility Classes ────────────────────────────────── */
-.text-income { color: var(--color-income); }
-.text-expense { color: var(--color-expense); }
-.text-transfer { color: var(--color-transfer); }
-.text-secondary { color: var(--text-secondary); }
-.text-tertiary { color: var(--text-tertiary); }
+.text-income {
+  color: var(--color-income);
+}
+.text-expense {
+  color: var(--color-expense);
+}
+.text-transfer {
+  color: var(--color-transfer);
+}
+.text-secondary {
+  color: var(--text-secondary);
+}
+.text-tertiary {
+  color: var(--text-tertiary);
+}
 
-.bg-income { background: rgba(16, 185, 129, 0.1); }
-.bg-expense { background: rgba(239, 68, 68, 0.1); }
+.bg-income {
+  background: rgba(16, 185, 129, 0.1);
+}
+.bg-expense {
+  background: rgba(239, 68, 68, 0.1);
+}
 
 .divider {
   height: 1px;
@@ -298,7 +350,9 @@ input::placeholder {
 
 /* ─── Reduced Motion ─────────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
+  *,
+  *::before,
+  *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
@@ -307,8 +361,12 @@ input::placeholder {
 
 /* ── Skeleton shimmer (DEC-012) ──────────────────────────────────────────── */
 @keyframes nf-shimmer {
-  0%   { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
 }
 
 /* A5.5 / A11Y-01: honour reduced-motion — a continuous shimmer is exactly the
@@ -376,6 +434,16 @@ input::placeholder {
      below the breakpoint; the panels stack in the order they already read. */
   .nf-content-grid {
     grid-template-columns: 1fr !important;
+  }
+}
+
+@media (max-width: 600px) {
+  .nf-notification-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .nf-notification-grid > * {
+    grid-column: 1 !important;
   }
 }
 

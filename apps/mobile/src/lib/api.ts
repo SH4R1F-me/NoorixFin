@@ -9,6 +9,7 @@
  * the API.
  */
 import { getAccessToken } from './supabase';
+import { getClientInfoHeader } from './device';
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:3001';
 
@@ -24,27 +25,19 @@ export class ApiError extends Error {
 
   /** 4xx (except 408/429) means retrying the same payload will fail again. */
   get isPermanent(): boolean {
-    return (
-      this.status >= 400 &&
-      this.status < 500 &&
-      this.status !== 408 &&
-      this.status !== 429
-    );
+    return this.status >= 400 && this.status < 500 && this.status !== 408 && this.status !== 429;
   }
 }
 
 type RequestOptions = {
-  method?: 'GET' | 'POST' | 'PATCH' | 'DELETE';
+  method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
   body?: unknown;
   /** Reused across every retry of the same logical write (FIN-02). */
   idempotencyKey?: string;
   signal?: AbortSignal;
 };
 
-export async function apiFetch<T>(
-  path: string,
-  options: RequestOptions = {},
-): Promise<T> {
+export async function apiFetch<T>(path: string, options: RequestOptions = {}): Promise<T> {
   const token = await getAccessToken();
   if (!token) {
     throw new ApiError(401, 'NOT_AUTHENTICATED', 'No active session');
@@ -56,6 +49,7 @@ export async function apiFetch<T>(
     Authorization: `Bearer ${token}`,
     'Content-Type': 'application/json',
   };
+  headers['X-Client-Info'] = await getClientInfoHeader();
   if (idempotencyKey) headers['Idempotency-Key'] = idempotencyKey;
 
   let response: Response;

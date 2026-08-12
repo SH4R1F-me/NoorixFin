@@ -10,8 +10,10 @@ import { APP_INTERCEPTOR } from '@nestjs/core';
 import { AdminController } from './admin.controller';
 import { AdminService } from './admin.service';
 import { IdempotencyInterceptor } from '../common/interceptors/idempotency.interceptor';
+import { NotificationsModule } from '../notifications/notifications.module';
 
 @Module({
+  imports: [NotificationsModule],
   controllers: [AdminController],
   providers: [
     AdminService,

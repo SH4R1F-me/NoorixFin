@@ -11,7 +11,7 @@
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { Archive, Loader2, Megaphone, Send } from 'lucide-react';
-import type { AdminBroadcast } from '../../../lib/admin';
+import type { AdminBroadcast } from '../../../lib/admin-types';
 import { Badge, EmptyState, Panel, T, formatTime, s } from '../ui';
 import { archiveBroadcast, createBroadcast, publishBroadcast } from './actions';
 

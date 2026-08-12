@@ -86,10 +86,18 @@ function inferPlatform(
   // UA fallback for web app server-side requests that do not send the header.
   if (userAgent) {
     const ua = userAgent.toLowerCase();
-    if (ua.includes('iphone') || ua.includes('ipad') || ua.includes('cfnetwork'))
+    if (
+      ua.includes('iphone') ||
+      ua.includes('ipad') ||
+      ua.includes('cfnetwork')
+    )
       return 'ios';
     if (ua.includes('android')) return 'android';
-    if (ua.includes('mozilla') || ua.includes('chrome') || ua.includes('safari'))
+    if (
+      ua.includes('mozilla') ||
+      ua.includes('chrome') ||
+      ua.includes('safari')
+    )
       return 'web';
   }
   return 'api';
@@ -99,7 +107,7 @@ function inferPlatform(
 export class ClientContextMiddleware implements NestMiddleware {
   use(req: ClientContextRequest, _res: Response, next: NextFunction) {
     const raw = req.headers['x-client-info'] as string | undefined;
-    const ua = (req.headers['user-agent'] as string | undefined) ?? null;
+    const ua = req.headers['user-agent'] ?? null;
 
     if (!raw) {
       // Still infer platform from UA so SSR web requests are tagged 'web'.

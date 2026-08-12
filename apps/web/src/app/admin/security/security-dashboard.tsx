@@ -5,8 +5,8 @@
  */
 import { Shield, LogIn, Smartphone, AlertTriangle, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
-import type { AuthAuditEvent, Anomalies } from '../../../lib/admin';
-import { Panel, Badge, EmptyState, ErrorState, T, s, formatTime } from '../ui';
+import type { AuthAuditEvent, Anomalies } from '../../../lib/admin-types';
+import { Panel, EmptyState, ErrorState, T, s, formatTime } from '../ui';
 import { useLocale } from '../../../lib/i18n/locale-provider';
 
 const ACTION_COLOR: Record<string, string> = {
@@ -38,14 +38,23 @@ export default function SecurityDashboard({
     <div>
       <div style={{ marginBottom: '1.75rem' }}>
         <h1 style={s.title}>
-          <Shield size={22} style={{ display: 'inline', marginRight: 8, verticalAlign: 'middle', color: T.accent }} />
+          <Shield
+            size={22}
+            style={{ display: 'inline', marginRight: 8, verticalAlign: 'middle', color: T.accent }}
+          />
           {t('admin.security.title')}
         </h1>
         <p style={s.subtitle}>{t('admin.security.subtitle')}</p>
       </div>
 
       {/* KPI tiles */}
-      <div style={{ ...s.grid, marginBottom: '1.5rem', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))' }}>
+      <div
+        style={{
+          ...s.grid,
+          marginBottom: '1.5rem',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+        }}
+      >
         <Tile
           label="Active Sessions"
           value={totalSessions}
@@ -72,11 +81,30 @@ export default function SecurityDashboard({
       {authError && <ErrorState error={authError} />}
 
       {/* Quick nav cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '0.875rem', marginBottom: '1.5rem' }}>
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+          gap: '0.875rem',
+          marginBottom: '1.5rem',
+        }}
+      >
         {[
-          { href: '/admin/security/auth-events', label: t('admin.security.authEvents'), icon: <LogIn size={18} /> },
-          { href: '/admin/security/sessions', label: t('admin.security.sessions'), icon: <Smartphone size={18} /> },
-          { href: '/admin/security/anomalies', label: t('admin.security.anomalies'), icon: <AlertTriangle size={18} /> },
+          {
+            href: '/admin/security/auth-events',
+            label: t('admin.security.authEvents'),
+            icon: <LogIn size={18} />,
+          },
+          {
+            href: '/admin/security/sessions',
+            label: t('admin.security.sessions'),
+            icon: <Smartphone size={18} />,
+          },
+          {
+            href: '/admin/security/anomalies',
+            label: t('admin.security.anomalies'),
+            icon: <AlertTriangle size={18} />,
+          },
         ].map((item) => (
           <Link key={item.href} href={item.href} style={{ textDecoration: 'none' }}>
             <div
@@ -90,9 +118,13 @@ export default function SecurityDashboard({
                 transition: 'border-color 0.15s',
               }}
             >
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem', color: T.textDim }}>
+              <div
+                style={{ display: 'flex', alignItems: 'center', gap: '0.625rem', color: T.textDim }}
+              >
                 {item.icon}
-                <span style={{ fontSize: '0.875rem', fontWeight: 600, color: T.text }}>{item.label}</span>
+                <span style={{ fontSize: '0.875rem', fontWeight: 600, color: T.text }}>
+                  {item.label}
+                </span>
               </div>
               <ChevronRight size={16} color={T.textFaint} />
             </div>
@@ -119,13 +151,39 @@ export default function SecurityDashboard({
                 {recentAuth.map((ev) => (
                   <tr key={ev.id}>
                     <td style={s.td}>
-                      <span style={{ color: ACTION_COLOR[ev.action] ?? T.textDim, fontWeight: 600, fontSize: '0.8125rem' }}>
+                      <span
+                        style={{
+                          color: ACTION_COLOR[ev.action] ?? T.textDim,
+                          fontWeight: 600,
+                          fontSize: '0.8125rem',
+                        }}
+                      >
                         {ev.action.replace(/_/g, ' ')}
                       </span>
                     </td>
-                    <td style={{ ...s.td, textTransform: 'capitalize', color: T.textDim }}>{ev.platform ?? '—'}</td>
-                    <td style={{ ...s.td, fontFamily: 'monospace', fontSize: '0.75rem', color: T.textFaint }}>{ev.ip_address ?? '—'}</td>
-                    <td style={{ ...s.td, fontFamily: 'monospace', fontSize: '0.75rem', color: T.textFaint }}>{formatTime(ev.created_at)}</td>
+                    <td style={{ ...s.td, textTransform: 'capitalize', color: T.textDim }}>
+                      {ev.platform ?? '—'}
+                    </td>
+                    <td
+                      style={{
+                        ...s.td,
+                        fontFamily: 'monospace',
+                        fontSize: '0.75rem',
+                        color: T.textFaint,
+                      }}
+                    >
+                      {ev.ip_address ?? '—'}
+                    </td>
+                    <td
+                      style={{
+                        ...s.td,
+                        fontFamily: 'monospace',
+                        fontSize: '0.75rem',
+                        color: T.textFaint,
+                      }}
+                    >
+                      {formatTime(ev.created_at)}
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -153,11 +211,25 @@ function Tile({
   return (
     <Link href={href} style={{ textDecoration: 'none' }}>
       <div style={{ ...s.panel, padding: '1.1rem 1.25rem', cursor: 'pointer' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '0.6875rem', textTransform: 'uppercase', letterSpacing: '0.07em', color: T.textFaint, fontWeight: 600, marginBottom: 6 }}>
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 6,
+            fontSize: '0.6875rem',
+            textTransform: 'uppercase',
+            letterSpacing: '0.07em',
+            color: T.textFaint,
+            fontWeight: 600,
+            marginBottom: 6,
+          }}
+        >
           <span style={{ color: tone }}>{icon}</span>
           {label}
         </div>
-        <div style={{ fontSize: '1.75rem', fontWeight: 800, color: tone, lineHeight: 1 }}>{value}</div>
+        <div style={{ fontSize: '1.75rem', fontWeight: 800, color: tone, lineHeight: 1 }}>
+          {value}
+        </div>
       </div>
     </Link>
   );

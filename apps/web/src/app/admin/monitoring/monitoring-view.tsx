@@ -14,7 +14,7 @@
  */
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Activity, Pause, Play, Search, Trash2 } from 'lucide-react';
-import type { SystemEvent } from '../../../lib/admin';
+import type { SystemEvent } from '../../../lib/admin-types';
 import { Badge, EmptyState, LEVEL_COLOR, T, formatTime, s } from '../ui';
 
 /** Newest N kept in memory. Beyond this, older entries fall off the tail. */

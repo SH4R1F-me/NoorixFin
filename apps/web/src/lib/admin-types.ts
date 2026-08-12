@@ -127,6 +127,42 @@ export interface AdminBroadcast {
   stats: { seen: number; dismissed: number };
 }
 
+export interface NotificationCampaign {
+  id: string;
+  audience: 'ALL' | 'OPERATORS';
+  category: 'system' | 'operator';
+  severity: 'INFO' | 'SUCCESS' | 'WARNING' | 'CRITICAL';
+  title_en: string;
+  title_bn: string | null;
+  body_en: string;
+  body_bn: string | null;
+  action_url: string | null;
+  scheduled_for: string;
+  expires_at: string | null;
+  status: 'DRAFT' | 'SCHEDULED' | 'PROCESSING' | 'SENT' | 'FAILED' | 'CANCELLED';
+  recipient_count: number;
+  error: string | null;
+  created_at: string;
+}
+
+export interface NotificationDeliveryStats {
+  campaign_id: string;
+  total: number;
+  by_channel: Record<string, Record<string, number>>;
+}
+
+export interface NotificationTemplate {
+  id: string;
+  key: string;
+  category: string;
+  title_en: string;
+  title_bn: string | null;
+  body_en: string;
+  body_bn: string | null;
+  action_url: string | null;
+  updated_at: string;
+}
+
 export interface Page<T> {
   items: T[];
   total: number;

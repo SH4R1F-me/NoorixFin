@@ -9,8 +9,10 @@ import {
 } from './account.controller';
 import { AccountService } from './account.service';
 import { ExportService } from './export.service';
+import { NotificationsModule } from '../notifications/notifications.module';
 
 @Module({
+  imports: [NotificationsModule],
   controllers: [AccountController, PublicSettingsController],
   providers: [AccountService, ExportService],
 })

@@ -17,6 +17,7 @@ import { randomUUID } from 'crypto';
 import { createHash } from 'crypto';
 import { parseMinorUnits } from '@noorixfin/money';
 import { toPage } from '@noorixfin/domain';
+import { NotificationsService } from '../notifications/notifications.service';
 
 @Injectable()
 export class TransactionsService {
@@ -25,6 +26,7 @@ export class TransactionsService {
   constructor(
     private readonly supabaseService: SupabaseService,
     private readonly categoriesService: CategoriesService,
+    private readonly notifications: NotificationsService,
   ) {}
 
   /**
@@ -244,6 +246,20 @@ export class TransactionsService {
           this.logger.error(`Failed to link tags: ${linkError.message}`);
         }
       }
+    }
+
+    try {
+      await this.notifications.evaluateFinancialRules(
+        accessToken,
+        userId,
+        workspaceId,
+      );
+    } catch (error) {
+      // The ledger write is already durable. A provider/rule outage must not
+      // turn a successful financial mutation into a retryable client error.
+      this.logger.warn(
+        `Post-transaction notification rules failed: ${error instanceof Error ? error.message : String(error)}`,
+      );
     }
 
     return { ...entry, postings: createdPostings || [] };
@@ -577,7 +593,7 @@ export class TransactionsService {
   async reverseTransaction(
     transactionId: string,
     workspaceId: string,
-    _userId: string,
+    userId: string,
     accessToken: string,
   ) {
     const client = this.supabaseService.getUserClient(accessToken);
@@ -630,6 +646,33 @@ export class TransactionsService {
       .select('*, journal_postings(*)')
       .eq('id', reversalId)
       .single();
+
+    try {
+      await this.notifications.create({
+        userId,
+        workspaceId,
+        category: 'transaction',
+        severity: 'INFO',
+        titleEn: 'Transaction reversed',
+        titleBn: 'লেনদেন বিপরীত করা হয়েছে',
+        bodyEn:
+          'A correction was posted while preserving the original history.',
+        bodyBn: 'মূল ইতিহাস সংরক্ষণ করে একটি সংশোধন পোস্ট করা হয়েছে।',
+        actionUrl: `/dashboard/transactions/${String(reversalId)}`,
+        resourceType: 'journal_entry',
+        resourceId: String(reversalId),
+        dedupeKey: `transaction-reversed:${transactionId}`,
+      });
+      await this.notifications.evaluateFinancialRules(
+        accessToken,
+        userId,
+        workspaceId,
+      );
+    } catch (notificationError) {
+      this.logger.warn(
+        `Reversal notification failed: ${notificationError instanceof Error ? notificationError.message : String(notificationError)}`,
+      );
+    }
 
     return reversal;
   }
