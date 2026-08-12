@@ -1,9 +1,15 @@
 /**
  * Root layout — DEC-010.
  *
- * Opens the local database, starts foreground-only token refresh, and gates on
- * the session. The session comes from SecureStore, so a returning user is
- * already signed in before the first frame — they log in once (DEC-010).
+ * Responsibilities:
+ * 1. Open the local SQLite database.
+ * 2. Start foreground-only token refresh.
+ * 3. Gate on session → sign-in if none.
+ * 4. Gate on workspace → workspace selection if none.
+ * 5. Wrap with WorkspaceProvider and QueryClient.
+ *
+ * Sessions come from SecureStore: a returning user is already signed in before
+ * the first frame — they log in once and the token refreshes in the foreground.
  */
 import { useEffect, useState } from 'react';
 import { Stack, useRouter, useSegments } from 'expo-router';
@@ -11,6 +17,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import type { Session } from '@supabase/supabase-js';
 import { supabase, startAuthAutoRefresh } from '../src/lib/supabase';
 import { getDb } from '../src/db';
+import { WorkspaceProvider, useWorkspace } from '../src/lib/WorkspaceContext';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -23,11 +30,40 @@ const queryClient = new QueryClient({
   },
 });
 
+function NavigationGuard({ session }: { session: Session | null }) {
+  const segments = useSegments();
+  const router = useRouter();
+  const { workspaceId, isLoading: wsLoading } = useWorkspace();
+
+  useEffect(() => {
+    if (wsLoading) return;
+
+    const inAuthGroup = segments[0] === 'sign-in';
+    const inWsSelect = segments[0] === 'workspace-select';
+
+    if (!session) {
+      if (!inAuthGroup) router.replace('/sign-in');
+      return;
+    }
+
+    // Session exists but no workspace chosen
+    if (session && !workspaceId && !inWsSelect && !inAuthGroup) {
+      router.replace('/workspace-select');
+      return;
+    }
+
+    // All good — go to tabs
+    if (session && workspaceId && (inAuthGroup || inWsSelect)) {
+      router.replace('/(tabs)');
+    }
+  }, [session, workspaceId, wsLoading, segments, router]);
+
+  return null;
+}
+
 export default function RootLayout() {
   const [ready, setReady] = useState(false);
   const [session, setSession] = useState<Session | null>(null);
-  const segments = useSegments();
-  const router = useRouter();
 
   useEffect(() => {
     let active = true;
@@ -53,18 +89,22 @@ export default function RootLayout() {
     };
   }, []);
 
-  useEffect(() => {
-    if (!ready) return;
-    const inAuthGroup = segments[0] === 'sign-in';
-    if (!session && !inAuthGroup) router.replace('/sign-in');
-    if (session && inAuthGroup) router.replace('/');
-  }, [ready, session, segments, router]);
-
   if (!ready) return null;
 
   return (
     <QueryClientProvider client={queryClient}>
-      <Stack screenOptions={{ headerShown: false }} />
+      <WorkspaceProvider>
+        <NavigationGuard session={session} />
+        <Stack screenOptions={{ headerShown: false }}>
+          <Stack.Screen name="(tabs)" />
+          <Stack.Screen name="sign-in" />
+          <Stack.Screen name="workspace-select" />
+          <Stack.Screen
+            name="add-transaction"
+            options={{ presentation: 'modal' }}
+          />
+        </Stack>
+      </WorkspaceProvider>
     </QueryClientProvider>
   );
 }
