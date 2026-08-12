@@ -5,10 +5,24 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import {
-  ArrowRight, Shield, PieChart, Target, Heart,
-  GraduationCap, Users, Briefcase, TrendingUp,
-  Smartphone, Lock, CheckCircle2, Star, GitFork,
-  Zap, BarChart3, WifiOff, Eye
+  ArrowRight,
+  Shield,
+  PieChart,
+  Target,
+  Heart,
+  GraduationCap,
+  Users,
+  Briefcase,
+  TrendingUp,
+  Smartphone,
+  Lock,
+  CheckCircle2,
+  Star,
+  GitFork,
+  Zap,
+  BarChart3,
+  WifiOff,
+  Eye,
 } from 'lucide-react';
 import { FadeUp, StaggerGrid, StaggerItem, TiltCard } from './components/motion';
 import { getServerT, getServerRawObject } from '../../lib/i18n/locale';
@@ -18,7 +32,8 @@ export const metadata: Metadata = {
   title: 'NoorixFin — Free & Open-Source Personal Finance for Everyone',
   description:
     'Take full control of your money. 100% free personal finance manager for students, families, freelancers & professionals. No ads, no subscriptions, no data selling.',
-  keywords: 'personal finance, budget tracker, free, open source, bangla, students, families, freelancers',
+  keywords:
+    'personal finance, budget tracker, free, open source, bangla, students, families, freelancers',
 };
 
 function GithubIcon({ size = 18 }: { size?: number }) {
@@ -67,8 +82,14 @@ export default async function HomePage() {
     <>
       {/* ── Hero ─────────────────────────────────────── */}
       <section className="m-hero" style={{ position: 'relative', overflow: 'hidden' }}>
-        <div className="m-orb m-orb-green" style={{ width: 700, height: 700, top: -250, left: '50%', transform: 'translateX(-50%)' }} />
-        <div className="m-orb m-orb-blue" style={{ width: 300, height: 300, top: 100, right: -100, opacity: 0.15 }} />
+        <div
+          className="m-orb m-orb-green"
+          style={{ width: 700, height: 700, top: -250, left: '50%', transform: 'translateX(-50%)' }}
+        />
+        <div
+          className="m-orb m-orb-blue"
+          style={{ width: 300, height: 300, top: 100, right: -100, opacity: 0.15 }}
+        />
 
         <FadeUp>
           <div className="m-badge" style={{ marginBottom: '1.5rem' }}>
@@ -76,16 +97,31 @@ export default async function HomePage() {
           </div>
 
           <h1 className="m-h1">
-            {t('marketing.hero.title').split('. ').map((part: string, i: number, arr: string[]) => (
-              <span key={i}>
-                {i === arr.length - 1
-                  ? <span className="m-gradient-text">{part}</span>
-                  : <>{part}.<br /></>}
-              </span>
-            ))}
+            {t('marketing.hero.title')
+              .split('. ')
+              .map((part: string, i: number, arr: string[]) => (
+                <span key={i}>
+                  {i === arr.length - 1 ? (
+                    <span className="m-gradient-text">{part}</span>
+                  ) : (
+                    <>
+                      {part}.<br />
+                    </>
+                  )}
+                </span>
+              ))}
           </h1>
 
-          <p className="m-lead" style={{ margin: '1.75rem auto 0', textAlign: 'center', maxWidth: '680px', fontSize: '1.15rem', lineHeight: 1.75 }}>
+          <p
+            className="m-lead"
+            style={{
+              margin: '1.75rem auto 0',
+              textAlign: 'center',
+              maxWidth: '680px',
+              fontSize: '1.15rem',
+              lineHeight: 1.75,
+            }}
+          >
             {t('marketing.hero.subtitle')}
           </p>
         </FadeUp>
@@ -102,6 +138,12 @@ export default async function HomePage() {
         </FadeUp>
 
         <FadeUp delay={0.28}>
+          <div className="m-hero-mobile-cta">
+            <Smartphone size={17} aria-hidden="true" />
+            <Link href="/download">Get the mobile app</Link>
+            <span>·</span>
+            <Link href="/download">Direct APK</Link>
+          </div>
           <div className="m-hero-stars">
             <GithubIcon size={16} />
             <span>{t('marketing.homePage.heroStars')}</span>
@@ -122,11 +164,21 @@ export default async function HomePage() {
       </section>
 
       {/* ── Built for every stage of your life ───────── */}
-      <section className="m-section-full" style={{ background: 'rgba(10,15,30,0.7)', borderTop: '1px solid var(--m-border)', borderBottom: '1px solid var(--m-border)' }}>
+      <section
+        className="m-section-full"
+        style={{
+          background: 'rgba(10,15,30,0.7)',
+          borderTop: '1px solid var(--m-border)',
+          borderBottom: '1px solid var(--m-border)',
+        }}
+      >
         <div className="m-section-inner" style={{ maxWidth: '940px' }}>
           <FadeUp>
             <div style={{ textAlign: 'center', marginBottom: '4rem' }}>
-              <div className="m-eyebrow"><span className="m-eyebrow-dot" />{t('marketing.homePage.eyebrowRealPeople')}</div>
+              <div className="m-eyebrow">
+                <span className="m-eyebrow-dot" />
+                {t('marketing.homePage.eyebrowRealPeople')}
+              </div>
               <h2 className="m-h2">{t('marketing.audiences.title')}</h2>
               <p className="m-lead" style={{ margin: '1.25rem auto 0', maxWidth: '640px' }}>
                 {t('marketing.audiences.subtitle')}
@@ -148,8 +200,23 @@ export default async function HomePage() {
                     marginBottom: isLast ? 0 : '2rem',
                   }}
                 >
-                  <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'flex-start', flexWrap: 'wrap' }}>
-                    <div style={{ background: a.tint, padding: '1.25rem', borderRadius: '16px', color: a.accent, flexShrink: 0 }}>
+                  <div
+                    style={{
+                      display: 'flex',
+                      gap: '1.5rem',
+                      alignItems: 'flex-start',
+                      flexWrap: 'wrap',
+                    }}
+                  >
+                    <div
+                      style={{
+                        background: a.tint,
+                        padding: '1.25rem',
+                        borderRadius: '16px',
+                        color: a.accent,
+                        flexShrink: 0,
+                      }}
+                    >
                       <Icon size={36} />
                     </div>
                     <div style={{ flex: 1, minWidth: '280px' }}>
@@ -168,16 +235,40 @@ export default async function HomePage() {
                       <h3 className="m-h3" style={{ fontSize: '1.6rem', marginBottom: '1rem' }}>
                         {copy.title}
                       </h3>
-                      <p style={{ fontSize: '1.05rem', color: 'var(--m-muted)', lineHeight: 1.85, marginBottom: '1rem' }}>
+                      <p
+                        style={{
+                          fontSize: '1.05rem',
+                          color: 'var(--m-muted)',
+                          lineHeight: 1.85,
+                          marginBottom: '1rem',
+                        }}
+                      >
                         {copy.desc}
                       </p>
                       <p style={{ fontSize: '1rem', color: 'var(--m-muted)', lineHeight: 1.8 }}>
                         {copy.hook}
                       </p>
-                      <ul style={{ marginTop: '1.25rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                      <ul
+                        style={{
+                          marginTop: '1.25rem',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          gap: '0.5rem',
+                        }}
+                      >
                         {copy.points.map((item) => (
-                          <li key={item} style={{ display: 'flex', alignItems: 'center', gap: '0.625rem', color: 'var(--m-muted)', fontSize: '0.9375rem' }}>
-                            <CheckCircle2 size={16} style={{ color: a.accent, flexShrink: 0 }} />{item}
+                          <li
+                            key={item}
+                            style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '0.625rem',
+                              color: 'var(--m-muted)',
+                              fontSize: '0.9375rem',
+                            }}
+                          >
+                            <CheckCircle2 size={16} style={{ color: a.accent, flexShrink: 0 }} />
+                            {item}
                           </li>
                         ))}
                       </ul>
@@ -194,35 +285,54 @@ export default async function HomePage() {
       <section className="m-section">
         <FadeUp>
           <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
-            <div className="m-eyebrow"><span className="m-eyebrow-dot" />{t('marketing.homePage.eyebrowTryIt')}</div>
+            <div className="m-eyebrow">
+              <span className="m-eyebrow-dot" />
+              {t('marketing.homePage.eyebrowTryIt')}
+            </div>
             <h2 className="m-h2">{t('marketing.calculator.title')}</h2>
-            <p className="m-lead" style={{ margin: '1rem auto 0' }}>{t('marketing.calculator.subtitle')}</p>
+            <p className="m-lead" style={{ margin: '1rem auto 0' }}>
+              {t('marketing.calculator.subtitle')}
+            </p>
           </div>
         </FadeUp>
         <FadeUp delay={0.1}>
-          <SavingsCalculator translations={{
-            title: t('marketing.calculator.title'),
-            subtitle: t('marketing.calculator.subtitle'),
-            monthlyIncome: t('marketing.calculator.monthlyIncome'),
-            monthlyExpenses: t('marketing.calculator.monthlyExpenses'),
-            savingsGoal: t('marketing.calculator.savingsGoal'),
-            timeToReach: t('marketing.calculator.timeToReach'),
-            months: t('marketing.calculator.months'),
-            years: t('marketing.calculator.years'),
-            almostThere: t('marketing.calculator.almostThere'),
-            deficit: t('marketing.calculator.deficit'),
-          }} />
+          <SavingsCalculator
+            translations={{
+              title: t('marketing.calculator.title'),
+              subtitle: t('marketing.calculator.subtitle'),
+              monthlyIncome: t('marketing.calculator.monthlyIncome'),
+              monthlyExpenses: t('marketing.calculator.monthlyExpenses'),
+              savingsGoal: t('marketing.calculator.savingsGoal'),
+              timeToReach: t('marketing.calculator.timeToReach'),
+              months: t('marketing.calculator.months'),
+              years: t('marketing.calculator.years'),
+              almostThere: t('marketing.calculator.almostThere'),
+              deficit: t('marketing.calculator.deficit'),
+            }}
+          />
         </FadeUp>
       </section>
 
       {/* ── Features Grid ──────────────────────────────── */}
-      <section className="m-section-full" style={{ background: 'rgba(10,15,30,0.5)', borderTop: '1px solid var(--m-border)', borderBottom: '1px solid var(--m-border)' }}>
+      <section
+        className="m-section-full"
+        style={{
+          background: 'rgba(10,15,30,0.5)',
+          borderTop: '1px solid var(--m-border)',
+          borderBottom: '1px solid var(--m-border)',
+        }}
+      >
         <div className="m-section-inner">
           <FadeUp>
             <div style={{ textAlign: 'center', marginBottom: '3.5rem' }}>
-              <div className="m-eyebrow"><span className="m-eyebrow-dot" />{t('marketing.homePage.eyebrowWhatYouGet')}</div>
+              <div className="m-eyebrow">
+                <span className="m-eyebrow-dot" />
+                {t('marketing.homePage.eyebrowWhatYouGet')}
+              </div>
               <h2 className="m-h2">{t('marketing.features.title')}</h2>
-              <p className="m-lead" style={{ margin: '1rem auto 0' }}>{t('marketing.features.subtitle')}</p>
+              <p className="m-lead" style={{ margin: '1rem auto 0' }}>
+                {t('marketing.features.subtitle')}
+              </p>
             </div>
           </FadeUp>
           <StaggerGrid className="m-grid-3">
@@ -232,9 +342,18 @@ export default async function HomePage() {
                 <StaggerItem key={f.title}>
                   <TiltCard>
                     <div className="m-card" style={{ height: '100%' }}>
-                      <div className="m-card-icon"><Icon size={22} /></div>
-                      <h3 className="m-h3" style={{ marginBottom: '0.625rem', fontSize: '1.05rem' }}>{f.title}</h3>
-                      <p style={{ fontSize: '0.9rem', color: 'var(--m-muted)', lineHeight: 1.7 }}>{f.desc}</p>
+                      <div className="m-card-icon">
+                        <Icon size={22} />
+                      </div>
+                      <h3
+                        className="m-h3"
+                        style={{ marginBottom: '0.625rem', fontSize: '1.05rem' }}
+                      >
+                        {f.title}
+                      </h3>
+                      <p style={{ fontSize: '0.9rem', color: 'var(--m-muted)', lineHeight: 1.7 }}>
+                        {f.desc}
+                      </p>
                     </div>
                   </TiltCard>
                 </StaggerItem>
@@ -249,12 +368,31 @@ export default async function HomePage() {
         <div className="m-grid-2" style={{ alignItems: 'center', gap: '4rem' }}>
           <FadeUp>
             <div>
-              <div className="m-eyebrow"><span className="m-eyebrow-dot" />{t('marketing.homePage.eyebrowSecurity')}</div>
-              <h2 className="m-h2" style={{ marginBottom: '1.25rem' }}>{t('marketing.homePage.privacyTitle')}</h2>
-              <p style={{ color: 'var(--m-muted)', lineHeight: 1.8, fontSize: '1rem', marginBottom: '1.5rem' }}>
+              <div className="m-eyebrow">
+                <span className="m-eyebrow-dot" />
+                {t('marketing.homePage.eyebrowSecurity')}
+              </div>
+              <h2 className="m-h2" style={{ marginBottom: '1.25rem' }}>
+                {t('marketing.homePage.privacyTitle')}
+              </h2>
+              <p
+                style={{
+                  color: 'var(--m-muted)',
+                  lineHeight: 1.8,
+                  fontSize: '1rem',
+                  marginBottom: '1.5rem',
+                }}
+              >
                 {t('marketing.homePage.privacyBody1')}
               </p>
-              <p style={{ color: 'var(--m-muted)', lineHeight: 1.8, fontSize: '1rem', marginBottom: '2rem' }}>
+              <p
+                style={{
+                  color: 'var(--m-muted)',
+                  lineHeight: 1.8,
+                  fontSize: '1rem',
+                  marginBottom: '2rem',
+                }}
+              >
                 {t('marketing.homePage.privacyBody2')}
               </p>
               <Link href="/security" className="m-btn-outline">
@@ -267,8 +405,19 @@ export default async function HomePage() {
               {trustPoints.map((text, i) => {
                 const Icon = [Lock, Eye, Zap, CheckCircle2, Smartphone, TrendingUp][i];
                 return (
-                  <div key={text} className="m-card" style={{ padding: '1rem 1.25rem', display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                    <div style={{ color: 'var(--m-green)', flexShrink: 0 }}><Icon size={20} /></div>
+                  <div
+                    key={text}
+                    className="m-card"
+                    style={{
+                      padding: '1rem 1.25rem',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '1rem',
+                    }}
+                  >
+                    <div style={{ color: 'var(--m-green)', flexShrink: 0 }}>
+                      <Icon size={20} />
+                    </div>
                     <span style={{ fontSize: '0.9375rem', color: 'var(--m-muted)' }}>{text}</span>
                   </div>
                 );
@@ -279,19 +428,52 @@ export default async function HomePage() {
       </section>
 
       {/* ── Open Source Philosophy ─────────────────────── */}
-      <section className="m-section-full" style={{ background: 'rgba(16,185,129,0.04)', borderTop: '1px solid rgba(16,185,129,0.12)', borderBottom: '1px solid rgba(16,185,129,0.12)' }}>
+      <section
+        className="m-section-full"
+        style={{
+          background: 'rgba(16,185,129,0.04)',
+          borderTop: '1px solid rgba(16,185,129,0.12)',
+          borderBottom: '1px solid rgba(16,185,129,0.12)',
+        }}
+      >
         <div className="m-section-inner" style={{ textAlign: 'center', maxWidth: '720px' }}>
           <FadeUp>
-            <div className="m-eyebrow" style={{ justifyContent: 'center' }}><span className="m-eyebrow-dot" />{t('marketing.homePage.eyebrowOpenSource')}</div>
-            <h2 className="m-h2" style={{ marginBottom: '1.25rem' }}>{t('marketing.homePage.openSourceTitle')}</h2>
-            <p style={{ color: 'var(--m-muted)', lineHeight: 1.85, fontSize: '1.05rem', marginBottom: '1.5rem' }}>
+            <div className="m-eyebrow" style={{ justifyContent: 'center' }}>
+              <span className="m-eyebrow-dot" />
+              {t('marketing.homePage.eyebrowOpenSource')}
+            </div>
+            <h2 className="m-h2" style={{ marginBottom: '1.25rem' }}>
+              {t('marketing.homePage.openSourceTitle')}
+            </h2>
+            <p
+              style={{
+                color: 'var(--m-muted)',
+                lineHeight: 1.85,
+                fontSize: '1.05rem',
+                marginBottom: '1.5rem',
+              }}
+            >
               {t('marketing.homePage.openSourceBody1')}
             </p>
-            <p style={{ color: 'var(--m-muted)', lineHeight: 1.85, fontSize: '1.05rem', marginBottom: '2.5rem' }}>
+            <p
+              style={{
+                color: 'var(--m-muted)',
+                lineHeight: 1.85,
+                fontSize: '1.05rem',
+                marginBottom: '2.5rem',
+              }}
+            >
               {t('marketing.homePage.openSourceBody2')}
             </p>
-            <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}>
-              <a href="https://github.com/SH4R1F-me/NoorixFin" target="_blank" rel="noopener noreferrer" className="m-btn-outline m-hero-btn-lg">
+            <div
+              style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}
+            >
+              <a
+                href="https://github.com/SH4R1F-me/NoorixFin"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="m-btn-outline m-hero-btn-lg"
+              >
                 <GithubIcon size={18} /> {t('marketing.homePage.viewSource')}
               </a>
               <Link href="/open-source" className="m-btn-ghost m-hero-btn-lg">
@@ -306,7 +488,10 @@ export default async function HomePage() {
       <section className="m-section">
         <FadeUp>
           <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
-            <div className="m-eyebrow"><span className="m-eyebrow-dot" />{t('marketing.homePage.eyebrowCommunity')}</div>
+            <div className="m-eyebrow">
+              <span className="m-eyebrow-dot" />
+              {t('marketing.homePage.eyebrowCommunity')}
+            </div>
             <h2 className="m-h2">{t('marketing.homePage.communityTitle')}</h2>
             <p className="m-lead" style={{ margin: '1rem auto 0', maxWidth: '560px' }}>
               {t('marketing.homePage.communitySubtitle')}
@@ -315,17 +500,35 @@ export default async function HomePage() {
         </FadeUp>
         <StaggerGrid className="m-grid-3">
           {[
-            { icon: GitFork, title: t('marketing.homePage.fork'), desc: t('marketing.homePage.forkDesc') },
-            { icon: Star, title: t('marketing.homePage.star'), desc: t('marketing.homePage.starDesc') },
-            { icon: Heart, title: t('marketing.homePage.donate'), desc: t('marketing.homePage.donateDesc') },
+            {
+              icon: GitFork,
+              title: t('marketing.homePage.fork'),
+              desc: t('marketing.homePage.forkDesc'),
+            },
+            {
+              icon: Star,
+              title: t('marketing.homePage.star'),
+              desc: t('marketing.homePage.starDesc'),
+            },
+            {
+              icon: Heart,
+              title: t('marketing.homePage.donate'),
+              desc: t('marketing.homePage.donateDesc'),
+            },
           ].map((c) => {
             const Icon = c.icon;
             return (
               <StaggerItem key={c.title}>
                 <div className="m-card" style={{ textAlign: 'center', padding: '2rem' }}>
-                  <div className="m-card-icon" style={{ margin: '0 auto 1rem' }}><Icon size={24} /></div>
-                  <h3 className="m-h3" style={{ marginBottom: '0.5rem' }}>{c.title}</h3>
-                  <p style={{ fontSize: '0.9rem', color: 'var(--m-muted)', lineHeight: 1.7 }}>{c.desc}</p>
+                  <div className="m-card-icon" style={{ margin: '0 auto 1rem' }}>
+                    <Icon size={24} />
+                  </div>
+                  <h3 className="m-h3" style={{ marginBottom: '0.5rem' }}>
+                    {c.title}
+                  </h3>
+                  <p style={{ fontSize: '0.9rem', color: 'var(--m-muted)', lineHeight: 1.7 }}>
+                    {c.desc}
+                  </p>
                 </div>
               </StaggerItem>
             );
@@ -334,16 +537,44 @@ export default async function HomePage() {
       </section>
 
       {/* ── Final CTA ──────────────────────────────────── */}
-      <section className="m-section-full" style={{ background: 'rgba(10,15,30,0.8)', borderTop: '1px solid var(--m-border)', position: 'relative', overflow: 'hidden', textAlign: 'center' }}>
-        <div className="m-orb m-orb-green" style={{ width: 600, height: 600, bottom: -300, left: '50%', transform: 'translateX(-50%)', opacity: 0.18 }} />
-        <div className="m-section-inner" style={{ maxWidth: '680px', position: 'relative', zIndex: 1 }}>
+      <section
+        className="m-section-full"
+        style={{
+          background: 'rgba(10,15,30,0.8)',
+          borderTop: '1px solid var(--m-border)',
+          position: 'relative',
+          overflow: 'hidden',
+          textAlign: 'center',
+        }}
+      >
+        <div
+          className="m-orb m-orb-green"
+          style={{
+            width: 600,
+            height: 600,
+            bottom: -300,
+            left: '50%',
+            transform: 'translateX(-50%)',
+            opacity: 0.18,
+          }}
+        />
+        <div
+          className="m-section-inner"
+          style={{ maxWidth: '680px', position: 'relative', zIndex: 1 }}
+        >
           <FadeUp>
             <div className="m-badge" style={{ marginBottom: '1.5rem' }}>
               <span aria-hidden="true">🚀</span> {t('marketing.homePage.ctaBadge')}
             </div>
-            <h2 className="m-h2" style={{ marginBottom: '1.25rem' }}>{t('marketing.cta.title')}</h2>
-            <p className="m-lead" style={{ margin: '0 auto 2.5rem' }}>{t('marketing.cta.subtitle')}</p>
-            <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}>
+            <h2 className="m-h2" style={{ marginBottom: '1.25rem' }}>
+              {t('marketing.cta.title')}
+            </h2>
+            <p className="m-lead" style={{ margin: '0 auto 2.5rem' }}>
+              {t('marketing.cta.subtitle')}
+            </p>
+            <div
+              style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}
+            >
               <Link href="/auth/login" className="m-btn-primary m-hero-btn-lg" id="bottom-cta">
                 {t('marketing.cta.button')} <ArrowRight size={18} />
               </Link>

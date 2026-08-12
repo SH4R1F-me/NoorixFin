@@ -73,6 +73,9 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
+  // Lets CI and local verification build beside a running dev server instead
+  // of fighting it for `.next/lock`.
+  distDir: process.env.NEXT_DIST_DIR ?? '.next',
   turbopack: {
     // Absolute, because the workspace root is two levels up and a relative
     // value made `next build` warn on every run.

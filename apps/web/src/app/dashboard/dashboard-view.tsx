@@ -25,7 +25,10 @@ import {
   Plus,
   Wallet,
   CreditCard,
+  Smartphone,
+  X,
 } from 'lucide-react';
+import { useState } from 'react';
 import { formatAmount } from '@noorixfin/money';
 import { intlLocale } from '@noorixfin/i18n';
 import { useLocale } from '../../lib/i18n/locale-provider';
@@ -113,6 +116,7 @@ export default function DashboardView({
   currency?: string;
 }) {
   const { t, locale } = useLocale();
+  const [showMobileCard, setShowMobileCard] = useState(true);
   const summaryCards = rawCards.map((c) => ({ ...c, icon: ICONS[c.iconKey] }));
 
   /**
@@ -145,11 +149,39 @@ export default function DashboardView({
           <h1 style={styles.greeting}>{t('dashboard.greeting')} 👋</h1>
           <p style={styles.subGreeting}>{t('dashboard.subtitle')}</p>
         </div>
-        <a href="/dashboard/transactions?new=1" style={{ ...styles.addBtn, textDecoration: 'none' }}>
+        <a
+          href="/dashboard/transactions?new=1"
+          style={{ ...styles.addBtn, textDecoration: 'none' }}
+        >
           <Plus size={20} />
           <span>{t('transactions.addTransaction')}</span>
         </a>
       </div>
+
+      {showMobileCard && (
+        <aside style={styles.mobileCard} aria-label="Continue on the NoorixFin mobile app">
+          <div style={styles.mobileCardIcon}>
+            <Smartphone size={22} />
+          </div>
+          <div style={{ flex: 1 }}>
+            <strong style={{ color: '#f8fafc' }}>Continue on mobile</strong>
+            <p style={{ ...styles.emptyHint, padding: '.25rem 0 0' }}>
+              Work offline, unlock with biometrics, and pair this workspace with a secure one-time
+              QR code.
+            </p>
+          </div>
+          <a href="/dashboard/settings/mobile" style={styles.mobileCardLink}>
+            Set up mobile
+          </a>
+          <button
+            onClick={() => setShowMobileCard(false)}
+            style={styles.mobileCardClose}
+            aria-label="Dismiss mobile app suggestion"
+          >
+            <X size={16} />
+          </button>
+        </aside>
+      )}
 
       {/* Summary Cards */}
       <div style={styles.cardGrid}>
@@ -172,11 +204,13 @@ export default function DashboardView({
                 {/* No prior-month figure means the change is undefined, not
                     zero and not +100%. Render nothing rather than invent one. */}
                 {card.change !== null && (
-                  <span style={{
-                    ...styles.cardChange,
-                    color: card.positive ? '#10b981' : '#f87171',
-                    background: card.positive ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)',
-                  }}>
+                  <span
+                    style={{
+                      ...styles.cardChange,
+                      color: card.positive ? '#10b981' : '#f87171',
+                      background: card.positive ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)',
+                    }}
+                  >
                     {card.change}
                   </span>
                 )}
@@ -194,7 +228,9 @@ export default function DashboardView({
         <div style={styles.section}>
           <div style={styles.sectionHeader}>
             <h2 style={styles.sectionTitle}>{t('dashboard.recentTransactions')}</h2>
-            <a href="/dashboard/transactions" style={styles.viewAll}>{t('dashboard.viewAll')} →</a>
+            <a href="/dashboard/transactions" style={styles.viewAll}>
+              {t('dashboard.viewAll')} →
+            </a>
           </div>
           <div style={styles.transactionList}>
             {recentTransactions.length === 0 ? (
@@ -202,10 +238,12 @@ export default function DashboardView({
             ) : (
               recentTransactions.map((tx, i) => (
                 <div key={i} style={styles.transactionItem}>
-                  <div style={{
-                    ...styles.txIcon,
-                    background: tx.amount > 0 ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)',
-                  }}>
+                  <div
+                    style={{
+                      ...styles.txIcon,
+                      background: tx.amount > 0 ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)',
+                    }}
+                  >
                     {tx.amount > 0 ? (
                       <TrendingUp size={16} color="#10b981" />
                     ) : (
@@ -214,13 +252,18 @@ export default function DashboardView({
                   </div>
                   <div style={styles.txInfo}>
                     <span style={styles.txPayee}>{tx.payee}</span>
-                    <span style={styles.txCategory}>{tx.category} · {tx.date}</span>
+                    <span style={styles.txCategory}>
+                      {tx.category} · {tx.date}
+                    </span>
                   </div>
-                  <span style={{
-                    ...styles.txAmount,
-                    color: tx.amount > 0 ? '#10b981' : '#f87171',
-                  }}>
-                    {tx.amount > 0 ? '+' : ''}{amount(tx.amount)}
+                  <span
+                    style={{
+                      ...styles.txAmount,
+                      color: tx.amount > 0 ? '#10b981' : '#f87171',
+                    }}
+                  >
+                    {tx.amount > 0 ? '+' : ''}
+                    {amount(tx.amount)}
                   </span>
                 </div>
               ))
@@ -234,7 +277,9 @@ export default function DashboardView({
           <div style={styles.section}>
             <div style={styles.sectionHeader}>
               <h2 style={styles.sectionTitle}>{t('dashboard.budgetProgress')}</h2>
-              <a href="/dashboard/budgets" style={styles.viewAll}>{t('dashboard.details')} →</a>
+              <a href="/dashboard/budgets" style={styles.viewAll}>
+                {t('dashboard.details')} →
+              </a>
             </div>
             {budgetLines.length === 0 ? (
               <p style={styles.emptyHint}>{t('budgets.noBudgetBody')}</p>
@@ -284,7 +329,9 @@ export default function DashboardView({
           <div style={styles.section}>
             <div style={styles.sectionHeader}>
               <h2 style={styles.sectionTitle}>{t('dashboard.upcomingBills')}</h2>
-              <a href="/dashboard/calendar" style={styles.viewAll}>{t('nav.calendar')} →</a>
+              <a href="/dashboard/calendar" style={styles.viewAll}>
+                {t('nav.calendar')} →
+              </a>
             </div>
             <div style={styles.billList}>
               {upcomingBills.length === 0 ? (
@@ -318,7 +365,8 @@ export default function DashboardView({
                         color: bill.isIncome ? '#10b981' : '#f8fafc',
                       }}
                     >
-                      {bill.isIncome ? '+' : ''}{amount(bill.amount)}
+                      {bill.isIncome ? '+' : ''}
+                      {amount(bill.amount)}
                     </span>
                   </div>
                 ))
@@ -330,7 +378,9 @@ export default function DashboardView({
           <div style={styles.section}>
             <div style={styles.sectionHeader}>
               <h2 style={styles.sectionTitle}>{t('dashboard.savingsProgress')}</h2>
-              <a href="/dashboard/goals" style={styles.viewAll}>{t('dashboard.details')} →</a>
+              <a href="/dashboard/goals" style={styles.viewAll}>
+                {t('dashboard.details')} →
+              </a>
             </div>
             {goals.length === 0 ? (
               <p style={styles.emptyHint}>{t('goals.noGoalsBody')}</p>
@@ -388,7 +438,9 @@ export default function DashboardView({
             <div style={styles.section}>
               <div style={styles.sectionHeader}>
                 <h2 style={styles.sectionTitle}>{t('dashboard.debtSummary')}</h2>
-                <a href="/dashboard/goals" style={styles.viewAll}>{t('dashboard.details')} →</a>
+                <a href="/dashboard/goals" style={styles.viewAll}>
+                  {t('dashboard.details')} →
+                </a>
               </div>
               <p style={{ ...styles.cardAmount, color: '#f87171', margin: 0 }}>
                 {amount(totalDebt)}
@@ -403,6 +455,44 @@ export default function DashboardView({
 }
 
 const styles: Record<string, React.CSSProperties> = {
+  mobileCard: {
+    display: 'flex',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+    gap: '.85rem',
+    marginBottom: '1.25rem',
+    padding: '1rem',
+    background: 'linear-gradient(100deg, rgba(16,185,129,.12), rgba(56,189,248,.08))',
+    border: '1px solid rgba(52,211,153,.25)',
+    borderRadius: 12,
+  },
+  mobileCardIcon: {
+    width: 42,
+    height: 42,
+    display: 'grid',
+    placeItems: 'center',
+    color: '#34d399',
+    background: 'rgba(16,185,129,.14)',
+    borderRadius: 10,
+  },
+  mobileCardLink: {
+    padding: '.55rem .8rem',
+    borderRadius: 7,
+    background: '#10b981',
+    color: '#04120d',
+    fontSize: '.78rem',
+    fontWeight: 750,
+    textDecoration: 'none',
+  },
+  mobileCardClose: {
+    display: 'grid',
+    placeItems: 'center',
+    background: 'transparent',
+    color: '#94a3b8',
+    border: 0,
+    cursor: 'pointer',
+    padding: '.4rem',
+  },
   emptyHint: {
     color: '#8b9ab0',
     fontSize: '0.8125rem',

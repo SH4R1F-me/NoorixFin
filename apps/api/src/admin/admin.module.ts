@@ -11,9 +11,10 @@ import { AdminController } from './admin.controller';
 import { AdminService } from './admin.service';
 import { IdempotencyInterceptor } from '../common/interceptors/idempotency.interceptor';
 import { NotificationsModule } from '../notifications/notifications.module';
+import { ReleasesModule } from '../releases/releases.module';
 
 @Module({
-  imports: [NotificationsModule],
+  imports: [NotificationsModule, ReleasesModule],
   controllers: [AdminController],
   providers: [
     AdminService,

@@ -264,3 +264,19 @@ export interface Anomalies {
   new_devices: AnomalyNewDevice[];
   throttle_abusers: AnomalyThrottleAbuser[];
 }
+
+export interface MobileRelease {
+  latest_version: string;
+  min_version: string;
+  ios_url: string | null;
+  android_url: string | null;
+  apk_url: string | null;
+  apk_sha256: string | null;
+  release_notes_url: string | null;
+  ios_status: 'COMING_SOON' | 'LIVE';
+  android_status: 'COMING_SOON' | 'LIVE';
+  apk_size_bytes: number | null;
+  released_at: string | null;
+  ios_minimum: string;
+  android_minimum: string;
+}

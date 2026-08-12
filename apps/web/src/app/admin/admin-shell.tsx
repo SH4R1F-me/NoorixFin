@@ -37,6 +37,7 @@ import {
   AlertTriangle,
   FileText,
   RadioTower,
+  PackageOpen,
 } from 'lucide-react';
 
 type NavItem = {
@@ -117,6 +118,12 @@ const NAV_SECTIONS: NavSection[] = [
         key: 'admin.siteSettings',
         icon: Globe2,
         href: '/admin/site-settings',
+      },
+      {
+        id: 'mobile-releases',
+        key: 'admin.mobileReleases',
+        icon: PackageOpen,
+        href: '/admin/config/releases',
       },
       { id: 'settings', key: 'admin.globalSettings', icon: Settings2, href: '/admin/settings' },
     ],

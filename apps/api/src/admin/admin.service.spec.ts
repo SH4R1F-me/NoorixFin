@@ -17,6 +17,7 @@ import type { SupabaseService } from '../supabase/supabase.service';
 import type { AuditService } from '../observability/audit.service';
 import type { SystemEventsService } from '../observability/system-events.service';
 import type { NotificationsService } from '../notifications/notifications.service';
+import type { ReleasesService } from '../releases/releases.service';
 
 const OPERATOR = 'op-1';
 const TARGET = 'user-2';
@@ -135,6 +136,11 @@ function makeHarness(
     notifyBroadcast: jest.fn().mockResolvedValue(undefined),
     notifyOperators: jest.fn().mockResolvedValue(undefined),
   };
+  const releases = {
+    getMobileRelease: jest
+      .fn()
+      .mockResolvedValue({ latest_version: '1.0.0', min_version: '1.0.0' }),
+  };
 
   return {
     service: new AdminService(
@@ -142,6 +148,7 @@ function makeHarness(
       audit as unknown as AuditService,
       systemEvents as unknown as SystemEventsService,
       notifications as unknown as NotificationsService,
+      releases as unknown as ReleasesService,
     ),
     audit,
     updates,

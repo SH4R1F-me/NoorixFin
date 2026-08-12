@@ -15,6 +15,7 @@ import {
   IsOptional,
   IsString,
   IsUrl,
+  Matches,
   Length,
   Max,
   Min,
@@ -207,6 +208,77 @@ export class UpdateSettingsDto {
   @ValidateNested({ each: true })
   @Type(() => UpdateSettingDto)
   settings!: UpdateSettingDto[];
+}
+
+const SEMVER = /^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/;
+
+export class UpdateMobileReleaseDto {
+  @ApiProperty({ example: '1.4.2' })
+  @Matches(SEMVER)
+  latest_version!: string;
+
+  @ApiProperty({ example: '1.2.0' })
+  @Matches(SEMVER)
+  min_version!: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  @Length(0, 2048)
+  ios_url?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  @Length(0, 2048)
+  android_url?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  @Length(0, 2048)
+  apk_url?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @Matches(/^[a-fA-F0-9]{64}$|^$/)
+  apk_sha256?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  @Length(0, 2048)
+  release_notes_url?: string;
+
+  @ApiProperty({ enum: ['COMING_SOON', 'LIVE'] })
+  @IsIn(['COMING_SOON', 'LIVE'])
+  ios_status!: 'COMING_SOON' | 'LIVE';
+
+  @ApiProperty({ enum: ['COMING_SOON', 'LIVE'] })
+  @IsIn(['COMING_SOON', 'LIVE'])
+  android_status!: 'COMING_SOON' | 'LIVE';
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  apk_size_bytes?: number;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsISO8601()
+  released_at?: string;
+
+  @ApiProperty({ example: '15.0' })
+  @IsString()
+  @Length(1, 20)
+  ios_minimum!: string;
+
+  @ApiProperty({ example: '8.0' })
+  @IsString()
+  @Length(1, 20)
+  android_minimum!: string;
 }
 
 // ─── Broadcasts ─────────────────────────────────────────────────────────────

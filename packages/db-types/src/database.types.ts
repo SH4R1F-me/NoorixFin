@@ -508,6 +508,44 @@ export type Database = {
           },
         ];
       };
+      device_pairing_tokens: {
+        Row: {
+          consumed_at: string | null;
+          created_at: string;
+          expires_at: string;
+          id: string;
+          token_hash: string;
+          user_id: string;
+          workspace_id: string;
+        };
+        Insert: {
+          consumed_at?: string | null;
+          created_at?: string;
+          expires_at: string;
+          id?: string;
+          token_hash: string;
+          user_id: string;
+          workspace_id: string;
+        };
+        Update: {
+          consumed_at?: string | null;
+          created_at?: string;
+          expires_at?: string;
+          id?: string;
+          token_hash?: string;
+          user_id?: string;
+          workspace_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'device_pairing_tokens_workspace_id_fkey';
+            columns: ['workspace_id'];
+            isOneToOne: false;
+            referencedRelation: 'workspaces';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
       donation_options: {
         Row: {
           color_from: string;
@@ -1654,6 +1692,8 @@ export type Database = {
         Args: { p_entry_id: string; p_workspace_id: string };
         Returns: string;
       };
+      show_limit: { Args: never; Returns: number };
+      show_trgm: { Args: { '': string }; Returns: string[] };
       workspace_summary: { Args: { p_workspace_id: string }; Returns: Json };
       workspace_tz: { Args: { p_workspace_id: string }; Returns: string };
     };

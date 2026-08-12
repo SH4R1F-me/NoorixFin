@@ -63,6 +63,7 @@ import {
   SuspendUserDto,
   UpdateBroadcastDto,
   UpdateSettingsDto,
+  UpdateMobileReleaseDto,
 } from './dto/admin.dto';
 
 /**
@@ -325,6 +326,25 @@ export class AdminController {
     @Body() dto: UpdateSettingsDto,
   ) {
     return this.adminService.updateSettings(req.accessToken, user.id, dto);
+  }
+
+  @Get('releases')
+  @ApiOperation({ summary: 'Current operator-managed mobile release' })
+  getReleases() {
+    return this.adminService.getMobileRelease();
+  }
+
+  @Put('releases/mobile')
+  @ThrottleAdminWrite()
+  @Idempotent()
+  @ApiOperation({
+    summary: 'Update mobile store links and supported-version floor',
+  })
+  updateMobileRelease(
+    @CurrentUser() user: AuthenticatedUser,
+    @Body() dto: UpdateMobileReleaseDto,
+  ) {
+    return this.adminService.updateMobileRelease(user.id, dto);
   }
 
   // ─── Broadcasts ───────────────────────────────────────────

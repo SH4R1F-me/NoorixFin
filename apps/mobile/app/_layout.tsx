@@ -23,6 +23,7 @@ import {
   subscribeToNotificationLifecycle,
   subscribeToNotificationHints,
 } from '../src/lib/notifications';
+import ForcedUpgradeGate from '../src/components/ForcedUpgradeGate';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -45,6 +46,7 @@ function NavigationGuard({ session }: { session: Session | null }) {
 
     const inAuthGroup = segments[0] === 'sign-in';
     const inWsSelect = segments[0] === 'workspace-select';
+    const inPairing = segments[0] === 'pair';
 
     if (!session) {
       if (!inAuthGroup) router.replace('/sign-in');
@@ -52,7 +54,7 @@ function NavigationGuard({ session }: { session: Session | null }) {
     }
 
     // Session exists but no workspace chosen
-    if (session && !workspaceId && !inWsSelect && !inAuthGroup) {
+    if (session && !workspaceId && !inWsSelect && !inAuthGroup && !inPairing) {
       router.replace('/workspace-select');
       return;
     }
@@ -122,12 +124,14 @@ export default function RootLayout() {
           <Stack.Screen name="(tabs)" />
           <Stack.Screen name="sign-in" />
           <Stack.Screen name="workspace-select" />
+          <Stack.Screen name="pair" />
           <Stack.Screen
             name="notifications"
             options={{ headerShown: true, title: 'Notifications' }}
           />
           <Stack.Screen name="add-transaction" options={{ presentation: 'modal' }} />
         </Stack>
+        <ForcedUpgradeGate />
       </WorkspaceProvider>
     </QueryClientProvider>
   );

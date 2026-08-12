@@ -338,3 +338,8 @@ SET LOCAL request.jwt.claim.sub = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa';
 SELECT count(*) AS campaigns_visible_to_operator FROM notification_campaigns;
 SELECT count(*) AS templates_visible_to_operator FROM notification_templates;
 ROLLBACK;
+
+\echo '── DIST-01: release registry is complete and pairing tokens are API-only ──'
+SELECT key, value FROM site_settings WHERE key LIKE 'site.mobile.%' ORDER BY key;
+SELECT has_table_privilege('authenticated', 'public.device_pairing_tokens', 'SELECT')
+  AS authenticated_can_read_pairing_tokens;

@@ -41,6 +41,7 @@ export type {
   NotificationCampaign,
   NotificationDeliveryStats,
   NotificationTemplate,
+  MobileRelease,
 } from './admin-types';
 
 import type {
@@ -62,6 +63,7 @@ import type {
   NotificationCampaign,
   NotificationDeliveryStats,
   NotificationTemplate,
+  MobileRelease,
 } from './admin-types';
 
 // ─── Fetchers ───────────────────────────────────────────────────────────────
@@ -98,6 +100,7 @@ export const getNotificationTemplates = () =>
   get<NotificationTemplate[]>('/admin/notifications/templates');
 export const getNotificationDeliveryStats = (id: string) =>
   get<NotificationDeliveryStats>(`/admin/notifications/${id}/deliveries`);
+export const getMobileRelease = () => get<MobileRelease>('/admin/releases');
 
 export function getEvents(params: { level?: string; q?: string; limit?: number; offset?: number }) {
   const search = new URLSearchParams();

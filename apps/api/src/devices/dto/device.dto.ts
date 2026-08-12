@@ -45,3 +45,16 @@ export class RevokeAllDto {
   @IsUUID(4)
   currentDeviceId?: string;
 }
+
+export class CreatePairingDto {
+  @ApiProperty()
+  @IsUUID(4)
+  workspaceId!: string;
+}
+
+export class ConsumePairingDto {
+  @ApiProperty({ description: 'One-time token read from the pairing QR code' })
+  @IsString()
+  @MaxLength(256)
+  token!: string;
+}

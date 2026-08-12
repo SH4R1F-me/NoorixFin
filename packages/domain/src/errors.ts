@@ -63,6 +63,11 @@ export const API_ERRORS = {
     retryable: false,
     description: 'The caller is not a member of this workspace. SUPER_ADMIN does not bypass this.',
   },
+  WORKSPACE_ACCESS_DENIED: {
+    status: 403,
+    retryable: false,
+    description: 'The caller cannot issue a pairing code for this workspace.',
+  },
   NOT_SUPER_ADMIN: {
     status: 403,
     retryable: false,
@@ -114,6 +119,26 @@ export const API_ERRORS = {
   // ── Not found (404) ─────────────────────────────────────────────────────
   NOT_FOUND: { status: 404, retryable: false, description: 'Generic missing resource.' },
   WORKSPACE_NOT_FOUND: { status: 404, retryable: false, description: 'No such workspace.' },
+  PAIRING_TOKEN_NOT_FOUND: {
+    status: 404,
+    retryable: false,
+    description: 'The pairing token is invalid or belongs to another account.',
+  },
+  PAIRING_TOKEN_EXPIRED: {
+    status: 410,
+    retryable: false,
+    description: 'The one-time pairing token expired or was consumed.',
+  },
+  RELEASE_CONFIG_UNAVAILABLE: {
+    status: 503,
+    retryable: true,
+    description: 'Mobile release configuration could not be read.',
+  },
+  INVALID_RELEASE_URL: {
+    status: 400,
+    retryable: false,
+    description: 'A mobile release URL is not a safe HTTPS or relative URL.',
+  },
   ACCOUNT_NOT_FOUND: { status: 404, retryable: false, description: 'No such financial account.' },
   CATEGORY_NOT_FOUND: { status: 404, retryable: false, description: 'No such category.' },
   PARENT_CATEGORY_NOT_FOUND: {

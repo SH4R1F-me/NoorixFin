@@ -22,7 +22,12 @@ import {
 } from '@nestjs/swagger';
 import { Request } from 'express';
 import { DevicesService } from './devices.service';
-import { RegisterDeviceDto, RevokeAllDto } from './dto/device.dto';
+import {
+  ConsumePairingDto,
+  CreatePairingDto,
+  RegisterDeviceDto,
+  RevokeAllDto,
+} from './dto/device.dto';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import type { AuthenticatedUser } from '../common/decorators/current-user.decorator';
 import type { ClientContextRequest } from '../common/middleware/client-context.middleware';
@@ -57,6 +62,28 @@ export class DevicesController {
       dto,
       req.clientContext,
     );
+  }
+
+  @Post('pairing')
+  @ApiOperation({
+    summary: 'Issue a ten-minute, one-time mobile workspace pairing token',
+  })
+  createPairing(
+    @CurrentUser() user: AuthenticatedUser,
+    @Body() dto: CreatePairingDto,
+  ) {
+    return this.devices.createPairing(user.id, dto.workspaceId);
+  }
+
+  @Post('pairing/consume')
+  @ApiOperation({
+    summary: 'Consume a pairing token after signing in on mobile',
+  })
+  consumePairing(
+    @CurrentUser() user: AuthenticatedUser,
+    @Body() dto: ConsumePairingDto,
+  ) {
+    return this.devices.consumePairing(user.id, dto.token);
   }
 
   @Delete('current/:opaqueDeviceId')

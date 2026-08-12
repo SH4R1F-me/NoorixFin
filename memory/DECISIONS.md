@@ -1,13 +1,13 @@
 # NoorixFin — DECISIONS LOG
 
-**Last updated:** 2026-08-13 (Phase 4 notification transport decisions)
+**Last updated:** 2026-08-13 (Phase 5 mobile distribution controls)
 **Product name:** NoorixFin (renamed from MyFin — see DEC-008)
 
 > **Numbering gap:** `DEC-021` (server-side locale resolution) and `DEC-022`
 > (budget figures recomputed from the ledger) are cited by ~10 source files but
 > were never written up here. Their rationale is recoverable only from the code
 > that cites them, so they are recorded as missing rather than reconstructed
-> from guesswork. Next free id is **DEC-028**.
+> from guesswork. Next free id is **DEC-029**.
 
 ---
 
@@ -744,3 +744,31 @@ deferred or failed channels honestly.
 
 **Status:** Confirmed — implemented by `NotificationsService` and migration
 00023.
+
+---
+
+## DEC-028: Mobile releases are operator-controlled; workspace pairing is one-time
+
+**Date:** 2026-08-13 (Phase 5)
+
+**Decision:** the mobile app reads its current release, store links, APK digest,
+and minimum supported version from the public `GET /v1/releases/mobile`
+contract. Operators change only declared `site.mobile.*` settings. Workspace QR
+pairing carries a random ten-minute token; the database stores only its SHA-256
+hash, and consumption requires an authenticated session belonging to the same
+user before the token is atomically retired.
+
+**Rationale:** hardcoded store links make an emergency client retirement depend
+on a web deployment. A remotely controlled version floor lets the operator
+block a client with a known sync defect immediately. A QR containing a workspace
+id would be a durable, shareable identifier rather than proof, while a session
+or refresh token in a QR would transfer credentials through camera history and
+screenshots. The one-time, same-account token selects a workspace without ever
+transferring authentication.
+
+**Alternative rejected:** encode a Supabase session in the QR so a fresh phone
+signs in automatically. That would turn every screenshot into a bearer token
+and bypass the normal authentication and MFA path.
+
+**Status:** Confirmed — migration 00024, the release API, mobile launch gate,
+and SQL privilege invariants enforce it.

@@ -19,23 +19,30 @@ export default async function MarketingFooter() {
 
   const LINKS = {
     [t('marketing.footer.product')]: [
-      { href: '/features',    label: t('marketing.nav.features')     },
-      { href: '/open-source', label: t('marketing.nav.openSource')  },
-      { href: '/security',    label: t('marketing.nav.security')     },
-      { href: '/roadmap',     label: t('marketing.footer.roadmap')      },
-      { href: '/changelog',   label: t('marketing.footer.changelog')    },
+      { href: '/features', label: t('marketing.nav.features') },
+      { href: '/open-source', label: t('marketing.nav.openSource') },
+      { href: '/security', label: t('marketing.nav.security') },
+      { href: '/roadmap', label: t('marketing.footer.roadmap') },
+      { href: '/changelog', label: t('marketing.footer.changelog') },
     ],
     [t('marketing.footer.community')]: [
-      { href: '/community',   label: t('marketing.nav.community')    },
-      { href: '/docs',        label: t('marketing.nav.docs')},
-      { href: '/faq',         label: t('marketing.footer.faq')          },
-      { href: '/contact',     label: t('marketing.footer.contact')      },
+      { href: '/community', label: t('marketing.nav.community') },
+      { href: '/docs', label: t('marketing.nav.docs') },
+      { href: '/faq', label: t('marketing.footer.faq') },
+      { href: '/contact', label: t('marketing.footer.contact') },
     ],
     [t('marketing.footer.support')]: [
-      { href: '/support',     label: t('marketing.nav.donate')       },
-      { href: '/bug-report',  label: t('marketing.footer.reportBug') },
-      { href: '/contribute',  label: t('marketing.footer.contribute') },
-      { href: '/about',       label: t('marketing.footer.about')        },
+      { href: '/support', label: t('marketing.nav.donate') },
+      { href: '/bug-report', label: t('marketing.footer.reportBug') },
+      { href: '/contribute', label: t('marketing.footer.contribute') },
+      { href: '/about', label: t('marketing.footer.about') },
+    ],
+    Download: [
+      { href: '/download', label: 'iOS' },
+      { href: '/download', label: 'Android' },
+      { href: '/download', label: 'Direct APK' },
+      { href: '/changelog', label: 'Release notes' },
+      { href: '/download#requirements', label: 'System requirements' },
     ],
   };
 
@@ -45,15 +52,21 @@ export default async function MarketingFooter() {
         <div className="m-footer-top">
           {/* Brand */}
           <div>
-            <div className="m-nav-logo" style={{ display: 'flex', alignItems: 'center', gap: '0.625rem', marginBottom: '0.75rem' }}>
+            <div
+              className="m-nav-logo"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.625rem',
+                marginBottom: '0.75rem',
+              }}
+            >
               <div className="m-nav-logo-icon">
                 <Wallet size={18} color="white" />
               </div>
               <span className="m-nav-logo-text">{settings.site_name}</span>
             </div>
-            <p className="m-footer-brand-text">
-              {t('marketing.footer.brandDesc')}
-            </p>
+            <p className="m-footer-brand-text">{t('marketing.footer.brandDesc')}</p>
             <div style={{ display: 'flex', gap: '0.75rem', marginTop: '1.25rem' }}>
               <a
                 href="https://github.com/SH4R1F-me/NoorixFin"
@@ -73,7 +86,7 @@ export default async function MarketingFooter() {
             <div key={col}>
               <div className="m-footer-col-title">{col}</div>
               {links.map((l) => (
-                <Link key={l.href} href={l.href} className="m-footer-link">
+                <Link key={`${l.href}-${l.label}`} href={l.href} className="m-footer-link">
                   {l.label}
                 </Link>
               ))}
@@ -85,13 +98,22 @@ export default async function MarketingFooter() {
         <div className="m-footer-bottom">
           <p className="m-footer-copy">
             © {year} {settings.site_name}. {t('marketing.footer.builtWith')}{' '}
-            <Heart size={12} style={{ display: 'inline', color: '#f87171', verticalAlign: 'middle' }} />{' '}
+            <Heart
+              size={12}
+              style={{ display: 'inline', color: '#f87171', verticalAlign: 'middle' }}
+            />{' '}
             {t('marketing.footer.inBangladesh')}
           </p>
           <div className="m-footer-badges">
-            <span className="m-footer-badge m-footer-badge-green">{t('marketing.footer.license')}</span>
-            <span className="m-footer-badge m-footer-badge-gray">{t('marketing.footer.freeForever')}</span>
-            <span className="m-footer-badge m-footer-badge-gray">{t('marketing.footer.noTracking')}</span>
+            <span className="m-footer-badge m-footer-badge-green">
+              {t('marketing.footer.license')}
+            </span>
+            <span className="m-footer-badge m-footer-badge-gray">
+              {t('marketing.footer.freeForever')}
+            </span>
+            <span className="m-footer-badge m-footer-badge-gray">
+              {t('marketing.footer.noTracking')}
+            </span>
             <span className="m-footer-badge m-footer-badge-gray">{t('marketing.footer.wcag')}</span>
           </div>
         </div>

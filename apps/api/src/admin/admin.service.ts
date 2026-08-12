@@ -42,7 +42,12 @@ import {
   ListUsersQueryDto,
   UpdateBroadcastDto,
   UpdateSettingsDto,
+  UpdateMobileReleaseDto,
 } from './dto/admin.dto';
+import {
+  MOBILE_RELEASE_KEYS,
+  ReleasesService,
+} from '../releases/releases.service';
 
 /**
  * A ban long enough to be permanent in practice, short enough that GoTrue
@@ -102,6 +107,7 @@ export class AdminService {
     private readonly audit: AuditService,
     private readonly systemEvents: SystemEventsService,
     private readonly notifications: NotificationsService,
+    private readonly releases: ReleasesService,
   ) {}
 
   // ─── Overview & health ────────────────────────────────────────────────────
@@ -644,6 +650,73 @@ export class AdminService {
     });
 
     return this.listSettings(accessToken);
+  }
+
+  getMobileRelease() {
+    return this.releases.getMobileRelease();
+  }
+
+  async updateMobileRelease(actorId: string, dto: UpdateMobileReleaseDto) {
+    const toSafeUrl = (
+      value: string | undefined,
+      field: string,
+    ): string | null => {
+      const clean = value?.trim();
+      if (!clean) return null;
+      if (clean.startsWith('/') && !clean.startsWith('//')) return clean;
+      try {
+        const url = new URL(clean);
+        if (url.protocol === 'https:') return clean;
+      } catch {
+        // Normalised below.
+      }
+      throw new BadRequestException({
+        code: 'INVALID_RELEASE_URL',
+        message: `${field} must be an HTTPS URL${field === 'release_notes_url' ? ' or a safe relative path' : ''}`,
+      });
+    };
+
+    const values: Record<string, string | null> = {
+      'site.mobile.latest_version': dto.latest_version,
+      'site.mobile.min_version': dto.min_version,
+      'site.mobile.ios_url': toSafeUrl(dto.ios_url, 'ios_url'),
+      'site.mobile.android_url': toSafeUrl(dto.android_url, 'android_url'),
+      'site.mobile.apk_url': toSafeUrl(dto.apk_url, 'apk_url'),
+      'site.mobile.apk_sha256': dto.apk_sha256?.toLowerCase() || null,
+      'site.mobile.release_notes_url': toSafeUrl(
+        dto.release_notes_url,
+        'release_notes_url',
+      ),
+      'site.mobile.ios_status': dto.ios_status,
+      'site.mobile.android_status': dto.android_status,
+      'site.mobile.apk_size_bytes': dto.apk_size_bytes
+        ? String(dto.apk_size_bytes)
+        : null,
+      'site.mobile.released_at': dto.released_at ?? null,
+      'site.mobile.ios_minimum': dto.ios_minimum,
+      'site.mobile.android_minimum': dto.android_minimum,
+    };
+    const client = this.supabaseService.getServiceClient();
+    const rows = MOBILE_RELEASE_KEYS.map((key) => ({
+      key,
+      value: values[key],
+      updated_by: actorId,
+      updated_at: new Date().toISOString(),
+    }));
+    const { error } = await client
+      .from('site_settings')
+      .upsert(rows, { onConflict: 'key' });
+    if (error) throw this.translate(error);
+    await this.audit.write({
+      actorId,
+      action: 'ADMIN_MOBILE_RELEASE_UPDATED',
+      resourceType: 'mobile_release',
+      metadata: {
+        latest_version: dto.latest_version,
+        min_version: dto.min_version,
+      },
+    });
+    return this.releases.getMobileRelease();
   }
 
   // ─── Broadcasts ───────────────────────────────────────────────────────────

@@ -369,5 +369,27 @@ BEGIN
 END;
 $$;
 
+-- ── Phase 5 distribution configuration and one-time pairing ────────────────
+DO $$
+DECLARE v_count INT;
+BEGIN
+  SELECT count(*) INTO v_count FROM site_settings
+   WHERE key LIKE 'site.mobile.%';
+  IF v_count <> 13 THEN
+    RAISE EXCEPTION 'DIST-01 FAILED: expected 13 declared mobile release keys, found %', v_count;
+  END IF;
+
+  SELECT count(*) INTO v_count FROM pg_policies
+   WHERE schemaname = 'public' AND tablename = 'device_pairing_tokens';
+  IF v_count <> 0 THEN
+    RAISE EXCEPTION 'DIST-02 FAILED: pairing tokens have an authenticated RLS aperture';
+  END IF;
+
+  IF has_table_privilege('authenticated', 'public.device_pairing_tokens', 'SELECT') THEN
+    RAISE EXCEPTION 'DIST-03 FAILED: authenticated clients can read pairing token hashes';
+  END IF;
+END;
+$$;
+
 \echo ''
 \echo '✓ All CI invariants hold.'

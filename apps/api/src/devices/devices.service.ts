@@ -9,7 +9,13 @@
  * DEC-016 boundary: this service deals with a user's OWN devices only.
  * Admin-level revocation (force-revoke any user's session) lives in AdminService.
  */
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { randomBytes, createHash } from 'node:crypto';
+import {
+  ForbiddenException,
+  GoneException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { SupabaseService } from '../supabase/supabase.service';
 import type { ClientContext } from '../common/middleware/client-context.middleware';
 import { NotificationsService } from '../notifications/notifications.service';
@@ -111,6 +117,79 @@ export class DevicesService {
     if (error || !data)
       throw new NotFoundException('Device not found or already revoked');
     return { revoked: true };
+  }
+
+  async createPairing(userId: string, workspaceId: string) {
+    const client = this.supabaseService.getServiceClient();
+    const { data: membership } = await client
+      .from('workspace_members')
+      .select('workspace_id')
+      .eq('workspace_id', workspaceId)
+      .eq('user_id', userId)
+      .eq('status', 'ACTIVE')
+      .maybeSingle();
+    if (!membership)
+      throw new ForbiddenException({
+        code: 'WORKSPACE_ACCESS_DENIED',
+        message: 'Workspace is not available to this account',
+      });
+    const token = randomBytes(32).toString('base64url');
+    const tokenHash = createHash('sha256').update(token).digest('hex');
+    const expiresAt = new Date(Date.now() + 10 * 60_000).toISOString();
+    const { error } = await client.from('device_pairing_tokens').insert({
+      token_hash: tokenHash,
+      user_id: userId,
+      workspace_id: workspaceId,
+      expires_at: expiresAt,
+    });
+    if (error) throw error;
+    return { token, expires_at: expiresAt };
+  }
+
+  async consumePairing(userId: string, token: string) {
+    const client = this.supabaseService.getServiceClient();
+    const tokenHash = createHash('sha256').update(token).digest('hex');
+    const { data: pairing } = await client
+      .from('device_pairing_tokens')
+      .select('id, user_id, workspace_id, expires_at, consumed_at')
+      .eq('token_hash', tokenHash)
+      .maybeSingle();
+    if (!pairing || pairing.user_id !== userId)
+      throw new NotFoundException({
+        code: 'PAIRING_TOKEN_NOT_FOUND',
+        message: 'Pairing code is invalid',
+      });
+    if (
+      pairing.consumed_at ||
+      new Date(pairing.expires_at).getTime() <= Date.now()
+    )
+      throw new GoneException({
+        code: 'PAIRING_TOKEN_EXPIRED',
+        message: 'Pairing code has expired or was already used',
+      });
+    const { data: consumed } = await client
+      .from('device_pairing_tokens')
+      .update({ consumed_at: new Date().toISOString() })
+      .eq('id', pairing.id)
+      .is('consumed_at', null)
+      .select('workspace_id')
+      .maybeSingle();
+    if (!consumed)
+      throw new GoneException({
+        code: 'PAIRING_TOKEN_EXPIRED',
+        message: 'Pairing code was already used',
+      });
+    const { data: workspace } = await client
+      .from('workspaces')
+      .select('id, name, base_currency')
+      .eq('id', consumed.workspace_id)
+      .single();
+    if (!workspace)
+      throw new NotFoundException({
+        code: 'WORKSPACE_NOT_FOUND',
+        message: 'Paired workspace no longer exists',
+      });
+    return workspace;
   }
 
   async revokeCurrentDevice(

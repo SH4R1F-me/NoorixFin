@@ -11,6 +11,7 @@
  */
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import {
   AlertTriangle,
   Download,
@@ -21,18 +22,19 @@ import {
   LogOut,
   Save,
   Shield,
+  Smartphone,
+  Bell,
   Trash2,
   Unlink,
   User,
 } from 'lucide-react';
 import { savePreferences, requestAccountDeletion } from './actions';
+import { changePassword, linkGoogleIdentity, signOut, unlinkIdentity } from '../../auth/actions';
 import {
-  changePassword,
-  linkGoogleIdentity,
-  signOut,
-  unlinkIdentity,
-} from '../../auth/actions';
-import { GOOGLE_AUTH_ENABLED, PROVIDER_LABELS, type LinkedIdentity } from '../../../lib/auth-config';
+  GOOGLE_AUTH_ENABLED,
+  PROVIDER_LABELS,
+  type LinkedIdentity,
+} from '../../../lib/auth-config';
 import { useLocale } from '../../../lib/i18n/locale-provider';
 import type { SessionProfile } from '../../../lib/session';
 import type { MfaState } from '../../../lib/supabase/server';
@@ -148,9 +150,7 @@ export default function SettingsView({
           <div style={{ ...s.row, borderBottom: 'none' }}>
             <div style={s.rowLabel}>
               <span style={s.rowTitle}>{t('auth.email')}</span>
-              <span style={s.rowDesc}>
-                {t('settings.emailChangeUnavailable')}
-              </span>
+              <span style={s.rowDesc}>{t('settings.emailChangeUnavailable')}</span>
             </div>
             <span style={{ ...s.rowDesc, color: '#94a3b8' }}>{profile.email}</span>
           </div>
@@ -184,14 +184,16 @@ export default function SettingsView({
           </div>
           <div style={s.row}>
             <div style={s.rowLabel}>
-              <span id="pref-timezone" style={s.rowTitle}>{t('settings.timezone')}</span>
+              <span id="pref-timezone" style={s.rowTitle}>
+                {t('settings.timezone')}
+              </span>
               <span style={s.rowDesc}>Used for transaction dates and monthly boundaries</span>
             </div>
             <select
               value={timezone}
               onChange={(event) => setTimezone(event.target.value)}
               style={s.select}
-           
+
               aria-labelledby="pref-timezone"
             >
               {TIMEZONES.map((tz) => (
@@ -201,14 +203,16 @@ export default function SettingsView({
           </div>
           <div style={s.row}>
             <div style={s.rowLabel}>
-              <span id="pref-currency" style={s.rowTitle}>{t('settings.currency')}</span>
+              <span id="pref-currency" style={s.rowTitle}>
+                {t('settings.currency')}
+              </span>
               <span style={s.rowDesc}>Primary currency for new accounts</span>
             </div>
             <select
               value={currency}
               onChange={(event) => setCurrency(event.target.value)}
               style={s.select}
-           
+
               aria-labelledby="pref-currency"
             >
               {CURRENCIES.map((code) => (
@@ -218,14 +222,16 @@ export default function SettingsView({
           </div>
           <div style={s.row}>
             <div style={s.rowLabel}>
-              <span id="pref-week-start" style={s.rowTitle}>{t('settings.weekStart')}</span>
+              <span id="pref-week-start" style={s.rowTitle}>
+                {t('settings.weekStart')}
+              </span>
               <span style={s.rowDesc}>Affects budget periods and the calendar</span>
             </div>
             <select
               value={weekStart}
               onChange={(event) => setWeekStart(Number(event.target.value))}
               style={s.select}
-           
+
               aria-labelledby="pref-week-start"
             >
               {WEEK_STARTS.map((day) => (
@@ -278,9 +284,7 @@ export default function SettingsView({
               </div>
               {identities.length > 1 ? (
                 <button
-                  onClick={() =>
-                    run(() => unlinkIdentity(identity.id), 'Disconnected.')
-                  }
+                  onClick={() => run(() => unlinkIdentity(identity.id), 'Disconnected.')}
                   disabled={pending}
                   style={s.dangerBtn}
                 >
@@ -332,7 +336,9 @@ export default function SettingsView({
           </div>
 
           {hasPassword ? (
-            <div style={{ ...s.row, flexDirection: 'column', alignItems: 'stretch', gap: '0.75rem' }}>
+            <div
+              style={{ ...s.row, flexDirection: 'column', alignItems: 'stretch', gap: '0.75rem' }}
+            >
               <div style={s.rowLabel}>
                 <span style={s.rowTitle}>{t('settings.changePassword')}</span>
                 <span style={s.rowDesc}>
@@ -340,7 +346,13 @@ export default function SettingsView({
                   browser from taking the account.
                 </span>
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(190px, 1fr))', gap: '0.6rem' }}>
+              <div
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fit, minmax(190px, 1fr))',
+                  gap: '0.6rem',
+                }}
+              >
                 <input
                   type="password"
                   value={currentPassword}
@@ -381,7 +393,10 @@ export default function SettingsView({
                         setConfirmPassword('');
                         return { ok: true, message: 'Password changed.' };
                       }
-                      return { ok: false, message: PASSWORD_ERRORS[result.code] ?? 'Could not change the password.' };
+                      return {
+                        ok: false,
+                        message: PASSWORD_ERRORS[result.code] ?? 'Could not change the password.',
+                      };
                     }, 'Password changed.');
                   }}
                   disabled={pending || !currentPassword || newPassword.length < 8}
@@ -417,9 +432,7 @@ export default function SettingsView({
           <div style={{ ...s.row, borderBottom: 'none' }}>
             <div style={s.rowLabel}>
               <span style={s.rowTitle}>{t('settings.signOutAll')}</span>
-              <span style={s.rowDesc}>
-                {t('settings.signOutAllBody')}
-              </span>
+              <span style={s.rowDesc}>{t('settings.signOutAllBody')}</span>
             </div>
             <button onClick={() => void signOut()} style={s.dangerBtn}>
               <LogOut size={14} />
@@ -457,6 +470,51 @@ export default function SettingsView({
           </div>
         </section>
 
+        <section style={s.section}>
+          <div style={s.sectionHeader}>
+            <Smartphone size={18} style={s.sectionIcon} />
+            <span style={s.sectionTitle}>Apps & sessions</span>
+          </div>
+          <div style={s.row}>
+            <div style={s.rowLabel}>
+              <span style={s.rowTitle}>Mobile app</span>
+              <span style={s.rowDesc}>
+                Install the app and pair this workspace with a one-time QR code.
+              </span>
+            </div>
+            <Link
+              href="/dashboard/settings/mobile"
+              style={{ ...s.ghostBtn, textDecoration: 'none' }}
+            >
+              <Smartphone size={14} /> Set up mobile
+            </Link>
+          </div>
+          <div style={s.row}>
+            <div style={s.rowLabel}>
+              <span style={s.rowTitle}>Notifications</span>
+              <span style={s.rowDesc}>Choose channels, quiet hours, and digest delivery.</span>
+            </div>
+            <Link
+              href="/dashboard/settings/notifications"
+              style={{ ...s.ghostBtn, textDecoration: 'none' }}
+            >
+              <Bell size={14} /> Preferences
+            </Link>
+          </div>
+          <div style={{ ...s.row, borderBottom: 'none' }}>
+            <div style={s.rowLabel}>
+              <span style={s.rowTitle}>Sessions & devices</span>
+              <span style={s.rowDesc}>Review and revoke active sign-ins.</span>
+            </div>
+            <Link
+              href="/dashboard/settings/sessions"
+              style={{ ...s.ghostBtn, textDecoration: 'none' }}
+            >
+              <Shield size={14} /> Manage
+            </Link>
+          </div>
+        </section>
+
         {/* ── Danger zone ─────────────────────────────────── */}
         <section style={s.dangerSection}>
           <div style={{ ...s.sectionHeader, borderBottom: '1px solid rgba(239,68,68,0.15)' }}>
@@ -464,7 +522,15 @@ export default function SettingsView({
             <span style={{ ...s.sectionTitle, color: '#f87171' }}>{t('settings.dangerZone')}</span>
           </div>
 
-          <div style={{ ...s.row, flexDirection: 'column', alignItems: 'stretch', gap: '0.75rem', borderBottom: 'none' }}>
+          <div
+            style={{
+              ...s.row,
+              flexDirection: 'column',
+              alignItems: 'stretch',
+              gap: '0.75rem',
+              borderBottom: 'none',
+            }}
+          >
             <div style={s.rowLabel}>
               <span style={s.rowTitle}>{t('settings.deleteAccount')}</span>
               <span style={s.rowDesc}>
@@ -517,8 +583,7 @@ export default function SettingsView({
                       }, 'Deletion scheduled.')
                     }
                     disabled={
-                      pending ||
-                      deleteConfirm.trim().toLowerCase() !== profile.email.toLowerCase()
+                      pending || deleteConfirm.trim().toLowerCase() !== profile.email.toLowerCase()
                     }
                     style={{
                       ...s.dangerBtn,
@@ -587,10 +652,22 @@ const PASSWORD_ERRORS: Record<string, string> = {
 function GoogleMark() {
   return (
     <svg width="14" height="14" viewBox="0 0 48 48" aria-hidden="true">
-      <path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9 3.6l6.7-6.7C35.6 2.6 30.2.5 24 .5 14.6.5 6.5 5.8 2.6 13.5l7.8 6c1.9-5.6 7.1-10 13.6-10z" />
-      <path fill="#4285F4" d="M46.6 24.6c0-1.6-.15-3.2-.44-4.6H24v9.1h12.7c-.55 3-2.2 5.5-4.7 7.2l7.3 5.6c4.3-4 6.8-9.9 6.8-17.3z" />
-      <path fill="#FBBC05" d="M10.4 28.5c-.5-1.4-.8-2.9-.8-4.5s.3-3.1.8-4.5l-7.8-6C1 16.6 0 20.2 0 24s1 7.4 2.6 10.5l7.8-6z" />
-      <path fill="#34A853" d="M24 47.5c6.2 0 11.5-2 15.3-5.6l-7.3-5.6c-2 1.4-4.7 2.3-8 2.3-6.5 0-11.7-4.4-13.6-10l-7.8 6C6.5 42.2 14.6 47.5 24 47.5z" />
+      <path
+        fill="#EA4335"
+        d="M24 9.5c3.5 0 6.6 1.2 9 3.6l6.7-6.7C35.6 2.6 30.2.5 24 .5 14.6.5 6.5 5.8 2.6 13.5l7.8 6c1.9-5.6 7.1-10 13.6-10z"
+      />
+      <path
+        fill="#4285F4"
+        d="M46.6 24.6c0-1.6-.15-3.2-.44-4.6H24v9.1h12.7c-.55 3-2.2 5.5-4.7 7.2l7.3 5.6c4.3-4 6.8-9.9 6.8-17.3z"
+      />
+      <path
+        fill="#FBBC05"
+        d="M10.4 28.5c-.5-1.4-.8-2.9-.8-4.5s.3-3.1.8-4.5l-7.8-6C1 16.6 0 20.2 0 24s1 7.4 2.6 10.5l7.8-6z"
+      />
+      <path
+        fill="#34A853"
+        d="M24 47.5c6.2 0 11.5-2 15.3-5.6l-7.3-5.6c-2 1.4-4.7 2.3-8 2.3-6.5 0-11.7-4.4-13.6-10l-7.8 6C6.5 42.2 14.6 47.5 24 47.5z"
+      />
     </svg>
   );
 }

@@ -29,17 +29,19 @@ export default function MarketingNavClient({
     docs: string;
     community: string;
     security: string;
+    download: string;
     donate: string;
     launchApp: string;
   };
 }) {
   const NAV_LINKS = [
-    { href: '/features',   label: translations.features },
-    { href: '/open-source',label: translations.openSource },
-    { href: '/docs',       label: translations.docs },
-    { href: '/community',  label: translations.community },
-    { href: '/security',   label: translations.security },
-    { href: '/support',    label: translations.donate },
+    { href: '/features', label: translations.features },
+    { href: '/open-source', label: translations.openSource },
+    { href: '/docs', label: translations.docs },
+    { href: '/community', label: translations.community },
+    { href: '/security', label: translations.security },
+    { href: '/download', label: translations.download },
+    { href: '/support', label: translations.donate },
   ];
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -116,7 +118,7 @@ export default function MarketingNavClient({
               className="m-btn-ghost"
               style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}
             >
-                            <GithubIcon size={16} />
+              <GithubIcon size={16} />
               GitHub
             </a>
             <Link href="/auth/login" className="m-btn-primary">
@@ -138,14 +140,15 @@ export default function MarketingNavClient({
       </nav>
 
       {/* Mobile menu */}
-      <div
-        id="m-nav-mobile"
-        className={`m-nav-mobile ${mobileOpen ? 'm-nav-mobile--open' : ''}`}
-      >
+      <div id="m-nav-mobile" className={`m-nav-mobile ${mobileOpen ? 'm-nav-mobile--open' : ''}`}>
         {NAV_LINKS.map((l) => (
-          <Link key={l.href} href={l.href} className="m-nav-link">{l.label}</Link>
+          <Link key={l.href} href={l.href} className="m-nav-link">
+            {l.label}
+          </Link>
         ))}
-        <div style={{ display: 'flex', gap: '0.75rem', padding: '1rem 1rem 0.5rem', flexWrap: 'wrap' }}>
+        <div
+          style={{ display: 'flex', gap: '0.75rem', padding: '1rem 1rem 0.5rem', flexWrap: 'wrap' }}
+        >
           <button
             onClick={toggleLocale}
             className="m-lang-btn"
@@ -161,9 +164,11 @@ export default function MarketingNavClient({
             rel="noopener noreferrer"
             className="m-btn-outline"
           >
-                          <GithubIcon size={16} /> GitHub
+            <GithubIcon size={16} /> GitHub
           </a>
-          <Link href="/auth/login" className="m-btn-primary">{translations.launchApp}</Link>
+          <Link href="/auth/login" className="m-btn-primary">
+            {translations.launchApp}
+          </Link>
         </div>
       </div>
     </>

@@ -55,7 +55,9 @@
           }
         ],
         "summary": "Delta sync — all rows changed since the given cursor",
-        "tags": ["Sync"]
+        "tags": [
+          "Sync"
+        ]
       }
     },
     "/v1/notifications": {
@@ -68,7 +70,11 @@
             "in": "query",
             "schema": {
               "type": "string",
-              "enum": ["unread", "all", "archived"]
+              "enum": [
+                "unread",
+                "all",
+                "archived"
+              ]
             }
           },
           {
@@ -122,7 +128,9 @@
           }
         ],
         "summary": "List the current user's notifications",
-        "tags": ["Notifications"]
+        "tags": [
+          "Notifications"
+        ]
       }
     },
     "/v1/notifications/unread-count": {
@@ -140,7 +148,9 @@
           }
         ],
         "summary": "Unread notification badge count",
-        "tags": ["Notifications"]
+        "tags": [
+          "Notifications"
+        ]
       }
     },
     "/v1/notifications/read-all": {
@@ -158,7 +168,9 @@
           }
         ],
         "summary": "Mark every notification as read",
-        "tags": ["Notifications"]
+        "tags": [
+          "Notifications"
+        ]
       }
     },
     "/v1/notifications/{id}/read": {
@@ -185,7 +197,9 @@
           }
         ],
         "summary": "Mark one notification as read",
-        "tags": ["Notifications"]
+        "tags": [
+          "Notifications"
+        ]
       }
     },
     "/v1/notifications/{id}/archive": {
@@ -212,7 +226,9 @@
           }
         ],
         "summary": "Archive one notification",
-        "tags": ["Notifications"]
+        "tags": [
+          "Notifications"
+        ]
       }
     },
     "/v1/notifications/{id}": {
@@ -239,7 +255,9 @@
           }
         ],
         "summary": "Delete one notification",
-        "tags": ["Notifications"]
+        "tags": [
+          "Notifications"
+        ]
       }
     },
     "/v1/me/notification-preferences": {
@@ -257,7 +275,9 @@
           }
         ],
         "summary": "Get channel preferences and quiet hours",
-        "tags": ["Notifications"]
+        "tags": [
+          "Notifications"
+        ]
       },
       "put": {
         "operationId": "NotificationPreferencesController_update_v1",
@@ -283,7 +303,9 @@
           }
         ],
         "summary": "Update channel preferences and quiet hours",
-        "tags": ["Notifications"]
+        "tags": [
+          "Notifications"
+        ]
       }
     },
     "/v1/admin/notifications": {
@@ -301,7 +323,9 @@
           }
         ],
         "summary": "List operator-authored notification campaigns",
-        "tags": ["Admin Notifications"]
+        "tags": [
+          "Admin Notifications"
+        ]
       },
       "post": {
         "operationId": "AdminNotificationsController_compose_v1",
@@ -327,7 +351,9 @@
           }
         ],
         "summary": "Compose, target, and optionally schedule a campaign",
-        "tags": ["Admin Notifications"]
+        "tags": [
+          "Admin Notifications"
+        ]
       }
     },
     "/v1/admin/notifications/templates": {
@@ -345,7 +371,9 @@
           }
         ],
         "summary": "List reusable notification templates",
-        "tags": ["Admin Notifications"]
+        "tags": [
+          "Admin Notifications"
+        ]
       },
       "post": {
         "operationId": "AdminNotificationsController_saveTemplate_v1",
@@ -371,7 +399,9 @@
           }
         ],
         "summary": "Create or update a notification template by key",
-        "tags": ["Admin Notifications"]
+        "tags": [
+          "Admin Notifications"
+        ]
       }
     },
     "/v1/admin/notifications/templates/{id}": {
@@ -398,7 +428,9 @@
           }
         ],
         "summary": "Delete a notification template",
-        "tags": ["Admin Notifications"]
+        "tags": [
+          "Admin Notifications"
+        ]
       }
     },
     "/v1/admin/notifications/{id}/deliveries": {
@@ -425,7 +457,9 @@
           }
         ],
         "summary": "Aggregate per-channel delivery outcomes",
-        "tags": ["Admin Notifications"]
+        "tags": [
+          "Admin Notifications"
+        ]
       }
     },
     "/v1/health": {
@@ -459,7 +493,9 @@
           }
         },
         "summary": "Liveness probe — process is up. Touches no dependency.",
-        "tags": ["Health"]
+        "tags": [
+          "Health"
+        ]
       }
     },
     "/v1/health/live": {
@@ -472,7 +508,9 @@
           }
         },
         "summary": "Liveness probe (alias of GET /health)",
-        "tags": ["Health"]
+        "tags": [
+          "Health"
+        ]
       }
     },
     "/v1/health/ready": {
@@ -488,7 +526,9 @@
           }
         },
         "summary": "Readiness probe — checks database and auth. 503 when not ready.",
-        "tags": ["Health"]
+        "tags": [
+          "Health"
+        ]
       }
     },
     "/v1/me": {
@@ -513,7 +553,9 @@
           }
         ],
         "summary": "Get current user profile",
-        "tags": ["Profile"]
+        "tags": [
+          "Profile"
+        ]
       }
     },
     "/v1/me/preferences": {
@@ -548,7 +590,9 @@
           }
         ],
         "summary": "Update user preferences",
-        "tags": ["Profile"]
+        "tags": [
+          "Profile"
+        ]
       }
     },
     "/v1/me/onboarding": {
@@ -584,7 +628,9 @@
           }
         ],
         "summary": "Advance the §5.2 onboarding state machine",
-        "tags": ["Profile"]
+        "tags": [
+          "Profile"
+        ]
       }
     },
     "/v1/workspaces": {
@@ -619,7 +665,9 @@
           }
         ],
         "summary": "Create a new personal workspace",
-        "tags": ["Workspaces"]
+        "tags": [
+          "Workspaces"
+        ]
       },
       "get": {
         "operationId": "WorkspacesController_list_v1",
@@ -645,7 +693,9 @@
           }
         ],
         "summary": "List user workspaces",
-        "tags": ["Workspaces"]
+        "tags": [
+          "Workspaces"
+        ]
       }
     },
     "/v1/workspaces/{workspaceId}/summary": {
@@ -673,7 +723,9 @@
           }
         ],
         "summary": "Dashboard summary — net worth, month income/expense/net, prior month",
-        "tags": ["Workspaces"]
+        "tags": [
+          "Workspaces"
+        ]
       }
     },
     "/v1/workspaces/{workspaceId}/accounts": {
@@ -717,7 +769,9 @@
           }
         ],
         "summary": "Create a new ledger account",
-        "tags": ["Accounts"]
+        "tags": [
+          "Accounts"
+        ]
       },
       "get": {
         "operationId": "AccountsController_list_v1",
@@ -752,7 +806,9 @@
           }
         ],
         "summary": "List workspace accounts with balances",
-        "tags": ["Accounts"]
+        "tags": [
+          "Accounts"
+        ]
       }
     },
     "/v1/workspaces/{workspaceId}/accounts/{id}": {
@@ -804,7 +860,9 @@
           }
         ],
         "summary": "Update an account (name, flags, archive)",
-        "tags": ["Accounts"]
+        "tags": [
+          "Accounts"
+        ]
       }
     },
     "/v1/workspaces/{workspaceId}/transactions": {
@@ -848,7 +906,9 @@
           }
         ],
         "summary": "Create a new transaction (income/expense/transfer)",
-        "tags": ["Transactions"]
+        "tags": [
+          "Transactions"
+        ]
       },
       "get": {
         "operationId": "TransactionsController_list_v1",
@@ -914,7 +974,9 @@
           }
         ],
         "summary": "List transactions with cursor pagination",
-        "tags": ["Transactions"]
+        "tags": [
+          "Transactions"
+        ]
       }
     },
     "/v1/workspaces/{workspaceId}/tags": {
@@ -942,7 +1004,9 @@
           }
         ],
         "summary": "Every tag in the workspace, with usage counts",
-        "tags": ["Transactions"]
+        "tags": [
+          "Transactions"
+        ]
       }
     },
     "/v1/workspaces/{workspaceId}/tags/{tagId}": {
@@ -978,7 +1042,9 @@
           }
         ],
         "summary": "Delete a tag",
-        "tags": ["Transactions"]
+        "tags": [
+          "Transactions"
+        ]
       }
     },
     "/v1/workspaces/{workspaceId}/transactions/{id}": {
@@ -1020,7 +1086,9 @@
           }
         ],
         "summary": "Get transaction detail with postings",
-        "tags": ["Transactions"]
+        "tags": [
+          "Transactions"
+        ]
       }
     },
     "/v1/workspaces/{workspaceId}/transactions/{id}/reverse": {
@@ -1062,7 +1130,9 @@
           }
         ],
         "summary": "Reverse a posted transaction",
-        "tags": ["Transactions"]
+        "tags": [
+          "Transactions"
+        ]
       }
     },
     "/v1/workspaces/{workspaceId}/categories": {
@@ -1082,7 +1152,10 @@
             "required": false,
             "in": "query",
             "schema": {
-              "enum": ["INCOME", "EXPENSE"],
+              "enum": [
+                "INCOME",
+                "EXPENSE"
+              ],
               "type": "string"
             }
           }
@@ -1108,7 +1181,9 @@
           }
         ],
         "summary": "List categories (auto-seeds system categories)",
-        "tags": ["Categories"]
+        "tags": [
+          "Categories"
+        ]
       },
       "post": {
         "operationId": "CategoriesController_create_v1",
@@ -1150,7 +1225,9 @@
           }
         ],
         "summary": "Create a custom category",
-        "tags": ["Categories"]
+        "tags": [
+          "Categories"
+        ]
       }
     },
     "/v1/workspaces/{workspaceId}/categories/{id}": {
@@ -1202,7 +1279,9 @@
           }
         ],
         "summary": "Update a category (renaming a system category sets custom_name)",
-        "tags": ["Categories"]
+        "tags": [
+          "Categories"
+        ]
       }
     },
     "/v1/workspaces/{workspaceId}/budget": {
@@ -1229,7 +1308,9 @@
           }
         ],
         "summary": "Budget status: planned vs actual for the current period",
-        "tags": ["Planning"]
+        "tags": [
+          "Planning"
+        ]
       },
       "put": {
         "operationId": "PlanningController_upsertBudget_v1",
@@ -1264,7 +1345,9 @@
           }
         ],
         "summary": "Create or replace the budget and all of its lines",
-        "tags": ["Planning"]
+        "tags": [
+          "Planning"
+        ]
       }
     },
     "/v1/workspaces/{workspaceId}/budget/{id}": {
@@ -1299,7 +1382,9 @@
           }
         ],
         "summary": "Delete a budget",
-        "tags": ["Planning"]
+        "tags": [
+          "Planning"
+        ]
       }
     },
     "/v1/workspaces/{workspaceId}/goals": {
@@ -1326,7 +1411,9 @@
           }
         ],
         "summary": "Savings goals and debt summary, progress read from the ledger",
-        "tags": ["Planning"]
+        "tags": [
+          "Planning"
+        ]
       },
       "post": {
         "operationId": "PlanningController_createGoal_v1",
@@ -1361,7 +1448,9 @@
           }
         ],
         "summary": "Create a savings goal",
-        "tags": ["Planning"]
+        "tags": [
+          "Planning"
+        ]
       }
     },
     "/v1/workspaces/{workspaceId}/goals/{id}": {
@@ -1406,7 +1495,9 @@
           }
         ],
         "summary": "Update a savings goal (progress is not writable)",
-        "tags": ["Planning"]
+        "tags": [
+          "Planning"
+        ]
       },
       "delete": {
         "operationId": "PlanningController_deleteGoal_v1",
@@ -1439,7 +1530,9 @@
           }
         ],
         "summary": "Delete a savings goal",
-        "tags": ["Planning"]
+        "tags": [
+          "Planning"
+        ]
       }
     },
     "/v1/workspaces/{workspaceId}/debts": {
@@ -1476,7 +1569,9 @@
           }
         ],
         "summary": "Attach or replace repayment terms on a liability account",
-        "tags": ["Planning"]
+        "tags": [
+          "Planning"
+        ]
       }
     },
     "/v1/workspaces/{workspaceId}/calendar": {
@@ -1511,7 +1606,9 @@
           }
         ],
         "summary": "Upcoming, due and overdue events",
-        "tags": ["Planning"]
+        "tags": [
+          "Planning"
+        ]
       },
       "post": {
         "operationId": "PlanningController_createEvent_v1",
@@ -1546,7 +1643,9 @@
           }
         ],
         "summary": "Create a bill, expected income or reminder",
-        "tags": ["Planning"]
+        "tags": [
+          "Planning"
+        ]
       }
     },
     "/v1/workspaces/{workspaceId}/calendar/{id}": {
@@ -1591,7 +1690,9 @@
           }
         ],
         "summary": "Mark paid or skipped, or edit an event",
-        "tags": ["Planning"]
+        "tags": [
+          "Planning"
+        ]
       },
       "delete": {
         "operationId": "PlanningController_deleteEvent_v1",
@@ -1624,7 +1725,9 @@
           }
         ],
         "summary": "Delete a calendar event",
-        "tags": ["Planning"]
+        "tags": [
+          "Planning"
+        ]
       }
     },
     "/v1/workspaces/{workspaceId}/recurring": {
@@ -1651,7 +1754,9 @@
           }
         ],
         "summary": "List recurring rules",
-        "tags": ["Planning"]
+        "tags": [
+          "Planning"
+        ]
       },
       "post": {
         "operationId": "PlanningController_createRule_v1",
@@ -1686,7 +1791,9 @@
           }
         ],
         "summary": "Create a recurring rule (never auto-posts — §9.4)",
-        "tags": ["Planning"]
+        "tags": [
+          "Planning"
+        ]
       }
     },
     "/v1/workspaces/{workspaceId}/recurring/{id}": {
@@ -1721,7 +1828,9 @@
           }
         ],
         "summary": "Delete a recurring rule",
-        "tags": ["Planning"]
+        "tags": [
+          "Planning"
+        ]
       }
     },
     "/v1/workspaces/{workspaceId}/reports/categories": {
@@ -1766,7 +1875,9 @@
           }
         ],
         "summary": "Category breakdown and 6-month trend (§11.3 contract)",
-        "tags": ["Planning"]
+        "tags": [
+          "Planning"
+        ]
       }
     },
     "/v1/admin/overview": {
@@ -1784,7 +1895,9 @@
           }
         ],
         "summary": "Platform-wide counts, uptime and DB latency",
-        "tags": ["Admin"]
+        "tags": [
+          "Admin"
+        ]
       }
     },
     "/v1/admin/health": {
@@ -1803,7 +1916,9 @@
           }
         ],
         "summary": "Deep health check — probes Postgres, Auth and Storage",
-        "tags": ["Admin"]
+        "tags": [
+          "Admin"
+        ]
       }
     },
     "/v1/admin/events": {
@@ -1816,7 +1931,13 @@
             "in": "query",
             "schema": {
               "type": "string",
-              "enum": ["DEBUG", "INFO", "WARN", "ERROR", "FATAL"]
+              "enum": [
+                "DEBUG",
+                "INFO",
+                "WARN",
+                "ERROR",
+                "FATAL"
+              ]
             }
           },
           {
@@ -1885,7 +2006,9 @@
           }
         ],
         "summary": "Paginated operational event log",
-        "tags": ["Admin"]
+        "tags": [
+          "Admin"
+        ]
       }
     },
     "/v1/admin/events/stream": {
@@ -1912,7 +2035,9 @@
           }
         ],
         "summary": "Live event feed (SSE)",
-        "tags": ["Admin"]
+        "tags": [
+          "Admin"
+        ]
       }
     },
     "/v1/admin/jobs": {
@@ -1931,7 +2056,9 @@
           }
         ],
         "summary": "Scheduled jobs and their last run outcome",
-        "tags": ["Admin"]
+        "tags": [
+          "Admin"
+        ]
       }
     },
     "/v1/admin/tracing": {
@@ -1949,7 +2076,9 @@
           }
         ],
         "summary": "Whether the request-trace window is open, and until when",
-        "tags": ["Admin"]
+        "tags": [
+          "Admin"
+        ]
       },
       "post": {
         "description": "Records EVERY request to system_events so one user's request can be followed end to end. Expires on its own — a trace that must be switched off by hand becomes a permanent activity log of every user, which DEC-016 does not permit an operator to keep.",
@@ -1976,7 +2105,9 @@
           }
         ],
         "summary": "Open a time-boxed request-trace window",
-        "tags": ["Admin"]
+        "tags": [
+          "Admin"
+        ]
       },
       "delete": {
         "operationId": "AdminController_disableTracing_v1",
@@ -1992,7 +2123,9 @@
           }
         ],
         "summary": "Close the trace window early",
-        "tags": ["Admin"]
+        "tags": [
+          "Admin"
+        ]
       }
     },
     "/v1/admin/events/prune": {
@@ -2010,7 +2143,9 @@
           }
         ],
         "summary": "Drop events past the retention window",
-        "tags": ["Admin"]
+        "tags": [
+          "Admin"
+        ]
       }
     },
     "/v1/admin/audit": {
@@ -2071,7 +2206,9 @@
           }
         ],
         "summary": "Global audit trail",
-        "tags": ["Admin"]
+        "tags": [
+          "Admin"
+        ]
       }
     },
     "/v1/admin/users": {
@@ -2094,7 +2231,11 @@
             "in": "query",
             "schema": {
               "type": "string",
-              "enum": ["ACTIVE", "SUSPENDED", "PENDING_DELETION"]
+              "enum": [
+                "ACTIVE",
+                "SUSPENDED",
+                "PENDING_DELETION"
+              ]
             }
           },
           {
@@ -2127,7 +2268,9 @@
           }
         ],
         "summary": "User metadata list",
-        "tags": ["Admin"]
+        "tags": [
+          "Admin"
+        ]
       }
     },
     "/v1/admin/users/{userId}": {
@@ -2154,7 +2297,9 @@
           }
         ],
         "summary": "Single user metadata",
-        "tags": ["Admin"]
+        "tags": [
+          "Admin"
+        ]
       },
       "patch": {
         "description": "Allowlist: display_name, locale, timezone. is_super_admin is deliberately not editable here — promotion is a service-role SQL operation (DEC-013).",
@@ -2190,7 +2335,9 @@
           }
         ],
         "summary": "Update the operator-editable subset of a profile",
-        "tags": ["Admin"]
+        "tags": [
+          "Admin"
+        ]
       }
     },
     "/v1/admin/users/{userId}/suspend": {
@@ -2227,7 +2374,9 @@
           }
         ],
         "summary": "Suspend an account (Auth ban + status)",
-        "tags": ["Admin"]
+        "tags": [
+          "Admin"
+        ]
       }
     },
     "/v1/admin/users/{userId}/reinstate": {
@@ -2254,7 +2403,9 @@
           }
         ],
         "summary": "Lift a suspension, and cancel any pending deletion",
-        "tags": ["Admin"]
+        "tags": [
+          "Admin"
+        ]
       }
     },
     "/v1/admin/purge": {
@@ -2273,7 +2424,9 @@
           }
         ],
         "summary": "Run the deletion purge for expired grace periods",
-        "tags": ["Admin"]
+        "tags": [
+          "Admin"
+        ]
       }
     },
     "/v1/admin/settings": {
@@ -2291,7 +2444,9 @@
           }
         ],
         "summary": "All global settings, public and private",
-        "tags": ["Admin"]
+        "tags": [
+          "Admin"
+        ]
       },
       "put": {
         "operationId": "AdminController_updateSettings_v1",
@@ -2317,7 +2472,59 @@
           }
         ],
         "summary": "Update one or more known settings",
-        "tags": ["Admin"]
+        "tags": [
+          "Admin"
+        ]
+      }
+    },
+    "/v1/admin/releases": {
+      "get": {
+        "operationId": "AdminController_getReleases_v1",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "supabase-auth": []
+          }
+        ],
+        "summary": "Current operator-managed mobile release",
+        "tags": [
+          "Admin"
+        ]
+      }
+    },
+    "/v1/admin/releases/mobile": {
+      "put": {
+        "operationId": "AdminController_updateMobileRelease_v1",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateMobileReleaseDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "supabase-auth": []
+          }
+        ],
+        "summary": "Update mobile store links and supported-version floor",
+        "tags": [
+          "Admin"
+        ]
       }
     },
     "/v1/admin/broadcasts": {
@@ -2335,7 +2542,9 @@
           }
         ],
         "summary": "All broadcasts with aggregate delivery stats",
-        "tags": ["Admin"]
+        "tags": [
+          "Admin"
+        ]
       },
       "post": {
         "operationId": "AdminController_createBroadcast_v1",
@@ -2361,7 +2570,9 @@
           }
         ],
         "summary": "Compose a broadcast (always created as DRAFT)",
-        "tags": ["Admin"]
+        "tags": [
+          "Admin"
+        ]
       }
     },
     "/v1/admin/broadcasts/{broadcastId}": {
@@ -2398,7 +2609,9 @@
           }
         ],
         "summary": "Edit a broadcast",
-        "tags": ["Admin"]
+        "tags": [
+          "Admin"
+        ]
       }
     },
     "/v1/admin/broadcasts/{broadcastId}/publish": {
@@ -2425,7 +2638,9 @@
           }
         ],
         "summary": "Publish — makes it visible to its audience",
-        "tags": ["Admin"]
+        "tags": [
+          "Admin"
+        ]
       }
     },
     "/v1/admin/broadcasts/{broadcastId}/archive": {
@@ -2452,7 +2667,9 @@
           }
         ],
         "summary": "Archive — withdraws it from every user",
-        "tags": ["Admin"]
+        "tags": [
+          "Admin"
+        ]
       }
     },
     "/v1/admin/metrics/performance": {
@@ -2479,7 +2696,9 @@
           }
         ],
         "summary": "p50/p95/p99 latency, error rate, request volume from system_events",
-        "tags": ["Admin"]
+        "tags": [
+          "Admin"
+        ]
       }
     },
     "/v1/admin/alerts": {
@@ -2497,7 +2716,9 @@
           }
         ],
         "summary": "Current state of all alert rules",
-        "tags": ["Admin"]
+        "tags": [
+          "Admin"
+        ]
       }
     },
     "/v1/admin/alerts/{alertKey}/acknowledge": {
@@ -2524,7 +2745,9 @@
           }
         ],
         "summary": "Acknowledge (resolve) a firing alert",
-        "tags": ["Admin"]
+        "tags": [
+          "Admin"
+        ]
       }
     },
     "/v1/admin/security/auth-events": {
@@ -2567,7 +2790,9 @@
           }
         ],
         "summary": "Auth-related audit events (logins, MFA, suspensions)",
-        "tags": ["Admin"]
+        "tags": [
+          "Admin"
+        ]
       }
     },
     "/v1/admin/security/sessions": {
@@ -2610,7 +2835,9 @@
           }
         ],
         "summary": "All active (non-revoked) device sessions platform-wide",
-        "tags": ["Admin"]
+        "tags": [
+          "Admin"
+        ]
       }
     },
     "/v1/admin/security/sessions/{deviceId}/revoke": {
@@ -2637,7 +2864,9 @@
           }
         ],
         "summary": "Force-revoke a single device session",
-        "tags": ["Admin"]
+        "tags": [
+          "Admin"
+        ]
       }
     },
     "/v1/admin/security/sessions/revoke-all/{userId}": {
@@ -2664,7 +2893,9 @@
           }
         ],
         "summary": "Force-revoke all sessions for a given user",
-        "tags": ["Admin"]
+        "tags": [
+          "Admin"
+        ]
       }
     },
     "/v1/admin/security/anomalies": {
@@ -2682,7 +2913,9 @@
           }
         ],
         "summary": "Heuristic security signals: new devices, throttle abusers",
-        "tags": ["Admin"]
+        "tags": [
+          "Admin"
+        ]
       }
     },
     "/v1/admin/events/trace/{requestId}": {
@@ -2709,7 +2942,24 @@
           }
         ],
         "summary": "All system_events for a single X-Request-ID (correlated trace)",
-        "tags": ["Admin"]
+        "tags": [
+          "Admin"
+        ]
+      }
+    },
+    "/v1/releases/mobile": {
+      "get": {
+        "operationId": "ReleasesController_mobile_v1",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Current iOS, Android and APK release metadata"
+          }
+        },
+        "summary": "Public mobile download metadata and supported-version floor",
+        "tags": [
+          "Releases"
+        ]
       }
     },
     "/v1/me/export": {
@@ -2728,7 +2978,9 @@
           }
         ],
         "summary": "Export every row this account owns (§15.3)",
-        "tags": ["Account"]
+        "tags": [
+          "Account"
+        ]
       }
     },
     "/v1/me/deletion-request": {
@@ -2757,7 +3009,9 @@
           }
         ],
         "summary": "Schedule this account for deletion after a 30-day grace period",
-        "tags": ["Account"]
+        "tags": [
+          "Account"
+        ]
       },
       "delete": {
         "description": "Not reachable by the requesting user in practice: requesting deletion bans the account, so their session is dead. Cancellation is an operator action via POST /v1/admin/users/:id/reinstate. This route exists for the case where the ban failed but the marking succeeded.",
@@ -2774,7 +3028,9 @@
           }
         ],
         "summary": "Cancel a pending deletion",
-        "tags": ["Account"]
+        "tags": [
+          "Account"
+        ]
       }
     },
     "/v1/me/broadcasts": {
@@ -2792,7 +3048,9 @@
           }
         ],
         "summary": "Live broadcasts this user has not dismissed",
-        "tags": ["Account"]
+        "tags": [
+          "Account"
+        ]
       }
     },
     "/v1/me/broadcasts/{broadcastId}/dismiss": {
@@ -2819,7 +3077,9 @@
           }
         ],
         "summary": "Dismiss a broadcast for this user",
-        "tags": ["Account"]
+        "tags": [
+          "Account"
+        ]
       }
     },
     "/v1/settings/public": {
@@ -2838,7 +3098,9 @@
           }
         ],
         "summary": "Global settings any signed-in user may read",
-        "tags": ["Account"]
+        "tags": [
+          "Account"
+        ]
       }
     },
     "/v1/me/devices": {
@@ -2856,7 +3118,9 @@
           }
         ],
         "summary": "List active devices for the current user",
-        "tags": ["Devices & Sessions"]
+        "tags": [
+          "Devices & Sessions"
+        ]
       },
       "post": {
         "operationId": "DevicesController_register_v1",
@@ -2882,7 +3146,69 @@
           }
         ],
         "summary": "Register or update a device (upsert on device_id)",
-        "tags": ["Devices & Sessions"]
+        "tags": [
+          "Devices & Sessions"
+        ]
+      }
+    },
+    "/v1/me/devices/pairing": {
+      "post": {
+        "operationId": "DevicesController_createPairing_v1",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePairingDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Issue a ten-minute, one-time mobile workspace pairing token",
+        "tags": [
+          "Devices & Sessions"
+        ]
+      }
+    },
+    "/v1/me/devices/pairing/consume": {
+      "post": {
+        "operationId": "DevicesController_consumePairing_v1",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConsumePairingDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Consume a pairing token after signing in on mobile",
+        "tags": [
+          "Devices & Sessions"
+        ]
       }
     },
     "/v1/me/devices/current/{opaqueDeviceId}": {
@@ -2909,7 +3235,9 @@
           }
         ],
         "summary": "Revoke the caller device by its app-generated device_id",
-        "tags": ["Devices & Sessions"]
+        "tags": [
+          "Devices & Sessions"
+        ]
       }
     },
     "/v1/me/devices/{deviceId}": {
@@ -2936,7 +3264,9 @@
           }
         ],
         "summary": "Revoke a specific device / sign out of that session",
-        "tags": ["Devices & Sessions"]
+        "tags": [
+          "Devices & Sessions"
+        ]
       }
     },
     "/v1/me/devices/revoke-all": {
@@ -2964,7 +3294,9 @@
           }
         ],
         "summary": "Sign out of all other devices",
-        "tags": ["Devices & Sessions"]
+        "tags": [
+          "Devices & Sessions"
+        ]
       }
     }
   },
@@ -3006,7 +3338,12 @@
             "description": "Changed rows per table, keyed by table name."
           }
         },
-        "required": ["cursor", "has_more", "server_time", "changes"]
+        "required": [
+          "cursor",
+          "has_more",
+          "server_time",
+          "changes"
+        ]
       },
       "NotificationPreferenceDto": {
         "type": "object",
@@ -3036,10 +3373,20 @@
           },
           "digest": {
             "type": "string",
-            "enum": ["NONE", "DAILY", "WEEKLY"]
+            "enum": [
+              "NONE",
+              "DAILY",
+              "WEEKLY"
+            ]
           }
         },
-        "required": ["category", "in_app", "push", "email", "digest"]
+        "required": [
+          "category",
+          "in_app",
+          "push",
+          "email",
+          "digest"
+        ]
       },
       "UpdateNotificationPreferencesDto": {
         "type": "object",
@@ -3066,22 +3413,35 @@
             "nullable": true
           }
         },
-        "required": ["preferences"]
+        "required": [
+          "preferences"
+        ]
       },
       "ComposeNotificationDto": {
         "type": "object",
         "properties": {
           "audience": {
             "type": "string",
-            "enum": ["ALL", "OPERATORS"]
+            "enum": [
+              "ALL",
+              "OPERATORS"
+            ]
           },
           "category": {
             "type": "string",
-            "enum": ["system", "operator"]
+            "enum": [
+              "system",
+              "operator"
+            ]
           },
           "severity": {
             "type": "string",
-            "enum": ["INFO", "SUCCESS", "WARNING", "CRITICAL"]
+            "enum": [
+              "INFO",
+              "SUCCESS",
+              "WARNING",
+              "CRITICAL"
+            ]
           },
           "title_en": {
             "type": "string"
@@ -3106,7 +3466,13 @@
             "type": "string"
           }
         },
-        "required": ["audience", "category", "severity", "title_en", "body_en"]
+        "required": [
+          "audience",
+          "category",
+          "severity",
+          "title_en",
+          "body_en"
+        ]
       },
       "NotificationTemplateDto": {
         "type": "object",
@@ -3145,7 +3511,12 @@
             "type": "string"
           }
         },
-        "required": ["key", "category", "title_en", "body_en"]
+        "required": [
+          "key",
+          "category",
+          "title_en",
+          "body_en"
+        ]
       },
       "ProfileResponseDto": {
         "type": "object",
@@ -3189,7 +3560,11 @@
           "persona": {
             "type": "string",
             "example": "INDIVIDUAL",
-            "enum": ["INDIVIDUAL", "STUDENT", "FREELANCER"],
+            "enum": [
+              "INDIVIDUAL",
+              "STUDENT",
+              "FREELANCER"
+            ],
             "description": "Null until the user reaches §5.2 step 4."
           },
           "is_super_admin": {
@@ -3200,7 +3575,11 @@
           "status": {
             "type": "string",
             "example": "ACTIVE",
-            "enum": ["ACTIVE", "SUSPENDED", "PENDING_DELETION"],
+            "enum": [
+              "ACTIVE",
+              "SUSPENDED",
+              "PENDING_DELETION"
+            ],
             "description": "Account lifecycle state (DEC-017)."
           },
           "deletion_scheduled_for": {
@@ -3286,7 +3665,11 @@
           "persona": {
             "type": "string",
             "example": "INDIVIDUAL",
-            "enum": ["INDIVIDUAL", "STUDENT", "FREELANCER"],
+            "enum": [
+              "INDIVIDUAL",
+              "STUDENT",
+              "FREELANCER"
+            ],
             "description": "Blueprint §5.2 step 4. FAMILY is deliberately absent — DEC-007 dropped family workspaces, and offering a persona the product cannot honour would be the blueprint outvoting a later decision."
           }
         }
@@ -3307,7 +3690,9 @@
             "example": "Asia/Dhaka"
           }
         },
-        "required": ["name"]
+        "required": [
+          "name"
+        ]
       },
       "WorkspaceResponseDto": {
         "type": "object",
@@ -3317,7 +3702,9 @@
           },
           "type": {
             "type": "string",
-            "enum": ["PERSONAL"]
+            "enum": [
+              "PERSONAL"
+            ]
           },
           "name": {
             "type": "string"
@@ -3333,7 +3720,11 @@
           },
           "status": {
             "type": "string",
-            "enum": ["ACTIVE", "PENDING_DELETION", "DELETED"]
+            "enum": [
+              "ACTIVE",
+              "PENDING_DELETION",
+              "DELETED"
+            ]
           },
           "created_at": {
             "type": "string"
@@ -3368,7 +3759,13 @@
           "class": {
             "type": "string",
             "example": "ASSET",
-            "enum": ["ASSET", "LIABILITY", "INCOME", "EXPENSE", "EQUITY"]
+            "enum": [
+              "ASSET",
+              "LIABILITY",
+              "INCOME",
+              "EXPENSE",
+              "EQUITY"
+            ]
           },
           "subtype": {
             "type": "string",
@@ -3391,7 +3788,10 @@
           "normal_balance": {
             "type": "string",
             "example": "DEBIT",
-            "enum": ["DEBIT", "CREDIT"]
+            "enum": [
+              "DEBIT",
+              "CREDIT"
+            ]
           },
           "include_in_budget": {
             "type": "boolean",
@@ -3411,7 +3811,11 @@
             "description": "Opening balance as minor-unit decimal string (e.g., \"50000\" = 500.00 BDT)"
           }
         },
-        "required": ["name", "class", "subtype"]
+        "required": [
+          "name",
+          "class",
+          "subtype"
+        ]
       },
       "AccountResponseDto": {
         "type": "object",
@@ -3506,7 +3910,11 @@
           "type": {
             "type": "string",
             "example": "EXPENSE",
-            "enum": ["INCOME", "EXPENSE", "TRANSFER"]
+            "enum": [
+              "INCOME",
+              "EXPENSE",
+              "TRANSFER"
+            ]
           },
           "amount": {
             "type": "string",
@@ -3539,7 +3947,10 @@
             "example": "Weekly groceries"
           },
           "tags": {
-            "example": ["groceries", "weekly"],
+            "example": [
+              "groceries",
+              "weekly"
+            ],
             "type": "array",
             "items": {
               "type": "string"
@@ -3551,7 +3962,12 @@
             "example": "550e8400-e29b-41d4-a716-446655440001"
           }
         },
-        "required": ["type", "amount", "account_id", "idempotency_key"]
+        "required": [
+          "type",
+          "amount",
+          "account_id",
+          "idempotency_key"
+        ]
       },
       "TransactionResponseDto": {
         "type": "object",
@@ -3627,7 +4043,10 @@
           },
           "kind": {
             "type": "string",
-            "enum": ["INCOME", "EXPENSE"]
+            "enum": [
+              "INCOME",
+              "EXPENSE"
+            ]
           },
           "translation_key": {
             "type": "object",
@@ -3686,7 +4105,10 @@
           "kind": {
             "type": "string",
             "description": "Category kind — matches the backing ledger account class",
-            "enum": ["INCOME", "EXPENSE"]
+            "enum": [
+              "INCOME",
+              "EXPENSE"
+            ]
           },
           "icon": {
             "type": "string",
@@ -3708,7 +4130,10 @@
             "example": 0
           }
         },
-        "required": ["name", "kind"]
+        "required": [
+          "name",
+          "kind"
+        ]
       },
       "UpdateCategoryDto": {
         "type": "object",
@@ -3752,7 +4177,10 @@
             "description": "Warn at this % of the limit. 0 disables."
           }
         },
-        "required": ["category_id", "planned_minor"]
+        "required": [
+          "category_id",
+          "planned_minor"
+        ]
       },
       "UpsertBudgetDto": {
         "type": "object",
@@ -3763,7 +4191,10 @@
           },
           "cadence": {
             "type": "string",
-            "enum": ["MONTHLY", "WEEKLY"]
+            "enum": [
+              "MONTHLY",
+              "WEEKLY"
+            ]
           },
           "rollover": {
             "type": "boolean",
@@ -3776,7 +4207,9 @@
             }
           }
         },
-        "required": ["lines"]
+        "required": [
+          "lines"
+        ]
       },
       "CreateGoalDto": {
         "type": "object",
@@ -3807,7 +4240,10 @@
             "example": 0
           }
         },
-        "required": ["name", "target_minor"]
+        "required": [
+          "name",
+          "target_minor"
+        ]
       },
       "UpdateGoalDto": {
         "type": "object",
@@ -3829,7 +4265,11 @@
           },
           "status": {
             "type": "string",
-            "enum": ["ACTIVE", "ACHIEVED", "ABANDONED"]
+            "enum": [
+              "ACTIVE",
+              "ACHIEVED",
+              "ABANDONED"
+            ]
           }
         }
       },
@@ -3860,14 +4300,22 @@
             "description": "Day of month the payment is due"
           }
         },
-        "required": ["ledger_account_id", "principal_minor"]
+        "required": [
+          "ledger_account_id",
+          "principal_minor"
+        ]
       },
       "CreateCalendarEventDto": {
         "type": "object",
         "properties": {
           "type": {
             "type": "string",
-            "enum": ["BILL", "INCOME", "GOAL", "CUSTOM"]
+            "enum": [
+              "BILL",
+              "INCOME",
+              "GOAL",
+              "CUSTOM"
+            ]
           },
           "title": {
             "type": "string",
@@ -3887,7 +4335,10 @@
             "description": "Due date in the workspace timezone"
           },
           "reminder_offsets": {
-            "example": [1440, 60],
+            "example": [
+              1440,
+              60
+            ],
             "description": "Remind this many minutes before the due time",
             "type": "array",
             "items": {
@@ -3895,7 +4346,11 @@
             }
           }
         },
-        "required": ["type", "title", "due_date"]
+        "required": [
+          "type",
+          "title",
+          "due_date"
+        ]
       },
       "UpdateCalendarEventDto": {
         "type": "object",
@@ -3911,7 +4366,11 @@
           },
           "status": {
             "type": "string",
-            "enum": ["UPCOMING", "PAID", "SKIPPED"]
+            "enum": [
+              "UPCOMING",
+              "PAID",
+              "SKIPPED"
+            ]
           },
           "journal_entry_id": {
             "type": "string",
@@ -3928,7 +4387,11 @@
           },
           "entry_type": {
             "type": "string",
-            "enum": ["INCOME", "EXPENSE", "TRANSFER"]
+            "enum": [
+              "INCOME",
+              "EXPENSE",
+              "TRANSFER"
+            ]
           },
           "amount_minor": {
             "type": "string",
@@ -3949,7 +4412,12 @@
           },
           "frequency": {
             "type": "string",
-            "enum": ["DAILY", "WEEKLY", "MONTHLY", "YEARLY"]
+            "enum": [
+              "DAILY",
+              "WEEKLY",
+              "MONTHLY",
+              "YEARLY"
+            ]
           },
           "interval_count": {
             "type": "number",
@@ -3965,10 +4433,19 @@
           },
           "behavior": {
             "type": "string",
-            "enum": ["REMIND_ONLY", "AUTO_CREATE_DRAFT"]
+            "enum": [
+              "REMIND_ONLY",
+              "AUTO_CREATE_DRAFT"
+            ]
           }
         },
-        "required": ["name", "entry_type", "amount_minor", "frequency", "next_occurrence"]
+        "required": [
+          "name",
+          "entry_type",
+          "amount_minor",
+          "frequency",
+          "next_occurrence"
+        ]
       },
       "EnableTracingDto": {
         "type": "object",
@@ -3989,7 +4466,10 @@
           },
           "locale": {
             "type": "string",
-            "enum": ["bn", "en"]
+            "enum": [
+              "bn",
+              "en"
+            ]
           },
           "timezone": {
             "type": "string",
@@ -4005,7 +4485,9 @@
             "example": "Terms of service violation — ticket #412"
           }
         },
-        "required": ["reason"]
+        "required": [
+          "reason"
+        ]
       },
       "UpdateSettingDto": {
         "type": "object",
@@ -4022,7 +4504,10 @@
             }
           }
         },
-        "required": ["key", "value"]
+        "required": [
+          "key",
+          "value"
+        ]
       },
       "UpdateSettingsDto": {
         "type": "object",
@@ -4034,7 +4519,73 @@
             }
           }
         },
-        "required": ["settings"]
+        "required": [
+          "settings"
+        ]
+      },
+      "UpdateMobileReleaseDto": {
+        "type": "object",
+        "properties": {
+          "latest_version": {
+            "type": "string",
+            "example": "1.4.2"
+          },
+          "min_version": {
+            "type": "string",
+            "example": "1.2.0"
+          },
+          "ios_url": {
+            "type": "string"
+          },
+          "android_url": {
+            "type": "string"
+          },
+          "apk_url": {
+            "type": "string"
+          },
+          "apk_sha256": {
+            "type": "string"
+          },
+          "release_notes_url": {
+            "type": "string"
+          },
+          "ios_status": {
+            "type": "string",
+            "enum": [
+              "COMING_SOON",
+              "LIVE"
+            ]
+          },
+          "android_status": {
+            "type": "string",
+            "enum": [
+              "COMING_SOON",
+              "LIVE"
+            ]
+          },
+          "apk_size_bytes": {
+            "type": "number"
+          },
+          "released_at": {
+            "type": "string"
+          },
+          "ios_minimum": {
+            "type": "string",
+            "example": "15.0"
+          },
+          "android_minimum": {
+            "type": "string",
+            "example": "8.0"
+          }
+        },
+        "required": [
+          "latest_version",
+          "min_version",
+          "ios_status",
+          "android_status",
+          "ios_minimum",
+          "android_minimum"
+        ]
       },
       "CreateBroadcastDto": {
         "type": "object",
@@ -4055,11 +4606,19 @@
           },
           "severity": {
             "type": "string",
-            "enum": ["INFO", "SUCCESS", "WARNING", "CRITICAL"]
+            "enum": [
+              "INFO",
+              "SUCCESS",
+              "WARNING",
+              "CRITICAL"
+            ]
           },
           "audience": {
             "type": "string",
-            "enum": ["ALL", "SUPER_ADMINS"]
+            "enum": [
+              "ALL",
+              "SUPER_ADMINS"
+            ]
           },
           "link_url": {
             "type": "string"
@@ -4077,7 +4636,10 @@
             "description": "ISO timestamp; null means no expiry"
           }
         },
-        "required": ["title_en", "title_bn"]
+        "required": [
+          "title_en",
+          "title_bn"
+        ]
       },
       "UpdateBroadcastDto": {
         "type": "object",
@@ -4098,11 +4660,19 @@
           },
           "severity": {
             "type": "string",
-            "enum": ["INFO", "SUCCESS", "WARNING", "CRITICAL"]
+            "enum": [
+              "INFO",
+              "SUCCESS",
+              "WARNING",
+              "CRITICAL"
+            ]
           },
           "audience": {
             "type": "string",
-            "enum": ["ALL", "SUPER_ADMINS"]
+            "enum": [
+              "ALL",
+              "SUPER_ADMINS"
+            ]
           },
           "link_url": {
             "type": "string"
@@ -4135,7 +4705,9 @@
             "example": "No longer needed"
           }
         },
-        "required": ["confirm_email"]
+        "required": [
+          "confirm_email"
+        ]
       },
       "RegisterDeviceDto": {
         "type": "object",
@@ -4154,10 +4726,40 @@
           },
           "pushProvider": {
             "type": "string",
-            "enum": ["expo", "fcm", "apns", "webpush"]
+            "enum": [
+              "expo",
+              "fcm",
+              "apns",
+              "webpush"
+            ]
           }
         },
-        "required": ["deviceId"]
+        "required": [
+          "deviceId"
+        ]
+      },
+      "CreatePairingDto": {
+        "type": "object",
+        "properties": {
+          "workspaceId": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "workspaceId"
+        ]
+      },
+      "ConsumePairingDto": {
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string",
+            "description": "One-time token read from the pairing QR code"
+          }
+        },
+        "required": [
+          "token"
+        ]
       },
       "RevokeAllDto": {
         "type": "object",
@@ -4171,7 +4773,14 @@
       "ApiErrorBody": {
         "type": "object",
         "description": "The shape of every failure, produced by GlobalHttpExceptionFilter. `code` is the stable identifier — branch on it, not on `message`, which is prose and may be reworded or translated.",
-        "required": ["statusCode", "code", "message", "requestId", "timestamp", "path"],
+        "required": [
+          "statusCode",
+          "code",
+          "message",
+          "requestId",
+          "timestamp",
+          "path"
+        ],
         "properties": {
           "statusCode": {
             "type": "integer",
@@ -4184,6 +4793,7 @@
               "INVALID_TOKEN",
               "AUTH_FAILED",
               "NOT_WORKSPACE_MEMBER",
+              "WORKSPACE_ACCESS_DENIED",
               "NOT_SUPER_ADMIN",
               "MFA_REQUIRED",
               "ACCOUNT_NOT_ACTIVE",
@@ -4195,6 +4805,10 @@
               "IDEMPOTENCY_IN_PROGRESS",
               "NOT_FOUND",
               "WORKSPACE_NOT_FOUND",
+              "PAIRING_TOKEN_NOT_FOUND",
+              "PAIRING_TOKEN_EXPIRED",
+              "RELEASE_CONFIG_UNAVAILABLE",
+              "INVALID_RELEASE_URL",
               "ACCOUNT_NOT_FOUND",
               "CATEGORY_NOT_FOUND",
               "PARENT_CATEGORY_NOT_FOUND",
