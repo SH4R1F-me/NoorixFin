@@ -1,4 +1,14 @@
 {
   "extends": "./tsconfig.json",
-  "exclude": ["node_modules", "test", "dist", "**/*spec.ts"]
+  // `scripts/` is excluded, and it has to be. With no explicit `rootDir`,
+  // TypeScript infers it as the common ancestor of every input file — so the
+  // moment `scripts/generate-openapi.ts` joined the build, the root moved from
+  // `src/` to the package root and the output silently became `dist/src/main.js`
+  // instead of `dist/main.js`. Nothing failed at build time; `start:prod`
+  // (`node dist/main`) would simply have crashed with MODULE_NOT_FOUND on the
+  // first production boot.
+  //
+  // It also does not belong in a deployed artifact: it is a developer tool that
+  // boots the whole module graph to emit an OpenAPI file.
+  "exclude": ["node_modules", "test", "dist", "scripts", "**/*spec.ts"]
 }

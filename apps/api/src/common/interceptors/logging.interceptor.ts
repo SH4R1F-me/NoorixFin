@@ -30,6 +30,7 @@ import { Request, Response } from 'express';
 import { SystemEventsService } from '../../observability/system-events.service';
 import { TracingService } from '../../observability/tracing.service';
 import { AuthenticatedUser } from '../decorators/current-user.decorator';
+import type { ClientContextRequest } from '../middleware/client-context.middleware';
 
 /** Above this, a request is worth an operator's attention. */
 const SLOW_MS = 1000;
@@ -58,8 +59,11 @@ export class RequestTelemetryInterceptor implements NestInterceptor {
     if (isSse) return next.handle();
 
     const http = context.switchToHttp();
-    const request = http.getRequest<Request & { user?: AuthenticatedUser }>();
+    const request = http.getRequest<
+      ClientContextRequest & { user?: AuthenticatedUser }
+    >();
     const started = Date.now();
+    const cc = request.clientContext;
 
     return next.handle().pipe(
       tap({
@@ -85,6 +89,9 @@ export class RequestTelemetryInterceptor implements NestInterceptor {
               statusCode: response.statusCode,
               latencyMs: latency,
               metadata: { traced: true },
+              platform: cc?.platform ?? null,
+              appVersion: cc?.appVersion ?? null,
+              deviceId: cc?.deviceId ?? null,
             });
           }
 
@@ -101,6 +108,9 @@ export class RequestTelemetryInterceptor implements NestInterceptor {
             statusCode: response.statusCode,
             latencyMs: latency,
             metadata: { threshold_ms: SLOW_MS },
+            platform: cc?.platform ?? null,
+            appVersion: cc?.appVersion ?? null,
+            deviceId: cc?.deviceId ?? null,
           });
         },
         // Errors fall through to GlobalHttpExceptionFilter, which records them

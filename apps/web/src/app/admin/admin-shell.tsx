@@ -28,17 +28,65 @@ import {
   Menu,
   Globe,
   Globe2,
+  BarChart2,
+  Clock,
+  Bell,
+  Shield,
+  LogIn,
+  Smartphone,
+  AlertTriangle,
 } from 'lucide-react';
 
-const NAV_ITEMS = [
-  { id: 'overview', key: 'admin.overview', icon: ShieldAlert, href: '/admin' },
-  { id: 'monitoring', key: 'admin.monitoring', icon: Activity, href: '/admin/monitoring' },
-  { id: 'audit', key: 'admin.audit', icon: ScrollText, href: '/admin/audit' },
-  { id: 'users', key: 'admin.users', icon: Users, href: '/admin/users' },
-  { id: 'broadcasts', key: 'admin.broadcasts', icon: Megaphone, href: '/admin/broadcasts' },
-  { id: 'site-settings', key: 'admin.siteSettings', icon: Globe2, href: '/admin/site-settings' },
-  { id: 'settings', key: 'admin.globalSettings', icon: Settings2, href: '/admin/settings' },
-] as const;
+type NavItem = {
+  id: string;
+  key: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  icon: any;
+  href: string;
+};
+
+type NavSection = {
+  label?: string;
+  items: NavItem[];
+};
+
+const NAV_SECTIONS: NavSection[] = [
+  {
+    items: [
+      { id: 'overview', key: 'admin.overview', icon: ShieldAlert, href: '/admin' },
+    ],
+  },
+  {
+    label: 'admin.monitoring',
+    items: [
+      { id: 'monitoring', key: 'admin.monitoring', icon: Activity, href: '/admin/monitoring' },
+      { id: 'performance', key: 'admin.performance.title', icon: BarChart2, href: '/admin/monitoring/performance' },
+      { id: 'jobs', key: 'admin.jobs.title', icon: Clock, href: '/admin/monitoring/jobs' },
+      { id: 'alerts', key: 'admin.alerts.title', icon: Bell, href: '/admin/monitoring/alerts' },
+    ],
+  },
+  {
+    label: 'admin.security.title',
+    items: [
+      { id: 'security', key: 'admin.security.title', icon: Shield, href: '/admin/security' },
+      { id: 'auth-events', key: 'admin.security.authEvents', icon: LogIn, href: '/admin/security/auth-events' },
+      { id: 'sessions', key: 'admin.security.sessions', icon: Smartphone, href: '/admin/security/sessions' },
+      { id: 'anomalies', key: 'admin.security.anomalies', icon: AlertTriangle, href: '/admin/security/anomalies' },
+    ],
+  },
+  {
+    items: [
+      { id: 'users', key: 'admin.users', icon: Users, href: '/admin/users' },
+      { id: 'audit', key: 'admin.audit', icon: ScrollText, href: '/admin/audit' },
+      { id: 'broadcasts', key: 'admin.broadcasts', icon: Megaphone, href: '/admin/broadcasts' },
+      { id: 'site-settings', key: 'admin.siteSettings', icon: Globe2, href: '/admin/site-settings' },
+      { id: 'settings', key: 'admin.globalSettings', icon: Settings2, href: '/admin/settings' },
+    ],
+  },
+];
+
+// Flat list for active-id detection
+const ALL_NAV_ITEMS = NAV_SECTIONS.flatMap((s) => s.items);
 
 export default function AdminShell({
   children,
@@ -55,10 +103,8 @@ export default function AdminShell({
   const pathname = usePathname();
   const router = useRouter();
 
-  // Longest-prefix match so /admin/users/... keeps Users highlighted, while
-  // /admin itself does not match everything.
   const activeId =
-    NAV_ITEMS.filter((item) =>
+    ALL_NAV_ITEMS.filter((item) =>
       item.href === '/admin' ? pathname === '/admin' : pathname.startsWith(item.href),
     ).sort((a, b) => b.href.length - a.href.length)[0]?.id ?? 'overview';
 
@@ -99,34 +145,44 @@ export default function AdminShell({
         </div>
 
         <nav style={styles.nav}>
-          {NAV_ITEMS.map((item) => {
-            const isActive = activeId === item.id;
-            const Icon = item.icon;
-            return (
-              <a
-                key={item.id}
-                href={item.href}
-                onClick={(e) => {
-                  e.preventDefault();
-                  router.push(item.href);
-                  setMobileOpen(false);
-                }}
-                style={{ ...styles.navItem, ...(isActive ? styles.navItemActive : {}) }}
-                title={collapsed ? t(item.key) : undefined}
-              >
-                <Icon
-                  size={20}
-                  style={{ color: isActive ? '#f59e0b' : '#a09990', flexShrink: 0 }}
-                />
-                {!collapsed && (
-                  <span style={{ ...styles.navLabel, color: isActive ? '#fafaf9' : '#c9c2bc' }}>
-                    {t(item.key)}
-                  </span>
-                )}
-                {isActive && <div style={styles.activeIndicator} />}
-              </a>
-            );
-          })}
+          {NAV_SECTIONS.map((section, si) => (
+            <div key={si}>
+              {section.label && !collapsed && (
+                <div style={styles.sectionLabel}>{t(section.label as Parameters<typeof t>[0])}</div>
+              )}
+              {section.label && !collapsed && si > 0 && (
+                <div style={styles.sectionDivider} />
+              )}
+              {section.items.map((item) => {
+                const isActive = activeId === item.id;
+                const Icon = item.icon;
+                return (
+                  <a
+                    key={item.id}
+                    href={item.href}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      router.push(item.href);
+                      setMobileOpen(false);
+                    }}
+                    style={{ ...styles.navItem, ...(isActive ? styles.navItemActive : {}) }}
+                    title={collapsed ? t(item.key as Parameters<typeof t>[0]) : undefined}
+                  >
+                    <Icon
+                      size={20}
+                      style={{ color: isActive ? '#f59e0b' : '#a09990', flexShrink: 0 }}
+                    />
+                    {!collapsed && (
+                      <span style={{ ...styles.navLabel, color: isActive ? '#fafaf9' : '#c9c2bc' }}>
+                        {t(item.key as Parameters<typeof t>[0])}
+                      </span>
+                    )}
+                    {isActive && <div style={styles.activeIndicator} />}
+                  </a>
+                );
+              })}
+            </div>
+          ))}
         </nav>
 
         <div style={styles.sidebarFooter}>
@@ -266,6 +322,19 @@ const styles: Record<string, React.CSSProperties> = {
   },
   navItemActive: { background: 'rgba(245, 158, 11, 0.1)' },
   navLabel: { fontSize: '0.875rem', fontWeight: 500, whiteSpace: 'nowrap' },
+  sectionLabel: {
+    fontSize: '0.6875rem',
+    fontWeight: 700,
+    color: '#78716c',
+    letterSpacing: '0.08em',
+    textTransform: 'uppercase' as const,
+    padding: '0.875rem 0.75rem 0.25rem',
+  },
+  sectionDivider: {
+    height: 1,
+    background: '#292524',
+    margin: '0.375rem 0.5rem 0.5rem',
+  },
   activeIndicator: {
     position: 'absolute',
     left: 0,

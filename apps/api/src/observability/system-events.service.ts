@@ -40,6 +40,11 @@ export interface SystemEventInput {
   statusCode?: number;
   latencyMs?: number;
   metadata?: Record<string, unknown>;
+  // Phase 2 — client telemetry (migration 00022)
+  platform?: string | null;
+  appVersion?: string | null;
+  deviceId?: string | null;
+  sessionId?: string | null;
 }
 
 /** Row shape as it goes to Postgres (snake_case). */
@@ -116,6 +121,11 @@ export class SystemEventsService implements OnModuleInit, OnModuleDestroy {
         latency_ms: input.latencyMs ?? null,
         // system_events.metadata is jsonb; callers pass a plain object.
         metadata: (input.metadata ?? {}) as Json,
+        // Phase 2 client-telemetry columns (migration 00022)
+        platform: input.platform ?? null,
+        app_version: input.appVersion ?? null,
+        device_id: input.deviceId ?? null,
+        session_id: input.sessionId ?? null,
       });
     } catch {
       // Telemetry must not be able to fail a request. There is deliberately no

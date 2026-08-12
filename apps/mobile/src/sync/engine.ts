@@ -15,6 +15,7 @@
 import { getDb, getLocalColumns, upsertRows } from '../db';
 import { SYNCABLE_TABLES, type SyncableTable } from '../db/schema';
 import { apiFetch, ApiError } from '../lib/api';
+import { reportMobileError } from '../lib/observability';
 import { drain, type DrainResult } from './queue';
 
 export type SyncState =
@@ -59,6 +60,10 @@ async function execute(workspaceId: string): Promise<SyncOutcome> {
   try {
     push = await drain(workspaceId);
   } catch (error) {
+    // Reported with the STAGE as context, so a push failure and a pull failure
+    // never group together. They have different causes and different fixes,
+    // and merging them would hide whichever is rarer.
+    reportMobileError(error, 'sync:push');
     return {
       push: { sent: 0, parked: 0, deferred: 0, reclaimed: 0 },
       pulled: 0,
@@ -127,6 +132,10 @@ async function execute(workspaceId: string): Promise<SyncOutcome> {
     }
   } catch (error) {
     const offline = error instanceof ApiError && error.status === 0;
+    // Being offline is the normal state of an offline-first app, not a fault.
+    // Reporting it would drown the signal in the one condition this app is
+    // designed around.
+    if (!offline) reportMobileError(error, 'sync:pull');
     return {
       push,
       pulled,

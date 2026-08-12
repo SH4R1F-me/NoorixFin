@@ -12,19 +12,9 @@
    ==================================================== */
 
 /* ── CSS Variables ────────────────────────────────── */
-:root {
-  --m-bg:        #030712;
-  --m-bg2:       #0a0f1e;
-  --m-surface:   rgba(15, 23, 42, 0.8);
-  --m-border:    rgba(255,255,255,0.08);
-  --m-green:     #10b981;
-  --m-green-dim: rgba(16,185,129,0.15);
-  --m-text:      #f8fafc;
-  --m-muted:     #94a3b8;
-  --m-faint:     #475569;
-  --m-nav-h:     68px;
-  --m-max-w:     1200px;
-}
+/* The --m-* marketing tokens are generated — see @noorixfin/design-tokens.
+   This surface runs a darker background than the app, so they are separate
+   values rather than overrides. */
 
 /* ── Base ─────────────────────────────────────────── */
 .m-page {

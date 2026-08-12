@@ -74,6 +74,20 @@ jobs:
       - name: Typecheck
         run: pnpm typecheck
 
+      # Needs neither a database nor a running API: the OpenAPI document is
+      # built by walking the Nest module graph, so this belongs in the fast
+      # job rather than behind `supabase start`. Catches a route added without
+      # regenerating the client types, which would otherwise typecheck green
+      # against a shape the server stopped serving.
+      - name: API client types match the API
+        run: pnpm --filter @noorixfin/api-client check:fresh
+
+      # tokens.css is generated but committed (turbo dev does not run build, and
+      # a fresh clone would otherwise start unstyled). Committed means it can go
+      # stale; this is what stops it.
+      - name: Design tokens match tokens.css
+        run: pnpm --filter @noorixfin/design-tokens check:fresh
+
       # `--max-warnings 0`. The count is zero today, and letting warnings
       # accumulate is exactly how 289 lint errors became the normal state.
       - name: Lint (API)
@@ -84,6 +98,12 @@ jobs:
 
       - name: Unit tests
         run: pnpm test
+
+      # Stories are the only coverage several component states have, and a
+      # story that no longer compiles is a state nobody is looking at any more.
+      # Cheap: it is a Vite build of one package.
+      - name: Storybook builds
+        run: pnpm --filter @noorixfin/ui build-storybook -o /tmp/storybook
 
       - name: Production build
         run: pnpm build
@@ -116,6 +136,16 @@ jobs:
       - name: Start Supabase (applies all migrations from scratch)
         run: supabase start
 
+      # `supabase start` cannot apply a migration it does not recognise, and it
+      # says nothing when it skips one. This asserts that every .sql file in
+      # supabase/migrations is a migration the CLI knows about AND has run —
+      # so a mis-named or duplicate-versioned file fails here rather than
+      # becoming a table that is missing in production only.
+      # --strict because a CI database is created empty seconds earlier: an
+      # applied migration with no file cannot be a branch artefact here.
+      - name: No migration drift
+        run: pnpm db:check-drift:strict
+
       - name: Generated types match the migrations
         run: pnpm --filter @noorixfin/db-types check:fresh
 
@@ -140,6 +170,14 @@ jobs:
         run: |
           psql "postgresql://postgres:postgres@127.0.0.1:54322/postgres" \
             -f supabase/tests/acceptance.sql
+
+      # BACKUP-01. The runbook existed for months and nothing executed it —
+      # a backup nobody has restored is a hypothesis, and the moment you find
+      # out is the incident. This dumps the seeded database, restores it into a
+      # second one, and re-runs the invariants plus row-for-row comparisons
+      # against the restored copy. It never writes to the source.
+      - name: Backup restore drill
+        run: pnpm db:restore-drill
 
       - name: Stop Supabase
         if: always()

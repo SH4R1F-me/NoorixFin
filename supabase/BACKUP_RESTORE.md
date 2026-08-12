@@ -18,6 +18,47 @@ So this is a rehearsal script, not a policy statement. It is written to be
 
 ---
 
+## 0. Run the rehearsal — one command
+
+The whole of §2–§4 is now automated. It restores into a **new** database and
+never writes to the source, so it is safe to run against anything you can read:
+
+```bash
+pnpm db:restore-drill
+```
+
+It dumps, prepares the target, restores, runs `ci-assertions.sql` against the
+**restored** database, compares row counts table-by-table with the source,
+proves the ledger still balances, and checks that role grants came back. Any
+failure exits non-zero. It also runs in CI's `database` job, so BACKUP-01 is
+re-proved on every push rather than whenever someone remembers.
+
+**Last executed:** 2026-08-08 against the local stack — passed. 302 users, 302
+profiles, 300 workspaces, 1594 entries, 3188 postings, 5030 ledger accounts all
+matched; zero unbalanced entries; 24 tables carrying `authenticated` SELECT.
+
+### Two things the first automated run found
+
+1. **`-j 4` deadlocks. Use `-j 1`.** Parallel workers take conflicting locks
+   restoring the ledger's interdependent foreign keys; pg_restore reports
+   `deadlock detected` and abandons that item, leaving a database that looks
+   restored and is quietly missing constraints. §3 below still shows `-j 4`
+   because that is what was originally rehearsed by hand — the script is the
+   corrected version, and serial is the only setting that finishes clean.
+
+2. **Two error classes are expected and benign.** `pg_restore` exits non-zero
+   even on a good run, so the exit code alone cannot be the gate:
+
+   | Error | Why it is harmless |
+   |---|---|
+   | `schema "extensions" already exists` | The prepare step creates it deliberately (§3). Skip that step and this one benign collision becomes **208 real errors and zero tables**, because every `CREATE TABLE` needs `extensions.uuid_generate_v4()`. |
+   | `permission denied to change default privileges` (×9) | `ALTER DEFAULT PRIVILEGES` for roles the restoring role does not own. It governs objects created in *future*, never anything in the dump. The grants check proves the restored objects kept theirs. |
+
+   The script whitelists these **by pattern, not by count**, so a new kind of
+   error cannot hide behind them.
+
+---
+
 ## 1. What has to survive
 
 Not all of it is in Postgres, and a restore that recovers only the database

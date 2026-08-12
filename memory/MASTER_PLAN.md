@@ -2,20 +2,33 @@
 
 **Generated from:** `NoorixFin_Production_Blueprint.md` v1.0 (originally `MyFin_Production_Blueprint.md`)
 **Created:** 2026-08-01
-**Revised:** 2026-08-04 — Session 18 (Enterprise Admin System built; DEC-013's console deferral reversed — see DEC-016)
+**Revised:** 2026-08-08 — enterprise audit (see [`audit_and_development.md`](../audit_and_development.md))
 **Status:** ACTIVE — Phase 1 In Progress
 
 ---
 
 ## Audit Summary
 
-| Item | Status |
+**Refreshed 2026-08-08 against `310e1dd`** by reading the source and querying the
+running local database. The previous table was written in Session 3 and had gone
+five sessions stale — it still described 3 migrations and a default Expo
+template, both long superseded. Verify this table against the code before
+trusting it; do not let it drift again.
+
+| Item | Status (verified 2026-08-08) |
 |------|--------|
-| Existing codebase | Foundation built — API (7 modules), Web (6 routes), 3 migrations, 6 shared packages |
-| Mobile app | Scaffold only — still the default Expo template |
-| Blueprint completeness | Full 1330-line spec; §10.1 (role matrix) now **superseded by DEC-007** |
-| Open owner decisions | 12 items (Section 26) — **#1, #5, #11 now closed** by DEC-008, DEC-007, DEC-011 |
-| Live verification | **None** — the 15-item acceptance matrix has never been run against a live instance |
+| API | **10 controllers, ~70 routes** across 13 feature modules — health, profiles, account, workspaces, accounts, categories, transactions (+tags), planning, sync, admin (25 routes) |
+| Web | **Next.js 16 App Router — 15 marketing pages, 9 dashboard pages, 6 admin pages**, auth + onboarding. Only **4 shared components** — see audit gap E2 |
+| Mobile | **3 screens** (`_layout`, `index`, `sign-in`). The sync engine beneath is production-quality; the UI above it is a test harness. Active workspace is still hardcoded from `EXPO_PUBLIC_DEV_WORKSPACE_ID` — audit Finding A |
+| Database | **21 migrations, 24 public tables.** `workspace_members.role` is still `CHECK (role = 'OWNER')` — one member per workspace, audit Finding B |
+| Shared packages | 7 — `domain`, `money`, `i18n`, `design-tokens`, `db-types`, `test-fixtures`, and `api-client` (**still an `echo` stub**) |
+| Tests | 26 `.spec.ts` + 2 `.test.ts` (7 API suites, 13 sync-engine tests), 20 Playwright e2e specs, SQL invariants for tenant isolation / ledger balance / idempotency |
+| CI | 3 jobs — static, migrations-from-scratch + generated-type drift + SQL acceptance, and e2e run **twice** (once with the API deliberately unreachable) |
+| Blueprint completeness | Full 1330-line spec; §10.1 (role matrix) **superseded by DEC-007** |
+| Open owner decisions | 12 items (Section 26) — **#1, #5, #11 closed** by DEC-008, DEC-007, DEC-011. **DEC-025 (enterprise scope A vs B) is newly open and unanswered** |
+| Live verification | The 15-item acceptance matrix has **still never been run end-to-end** against a live instance — W8 remains the Phase 2 gate |
+| Notifications | **None.** No table, no push, no in-app centre — audit Finding C |
+| Observability | `system_events` + `audit_events` + SSE feed exist. **No error tracker, no APM, and no way to tell a mobile request from a web one** — audit gaps R1, R3 |
 
 ---
 

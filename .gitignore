@@ -49,3 +49,6 @@ playwright-report/
 # only by inspecting a staged diff. Never again by hand.
 client_secret_*.json
 *credentials*.json
+
+# Storybook static build output
+storybook-static/

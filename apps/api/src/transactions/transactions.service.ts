@@ -16,6 +16,7 @@ import { CreateTransactionDto } from './dto/transaction.dto';
 import { randomUUID } from 'crypto';
 import { createHash } from 'crypto';
 import { parseMinorUnits } from '@noorixfin/money';
+import { toPage } from '@noorixfin/domain';
 
 @Injectable()
 export class TransactionsService {
@@ -294,7 +295,7 @@ export class TransactionsService {
       // early avoids an `.in('id', [])`, which PostgREST treats as no filter at
       // all and would show the user the whole ledger instead of nothing.
       if (entryIdFilter.length === 0) {
-        return { items: [], next_cursor: undefined, has_more: false };
+        return { items: [], next_cursor: null, has_more: false };
       }
     }
 
@@ -319,7 +320,7 @@ export class TransactionsService {
 
       // Same trap as above: an empty `.in()` is no filter at all.
       if (entryIdFilter.length === 0) {
-        return { items: [], next_cursor: undefined, has_more: false };
+        return { items: [], next_cursor: null, has_more: false };
       }
     }
 
@@ -433,17 +434,10 @@ export class TransactionsService {
         a.localeCompare(b),
       ),
     }));
-    const hasMore = entries.length > limit;
-    const items = hasMore ? entries.slice(0, limit) : entries;
-    const nextCursor = hasMore
-      ? items[items.length - 1]?.occurred_at
-      : undefined;
-
-    return {
-      items,
-      next_cursor: nextCursor,
-      has_more: hasMore,
-    };
+    // `toPage` owns the over-fetch-by-one convention (see @noorixfin/domain):
+    // the query asked for limit + 1 rows, and whether that extra row came back
+    // is what answers has_more without a second COUNT.
+    return toPage(entries, limit, (entry) => entry.occurred_at);
   }
 
   /**

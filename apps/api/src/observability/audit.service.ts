@@ -28,6 +28,10 @@ export interface AuditEntry {
   workspaceId?: string | null;
   metadata?: Record<string, unknown>;
   ipAddress?: string | null;
+  // Phase 2 — client telemetry (migration 00022)
+  userAgent?: string | null;
+  platform?: string | null;
+  deviceId?: string | null;
 }
 
 @Injectable()
@@ -59,6 +63,10 @@ export class AuditService {
         // audit_events.metadata is jsonb; the caller supplies a plain object.
         metadata: (entry.metadata ?? {}) as Json,
         ip_address: entry.ipAddress ?? null,
+        // Phase 2 client-telemetry columns (migration 00022)
+        user_agent: entry.userAgent ?? null,
+        platform: entry.platform ?? null,
+        device_id: entry.deviceId ?? null,
       });
 
       if (error) {

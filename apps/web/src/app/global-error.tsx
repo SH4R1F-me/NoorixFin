@@ -14,8 +14,9 @@
  * failure the segment boundaries cannot catch, because `error.tsx` does not
  * wrap the layout above it.
  */
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { ErrorState } from '../components/error-state';
+import { clientFingerprint, reportClientError } from '../lib/observability';
 
 export default function GlobalError({
   error,
@@ -24,8 +25,14 @@ export default function GlobalError({
   error: Error & { digest?: string };
   unstable_retry: () => void;
 }) {
+  const fingerprint = useMemo(() => clientFingerprint(error, 'global-boundary'), [error]);
+
   useEffect(() => {
     console.error('[noorixfin] root layout error', error);
+    // Reported with its own context: a failure in the ROOT LAYOUT is a
+    // different bug from the same exception thrown in a page, and grouping
+    // them together would hide the more serious one.
+    reportClientError(error, 'global-boundary');
   }, [error]);
 
   return (
@@ -41,7 +48,12 @@ export default function GlobalError({
         }}
       >
         <title>NoorixFin</title>
-        <ErrorState kind="crash" onRetry={unstable_retry} digest={error.digest} homeHref="/" />
+        <ErrorState
+          kind="crash"
+          onRetry={unstable_retry}
+          digest={fingerprint}
+          homeHref="/"
+        />
       </body>
     </html>
   );

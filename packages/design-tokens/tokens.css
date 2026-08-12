@@ -1,0 +1,87 @@
+/*
+ * GENERATED FILE — do not edit.
+ *
+ * Source: packages/design-tokens/src/*.ts
+ * Regenerate: pnpm --filter @noorixfin/design-tokens generate
+ *
+ * Editing this file directly is how the palette drifted last time: the
+ * values here and the ones in the tokens package silently disagreed, and
+ * three different greens shipped at once.
+ */
+:root {
+  --color-primary-50: #ecfdf5;
+  --color-primary-100: #d1fae5;
+  --color-primary-200: #a7f3d0;
+  --color-primary-300: #6ee7b7;
+  --color-primary-400: #34d399;
+  --color-primary-500: #10b981;
+  --color-primary-600: #059669;
+  --color-primary-700: #047857;
+  --color-primary-800: #065f46;
+  --color-primary-900: #064e3b;
+  --color-accent-400: #fbbf24;
+  --color-accent-500: #f59e0b;
+  --color-accent-600: #d97706;
+  --color-income: #10b981;
+  --color-expense: #f87171;
+  --color-transfer: #3b82f6;
+  --color-warning: #f59e0b;
+  --color-error: #f87171;
+  --color-success: #10b981;
+  --font-ui: var(--font-inter), 'Inter', system-ui, -apple-system, sans-serif;
+  --font-bangla: var(--font-hind-siliguri), 'Hind Siliguri', var(--font-inter), sans-serif;
+  --space-0: 0rem;
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-10: 2.5rem;
+  --space-12: 3rem;
+  --space-16: 4rem;
+  --space-20: 5rem;
+  --space-24: 6rem;
+  --radius-sm: 0.375rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
+  --radius-2xl: 1.5rem;
+  --radius-full: 9999px;
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+  --shadow-glow: 0 0 20px rgba(16, 185, 129, 0.15);
+  --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-base: 250ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-slow: 350ms cubic-bezier(0.4, 0, 0.2, 1);
+  --bg-primary: #0f172a;
+  --bg-secondary: #1e293b;
+  --bg-tertiary: #334155;
+  --bg-card: #1e293b;
+  --bg-card-hover: #253349;
+  --bg-input: #1e293b;
+  --bg-glass: rgba(30, 41, 59, 0.8);
+  --text-primary: #f8fafc;
+  --text-secondary: #94a3b8;
+  --text-tertiary: #8b9ab0;
+  --text-inverse: #0f172a;
+  --border-primary: #334155;
+  --border-secondary: #475569;
+  --border-focus: #10b981;
+  --sidebar-width: 280px;
+  --sidebar-collapsed-width: 72px;
+  --m-bg: #030712;
+  --m-bg2: #0a0f1e;
+  --m-surface: rgba(15, 23, 42, 0.8);
+  --m-border: rgba(255,255,255,0.08);
+  --m-green: #10b981;
+  --m-green-dim: rgba(16,185,129,0.15);
+  --m-text: #f8fafc;
+  --m-muted: #94a3b8;
+  --m-faint: #748399;
+  --m-nav-h: 68px;
+  --m-max-w: 1200px;
+}

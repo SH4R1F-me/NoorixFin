@@ -379,7 +379,18 @@
     "emailChangeUnavailable": "Changing your email is not available yet.",
     "displayNamePlaceholder": "Your name",
     "exportDataBody": "A single JSON file with every account, transaction, budget and goal on this account. Everything the ledger holds, and nothing belonging to anyone else.",
-    "downloadExport": "Download my data"
+    "downloadExport": "Download my data",
+    "sessions": {
+      "title": "Sessions & Devices",
+      "subtitle": "Manage where you are signed in",
+      "thisDevice": "This device",
+      "revoke": "Sign out",
+      "revokeAll": "Sign out all other devices",
+      "noSessions": "No other active sessions",
+      "platform": "Platform",
+      "lastSeen": "Last seen",
+      "firstSeen": "First seen"
+    }
   },
   "time": {
     "sunday": "Sunday",
@@ -830,6 +841,66 @@
     "broadcasts": "Broadcasts",
     "globalSettings": "Global Settings",
     "siteSettings": "Site Settings",
-    "superAdmin": "SUPER ADMIN"
+    "superAdmin": "SUPER ADMIN",
+    "performance": {
+      "title": "Performance",
+      "subtitle": "p50/p95/p99 latency, request volume and error rates",
+      "window": "Window",
+      "totalRequests": "Total requests",
+      "errorRate": "Error rate",
+      "p50": "p50 latency",
+      "p95": "p95 latency",
+      "p99": "p99 latency",
+      "slowestRoutes": "Slowest routes",
+      "byPlatform": "By platform",
+      "requestCount": "Request count",
+      "errorCount": "Errors",
+      "computedAt": "Computed at"
+    },
+    "jobs": {
+      "title": "Scheduled Jobs",
+      "subtitle": "pg_cron jobs and their last run outcomes",
+      "jobName": "Job name",
+      "schedule": "Schedule",
+      "state": "State",
+      "lastRun": "Last run",
+      "nextRun": "Next run",
+      "active": "Active",
+      "disabled": "Disabled",
+      "noJobs": "No scheduled jobs found"
+    },
+    "alerts": {
+      "title": "Alerts",
+      "subtitle": "Active alert rules and their current state",
+      "acknowledge": "Acknowledge",
+      "firing": "Firing",
+      "resolved": "Resolved",
+      "lastFired": "Last fired",
+      "lastResolved": "Last resolved",
+      "noAlerts": "No alert rules have fired",
+      "alertKey": "Alert rule",
+      "lastValue": "Last value"
+    },
+    "security": {
+      "title": "Security",
+      "subtitle": "Auth events, active sessions, and anomaly detection",
+      "authEvents": "Auth Events",
+      "sessions": "Active Sessions",
+      "anomalies": "Anomalies",
+      "revokeSession": "Revoke session",
+      "revokeAll": "Revoke all sessions",
+      "revokeConfirm": "This will sign out the user from all devices. Continue?",
+      "newDevices": "New devices (24h)",
+      "throttleAbusers": "Throttle abusers (1h)",
+      "noSessions": "No active sessions",
+      "noAuthEvents": "No auth events found",
+      "noAnomalies": "No anomalies detected",
+      "platform": "Platform",
+      "deviceName": "Device name",
+      "lastSeen": "Last seen",
+      "firstSeen": "First seen",
+      "appVersion": "App version",
+      "hitCount": "Hit count"
+    }
   }
 }

@@ -8,100 +8,26 @@
    Typography: Inter for UI, Hind Siliguri for Bangla
    ==================================================== */
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Hind+Siliguri:wght@300;400;500;600;700&display=swap');
-
+/* Inter and Hind Siliguri are loaded by `next/font` in app/layout.tsx, which
+   self-hosts them. There is deliberately no @import from fonts.googleapis.com
+   here: it was render-blocking, it leaked every visitor's IP to a third party,
+   and the Content-Security-Policy in src/proxy.ts blocks it. */
 @import "tailwindcss";
 
 /* ─── CSS Custom Properties ─────────────────────────── */
-:root {
-  /* Emerald Primary */
-  --color-primary-50: #ecfdf5;
-  --color-primary-100: #d1fae5;
-  --color-primary-200: #a7f3d0;
-  --color-primary-300: #6ee7b7;
-  --color-primary-400: #34d399;
-  --color-primary-500: #10b981;
-  --color-primary-600: #059669;
-  --color-primary-700: #047857;
-  --color-primary-800: #065f46;
-  --color-primary-900: #064e3b;
+/* Design tokens (colours, spacing, radii, shadows, transitions, semantic
+   roles) now come from @noorixfin/design-tokens, imported in app/layout.tsx.
 
-  /* Amber Accent */
-  --color-accent-400: #fbbf24;
-  --color-accent-500: #f59e0b;
-  --color-accent-600: #d97706;
+   They used to be declared here by hand, which is how the palette drifted: the
+   tokens package shipped a primary of #0DAB76, this file shipped #10b981, the
+   marketing stylesheet had a third set, and nothing imported the tokens at all.
+   Generating them means a colour is decided in exactly one place.
 
-  /* Semantic Colors */
-  --color-income: #10b981;
-  --color-expense: #f87171;
-  --color-transfer: #3b82f6;
-  --color-warning: #f59e0b;
-  --color-error: #f87171;
-  --color-success: #10b981;
+   Verified byte-identical at the swap: all 72 custom properties previously
+   declared across this file and marketing.css matched the generated values
+   exactly, so nothing about the rendered product changed.
 
-  /* Fonts */
-  --font-ui: 'Inter', system-ui, -apple-system, sans-serif;
-  --font-bangla: 'Hind Siliguri', 'Inter', sans-serif;
-
-  /* Spacing */
-  --space-1: 0.25rem;
-  --space-2: 0.5rem;
-  --space-3: 0.75rem;
-  --space-4: 1rem;
-  --space-5: 1.25rem;
-  --space-6: 1.5rem;
-  --space-8: 2rem;
-  --space-10: 2.5rem;
-  --space-12: 3rem;
-  --space-16: 4rem;
-
-  /* Border Radius */
-  --radius-sm: 0.375rem;
-  --radius-md: 0.5rem;
-  --radius-lg: 0.75rem;
-  --radius-xl: 1rem;
-  --radius-2xl: 1.5rem;
-  --radius-full: 9999px;
-
-  /* Shadows */
-  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
-  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
-  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
-  --shadow-glow: 0 0 20px rgba(16, 185, 129, 0.15);
-
-  /* Transitions */
-  --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
-  --transition-base: 250ms cubic-bezier(0.4, 0, 0.2, 1);
-  --transition-slow: 350ms cubic-bezier(0.4, 0, 0.2, 1);
-
-  /* Dark Theme (default) */
-  --bg-primary: #0f172a;
-  --bg-secondary: #1e293b;
-  --bg-tertiary: #334155;
-  --bg-card: #1e293b;
-  --bg-card-hover: #253349;
-  --bg-input: #1e293b;
-  --bg-glass: rgba(30, 41, 59, 0.8);
-
-  --text-primary: #f8fafc;
-  --text-secondary: #94a3b8;
-  /* Was #64748b (slate-500), which measures 3.98:1 on this background — large
-     text only, and it was used for body copy in 16 files. WCAG 2.2 AA needs
-     4.5:1 for normal text (§5.5), and an axe scan of every route reported it
-     as the app's single most widespread violation. #8b9ab0 measures 6.62:1 and
-     still reads as tertiary against --text-secondary. */
-  --text-tertiary: #8b9ab0;
-  --text-inverse: #0f172a;
-
-  --border-primary: #334155;
-  --border-secondary: #475569;
-  --border-focus: #10b981;
-
-  /* Sidebar */
-  --sidebar-width: 280px;
-  --sidebar-collapsed-width: 72px;
-}
+   Add or change a token in packages/design-tokens/src, not here. */
 
 /* ─── Base Styles ────────────────────────────────────── */
 * {

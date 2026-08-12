@@ -68,33 +68,42 @@ export type Database = {
           action: string
           actor_id: string | null
           created_at: string
+          device_id: string | null
           id: string
           ip_address: unknown
           metadata: Json | null
+          platform: string | null
           resource_id: string | null
           resource_type: string
+          user_agent: string | null
           workspace_id: string | null
         }
         Insert: {
           action: string
           actor_id?: string | null
           created_at?: string
+          device_id?: string | null
           id?: string
           ip_address?: unknown
           metadata?: Json | null
+          platform?: string | null
           resource_id?: string | null
           resource_type: string
+          user_agent?: string | null
           workspace_id?: string | null
         }
         Update: {
           action?: string
           actor_id?: string | null
           created_at?: string
+          device_id?: string | null
           id?: string
           ip_address?: unknown
           metadata?: Json | null
+          platform?: string | null
           resource_id?: string | null
           resource_type?: string
+          user_agent?: string | null
           workspace_id?: string | null
         }
         Relationships: [
@@ -504,6 +513,54 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      donation_options: {
+        Row: {
+          color_from: string
+          color_to: string
+          created_at: string
+          description: string
+          display_order: number
+          icon: string
+          id: string
+          is_active: boolean
+          payment_methods: Json
+          subtitle: string
+          title: string
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          color_from?: string
+          color_to?: string
+          created_at?: string
+          description?: string
+          display_order?: number
+          icon?: string
+          id?: string
+          is_active?: boolean
+          payment_methods?: Json
+          subtitle?: string
+          title: string
+          type: string
+          updated_at?: string
+        }
+        Update: {
+          color_from?: string
+          color_to?: string
+          created_at?: string
+          description?: string
+          display_order?: number
+          icon?: string
+          id?: string
+          is_active?: boolean
+          payment_methods?: Json
+          subtitle?: string
+          title?: string
+          type?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       idempotency_records: {
         Row: {
@@ -1011,10 +1068,39 @@ export type Database = {
           },
         ]
       }
+      site_settings: {
+        Row: {
+          description: string
+          key: string
+          label: string
+          updated_at: string
+          updated_by: string | null
+          value: string | null
+        }
+        Insert: {
+          description?: string
+          key: string
+          label?: string
+          updated_at?: string
+          updated_by?: string | null
+          value?: string | null
+        }
+        Update: {
+          description?: string
+          key?: string
+          label?: string
+          updated_at?: string
+          updated_by?: string | null
+          value?: string | null
+        }
+        Relationships: []
+      }
       system_events: {
         Row: {
           actor_id: string | null
+          app_version: string | null
           created_at: string
+          device_id: string | null
           event_code: string
           id: number
           latency_ms: number | null
@@ -1022,14 +1108,18 @@ export type Database = {
           message: string
           metadata: Json
           method: string | null
+          platform: string | null
           request_id: string | null
           route: string | null
+          session_id: string | null
           source: string
           status_code: number | null
         }
         Insert: {
           actor_id?: string | null
+          app_version?: string | null
           created_at?: string
+          device_id?: string | null
           event_code: string
           id?: never
           latency_ms?: number | null
@@ -1037,14 +1127,18 @@ export type Database = {
           message?: string
           metadata?: Json
           method?: string | null
+          platform?: string | null
           request_id?: string | null
           route?: string | null
+          session_id?: string | null
           source?: string
           status_code?: number | null
         }
         Update: {
           actor_id?: string | null
+          app_version?: string | null
           created_at?: string
+          device_id?: string | null
           event_code?: string
           id?: never
           latency_ms?: number | null
@@ -1052,8 +1146,10 @@ export type Database = {
           message?: string
           metadata?: Json
           method?: string | null
+          platform?: string | null
           request_id?: string | null
           route?: string | null
+          session_id?: string | null
           source?: string
           status_code?: number | null
         }
@@ -1093,6 +1189,54 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      user_devices: {
+        Row: {
+          app_version: string | null
+          device_id: string
+          device_name: string | null
+          first_seen_at: string
+          id: string
+          last_ip: unknown
+          last_seen_at: string
+          os_version: string | null
+          platform: string
+          push_provider: string | null
+          push_token: string | null
+          revoked_at: string | null
+          user_id: string
+        }
+        Insert: {
+          app_version?: string | null
+          device_id: string
+          device_name?: string | null
+          first_seen_at?: string
+          id?: string
+          last_ip?: unknown
+          last_seen_at?: string
+          os_version?: string | null
+          platform: string
+          push_provider?: string | null
+          push_token?: string | null
+          revoked_at?: string | null
+          user_id: string
+        }
+        Update: {
+          app_version?: string | null
+          device_id?: string
+          device_name?: string | null
+          first_seen_at?: string
+          id?: string
+          last_ip?: unknown
+          last_seen_at?: string
+          os_version?: string | null
+          platform?: string
+          push_provider?: string | null
+          push_token?: string | null
+          revoked_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
       }
       workspace_members: {
         Row: {

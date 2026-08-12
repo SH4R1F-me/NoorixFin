@@ -5,10 +5,13 @@
   "main": "./src/index.ts",
   "types": "./src/index.ts",
   "scripts": {
-    "build": "echo 'TODO: OpenAPI client generation'",
-    "typecheck": "tsc --noEmit"
+    "build": "echo 'Consumed from source (main → src/index.ts); nothing to compile'",
+    "typecheck": "tsc --noEmit",
+    "generate": "pnpm --filter @noorixfin/api openapi:generate && openapi-typescript openapi.json -o src/schema.d.ts",
+    "check:fresh": "node scripts/check-fresh.mjs"
   },
   "devDependencies": {
+    "openapi-typescript": "^7.13.0",
     "typescript": "^5.8.0"
   }
 }

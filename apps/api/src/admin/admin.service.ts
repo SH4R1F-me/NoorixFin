@@ -804,6 +804,320 @@ export class AdminService {
     return data;
   }
 
+  // ─── Phase 2: Performance metrics ────────────────────────────────────────
+
+  /**
+   * p50/p95/p99 latency, error rate, and request volume from system_events.
+   * All aggregations run on the service role so RLS on system_events (which is
+   * operator-only) does not block them.
+   */
+  async getPerformanceMetrics(
+    _accessToken: string,
+    windowHours: number = 1,
+  ) {
+    const client = this.supabaseService.getServiceClient();
+    const since = new Date(Date.now() - windowHours * 60 * 60 * 1000).toISOString();
+
+    const { data, error } = await client
+      .from('system_events')
+      .select('latency_ms, status_code, platform, route, method, created_at, event_code')
+      .gte('created_at', since)
+      .not('latency_ms', 'is', null);
+
+    if (error) throw this.translate(error);
+
+    const rows = (data ?? []) as Array<{
+      latency_ms: number;
+      status_code: number | null;
+      platform: string | null;
+      route: string | null;
+      method: string | null;
+      event_code: string;
+    }>;
+
+    const latencies = rows.map((r) => r.latency_ms).sort((a, b) => a - b);
+    const total = latencies.length;
+    const errors = rows.filter(
+      (r) => r.status_code !== null && r.status_code >= 500,
+    ).length;
+    const client4xx = rows.filter(
+      (r) => r.status_code !== null && r.status_code >= 400 && r.status_code < 500,
+    ).length;
+
+    const pct = (n: number) =>
+      total === 0 ? 0 : latencies[Math.floor((n / 100) * total)] ?? 0;
+
+    // Per-route aggregation (top 10 slowest by p95)
+    const routeMap = new Map<
+      string,
+      { count: number; latencies: number[]; errors: number }
+    >();
+    for (const row of rows) {
+      const key = `${row.method ?? 'GET'} ${row.route ?? '/'}`;
+      const entry = routeMap.get(key) ?? { count: 0, latencies: [], errors: 0 };
+      entry.count += 1;
+      entry.latencies.push(row.latency_ms);
+      if (row.status_code !== null && row.status_code >= 500) entry.errors += 1;
+      routeMap.set(key, entry);
+    }
+    const routes = [...routeMap.entries()]
+      .map(([route, v]) => {
+        const sorted = v.latencies.sort((a, b) => a - b);
+        const rPct = (n: number) =>
+          sorted[Math.floor((n / 100) * sorted.length)] ?? 0;
+        return {
+          route,
+          count: v.count,
+          p50: rPct(50),
+          p95: rPct(95),
+          p99: rPct(99),
+          error_count: v.errors,
+        };
+      })
+      .sort((a, b) => b.p95 - a.p95)
+      .slice(0, 10);
+
+    // Per-platform breakdown
+    const platformMap = new Map<string, number>();
+    for (const row of rows) {
+      const p = row.platform ?? 'unknown';
+      platformMap.set(p, (platformMap.get(p) ?? 0) + 1);
+    }
+
+    return {
+      window_hours: windowHours,
+      total_requests: total,
+      error_count: errors,
+      client_error_count: client4xx,
+      error_rate: total === 0 ? 0 : Math.round((errors / total) * 10000) / 100,
+      p50: pct(50),
+      p95: pct(95),
+      p99: pct(99),
+      slowest_routes: routes,
+      by_platform: Object.fromEntries(platformMap),
+      computed_at: new Date().toISOString(),
+    };
+  }
+
+  // ─── Phase 2: Alerts ──────────────────────────────────────────────────────
+
+  async getAlerts(_accessToken: string) {
+    const client = this.supabaseService.getServiceClient();
+    const { data, error } = await client
+      .from('alert_state')
+      .select('*')
+      .order('updated_at', { ascending: false });
+    if (error) throw this.translate(error);
+    return data ?? [];
+  }
+
+  async acknowledgeAlert(actorId: string, alertKey: string) {
+    const client = this.supabaseService.getServiceClient();
+    const { data, error } = await client
+      .from('alert_state')
+      .update({
+        is_firing: false,
+        last_resolved_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      })
+      .eq('alert_key', alertKey)
+      .select()
+      .single();
+
+    if (error) throw this.translate(error);
+
+    await this.audit.write({
+      actorId,
+      action: 'ADMIN_ALERT_ACKNOWLEDGED',
+      resourceType: 'alert_state',
+      resourceId: alertKey,
+      metadata: { alert_key: alertKey },
+    });
+    this.systemEvents.record({
+      level: 'INFO',
+      eventCode: 'ALERT_ACKNOWLEDGED',
+      message: `Alert "${alertKey}" acknowledged by operator`,
+      actorId,
+    });
+
+    return data;
+  }
+
+  // ─── Phase 2: Security — auth events ─────────────────────────────────────
+
+  async getAuthEvents(
+    accessToken: string,
+    query: { limit?: number; offset?: number; platform?: string },
+  ) {
+    const client = this.supabaseService.getUserClient(accessToken);
+    const limit = query.limit ?? 50;
+    const offset = query.offset ?? 0;
+
+    // Auth-related actions written by the API on login/signup/password-reset.
+    const AUTH_ACTIONS = [
+      'USER_SIGNED_IN',
+      'USER_SIGNED_UP',
+      'PASSWORD_RESET_REQUESTED',
+      'EMAIL_CHANGED',
+      'MFA_ENROLLED',
+      'MFA_VERIFIED',
+      'ACCOUNT_DELETED',
+      'ADMIN_USER_SUSPENDED',
+      'ADMIN_USER_REINSTATED',
+    ];
+
+    let builder = client
+      .from('audit_events')
+      .select('*', { count: 'exact' })
+      .in('action', AUTH_ACTIONS)
+      .order('created_at', { ascending: false });
+
+    if (query.platform) builder = builder.eq('platform', query.platform);
+
+    const { data, error, count } = await builder.range(offset, offset + limit - 1);
+    if (error) throw this.translate(error);
+
+    return { items: data ?? [], total: count ?? 0, limit, offset };
+  }
+
+  // ─── Phase 2: Security — active sessions ─────────────────────────────────
+
+  async getActiveSessions(
+    _accessToken: string,
+    query: { limit?: number; offset?: number; platform?: string },
+  ) {
+    const client = this.supabaseService.getServiceClient();
+    const limit = query.limit ?? 50;
+    const offset = query.offset ?? 0;
+
+    let builder = client
+      .from('user_devices')
+      .select('id, user_id, device_id, platform, device_name, os_version, app_version, last_seen_at, last_ip, first_seen_at', { count: 'exact' })
+      .is('revoked_at', null)
+      .order('last_seen_at', { ascending: false });
+
+    if (query.platform) builder = builder.eq('platform', query.platform);
+
+    const { data, error, count } = await builder.range(offset, offset + limit - 1);
+    if (error) throw this.translate(error);
+
+    return { items: data ?? [], total: count ?? 0, limit, offset };
+  }
+
+  async revokeSession(actorId: string, deviceRowId: string) {
+    const client = this.supabaseService.getServiceClient();
+    const { data, error } = await client
+      .from('user_devices')
+      .update({ revoked_at: new Date().toISOString() })
+      .eq('id', deviceRowId)
+      .is('revoked_at', null)
+      .select('id, user_id, platform')
+      .single();
+
+    if (error || !data) {
+      throw new NotFoundException({ code: 'DEVICE_NOT_FOUND', message: 'Device not found or already revoked' });
+    }
+
+    await this.audit.write({
+      actorId,
+      action: 'ADMIN_SESSION_REVOKED',
+      resourceType: 'user_devices',
+      resourceId: deviceRowId,
+      metadata: { target_user: data.user_id, platform: data.platform },
+    });
+
+    return { revoked: true, device_id: deviceRowId };
+  }
+
+  async revokeAllUserSessions(actorId: string, userId: string) {
+    const client = this.supabaseService.getServiceClient();
+    const { error } = await client
+      .from('user_devices')
+      .update({ revoked_at: new Date().toISOString() })
+      .eq('user_id', userId)
+      .is('revoked_at', null);
+
+    if (error) throw this.translate(error);
+
+    await this.audit.write({
+      actorId,
+      action: 'ADMIN_ALL_SESSIONS_REVOKED',
+      resourceType: 'user_devices',
+      resourceId: userId,
+      metadata: { target_user: userId },
+    });
+
+    return { revoked: true };
+  }
+
+  // ─── Phase 2: Security — anomalies (heuristic) ───────────────────────────
+
+  /**
+   * Simple heuristic anomaly signals.
+   *
+   * Real impossible-travel detection requires geoIP resolution on every request
+   * IP, which is not available on the Free Tier without a third-party service.
+   * These are the signals available from existing data:
+   *   - New-device logins (first_seen_at very recent)
+   *   - High throttle-hit users (from system_events event_code THROTTLE_*)
+   *   - Accounts with > N platforms (web + ios + android at once)
+   */
+  async getAnomalies(_accessToken: string) {
+    const client = this.supabaseService.getServiceClient();
+    const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+
+    // New devices seen in the last 24h
+    const { data: newDevices } = await client
+      .from('user_devices')
+      .select('id, user_id, platform, device_name, first_seen_at, last_ip')
+      .gte('first_seen_at', oneDayAgo)
+      .is('revoked_at', null)
+      .order('first_seen_at', { ascending: false })
+      .limit(25);
+
+    // Throttle hits in the last hour
+    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+    const { data: throttleEvents } = await client
+      .from('system_events')
+      .select('actor_id, created_at, route, metadata')
+      .in('event_code', ['THROTTLE_SHORT', 'THROTTLE_MEDIUM', 'THROTTLE_LONG', 'RATE_LIMIT_EXCEEDED'])
+      .gte('created_at', oneHourAgo)
+      .not('actor_id', 'is', null)
+      .limit(100);
+
+    // Summarise throttle by actor
+    const throttleByActor = new Map<string, number>();
+    for (const evt of (throttleEvents ?? []) as Array<{ actor_id: string }>) {
+      const id = evt.actor_id;
+      throttleByActor.set(id, (throttleByActor.get(id) ?? 0) + 1);
+    }
+    const throttleAbusers = [...throttleByActor.entries()]
+      .filter(([, count]) => count >= 5)
+      .map(([actor_id, hit_count]) => ({ actor_id, hit_count }))
+      .sort((a, b) => b.hit_count - a.hit_count);
+
+    return {
+      new_devices_24h: newDevices ?? [],
+      throttle_abusers_1h: throttleAbusers,
+      computed_at: new Date().toISOString(),
+    };
+  }
+
+  // ─── Phase 2: Correlated trace view ──────────────────────────────────────
+
+  async getEventsByRequestId(accessToken: string, requestId: string) {
+    const client = this.supabaseService.getUserClient(accessToken);
+    const { data, error } = await client
+      .from('system_events')
+      .select('*')
+      .eq('request_id', requestId)
+      .order('created_at', { ascending: true })
+      .limit(200);
+
+    if (error) throw this.translate(error);
+    return data ?? [];
+  }
+
   // ─── Errors ───────────────────────────────────────────────────────────────
 
   /**

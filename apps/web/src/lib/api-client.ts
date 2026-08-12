@@ -16,13 +16,28 @@ import 'server-only';
  * single-flight lock would be dead code guarding a race that cannot occur.
  */
 import { createClient } from './supabase/server';
+import { isRetryable, type ApiErrorCode } from '@noorixfin/domain';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001';
+
+/**
+ * Codes this client synthesises, which the API can never send.
+ *
+ * Kept separate from `ApiErrorCode` on purpose: they describe a failure to get
+ * an answer, not an answer describing a failure, and conflating the two is how
+ * `isRetryable` would end up consulting a catalogue that has no entry for them.
+ */
+export type ClientErrorCode = 'API_UNREACHABLE' | 'UNKNOWN';
 
 export class ApiError extends Error {
   constructor(
     readonly status: number,
-    readonly code: string,
+    /**
+     * Typed against the published catalogue rather than `string`, so a
+     * `code === 'TRANSACTON_NOT_FOUND'` typo is a compile error instead of a
+     * branch that silently never runs.
+     */
+    readonly code: ApiErrorCode | ClientErrorCode,
     message: string,
   ) {
     super(message);
@@ -32,6 +47,17 @@ export class ApiError extends Error {
   /** True when the API could not be contacted at all, as opposed to answering with an error. */
   get isUnreachable(): boolean {
     return this.code === 'API_UNREACHABLE';
+  }
+
+  /**
+   * True when repeating the identical request could plausibly succeed.
+   *
+   * An unreachable API counts: the request never reached a handler, so nothing
+   * about it was rejected. Everything else defers to the catalogue, which
+   * fails closed on codes it does not know.
+   */
+  get isRetryable(): boolean {
+    return this.isUnreachable || isRetryable(this.code);
   }
 }
 
@@ -111,11 +137,15 @@ export async function apiFetch<T>(path: string, options: RequestOptions = {}): P
   }
 
   if (!response.ok) {
-    let code = 'UNKNOWN';
+    // Widened deliberately: the wire can carry a code this build has never
+    // heard of — an older client against a newer API. Narrowing it here with a
+    // runtime check would only trade an unknown code for a lost one, and
+    // `isRetryable` already fails closed on anything it does not recognise.
+    let code: ApiErrorCode | ClientErrorCode = 'UNKNOWN';
     let message = response.statusText;
     try {
       const parsed = (await response.json()) as { code?: string; message?: string };
-      code = parsed.code ?? code;
+      code = (parsed.code as ApiErrorCode | undefined) ?? code;
       message = parsed.message ?? message;
     } catch {
       // Non-JSON error body (proxy error page, gateway timeout). Keep the status text.

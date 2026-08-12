@@ -12,9 +12,22 @@ import {
   Logger,
 } from '@nestjs/common';
 import { Request, Response } from 'express';
+import {
+  captureError,
+  fingerprint,
+  resolveRelease,
+} from '@noorixfin/observability';
 import { SystemEventsService } from '../../observability/system-events.service';
 import { AuthenticatedUser } from '../decorators/current-user.decorator';
 import { scrubPath } from '../interceptors/logging.interceptor';
+import type { TracedRequest } from '../middleware/request-id.middleware';
+
+/**
+ * Resolved once at module load, not per request: the build cannot change while
+ * the process is running, and doing this per error would read the environment
+ * thousands of times during exactly the incident where it is busiest.
+ */
+const RELEASE = resolveRelease('api');
 
 interface ErrorResponse {
   statusCode: number;
@@ -114,12 +127,31 @@ export class GlobalHttpExceptionFilter implements ExceptionFilter {
     status: number,
     code: string,
     message: string,
-    request: Request & { user?: AuthenticatedUser },
+    request: TracedRequest & { user?: AuthenticatedUser },
     exception: unknown,
   ): void {
     const isServerError = status >= 500;
     const isSecuritySignal = [401, 403, 429].includes(status);
     if (!isServerError && !isSecuritySignal) return;
+
+    const route = scrubPath(request.url);
+    const traceId = request.traceContext?.traceId;
+
+    // Grouping key (audit gap R1). One bug firing ten thousand times used to
+    // read as ten thousand unrelated problems and bury the other nine; with a
+    // fingerprint an operator can ask how many DISTINCT things are broken:
+    //
+    //   SELECT metadata->>'fingerprint', count(*)
+    //   FROM system_events WHERE level = 'ERROR' GROUP BY 1 ORDER BY 2 DESC;
+    //
+    // The route is part of the identity, so the same generic failure on two
+    // endpoints stays two entries rather than one misleading total.
+    const group = fingerprint({
+      name: exception instanceof Error ? exception.name : 'Error',
+      message,
+      stack: exception instanceof Error ? exception.stack : undefined,
+      context: `${request.method} ${route}`,
+    });
 
     this.systemEvents.record({
       level: isServerError ? 'ERROR' : 'WARN',
@@ -127,10 +159,17 @@ export class GlobalHttpExceptionFilter implements ExceptionFilter {
       message,
       requestId: request.headers['x-request-id'] as string | undefined,
       actorId: request.user?.id,
-      route: scrubPath(request.url),
+      route,
       method: request.method,
       statusCode: status,
       metadata: {
+        fingerprint: group,
+        // Which build. Without it, "errors spiked at 14:00" cannot be joined
+        // to "we deployed at 13:58" — the first question anyone asks.
+        release: RELEASE.release,
+        environment: RELEASE.environment,
+        // Joins this server-side failure to the client span that caused it.
+        trace_id: traceId,
         // A stack is the whole point of a 5xx entry; it is our own code, not
         // user data. Bounded so one exception cannot dominate a batch.
         stack:
@@ -139,6 +178,23 @@ export class GlobalHttpExceptionFilter implements ExceptionFilter {
             : undefined,
       },
     });
+
+    // Hand the same failure to whatever external reporter is registered. The
+    // default is a no-op, so this costs one function call and changes nothing
+    // until someone configures one — see @noorixfin/observability.
+    if (isServerError) {
+      captureError(exception, {
+        release: RELEASE,
+        traceId,
+        context: `${request.method} ${route}`,
+        extra: {
+          code,
+          status,
+          request_id: request.headers['x-request-id'],
+          actor_id: request.user?.id,
+        },
+      });
+    }
   }
 
   private statusToCode(status: number): string {

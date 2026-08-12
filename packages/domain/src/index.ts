@@ -277,6 +277,16 @@ export interface Attachment {
 
 // ─── API Types ───────────────────────────────────────────────────────
 
+/**
+ * The published error catalogue and the standard list envelope.
+ *
+ * `ApiError` below is the historical, code-agnostic shape. `ApiErrorBody` in
+ * ./errors adds the fields the filter actually sends (`statusCode`, `path`,
+ * `timestamp`) and types `code` against the catalogue — prefer it in new code.
+ */
+export * from './errors';
+export * from './pagination';
+
 export interface ApiError {
   code: string;
   message: string;
@@ -284,11 +294,13 @@ export interface ApiError {
   requestId: string;
 }
 
-export interface PaginatedResponse<T> {
-  data: T[];
-  cursor: string | null;
-  hasMore: boolean;
-}
+/**
+ * `PaginatedResponse` used to live here with a `hasMore` field and a `data`
+ * array. It was exported, referenced by nothing in the workspace, and
+ * disagreed with what the API actually sends — `{ items, next_cursor,
+ * has_more }` — so anyone who had trusted it would have unwrapped the wrong
+ * keys. Removed in favour of `Page<T>` in ./pagination, which matches the wire.
+ */
 
 // ─── Utility ─────────────────────────────────────────────────────────
 

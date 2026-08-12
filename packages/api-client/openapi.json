@@ -1,0 +1,3647 @@
+{
+  "openapi": "3.0.0",
+  "paths": {
+    "/v1/workspaces/{workspaceId}/sync": {
+      "get": {
+        "description": "Omit `since` for a full initial pull. Delivery is at-least-once: boundary rows may repeat, so the client must upsert by primary key. Advance your stored cursor only when `has_more` is false.",
+        "operationId": "SyncController_delta_v1",
+        "parameters": [
+          {
+            "name": "workspaceId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "since",
+            "required": false,
+            "in": "query",
+            "description": "ISO-8601 timestamp cursor. Returns rows with updated_at > since. Omit for a full initial pull.",
+            "schema": {
+              "example": "2026-08-04T10:15:00.000Z",
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "description": "Max rows per table in one page. The response says whether more remain.",
+            "schema": {
+              "minimum": 1,
+              "maximum": 1000,
+              "default": 500,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SyncResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "supabase-auth": []
+          }
+        ],
+        "summary": "Delta sync — all rows changed since the given cursor",
+        "tags": [
+          "Sync"
+        ]
+      }
+    },
+    "/v1/health": {
+      "get": {
+        "operationId": "HealthController_check_v1",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Service is alive",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "ok"
+                    },
+                    "timestamp": {
+                      "type": "string",
+                      "example": "2026-08-01T00:00:00.000Z"
+                    },
+                    "version": {
+                      "type": "string",
+                      "example": "0.1.0"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "Liveness probe — process is up. Touches no dependency.",
+        "tags": [
+          "Health"
+        ]
+      }
+    },
+    "/v1/health/live": {
+      "get": {
+        "operationId": "HealthController_live_v1",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Liveness probe (alias of GET /health)",
+        "tags": [
+          "Health"
+        ]
+      }
+    },
+    "/v1/health/ready": {
+      "get": {
+        "operationId": "HealthController_ready_v1",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Every dependency answered"
+          },
+          "503": {
+            "description": "A dependency is failing, or the process is draining"
+          }
+        },
+        "summary": "Readiness probe — checks database and auth. 503 when not ready.",
+        "tags": [
+          "Health"
+        ]
+      }
+    },
+    "/v1/me": {
+      "get": {
+        "operationId": "ProfilesController_getProfile_v1",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProfileResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "supabase-auth": []
+          }
+        ],
+        "summary": "Get current user profile",
+        "tags": [
+          "Profile"
+        ]
+      }
+    },
+    "/v1/me/preferences": {
+      "patch": {
+        "operationId": "ProfilesController_updatePreferences_v1",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdatePreferencesDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProfileResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "supabase-auth": []
+          }
+        ],
+        "summary": "Update user preferences",
+        "tags": [
+          "Profile"
+        ]
+      }
+    },
+    "/v1/me/onboarding": {
+      "patch": {
+        "description": "Separate from /me/preferences: preferences are freely editable, this is a monotonic progression. Moving backwards is silently ignored so a reloaded step cannot drag a finished user back into onboarding.",
+        "operationId": "ProfilesController_updateOnboarding_v1",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateOnboardingDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProfileResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "supabase-auth": []
+          }
+        ],
+        "summary": "Advance the §5.2 onboarding state machine",
+        "tags": [
+          "Profile"
+        ]
+      }
+    },
+    "/v1/workspaces": {
+      "post": {
+        "operationId": "WorkspacesController_create_v1",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateWorkspaceDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkspaceResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "supabase-auth": []
+          }
+        ],
+        "summary": "Create a new personal workspace",
+        "tags": [
+          "Workspaces"
+        ]
+      },
+      "get": {
+        "operationId": "WorkspacesController_list_v1",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/WorkspaceResponseDto"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "supabase-auth": []
+          }
+        ],
+        "summary": "List user workspaces",
+        "tags": [
+          "Workspaces"
+        ]
+      }
+    },
+    "/v1/workspaces/{workspaceId}/summary": {
+      "get": {
+        "description": "Single aggregated payload (DEC-011). Amounts are minor units. Percentage deltas are NOT returned: with a zero prior month a change is undefined rather than +100%, so the client decides how to render that.",
+        "operationId": "WorkspacesController_summary_v1",
+        "parameters": [
+          {
+            "name": "workspaceId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "supabase-auth": []
+          }
+        ],
+        "summary": "Dashboard summary — net worth, month income/expense/net, prior month",
+        "tags": [
+          "Workspaces"
+        ]
+      }
+    },
+    "/v1/workspaces/{workspaceId}/accounts": {
+      "post": {
+        "operationId": "AccountsController_create_v1",
+        "parameters": [
+          {
+            "name": "workspaceId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateAccountDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "supabase-auth": []
+          }
+        ],
+        "summary": "Create a new ledger account",
+        "tags": [
+          "Accounts"
+        ]
+      },
+      "get": {
+        "operationId": "AccountsController_list_v1",
+        "parameters": [
+          {
+            "name": "workspaceId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AccountResponseDto"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "supabase-auth": []
+          }
+        ],
+        "summary": "List workspace accounts with balances",
+        "tags": [
+          "Accounts"
+        ]
+      }
+    },
+    "/v1/workspaces/{workspaceId}/accounts/{id}": {
+      "patch": {
+        "operationId": "AccountsController_update_v1",
+        "parameters": [
+          {
+            "name": "workspaceId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateAccountDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "supabase-auth": []
+          }
+        ],
+        "summary": "Update an account (name, flags, archive)",
+        "tags": [
+          "Accounts"
+        ]
+      }
+    },
+    "/v1/workspaces/{workspaceId}/transactions": {
+      "post": {
+        "operationId": "TransactionsController_create_v1",
+        "parameters": [
+          {
+            "name": "workspaceId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTransactionDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TransactionResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "supabase-auth": []
+          }
+        ],
+        "summary": "Create a new transaction (income/expense/transfer)",
+        "tags": [
+          "Transactions"
+        ]
+      },
+      "get": {
+        "operationId": "TransactionsController_list_v1",
+        "parameters": [
+          {
+            "name": "workspaceId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "cursor",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "category",
+            "required": false,
+            "in": "query",
+            "description": "Drill-down filter (§5.3) — only entries posting against this category. This is what turns a budget line or a report slice into the transactions behind it.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "tag",
+            "required": false,
+            "in": "query",
+            "description": "Only entries carrying this tag. Intersects with `category`.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TransactionResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "supabase-auth": []
+          }
+        ],
+        "summary": "List transactions with cursor pagination",
+        "tags": [
+          "Transactions"
+        ]
+      }
+    },
+    "/v1/workspaces/{workspaceId}/tags": {
+      "get": {
+        "description": "The count distinguishes a label in active use from one left behind by a typo — which is the decision this list exists to support.",
+        "operationId": "TransactionsController_listTags_v1",
+        "parameters": [
+          {
+            "name": "workspaceId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "supabase-auth": []
+          }
+        ],
+        "summary": "Every tag in the workspace, with usage counts",
+        "tags": [
+          "Transactions"
+        ]
+      }
+    },
+    "/v1/workspaces/{workspaceId}/tags/{tagId}": {
+      "delete": {
+        "description": "Detaches it from every entry and alters no posting — a tag is a label, not a fact about the money.",
+        "operationId": "TransactionsController_deleteTag_v1",
+        "parameters": [
+          {
+            "name": "workspaceId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "tagId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "supabase-auth": []
+          }
+        ],
+        "summary": "Delete a tag",
+        "tags": [
+          "Transactions"
+        ]
+      }
+    },
+    "/v1/workspaces/{workspaceId}/transactions/{id}": {
+      "get": {
+        "operationId": "TransactionsController_getOne_v1",
+        "parameters": [
+          {
+            "name": "workspaceId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TransactionResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "supabase-auth": []
+          }
+        ],
+        "summary": "Get transaction detail with postings",
+        "tags": [
+          "Transactions"
+        ]
+      }
+    },
+    "/v1/workspaces/{workspaceId}/transactions/{id}/reverse": {
+      "post": {
+        "operationId": "TransactionsController_reverse_v1",
+        "parameters": [
+          {
+            "name": "workspaceId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TransactionResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "supabase-auth": []
+          }
+        ],
+        "summary": "Reverse a posted transaction",
+        "tags": [
+          "Transactions"
+        ]
+      }
+    },
+    "/v1/workspaces/{workspaceId}/categories": {
+      "get": {
+        "operationId": "CategoriesController_list_v1",
+        "parameters": [
+          {
+            "name": "workspaceId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "kind",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "enum": [
+                "INCOME",
+                "EXPENSE"
+              ],
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CategoryResponseDto"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "supabase-auth": []
+          }
+        ],
+        "summary": "List categories (auto-seeds system categories)",
+        "tags": [
+          "Categories"
+        ]
+      },
+      "post": {
+        "operationId": "CategoriesController_create_v1",
+        "parameters": [
+          {
+            "name": "workspaceId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateCategoryDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CategoryResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "supabase-auth": []
+          }
+        ],
+        "summary": "Create a custom category",
+        "tags": [
+          "Categories"
+        ]
+      }
+    },
+    "/v1/workspaces/{workspaceId}/categories/{id}": {
+      "patch": {
+        "operationId": "CategoriesController_update_v1",
+        "parameters": [
+          {
+            "name": "workspaceId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateCategoryDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CategoryResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "supabase-auth": []
+          }
+        ],
+        "summary": "Update a category (renaming a system category sets custom_name)",
+        "tags": [
+          "Categories"
+        ]
+      }
+    },
+    "/v1/workspaces/{workspaceId}/budget": {
+      "get": {
+        "operationId": "PlanningController_getBudget_v1",
+        "parameters": [
+          {
+            "name": "workspaceId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "One payload per DEC-011; spend derived from postings"
+          }
+        },
+        "security": [
+          {
+            "supabase-auth": []
+          }
+        ],
+        "summary": "Budget status: planned vs actual for the current period",
+        "tags": [
+          "Planning"
+        ]
+      },
+      "put": {
+        "operationId": "PlanningController_upsertBudget_v1",
+        "parameters": [
+          {
+            "name": "workspaceId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertBudgetDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "supabase-auth": []
+          }
+        ],
+        "summary": "Create or replace the budget and all of its lines",
+        "tags": [
+          "Planning"
+        ]
+      }
+    },
+    "/v1/workspaces/{workspaceId}/budget/{id}": {
+      "delete": {
+        "operationId": "PlanningController_deleteBudget_v1",
+        "parameters": [
+          {
+            "name": "workspaceId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "supabase-auth": []
+          }
+        ],
+        "summary": "Delete a budget",
+        "tags": [
+          "Planning"
+        ]
+      }
+    },
+    "/v1/workspaces/{workspaceId}/goals": {
+      "get": {
+        "operationId": "PlanningController_getGoals_v1",
+        "parameters": [
+          {
+            "name": "workspaceId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "supabase-auth": []
+          }
+        ],
+        "summary": "Savings goals and debt summary, progress read from the ledger",
+        "tags": [
+          "Planning"
+        ]
+      },
+      "post": {
+        "operationId": "PlanningController_createGoal_v1",
+        "parameters": [
+          {
+            "name": "workspaceId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateGoalDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "supabase-auth": []
+          }
+        ],
+        "summary": "Create a savings goal",
+        "tags": [
+          "Planning"
+        ]
+      }
+    },
+    "/v1/workspaces/{workspaceId}/goals/{id}": {
+      "patch": {
+        "operationId": "PlanningController_updateGoal_v1",
+        "parameters": [
+          {
+            "name": "workspaceId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateGoalDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "supabase-auth": []
+          }
+        ],
+        "summary": "Update a savings goal (progress is not writable)",
+        "tags": [
+          "Planning"
+        ]
+      },
+      "delete": {
+        "operationId": "PlanningController_deleteGoal_v1",
+        "parameters": [
+          {
+            "name": "workspaceId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "supabase-auth": []
+          }
+        ],
+        "summary": "Delete a savings goal",
+        "tags": [
+          "Planning"
+        ]
+      }
+    },
+    "/v1/workspaces/{workspaceId}/debts": {
+      "put": {
+        "operationId": "PlanningController_upsertDebt_v1",
+        "parameters": [
+          {
+            "name": "workspaceId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertDebtDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "supabase-auth": []
+          }
+        ],
+        "summary": "Attach or replace repayment terms on a liability account",
+        "tags": [
+          "Planning"
+        ]
+      }
+    },
+    "/v1/workspaces/{workspaceId}/calendar": {
+      "get": {
+        "operationId": "PlanningController_getCalendar_v1",
+        "parameters": [
+          {
+            "name": "workspaceId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "days",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "supabase-auth": []
+          }
+        ],
+        "summary": "Upcoming, due and overdue events",
+        "tags": [
+          "Planning"
+        ]
+      },
+      "post": {
+        "operationId": "PlanningController_createEvent_v1",
+        "parameters": [
+          {
+            "name": "workspaceId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateCalendarEventDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "supabase-auth": []
+          }
+        ],
+        "summary": "Create a bill, expected income or reminder",
+        "tags": [
+          "Planning"
+        ]
+      }
+    },
+    "/v1/workspaces/{workspaceId}/calendar/{id}": {
+      "patch": {
+        "operationId": "PlanningController_updateEvent_v1",
+        "parameters": [
+          {
+            "name": "workspaceId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateCalendarEventDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "supabase-auth": []
+          }
+        ],
+        "summary": "Mark paid or skipped, or edit an event",
+        "tags": [
+          "Planning"
+        ]
+      },
+      "delete": {
+        "operationId": "PlanningController_deleteEvent_v1",
+        "parameters": [
+          {
+            "name": "workspaceId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "supabase-auth": []
+          }
+        ],
+        "summary": "Delete a calendar event",
+        "tags": [
+          "Planning"
+        ]
+      }
+    },
+    "/v1/workspaces/{workspaceId}/recurring": {
+      "get": {
+        "operationId": "PlanningController_listRules_v1",
+        "parameters": [
+          {
+            "name": "workspaceId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "supabase-auth": []
+          }
+        ],
+        "summary": "List recurring rules",
+        "tags": [
+          "Planning"
+        ]
+      },
+      "post": {
+        "operationId": "PlanningController_createRule_v1",
+        "parameters": [
+          {
+            "name": "workspaceId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateRecurringRuleDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "supabase-auth": []
+          }
+        ],
+        "summary": "Create a recurring rule (never auto-posts — §9.4)",
+        "tags": [
+          "Planning"
+        ]
+      }
+    },
+    "/v1/workspaces/{workspaceId}/recurring/{id}": {
+      "delete": {
+        "operationId": "PlanningController_deleteRule_v1",
+        "parameters": [
+          {
+            "name": "workspaceId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "supabase-auth": []
+          }
+        ],
+        "summary": "Delete a recurring rule",
+        "tags": [
+          "Planning"
+        ]
+      }
+    },
+    "/v1/workspaces/{workspaceId}/reports/categories": {
+      "get": {
+        "operationId": "PlanningController_getReport_v1",
+        "parameters": [
+          {
+            "name": "workspaceId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "from",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "example": "2026-08-01",
+              "type": "string"
+            }
+          },
+          {
+            "name": "to",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "example": "2026-09-01",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "supabase-auth": []
+          }
+        ],
+        "summary": "Category breakdown and 6-month trend (§11.3 contract)",
+        "tags": [
+          "Planning"
+        ]
+      }
+    },
+    "/v1/admin/overview": {
+      "get": {
+        "operationId": "AdminController_overview_v1",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "supabase-auth": []
+          }
+        ],
+        "summary": "Platform-wide counts, uptime and DB latency",
+        "tags": [
+          "Admin"
+        ]
+      }
+    },
+    "/v1/admin/health": {
+      "get": {
+        "description": "Unlike GET /v1/health, which reports that the process is up, this one actually reaches each dependency and reports per-check latency.",
+        "operationId": "AdminController_health_v1",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "supabase-auth": []
+          }
+        ],
+        "summary": "Deep health check — probes Postgres, Auth and Storage",
+        "tags": [
+          "Admin"
+        ]
+      }
+    },
+    "/v1/admin/events": {
+      "get": {
+        "operationId": "AdminController_listEvents_v1",
+        "parameters": [
+          {
+            "name": "level",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "DEBUG",
+                "INFO",
+                "WARN",
+                "ERROR",
+                "FATAL"
+              ]
+            }
+          },
+          {
+            "name": "source",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "example": "api",
+              "type": "string"
+            }
+          },
+          {
+            "name": "q",
+            "required": false,
+            "in": "query",
+            "description": "Free-text match on message or event code",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "since",
+            "required": false,
+            "in": "query",
+            "description": "ISO timestamp lower bound",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "afterId",
+            "required": false,
+            "in": "query",
+            "description": "Return only events with id greater than this — the live-tail cursor",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": 50,
+              "type": "number"
+            }
+          },
+          {
+            "name": "offset",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": 0,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "supabase-auth": []
+          }
+        ],
+        "summary": "Paginated operational event log",
+        "tags": [
+          "Admin"
+        ]
+      }
+    },
+    "/v1/admin/events/stream": {
+      "get": {
+        "operationId": "AdminController_streamEvents_v1",
+        "parameters": [
+          {
+            "name": "afterId",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "supabase-auth": []
+          }
+        ],
+        "summary": "Live event feed (SSE)",
+        "tags": [
+          "Admin"
+        ]
+      }
+    },
+    "/v1/admin/jobs": {
+      "get": {
+        "description": "A scheduler nobody can inspect is a scheduler nobody trusts. The case that matters is FAILURE: a purge that has been erroring for a week looks exactly like a purge with nothing to do unless the run log is visible.",
+        "operationId": "AdminController_scheduledJobs_v1",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "supabase-auth": []
+          }
+        ],
+        "summary": "Scheduled jobs and their last run outcome",
+        "tags": [
+          "Admin"
+        ]
+      }
+    },
+    "/v1/admin/tracing": {
+      "get": {
+        "operationId": "AdminController_tracingStatus_v1",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "supabase-auth": []
+          }
+        ],
+        "summary": "Whether the request-trace window is open, and until when",
+        "tags": [
+          "Admin"
+        ]
+      },
+      "post": {
+        "description": "Records EVERY request to system_events so one user's request can be followed end to end. Expires on its own — a trace that must be switched off by hand becomes a permanent activity log of every user, which DEC-016 does not permit an operator to keep.",
+        "operationId": "AdminController_enableTracing_v1",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EnableTracingDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "supabase-auth": []
+          }
+        ],
+        "summary": "Open a time-boxed request-trace window",
+        "tags": [
+          "Admin"
+        ]
+      },
+      "delete": {
+        "operationId": "AdminController_disableTracing_v1",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "supabase-auth": []
+          }
+        ],
+        "summary": "Close the trace window early",
+        "tags": [
+          "Admin"
+        ]
+      }
+    },
+    "/v1/admin/events/prune": {
+      "post": {
+        "operationId": "AdminController_pruneEvents_v1",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "supabase-auth": []
+          }
+        ],
+        "summary": "Drop events past the retention window",
+        "tags": [
+          "Admin"
+        ]
+      }
+    },
+    "/v1/admin/audit": {
+      "get": {
+        "operationId": "AdminController_listAudit_v1",
+        "parameters": [
+          {
+            "name": "action",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "resourceType",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "actorId",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": 50,
+              "type": "number"
+            }
+          },
+          {
+            "name": "offset",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": 0,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "supabase-auth": []
+          }
+        ],
+        "summary": "Global audit trail",
+        "tags": [
+          "Admin"
+        ]
+      }
+    },
+    "/v1/admin/users": {
+      "get": {
+        "description": "Platform metadata and activity COUNTS only. This endpoint cannot return a balance, amount, payee or note — operators have no access to any user's financial rows (DEC-002 #12, DEC-007).",
+        "operationId": "AdminController_listUsers_v1",
+        "parameters": [
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "description": "Matches email or display name",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "ACTIVE",
+                "SUSPENDED",
+                "PENDING_DELETION"
+              ]
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": 50,
+              "type": "number"
+            }
+          },
+          {
+            "name": "offset",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": 0,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Metadata and counts; never financial data"
+          }
+        },
+        "security": [
+          {
+            "supabase-auth": []
+          }
+        ],
+        "summary": "User metadata list",
+        "tags": [
+          "Admin"
+        ]
+      }
+    },
+    "/v1/admin/users/{userId}": {
+      "get": {
+        "operationId": "AdminController_getUser_v1",
+        "parameters": [
+          {
+            "name": "userId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "supabase-auth": []
+          }
+        ],
+        "summary": "Single user metadata",
+        "tags": [
+          "Admin"
+        ]
+      },
+      "patch": {
+        "description": "Allowlist: display_name, locale, timezone. is_super_admin is deliberately not editable here — promotion is a service-role SQL operation (DEC-013).",
+        "operationId": "AdminController_updateUser_v1",
+        "parameters": [
+          {
+            "name": "userId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdminUpdateUserDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "supabase-auth": []
+          }
+        ],
+        "summary": "Update the operator-editable subset of a profile",
+        "tags": [
+          "Admin"
+        ]
+      }
+    },
+    "/v1/admin/users/{userId}/suspend": {
+      "post": {
+        "operationId": "AdminController_suspendUser_v1",
+        "parameters": [
+          {
+            "name": "userId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SuspendUserDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "supabase-auth": []
+          }
+        ],
+        "summary": "Suspend an account (Auth ban + status)",
+        "tags": [
+          "Admin"
+        ]
+      }
+    },
+    "/v1/admin/users/{userId}/reinstate": {
+      "post": {
+        "operationId": "AdminController_reinstateUser_v1",
+        "parameters": [
+          {
+            "name": "userId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "supabase-auth": []
+          }
+        ],
+        "summary": "Lift a suspension, and cancel any pending deletion",
+        "tags": [
+          "Admin"
+        ]
+      }
+    },
+    "/v1/admin/purge": {
+      "post": {
+        "description": "Irreversible. Removes application data in FK dependency order, then the auth user. Only touches accounts whose 30-day grace has already expired.",
+        "operationId": "AdminController_runPurge_v1",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "supabase-auth": []
+          }
+        ],
+        "summary": "Run the deletion purge for expired grace periods",
+        "tags": [
+          "Admin"
+        ]
+      }
+    },
+    "/v1/admin/settings": {
+      "get": {
+        "operationId": "AdminController_listSettings_v1",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "supabase-auth": []
+          }
+        ],
+        "summary": "All global settings, public and private",
+        "tags": [
+          "Admin"
+        ]
+      },
+      "put": {
+        "operationId": "AdminController_updateSettings_v1",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateSettingsDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "supabase-auth": []
+          }
+        ],
+        "summary": "Update one or more known settings",
+        "tags": [
+          "Admin"
+        ]
+      }
+    },
+    "/v1/admin/broadcasts": {
+      "get": {
+        "operationId": "AdminController_listBroadcasts_v1",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "supabase-auth": []
+          }
+        ],
+        "summary": "All broadcasts with aggregate delivery stats",
+        "tags": [
+          "Admin"
+        ]
+      },
+      "post": {
+        "operationId": "AdminController_createBroadcast_v1",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateBroadcastDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "supabase-auth": []
+          }
+        ],
+        "summary": "Compose a broadcast (always created as DRAFT)",
+        "tags": [
+          "Admin"
+        ]
+      }
+    },
+    "/v1/admin/broadcasts/{broadcastId}": {
+      "patch": {
+        "operationId": "AdminController_updateBroadcast_v1",
+        "parameters": [
+          {
+            "name": "broadcastId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateBroadcastDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "supabase-auth": []
+          }
+        ],
+        "summary": "Edit a broadcast",
+        "tags": [
+          "Admin"
+        ]
+      }
+    },
+    "/v1/admin/broadcasts/{broadcastId}/publish": {
+      "post": {
+        "operationId": "AdminController_publishBroadcast_v1",
+        "parameters": [
+          {
+            "name": "broadcastId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "supabase-auth": []
+          }
+        ],
+        "summary": "Publish — makes it visible to its audience",
+        "tags": [
+          "Admin"
+        ]
+      }
+    },
+    "/v1/admin/broadcasts/{broadcastId}/archive": {
+      "post": {
+        "operationId": "AdminController_archiveBroadcast_v1",
+        "parameters": [
+          {
+            "name": "broadcastId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "supabase-auth": []
+          }
+        ],
+        "summary": "Archive — withdraws it from every user",
+        "tags": [
+          "Admin"
+        ]
+      }
+    },
+    "/v1/me/export": {
+      "get": {
+        "description": "Runs on the USER's client, so RLS is the scope boundary and a bug here cannot widen it. Operational logs are excluded: an audit trail a user can export is an audit trail an attacker can read after taking an account.",
+        "operationId": "AccountController_exportData_v1",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "A single JSON document. See ExportService for the shape."
+          }
+        },
+        "security": [
+          {
+            "supabase-auth": []
+          }
+        ],
+        "summary": "Export every row this account owns (§15.3)",
+        "tags": [
+          "Account"
+        ]
+      }
+    },
+    "/v1/me/deletion-request": {
+      "post": {
+        "description": "Nothing is deleted now. The account is banned and marked PENDING_DELETION; data is removed only when the grace period expires and the purge runs. Reversible by an operator until then (DEC-017).",
+        "operationId": "AccountController_requestDeletion_v1",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestDeletionDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "supabase-auth": []
+          }
+        ],
+        "summary": "Schedule this account for deletion after a 30-day grace period",
+        "tags": [
+          "Account"
+        ]
+      },
+      "delete": {
+        "description": "Not reachable by the requesting user in practice: requesting deletion bans the account, so their session is dead. Cancellation is an operator action via POST /v1/admin/users/:id/reinstate. This route exists for the case where the ban failed but the marking succeeded.",
+        "operationId": "AccountController_cancelDeletion_v1",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "supabase-auth": []
+          }
+        ],
+        "summary": "Cancel a pending deletion",
+        "tags": [
+          "Account"
+        ]
+      }
+    },
+    "/v1/me/broadcasts": {
+      "get": {
+        "operationId": "AccountController_listBroadcasts_v1",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Bilingual broadcast payloads"
+          }
+        },
+        "security": [
+          {
+            "supabase-auth": []
+          }
+        ],
+        "summary": "Live broadcasts this user has not dismissed",
+        "tags": [
+          "Account"
+        ]
+      }
+    },
+    "/v1/me/broadcasts/{broadcastId}/dismiss": {
+      "post": {
+        "operationId": "AccountController_dismissBroadcast_v1",
+        "parameters": [
+          {
+            "name": "broadcastId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "supabase-auth": []
+          }
+        ],
+        "summary": "Dismiss a broadcast for this user",
+        "tags": [
+          "Account"
+        ]
+      }
+    },
+    "/v1/settings/public": {
+      "get": {
+        "description": "Maintenance mode, whether signups are open, app version, donation link, support address. Private operator settings are excluded by RLS.",
+        "operationId": "PublicSettingsController_getPublicSettings_v1",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "supabase-auth": []
+          }
+        ],
+        "summary": "Global settings any signed-in user may read",
+        "tags": [
+          "Account"
+        ]
+      }
+    }
+  },
+  "info": {
+    "title": "NoorixFin API",
+    "description": "Personal and household finance management API. All financial amounts are minor-unit decimal strings. All timestamps are ISO 8601 UTC. Every failure body matches the `ApiErrorBody` schema; branch on its `code`, never on `message`.",
+    "version": "1.0.0",
+    "contact": {}
+  },
+  "tags": [],
+  "servers": [],
+  "components": {
+    "securitySchemes": {
+      "supabase-auth": {
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "type": "http",
+        "description": "Supabase access token"
+      }
+    },
+    "schemas": {
+      "SyncResponseDto": {
+        "type": "object",
+        "properties": {
+          "cursor": {
+            "type": "string",
+            "description": "Cursor to pass as `since` on the next pull. Advance it ONLY when has_more is false — see the partial-page note in the service."
+          },
+          "has_more": {
+            "type": "boolean",
+            "description": "True if any table hit the row limit. Call again with the same cursor to drain the remainder."
+          },
+          "server_time": {
+            "type": "string",
+            "description": "Server time when this delta was computed (ISO-8601)."
+          },
+          "changes": {
+            "type": "object",
+            "description": "Changed rows per table, keyed by table name."
+          }
+        },
+        "required": [
+          "cursor",
+          "has_more",
+          "server_time",
+          "changes"
+        ]
+      },
+      "ProfileResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "550e8400-e29b-41d4-a716-446655440000"
+          },
+          "display_name": {
+            "type": "string",
+            "example": "Sharif"
+          },
+          "avatar_path": {
+            "type": "object",
+            "example": null
+          },
+          "locale": {
+            "type": "string",
+            "example": "bn"
+          },
+          "timezone": {
+            "type": "string",
+            "example": "Asia/Dhaka"
+          },
+          "base_currency": {
+            "type": "string",
+            "example": "BDT"
+          },
+          "week_starts_on": {
+            "type": "number",
+            "example": 0
+          },
+          "amount_privacy_default": {
+            "type": "boolean",
+            "example": false
+          },
+          "onboarding_status": {
+            "type": "string",
+            "example": "COMPLETED"
+          },
+          "persona": {
+            "type": "string",
+            "example": "INDIVIDUAL",
+            "enum": [
+              "INDIVIDUAL",
+              "STUDENT",
+              "FREELANCER"
+            ],
+            "description": "Null until the user reaches §5.2 step 4."
+          },
+          "is_super_admin": {
+            "type": "boolean",
+            "example": false,
+            "description": "Platform operator flag (DEC-007). The web shell uses this to decide whether to render the System Admin switch. It grants METADATA access only — never access to another user's financial rows."
+          },
+          "status": {
+            "type": "string",
+            "example": "ACTIVE",
+            "enum": [
+              "ACTIVE",
+              "SUSPENDED",
+              "PENDING_DELETION"
+            ],
+            "description": "Account lifecycle state (DEC-017)."
+          },
+          "deletion_scheduled_for": {
+            "type": "object",
+            "description": "Set when status is PENDING_DELETION — when the purge runs."
+          },
+          "email": {
+            "type": "string"
+          },
+          "created_at": {
+            "type": "string"
+          },
+          "updated_at": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "display_name",
+          "locale",
+          "timezone",
+          "base_currency",
+          "week_starts_on",
+          "amount_privacy_default",
+          "onboarding_status",
+          "is_super_admin",
+          "status",
+          "email",
+          "created_at",
+          "updated_at"
+        ]
+      },
+      "UpdatePreferencesDto": {
+        "type": "object",
+        "properties": {
+          "locale": {
+            "type": "string",
+            "example": "bn",
+            "description": "User locale: bn or en"
+          },
+          "timezone": {
+            "type": "string",
+            "example": "Asia/Dhaka",
+            "description": "IANA timezone name"
+          },
+          "base_currency": {
+            "type": "string",
+            "example": "BDT",
+            "description": "ISO 4217 currency code"
+          },
+          "week_starts_on": {
+            "type": "number",
+            "example": 0,
+            "description": "Week start day: 0=Sun, 1=Mon, ..., 6=Sat"
+          },
+          "amount_privacy_default": {
+            "type": "boolean",
+            "description": "Default privacy mode for amounts"
+          },
+          "display_name": {
+            "type": "string",
+            "example": "Sharif",
+            "description": "Display name"
+          }
+        }
+      },
+      "UpdateOnboardingDto": {
+        "type": "object",
+        "properties": {
+          "onboarding_status": {
+            "type": "string",
+            "example": "PERSONA_SELECTED",
+            "enum": [
+              "LANGUAGE_SELECTED",
+              "PREFERENCES_SET",
+              "PERSONA_SELECTED",
+              "WORKSPACE_CREATED",
+              "FIRST_ACCOUNT_ADDED",
+              "COMPLETED"
+            ],
+            "description": "The step just finished. ACCOUNT_CREATED is absent because it is the initial state — a client asking to move BACK to it is a bug, not a step."
+          },
+          "persona": {
+            "type": "string",
+            "example": "INDIVIDUAL",
+            "enum": [
+              "INDIVIDUAL",
+              "STUDENT",
+              "FREELANCER"
+            ],
+            "description": "Blueprint §5.2 step 4. FAMILY is deliberately absent — DEC-007 dropped family workspaces, and offering a persona the product cannot honour would be the blueprint outvoting a later decision."
+          }
+        }
+      },
+      "CreateWorkspaceDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "My Personal Finance"
+          },
+          "base_currency": {
+            "type": "string",
+            "example": "BDT"
+          },
+          "timezone": {
+            "type": "string",
+            "example": "Asia/Dhaka"
+          }
+        },
+        "required": [
+          "name"
+        ]
+      },
+      "WorkspaceResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "PERSONAL"
+            ]
+          },
+          "name": {
+            "type": "string"
+          },
+          "base_currency": {
+            "type": "string"
+          },
+          "timezone": {
+            "type": "string"
+          },
+          "created_by": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "ACTIVE",
+              "PENDING_DELETION",
+              "DELETED"
+            ]
+          },
+          "created_at": {
+            "type": "string"
+          },
+          "updated_at": {
+            "type": "string"
+          },
+          "role": {
+            "type": "string",
+            "description": "Current user role (always OWNER)"
+          }
+        },
+        "required": [
+          "id",
+          "type",
+          "name",
+          "base_currency",
+          "timezone",
+          "created_by",
+          "status",
+          "created_at",
+          "updated_at"
+        ]
+      },
+      "CreateAccountDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "Cash in Hand"
+          },
+          "class": {
+            "type": "string",
+            "example": "ASSET",
+            "enum": [
+              "ASSET",
+              "LIABILITY",
+              "INCOME",
+              "EXPENSE",
+              "EQUITY"
+            ]
+          },
+          "subtype": {
+            "type": "string",
+            "example": "CASH",
+            "enum": [
+              "CASH",
+              "BANK",
+              "MOBILE_WALLET",
+              "CREDIT_CARD",
+              "LOAN",
+              "SAVINGS",
+              "CATEGORY",
+              "SYSTEM"
+            ]
+          },
+          "currency_code": {
+            "type": "string",
+            "example": "BDT"
+          },
+          "normal_balance": {
+            "type": "string",
+            "example": "DEBIT",
+            "enum": [
+              "DEBIT",
+              "CREDIT"
+            ]
+          },
+          "include_in_budget": {
+            "type": "boolean",
+            "example": true
+          },
+          "include_in_net_worth": {
+            "type": "boolean",
+            "example": true
+          },
+          "opening_date": {
+            "type": "string",
+            "example": "2026-01-01"
+          },
+          "opening_balance": {
+            "type": "string",
+            "example": "50000",
+            "description": "Opening balance as minor-unit decimal string (e.g., \"50000\" = 500.00 BDT)"
+          }
+        },
+        "required": [
+          "name",
+          "class",
+          "subtype"
+        ]
+      },
+      "AccountResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "workspace_id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "class": {
+            "type": "string"
+          },
+          "subtype": {
+            "type": "string"
+          },
+          "currency_code": {
+            "type": "string"
+          },
+          "normal_balance": {
+            "type": "string"
+          },
+          "include_in_budget": {
+            "type": "boolean"
+          },
+          "include_in_net_worth": {
+            "type": "boolean"
+          },
+          "opening_date": {
+            "type": "string"
+          },
+          "archived_at": {
+            "type": "object"
+          },
+          "created_by": {
+            "type": "string"
+          },
+          "version": {
+            "type": "number"
+          },
+          "created_at": {
+            "type": "string"
+          },
+          "updated_at": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "workspace_id",
+          "name",
+          "class",
+          "subtype",
+          "currency_code",
+          "normal_balance",
+          "include_in_budget",
+          "include_in_net_worth",
+          "created_by",
+          "version",
+          "created_at",
+          "updated_at"
+        ]
+      },
+      "UpdateAccountDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "Updated Account Name"
+          },
+          "include_in_budget": {
+            "type": "boolean",
+            "example": true
+          },
+          "include_in_net_worth": {
+            "type": "boolean",
+            "example": true
+          },
+          "archived": {
+            "type": "boolean",
+            "description": "Set to true to archive the account",
+            "example": false
+          }
+        }
+      },
+      "CreateTransactionDto": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "example": "EXPENSE",
+            "enum": [
+              "INCOME",
+              "EXPENSE",
+              "TRANSFER"
+            ]
+          },
+          "amount": {
+            "type": "string",
+            "example": "125000",
+            "description": "Amount in minor units as decimal string (e.g., \"125000\" = ৳1,250.00)"
+          },
+          "account_id": {
+            "type": "string",
+            "example": "550e8400-e29b-41d4-a716-446655440000",
+            "description": "Primary account ID"
+          },
+          "category_id": {
+            "type": "string",
+            "description": "Category account ID (for income/expense) or destination account (for transfer)"
+          },
+          "transfer_to_account_id": {
+            "type": "string",
+            "description": "Destination account ID (for transfers)"
+          },
+          "occurred_at": {
+            "type": "string",
+            "example": "2026-08-01T12:00:00Z"
+          },
+          "payee": {
+            "type": "string",
+            "example": "Grocery store"
+          },
+          "note": {
+            "type": "string",
+            "example": "Weekly groceries"
+          },
+          "tags": {
+            "example": [
+              "groceries",
+              "weekly"
+            ],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "idempotency_key": {
+            "type": "string",
+            "description": "Client-generated idempotency key (UUID)",
+            "example": "550e8400-e29b-41d4-a716-446655440001"
+          }
+        },
+        "required": [
+          "type",
+          "amount",
+          "account_id",
+          "idempotency_key"
+        ]
+      },
+      "TransactionResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "workspace_id": {
+            "type": "string"
+          },
+          "entry_type": {
+            "type": "string"
+          },
+          "occurred_at": {
+            "type": "string"
+          },
+          "local_date": {
+            "type": "string"
+          },
+          "payee": {
+            "type": "string"
+          },
+          "note": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "source": {
+            "type": "string"
+          },
+          "created_by": {
+            "type": "string"
+          },
+          "version": {
+            "type": "number"
+          },
+          "created_at": {
+            "type": "string"
+          },
+          "postings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "workspace_id",
+          "entry_type",
+          "occurred_at",
+          "local_date",
+          "status",
+          "source",
+          "created_by",
+          "version",
+          "created_at"
+        ]
+      },
+      "CategoryResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "workspace_id": {
+            "type": "string"
+          },
+          "ledger_account_id": {
+            "type": "string",
+            "description": "Backing ledger account. Postings reference THIS, not `id`."
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "INCOME",
+              "EXPENSE"
+            ]
+          },
+          "translation_key": {
+            "type": "object",
+            "description": "Set for system categories. Translate it for display; also marks the row as system-provided.",
+            "example": "cat.food_dining"
+          },
+          "custom_name": {
+            "type": "object",
+            "description": "User-supplied name. Overrides translation_key when present."
+          },
+          "parent_id": {
+            "type": "object"
+          },
+          "icon": {
+            "type": "string"
+          },
+          "color": {
+            "type": "string"
+          },
+          "sort_order": {
+            "type": "number"
+          },
+          "archived_at": {
+            "type": "object"
+          },
+          "deleted_at": {
+            "type": "object"
+          },
+          "created_at": {
+            "type": "string"
+          },
+          "updated_at": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "workspace_id",
+          "ledger_account_id",
+          "kind",
+          "icon",
+          "color",
+          "sort_order",
+          "created_at",
+          "updated_at"
+        ]
+      },
+      "CreateCategoryDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Display name. Stored as `custom_name`; also names the backing ledger account.",
+            "example": "Food & Dining"
+          },
+          "kind": {
+            "type": "string",
+            "description": "Category kind — matches the backing ledger account class",
+            "enum": [
+              "INCOME",
+              "EXPENSE"
+            ]
+          },
+          "icon": {
+            "type": "string",
+            "description": "Emoji icon",
+            "example": "🍕"
+          },
+          "color": {
+            "type": "string",
+            "description": "Hex color for the category",
+            "example": "#10b981"
+          },
+          "parent_id": {
+            "type": "string",
+            "description": "Parent category ID for hierarchy"
+          },
+          "sort_order": {
+            "type": "number",
+            "description": "Sort order within siblings",
+            "example": 0
+          }
+        },
+        "required": [
+          "name",
+          "kind"
+        ]
+      },
+      "UpdateCategoryDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "icon": {
+            "type": "string"
+          },
+          "color": {
+            "type": "string"
+          },
+          "parent_id": {
+            "type": "string"
+          },
+          "sort_order": {
+            "type": "number"
+          },
+          "archived": {
+            "type": "boolean",
+            "description": "Archive this category"
+          }
+        }
+      },
+      "BudgetLineInputDto": {
+        "type": "object",
+        "properties": {
+          "category_id": {
+            "type": "string",
+            "description": "Category this limit applies to"
+          },
+          "planned_minor": {
+            "type": "string",
+            "example": "2000000",
+            "description": "Planned limit, minor units"
+          },
+          "alert_threshold_pct": {
+            "type": "number",
+            "example": 80,
+            "description": "Warn at this % of the limit. 0 disables."
+          }
+        },
+        "required": [
+          "category_id",
+          "planned_minor"
+        ]
+      },
+      "UpsertBudgetDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "Monthly budget"
+          },
+          "cadence": {
+            "type": "string",
+            "enum": [
+              "MONTHLY",
+              "WEEKLY"
+            ]
+          },
+          "rollover": {
+            "type": "boolean",
+            "description": "Whether unspent limit carries into the next period"
+          },
+          "lines": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BudgetLineInputDto"
+            }
+          }
+        },
+        "required": [
+          "lines"
+        ]
+      },
+      "CreateGoalDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "Emergency fund"
+          },
+          "target_minor": {
+            "type": "string",
+            "example": "10000000",
+            "description": "Target, minor units"
+          },
+          "currency_code": {
+            "type": "string",
+            "example": "BDT"
+          },
+          "target_date": {
+            "type": "string",
+            "example": "2027-01-01"
+          },
+          "linked_account_id": {
+            "type": "string",
+            "description": "Account whose balance IS the progress"
+          },
+          "priority": {
+            "type": "number",
+            "example": 0
+          }
+        },
+        "required": [
+          "name",
+          "target_minor"
+        ]
+      },
+      "UpdateGoalDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "target_minor": {
+            "type": "string"
+          },
+          "target_date": {
+            "type": "string"
+          },
+          "linked_account_id": {
+            "type": "string"
+          },
+          "priority": {
+            "type": "number"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "ACTIVE",
+              "ACHIEVED",
+              "ABANDONED"
+            ]
+          }
+        }
+      },
+      "UpsertDebtDto": {
+        "type": "object",
+        "properties": {
+          "ledger_account_id": {
+            "type": "string",
+            "description": "The LIABILITY ledger account these terms describe"
+          },
+          "principal_minor": {
+            "type": "string",
+            "example": "30000000",
+            "description": "Original principal, minor units"
+          },
+          "annual_rate_bps": {
+            "type": "number",
+            "example": 950,
+            "description": "Annual rate in basis points"
+          },
+          "minimum_payment_minor": {
+            "type": "string",
+            "example": "150000"
+          },
+          "due_day": {
+            "type": "number",
+            "example": 5,
+            "description": "Day of month the payment is due"
+          }
+        },
+        "required": [
+          "ledger_account_id",
+          "principal_minor"
+        ]
+      },
+      "CreateCalendarEventDto": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "BILL",
+              "INCOME",
+              "GOAL",
+              "CUSTOM"
+            ]
+          },
+          "title": {
+            "type": "string",
+            "example": "Electricity bill"
+          },
+          "amount_minor": {
+            "type": "string",
+            "example": "120000"
+          },
+          "currency_code": {
+            "type": "string",
+            "example": "BDT"
+          },
+          "due_date": {
+            "type": "string",
+            "example": "2026-08-10",
+            "description": "Due date in the workspace timezone"
+          },
+          "reminder_offsets": {
+            "example": [
+              1440,
+              60
+            ],
+            "description": "Remind this many minutes before the due time",
+            "type": "array",
+            "items": {
+              "type": "number"
+            }
+          }
+        },
+        "required": [
+          "type",
+          "title",
+          "due_date"
+        ]
+      },
+      "UpdateCalendarEventDto": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "amount_minor": {
+            "type": "string"
+          },
+          "due_date": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "UPCOMING",
+              "PAID",
+              "SKIPPED"
+            ]
+          },
+          "journal_entry_id": {
+            "type": "string",
+            "description": "The transaction that settled this event"
+          }
+        }
+      },
+      "CreateRecurringRuleDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "Rent"
+          },
+          "entry_type": {
+            "type": "string",
+            "enum": [
+              "INCOME",
+              "EXPENSE",
+              "TRANSFER"
+            ]
+          },
+          "amount_minor": {
+            "type": "string",
+            "example": "1500000"
+          },
+          "currency_code": {
+            "type": "string",
+            "example": "BDT"
+          },
+          "account_id": {
+            "type": "string"
+          },
+          "category_id": {
+            "type": "string"
+          },
+          "payee": {
+            "type": "string"
+          },
+          "frequency": {
+            "type": "string",
+            "enum": [
+              "DAILY",
+              "WEEKLY",
+              "MONTHLY",
+              "YEARLY"
+            ]
+          },
+          "interval_count": {
+            "type": "number",
+            "example": 1
+          },
+          "next_occurrence": {
+            "type": "string",
+            "example": "2026-09-01"
+          },
+          "ends_at": {
+            "type": "string",
+            "example": "2027-09-01"
+          },
+          "behavior": {
+            "type": "string",
+            "enum": [
+              "REMIND_ONLY",
+              "AUTO_CREATE_DRAFT"
+            ]
+          }
+        },
+        "required": [
+          "name",
+          "entry_type",
+          "amount_minor",
+          "frequency",
+          "next_occurrence"
+        ]
+      },
+      "EnableTracingDto": {
+        "type": "object",
+        "properties": {
+          "minutes": {
+            "type": "number",
+            "example": 15,
+            "description": "How long to trace for. Clamped server-side to at most 60 minutes."
+          }
+        }
+      },
+      "AdminUpdateUserDto": {
+        "type": "object",
+        "properties": {
+          "display_name": {
+            "type": "string",
+            "example": "Sharif"
+          },
+          "locale": {
+            "type": "string",
+            "enum": [
+              "bn",
+              "en"
+            ]
+          },
+          "timezone": {
+            "type": "string",
+            "example": "Asia/Dhaka"
+          }
+        }
+      },
+      "SuspendUserDto": {
+        "type": "object",
+        "properties": {
+          "reason": {
+            "type": "string",
+            "example": "Terms of service violation — ticket #412"
+          }
+        },
+        "required": [
+          "reason"
+        ]
+      },
+      "UpdateSettingDto": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string",
+            "example": "maintenance_mode"
+          },
+          "value": {
+            "type": "object",
+            "description": "JSON value for the setting. Shape is per-key.",
+            "example": {
+              "enabled": false
+            }
+          }
+        },
+        "required": [
+          "key",
+          "value"
+        ]
+      },
+      "UpdateSettingsDto": {
+        "type": "object",
+        "properties": {
+          "settings": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/UpdateSettingDto"
+            }
+          }
+        },
+        "required": [
+          "settings"
+        ]
+      },
+      "CreateBroadcastDto": {
+        "type": "object",
+        "properties": {
+          "title_en": {
+            "type": "string",
+            "example": "Scheduled maintenance"
+          },
+          "title_bn": {
+            "type": "string",
+            "example": "নির্ধারিত রক্ষণাবেক্ষণ"
+          },
+          "body_en": {
+            "type": "string"
+          },
+          "body_bn": {
+            "type": "string"
+          },
+          "severity": {
+            "type": "string",
+            "enum": [
+              "INFO",
+              "SUCCESS",
+              "WARNING",
+              "CRITICAL"
+            ]
+          },
+          "audience": {
+            "type": "string",
+            "enum": [
+              "ALL",
+              "SUPER_ADMINS"
+            ]
+          },
+          "link_url": {
+            "type": "string"
+          },
+          "dismissible": {
+            "type": "boolean",
+            "default": true
+          },
+          "publish_at": {
+            "type": "string",
+            "description": "ISO timestamp; defaults to publish time"
+          },
+          "expires_at": {
+            "type": "string",
+            "description": "ISO timestamp; null means no expiry"
+          }
+        },
+        "required": [
+          "title_en",
+          "title_bn"
+        ]
+      },
+      "UpdateBroadcastDto": {
+        "type": "object",
+        "properties": {
+          "title_en": {
+            "type": "string",
+            "example": "Scheduled maintenance"
+          },
+          "title_bn": {
+            "type": "string",
+            "example": "নির্ধারিত রক্ষণাবেক্ষণ"
+          },
+          "body_en": {
+            "type": "string"
+          },
+          "body_bn": {
+            "type": "string"
+          },
+          "severity": {
+            "type": "string",
+            "enum": [
+              "INFO",
+              "SUCCESS",
+              "WARNING",
+              "CRITICAL"
+            ]
+          },
+          "audience": {
+            "type": "string",
+            "enum": [
+              "ALL",
+              "SUPER_ADMINS"
+            ]
+          },
+          "link_url": {
+            "type": "string"
+          },
+          "dismissible": {
+            "type": "boolean",
+            "default": true
+          },
+          "publish_at": {
+            "type": "string",
+            "description": "ISO timestamp; defaults to publish time"
+          },
+          "expires_at": {
+            "type": "string",
+            "description": "ISO timestamp; null means no expiry"
+          }
+        }
+      },
+      "RequestDeletionDto": {
+        "type": "object",
+        "properties": {
+          "confirm_email": {
+            "type": "string",
+            "description": "Must exactly equal the signed-in account's email address. A typed confirmation, so an accidental or CSRF-driven POST cannot schedule the deletion of an entire ledger.",
+            "example": "me@example.com"
+          },
+          "reason": {
+            "type": "string",
+            "description": "Optional free-text reason, retained on the audit event.",
+            "example": "No longer needed"
+          }
+        },
+        "required": [
+          "confirm_email"
+        ]
+      },
+      "ApiErrorBody": {
+        "type": "object",
+        "description": "The shape of every failure, produced by GlobalHttpExceptionFilter. `code` is the stable identifier — branch on it, not on `message`, which is prose and may be reworded or translated.",
+        "required": [
+          "statusCode",
+          "code",
+          "message",
+          "requestId",
+          "timestamp",
+          "path"
+        ],
+        "properties": {
+          "statusCode": {
+            "type": "integer",
+            "example": 404
+          },
+          "code": {
+            "type": "string",
+            "enum": [
+              "MISSING_TOKEN",
+              "INVALID_TOKEN",
+              "AUTH_FAILED",
+              "NOT_WORKSPACE_MEMBER",
+              "NOT_SUPER_ADMIN",
+              "MFA_REQUIRED",
+              "ACCOUNT_NOT_ACTIVE",
+              "NOT_AUTHENTICATED",
+              "AUTHZ_CHECK_FAILED",
+              "IDEMPOTENCY_KEY_REQUIRED",
+              "IDEMPOTENCY_KEY_REUSED",
+              "IDEMPOTENCY_KEY_TOO_LONG",
+              "IDEMPOTENCY_IN_PROGRESS",
+              "NOT_FOUND",
+              "WORKSPACE_NOT_FOUND",
+              "ACCOUNT_NOT_FOUND",
+              "CATEGORY_NOT_FOUND",
+              "PARENT_CATEGORY_NOT_FOUND",
+              "TRANSACTION_NOT_FOUND",
+              "TAG_NOT_FOUND",
+              "GOAL_NOT_FOUND",
+              "EVENT_NOT_FOUND",
+              "USER_NOT_FOUND",
+              "TRANSACTION_NOT_REVERSIBLE",
+              "PERSONAL_WORKSPACE_EXISTS",
+              "INVALID_AMOUNT",
+              "AMOUNT_TOO_LARGE",
+              "INVALID_TYPE",
+              "INVALID_VALUE",
+              "INVALID_REFERENCE",
+              "CATEGORY_REQUIRED",
+              "CATEGORY_KIND_MISMATCH",
+              "DESTINATION_REQUIRED",
+              "NOT_A_LIABILITY",
+              "NO_POSTINGS",
+              "ALREADY_REVERSED",
+              "EMPTY_PATCH",
+              "NO_CHANGES",
+              "ALREADY_PENDING",
+              "NOT_PENDING",
+              "CONFIRMATION_MISMATCH",
+              "CANNOT_SUSPEND_SELF",
+              "LAST_SUPER_ADMIN",
+              "UNKNOWN_SETTING",
+              "SYNC_CURSOR_STALLED",
+              "SYNC_FAILED",
+              "REVERSAL_FAILED",
+              "SUMMARY_FAILED",
+              "AGGREGATION_FAILED",
+              "PLANNING_WRITE_FAILED",
+              "CATEGORY_CREATE_FAILED",
+              "CATEGORY_SEED_FAILED",
+              "ONBOARDING_UPDATE_FAILED",
+              "DELETION_REQUEST_FAILED",
+              "CANCEL_FAILED",
+              "SUSPEND_FAILED",
+              "REINSTATE_FAILED",
+              "DISMISS_FAILED",
+              "BROADCASTS_UNAVAILABLE"
+            ],
+            "example": "TRANSACTION_NOT_FOUND"
+          },
+          "message": {
+            "type": "string"
+          },
+          "requestId": {
+            "type": "string",
+            "description": "Echo of X-Request-ID — quote it when reporting a failure."
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "path": {
+            "type": "string"
+          },
+          "fieldErrors": {
+            "type": "object",
+            "nullable": true,
+            "additionalProperties": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "description": "Present only on validation failures."
+          }
+        }
+      }
+    }
+  }
+}

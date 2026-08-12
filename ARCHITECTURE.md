@@ -65,7 +65,7 @@ A pnpm + Turborepo workspace. `pnpm-workspace.yaml` declares exactly two globs:
 `apps/*` and `packages/*`.
 
 ```
-MyFin/
+NoorixFin/
 ├── apps/                       # Deployable applications
 │   ├── api/                    # NestJS REST API — the system of record
 │   │   ├── src/
@@ -112,7 +112,9 @@ MyFin/
 │   ├── domain/                 # Framework-free types & enums — the shared vocabulary
 │   ├── money/                  # Minor-unit arithmetic & double-entry balance check
 │   ├── i18n/                   # Translation catalogs + typed translator
-│   ├── design-tokens/          # Colours, spacing, typography scale
+│   ├── design-tokens/          # THE palette — generates tokens.css for web
+│   ├── ui/                     # Shared React components (nx-*), Storybook
+│   ├── observability/          # Release id, error fingerprints, redaction, tracing
 │   ├── db-types/               # Types GENERATED from the live schema
 │   ├── api-client/             # Placeholder for generated OpenAPI client
 │   └── test-fixtures/          # Shared test data builders
@@ -155,10 +157,33 @@ source.
 | `@noorixfin/domain` | Framework-free types & enums (~36 exports). The shared vocabulary — no runtime deps, so API and clients cannot drift. | api, mobile, test-fixtures | `dist/` |
 | `@noorixfin/money` | Minor-unit integer arithmetic, currency metadata, formatting, and `validateBalance()` for double-entry. | api, web, mobile | `dist/` |
 | `@noorixfin/i18n` | **All** translation catalogs (`locales/{en,bn}/{common,errors}.json`) plus a typed `createTranslator()`. Keys are typed from the English catalog, so a missing key is a compile error. | web, mobile | `dist/` |
-| `@noorixfin/design-tokens` | Colour, spacing, and typography primitives shared across web and native. | mobile | `dist/` |
+| `@noorixfin/design-tokens` | **The** palette, spacing, type and elevation scales. Generates `tokens.css` (74 custom properties) which the web app imports — so a colour is decided in one place. Scales exist twice, numeric for React Native and `rem` for CSS, derived from one source. | web | `dist/` + `tokens.css` |
+| `@noorixfin/ui` | Shared React components (`Button`, `Input`, `Card`, `Badge`, `Table`, `EmptyState`, `Skeleton`, `ConfirmDialog`). Every value in `ui.css` is a token `var()`. Documented in Storybook; 17 component tests assert the accessibility wiring. | web | source |
 | `@noorixfin/db-types` | TypeScript types **generated** from the live Postgres schema (`pnpm generate`). Never hand-edit. | api | `dist/` |
+| `@noorixfin/observability` | Release identity, stable error **fingerprints**, redaction, and W3C trace context. Vendor-neutral: the default reporter is a no-op, so nothing leaves the system until someone registers one. | api, web, mobile | `dist/` |
 | `@noorixfin/test-fixtures` | Shared test-data builders. | (test scopes) | source |
-| `@noorixfin/api-client` | Reserved for a generated OpenAPI client; currently a stub. | — | source |
+| `@noorixfin/api-client` | **Types generated from the API's own OpenAPI document** (`src/schema.d.ts`, 51 paths) plus helpers for looking up a route's response, body and params. Deliberately not a transport — see below. | web | source |
+
+**Design values are centralised in `packages/design-tokens`.** They were not,
+and the consequence is worth recording: the tokens package declared a primary of
+`#0DAB76`, `globals.css` declared `#10b981`, `marketing.css` declared a third
+set, the mobile app hardcoded a fourth — and **nothing imported the tokens
+package at all**, so no type error, failing test or broken build could reveal
+it. The values now generate into `tokens.css`, and
+`packages/design-tokens/src/tokens.test.ts` fails if a stylesheet starts
+declaring its own again.
+
+Regenerate after changing a token:
+
+```bash
+pnpm --filter @noorixfin/design-tokens generate
+```
+
+Browse the components:
+
+```bash
+pnpm --filter @noorixfin/ui storybook
+```
 
 **Translations are centralised in `packages/i18n`.** `apps/web/src/lib/i18n/` is
 *not* a second copy — it is a thin Next.js adapter (a `server-only` cookie/profile
@@ -326,15 +351,22 @@ Realtime transport and egress down (DEC-011).
 URI versioning, `defaultVersion: '1'` — so every route below is prefixed `/v1`.
 Live OpenAPI UI: **`http://localhost:3001/api/docs`**.
 
-`GET /health` is the **only** unauthenticated route (the sole `@Public()` in the
-codebase). Everything else requires `Authorization: Bearer <JWT>`, and routes under
-`workspaces/:workspaceId` additionally pass `WorkspaceMemberGuard`.
+The three **`/health*`** probes are the only unauthenticated routes (the only
+`@Public()` handlers in the codebase). Everything else requires
+`Authorization: Bearer <JWT>`, and routes under `workspaces/:workspaceId`
+additionally pass `WorkspaceMemberGuard`.
+
+> A probe that needs a token is a probe that fails during the incident it
+> exists to detect, which is why these three are public and why `/health/ready`
+> reports dependency *status* without leaking dependency *contents*.
 
 ### Identity & account
 
 | Method | Path | Purpose |
 |---|---|---|
-| `GET` | `/health` | Liveness probe — **the only public route** |
+| `GET` | `/health` | Liveness probe — touches no dependency |
+| `GET` | `/health/live` | Alias of the above, under the conventional name |
+| `GET` | `/health/ready` | Readiness — probes database and auth, and answers **503** when either fails or the process is draining |
 | `GET` | `/settings/public` | Global settings any **signed-in** user may read (maintenance mode, signups open, version, support address). "Public" here means *non-operator*, **not** unauthenticated — private operator settings are excluded by RLS. |
 | `GET` | `/me` | Current profile |
 | `PATCH` | `/me/preferences` | Update preferences (locale lives here) |
@@ -405,6 +437,7 @@ Operator-only, and deliberately **metadata-only** — never a user's ledger.
 - **Timestamps** are ISO 8601 UTC.
 - **`If-Match` / `ETag`** carry optimistic concurrency.
 - **`X-Request-ID`** is attached by `RequestIdMiddleware` and echoed back, so a client error can be traced to a server log line.
+- **`traceparent`** (W3C Trace Context) is adopted from the client when sent, or minted when not, and echoed back as a **child span**. This is what joins a mobile crash to the API request that caused it — `X-Request-ID` cannot, because the app and the server mint unrelated ids.
 - Errors are shaped `{ code, message }` by `GlobalHttpExceptionFilter`, which also feeds `system_events` (DEC-018).
 
 ### Idempotency — two mechanisms, don't confuse them
@@ -441,6 +474,44 @@ Idempotency protects against duplicate *success*, not against retrying a failure
 
 The API's CORS allowlist must contain the **web** origin (`http://localhost:3000`),
 not its own.
+
+### Error grouping
+
+Every 5xx and every 401/403/429 lands in `system_events` carrying a
+**fingerprint**, the **release** that produced it, and the **trace id**. The
+fingerprint is stable across machines, across line-number shifts, and across
+interpolated ids in the message — so one bug firing ten thousand times is one
+group, not ten thousand rows that bury the other nine:
+
+```sql
+SELECT metadata->>'fingerprint' AS bug,
+       metadata->>'release'     AS release,
+       count(*), max(created_at)
+FROM system_events
+WHERE level = 'ERROR'
+GROUP BY 1, 2
+ORDER BY 3 DESC;
+```
+
+Nothing is sent anywhere by default. `@noorixfin/observability` ships a no-op
+reporter; registering a hosted tracker is implementing one `ErrorReporter` and
+calling `setErrorReporter`, with no call site changes. Anything that does leave
+passes through the redaction layer first, which strips amounts, payees, notes
+and credentials — DEC-016 keeps operators out of a user's ledger, and an error
+tracker must not become the way around that.
+
+**Shutdown drains before it closes.** On `SIGTERM` the API flips
+`/health/ready` to 503 immediately, keeps serving for `SHUTDOWN_DRAIN_MS`
+(default 5000) so a load balancer stops routing to it, and only then calls
+`app.close()` — which is what flushes `SystemEventsService`'s buffer. Before
+this, a restart silently dropped both the in-flight requests and the last
+couple of seconds of events.
+
+> **If you override `API_PORT`, change two files, not one.** The web app reaches
+> the API through `NEXT_PUBLIC_API_URL` in `apps/web/.env.local`; moving the API
+> without moving that value produces a dashboard that renders its shell and then
+> fails every data fetch. `3001` is the contract — `main.ts`'s fallback,
+> `.env.example`, and the mobile client's default all agree on it.
 
 ---
 
@@ -494,13 +565,25 @@ pnpm --filter @noorixfin/api start:dev
 | Job | What it proves |
 |---|---|
 | **static** | Locale parity (bn ↔ en), `pnpm typecheck`, lint at `--max-warnings 0` for api and web, unit tests, production build |
-| **database** | Applies **all 21 migrations from scratch**, asserts generated types still match the schema, then runs SQL invariants for tenant isolation, ledger balance, and idempotency |
+| **database** | Applies **all 21 migrations from scratch**, asserts **no migration drift**, asserts generated types still match the schema, then runs SQL invariants for tenant isolation, ledger balance, and idempotency |
 | **e2e** | Real API + real database + production build. Playwright twice: once normally, once with the **API deliberately unreachable** to prove degraded mode |
 
 Two guards worth knowing: `pnpm --filter @noorixfin/db-types generate` regenerates
 types from the live schema and CI **fails if the committed output drifts**; and
 lint is pinned at zero warnings because "letting warnings accumulate is exactly
 how 289 lint errors became the normal state."
+
+**Check your own database before debugging a phantom bug:**
+
+```bash
+pnpm db:check-drift
+```
+
+It fails if a migration is committed but unapplied, if a `.sql` file is named so
+the CLI never runs it, or if a version number is duplicated and shadowed. This
+exists because `00021_site_settings.sql` once sat unapplied on a developer
+machine, and the only symptom was `/admin/site-settings` querying tables that
+did not exist — an error three layers from its cause.
 
 ---
 
@@ -519,10 +602,31 @@ Recorded rather than hidden. None currently break the build.
    `apps/web/eslint.config.mjs` are maintained independently. A shared
    `packages/eslint-config` would remove the drift.
 
-3. **`packages/api-client` is a stub.** Its `build` script is
-   `echo 'TODO: OpenAPI client generation'`. Web and mobile each hand-maintain
-   their own typed `apiFetch`. Generating a client from the Swagger document the
-   API already produces would delete that duplication.
+2a. **662 inline `style={{}}` objects remain across 50 files in `apps/web`.**
+   `@noorixfin/ui` exists now and the tokens are centralised, but the migration
+   is incremental — the `nx-` class prefix is chosen so both can coexist. The
+   base loading `Skeleton` is converted; everything else still inlines its
+   values. Converting a screen is safe to do piecemeal and is the cheapest
+   place to spend UI effort.
+
+3. ~~**`packages/api-client` is a stub.**~~ **Resolved 2026-08-08.** It now
+   generates `src/schema.d.ts` from the OpenAPI document the API produces, and
+   CI fails on drift (`check:fresh`, in the fast `static` job — generating the
+   document needs no database).
+
+   It generates **types, not a transport**, and that is deliberate. Both
+   `apiFetch` implementations carry behaviour specific to where they run — the
+   web one's 10-second timeout and degraded-mode conversion (§6), the mobile
+   one's reuse of the outbox row id as an idempotency key across retries (§7).
+   A generated runtime client would have to reimplement both before either
+   could adopt it, which is the usual reason generated clients sit unused. The
+   drift risk lived in the types, and that is what is now generated.
+
+   Regenerate after changing any route:
+
+   ```bash
+   pnpm --filter @noorixfin/api-client generate
+   ```
 
 4. **Root-level clutter.** `NoorixFin_Production_Blueprint.md` (63 KB) and
    `memory/` sit at the repository root. Moving them under `docs/` would tidy the

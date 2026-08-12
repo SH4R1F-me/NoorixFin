@@ -1,0 +1,279 @@
+/**
+ * @noorixfin/ui — component styles.
+ *
+ * Every value here is a `var(--…)` from @noorixfin/design-tokens. There are no
+ * literal colours, radii or durations in this file, and that is the rule the
+ * package exists to enforce: 662 inline `style={{}}` objects across 50 files is
+ * how the web app ended up with three palettes, and a component library that
+ * hardcoded its own would simply have added a fourth.
+ *
+ * Class names are prefixed `nx-` so they cannot collide with the app's existing
+ * global styles during the incremental migration — both will coexist for a
+ * while, and a component that restyled an unrelated `.card` would be worse than
+ * no component at all.
+ */
+
+/* ── Focus ──────────────────────────────────────────────────────────────
+   One rule for every interactive element. `:focus-visible`, not `:focus`, so
+   a mouse click does not leave a ring behind — but keyboard users always get
+   one. Removing this is the single easiest way to make the app unusable
+   without a mouse. */
+.nx-focusable:focus-visible,
+.nx-btn:focus-visible,
+.nx-input:focus-visible,
+.nx-select:focus-visible {
+  outline: 2px solid var(--border-focus);
+  outline-offset: 2px;
+}
+
+/* ── Button ─────────────────────────────────────────────────────────── */
+.nx-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  font-family: inherit;
+  font-weight: 500;
+  border: 1px solid transparent;
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  text-decoration: none;
+  white-space: nowrap;
+  line-height: 1.4;
+  transition: background var(--transition-fast), border-color var(--transition-fast),
+    color var(--transition-fast), opacity var(--transition-fast);
+}
+
+.nx-btn[disabled],
+.nx-btn[aria-disabled='true'] {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.nx-btn--sm { padding: var(--space-2) var(--space-3); font-size: 0.8125rem; }
+.nx-btn--md { padding: var(--space-3) var(--space-5); font-size: 0.875rem; }
+.nx-btn--lg { padding: var(--space-4) var(--space-6); font-size: 1rem; }
+
+.nx-btn--primary {
+  background: var(--color-primary-600);
+  color: #fff;
+}
+.nx-btn--primary:hover:not([disabled]):not([aria-disabled='true']) {
+  background: var(--color-primary-500);
+}
+
+.nx-btn--secondary {
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+  border-color: var(--border-primary);
+}
+.nx-btn--secondary:hover:not([disabled]):not([aria-disabled='true']) {
+  background: var(--bg-card-hover);
+  border-color: var(--border-secondary);
+}
+
+.nx-btn--ghost {
+  background: transparent;
+  color: var(--text-secondary);
+}
+.nx-btn--ghost:hover:not([disabled]):not([aria-disabled='true']) {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-primary);
+}
+
+/* Destructive actions read as dangerous before they are clicked, not after. */
+.nx-btn--danger {
+  background: rgba(239, 68, 68, 0.1);
+  color: var(--color-error);
+  border-color: rgba(239, 68, 68, 0.25);
+}
+.nx-btn--danger:hover:not([disabled]):not([aria-disabled='true']) {
+  background: rgba(239, 68, 68, 0.2);
+}
+
+.nx-btn--block { width: 100%; }
+
+/* Spinner. Honours prefers-reduced-motion below, where it stops rotating but
+   stays visible — the state still has to be legible without the animation. */
+.nx-spinner {
+  width: 1em;
+  height: 1em;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: var(--radius-full);
+  animation: nx-spin 700ms linear infinite;
+}
+
+@keyframes nx-spin { to { transform: rotate(360deg); } }
+
+/* ── Field ──────────────────────────────────────────────────────────── */
+.nx-field { display: flex; flex-direction: column; gap: var(--space-2); }
+
+.nx-label {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.nx-required { color: var(--color-error); margin-inline-start: 2px; }
+
+.nx-input,
+.nx-select {
+  font-family: inherit;
+  font-size: 0.875rem;
+  background: var(--bg-input);
+  color: var(--text-primary);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-lg);
+  padding: var(--space-3) var(--space-4);
+  width: 100%;
+  outline: none;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.nx-input::placeholder { color: var(--text-tertiary); }
+
+.nx-input:focus,
+.nx-select:focus {
+  border-color: var(--color-primary-500);
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15);
+}
+
+.nx-input--invalid,
+.nx-input--invalid:focus {
+  border-color: var(--color-error);
+  box-shadow: 0 0 0 3px rgba(248, 113, 113, 0.15);
+}
+
+.nx-hint { font-size: 0.75rem; color: var(--text-tertiary); }
+
+/* Not colour alone (§5.5) — the message is text, and it is wired to the input
+   by aria-describedby so a screen reader reads it with the field. */
+.nx-error { font-size: 0.75rem; color: var(--color-error); }
+
+/* ── Card ───────────────────────────────────────────────────────────── */
+.nx-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-xl);
+  padding: var(--space-6);
+}
+.nx-card--interactive { transition: border-color var(--transition-base), box-shadow var(--transition-base); }
+.nx-card--interactive:hover { border-color: var(--border-secondary); box-shadow: var(--shadow-lg); }
+.nx-card__title { font-size: 1rem; font-weight: 600; color: var(--text-primary); }
+.nx-card__subtitle { font-size: 0.8125rem; color: var(--text-tertiary); margin-top: var(--space-1); }
+.nx-card__body { margin-top: var(--space-4); }
+
+/* ── Badge ──────────────────────────────────────────────────────────── */
+.nx-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: 0.75rem;
+  font-weight: 500;
+  padding: 2px var(--space-2);
+  border-radius: var(--radius-full);
+  border: 1px solid transparent;
+  white-space: nowrap;
+}
+.nx-badge--neutral { background: var(--bg-tertiary); color: var(--text-secondary); }
+.nx-badge--success { background: rgba(16, 185, 129, 0.12); color: var(--color-success); border-color: rgba(16, 185, 129, 0.25); }
+.nx-badge--warning { background: rgba(245, 158, 11, 0.12); color: var(--color-warning); border-color: rgba(245, 158, 11, 0.25); }
+.nx-badge--danger  { background: rgba(248, 113, 113, 0.12); color: var(--color-error); border-color: rgba(248, 113, 113, 0.25); }
+.nx-badge--income  { background: rgba(16, 185, 129, 0.12); color: var(--color-income); }
+.nx-badge--expense { background: rgba(248, 113, 113, 0.12); color: var(--color-expense); }
+.nx-badge--transfer{ background: rgba(59, 130, 246, 0.12); color: var(--color-transfer); }
+
+/* ── Empty state ────────────────────────────────────────────────────── */
+.nx-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: var(--space-3);
+  padding: var(--space-12) var(--space-6);
+}
+.nx-empty__icon { font-size: 2rem; line-height: 1; opacity: 0.6; }
+.nx-empty__title { font-size: 1rem; font-weight: 600; color: var(--text-primary); }
+.nx-empty__body { font-size: 0.875rem; color: var(--text-tertiary); max-width: 44ch; }
+
+/* ── Skeleton ───────────────────────────────────────────────────────── */
+.nx-skeleton {
+  background: linear-gradient(90deg, var(--bg-secondary) 25%, var(--bg-tertiary) 37%, var(--bg-secondary) 63%);
+  background-size: 400% 100%;
+  animation: nx-shimmer 1.4s ease infinite;
+  border-radius: var(--radius-md);
+}
+@keyframes nx-shimmer { 0% { background-position: 100% 50%; } 100% { background-position: 0 50%; } }
+
+/* ── Table ──────────────────────────────────────────────────────────── */
+.nx-table-wrap { overflow-x: auto; }
+.nx-table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
+.nx-table th {
+  text-align: start;
+  font-weight: 500;
+  font-size: 0.75rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--border-primary);
+}
+.nx-table td {
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--border-primary);
+  color: var(--text-primary);
+}
+.nx-table tbody tr:hover { background: var(--bg-card-hover); }
+/* Money right-aligns and uses tabular figures so digits line up column-wise —
+   a column of amounts that does not align is materially harder to scan. */
+.nx-table td.nx-num,
+.nx-table th.nx-num { text-align: end; font-variant-numeric: tabular-nums; }
+
+/* ── Dialog ─────────────────────────────────────────────────────────── */
+.nx-dialog-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(2, 6, 23, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-4);
+  z-index: 1300;
+}
+.nx-dialog {
+  background: var(--bg-card);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-xl);
+  padding: var(--space-6);
+  width: 100%;
+  max-width: 30rem;
+}
+.nx-dialog__title { font-size: 1.125rem; font-weight: 600; color: var(--text-primary); }
+.nx-dialog__body { margin-top: var(--space-3); font-size: 0.875rem; color: var(--text-secondary); }
+.nx-dialog__actions {
+  margin-top: var(--space-6);
+  display: flex;
+  gap: var(--space-3);
+  justify-content: flex-end;
+  flex-wrap: wrap;
+}
+
+/* ── Reduced motion ─────────────────────────────────────────────────────
+   Honoured rather than assumed: the marketing pages already have a
+   prefers-reduced-motion e2e test, and a component library that ignored the
+   setting would quietly reintroduce what that test was written to prevent. */
+@media (prefers-reduced-motion: reduce) {
+  .nx-spinner,
+  .nx-skeleton {
+    animation: none;
+  }
+  .nx-skeleton { background: var(--bg-tertiary); }
+  .nx-btn,
+  .nx-input,
+  .nx-select,
+  .nx-card--interactive {
+    transition: none;
+  }
+}

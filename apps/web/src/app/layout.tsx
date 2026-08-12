@@ -1,9 +1,45 @@
 import type { Metadata } from "next";
+import { Inter, Hind_Siliguri } from "next/font/google";
+// Imported BEFORE globals.css so the custom properties exist for anything that
+// reads them. Custom-property resolution is order-independent, but keeping the
+// declaration first is what a reader expects and costs nothing.
+import "@noorixfin/design-tokens/tokens.css";
+// Component styles depend on the tokens above, and the app's own globals may
+// legitimately override a component, so the order is tokens → ui → globals.
+import "@noorixfin/ui/ui.css";
 import "./globals.css";
 import { Providers } from "./providers";
 import { getLocale } from "../lib/i18n/locale";
 import { LocaleProvider } from "../lib/i18n/locale-provider";
 import { getSessionContext } from "../lib/session";
+
+/**
+ * Fonts are self-hosted by `next/font`, not fetched from Google.
+ *
+ * `globals.css` used to `@import` them from fonts.googleapis.com. Three things
+ * were wrong with that: the CSP added in this session blocked it outright; an
+ * `@import` at the top of a stylesheet is render-blocking and serialises a
+ * second round trip before any text paints; and every visitor's IP was handed
+ * to a third party by a site whose own landing page advertises "0 trackers".
+ *
+ * `next/font` downloads the files at build time and serves them same-origin,
+ * which fixes all three at once. The `variable` option exposes each as a CSS
+ * custom property so `--font-ui` and `--font-bangla` keep working unchanged.
+ */
+const inter = Inter({
+  subsets: ["latin"],
+  variable: "--font-inter",
+  display: "swap",
+});
+
+// Hind Siliguri is not a variable font, so the weights the design uses have to
+// be named explicitly — unlike Inter, where the whole 300–800 range is one file.
+const hindSiliguri = Hind_Siliguri({
+  subsets: ["bengali", "latin"],
+  weight: ["300", "400", "500", "600", "700"],
+  variable: "--font-hind-siliguri",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   title: "NoorixFin — Personal Finance",
@@ -36,7 +72,11 @@ export default async function RootLayout({
   ]);
 
   return (
-    <html lang={locale} suppressHydrationWarning>
+    <html
+      lang={locale}
+      className={`${inter.variable} ${hindSiliguri.variable}`}
+      suppressHydrationWarning
+    >
       <body>
         <LocaleProvider initialLocale={locale} isAuthenticated={profile !== null}>
           <Providers>{children}</Providers>

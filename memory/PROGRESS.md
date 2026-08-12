@@ -437,9 +437,9 @@ Resolved; the acceptance matrix now carries the DEC-014 wording for SEC-02, FIN-
 
 ### Open question for the owner
 
-The repository directory is still `~/Runing_Project/MyFin/`. Renaming it to `NoorixFin/` is cosmetic
-but would break the current session's working directory and any absolute paths in local tooling —
-left for you to decide and do outside a session.
+~~The repository directory is still `~/Runing_Project/MyFin/`.~~ **Done 2026-08-09** — renamed to
+`~/Runing_Project/NoorixFin/` by the owner. pnpm workspace links, turbo caches and the Supabase
+containers all survived it; nothing needed reinstalling.
 
 ---
 

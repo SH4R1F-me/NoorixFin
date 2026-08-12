@@ -5,12 +5,27 @@
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && node scripts/generate-css.mjs",
     "dev": "tsc --watch",
     "typecheck": "tsc --noEmit",
-    "clean": "rm -rf dist"
+    "clean": "rm -rf dist",
+    "generate": "node scripts/generate-css.mjs",
+    "test": "vitest run",
+    "check:fresh": "node scripts/check-fresh.mjs"
   },
   "devDependencies": {
-    "typescript": "^5.8.0"
-  }
+    "typescript": "^5.8.0",
+    "vitest": "^3.2.0"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./tokens.css": "./tokens.css"
+  },
+  "files": [
+    "dist",
+    "tokens.css"
+  ]
 }

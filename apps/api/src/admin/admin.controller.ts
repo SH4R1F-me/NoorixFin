@@ -387,4 +387,108 @@ export class AdminController {
       'ARCHIVED',
     );
   }
+
+  // ─── Phase 2: Performance ──────────────────────────────────
+
+  @Get('metrics/performance')
+  @ApiOperation({ summary: 'p50/p95/p99 latency, error rate, request volume from system_events' })
+  getPerformanceMetrics(
+    @Req() req: AuthedRequest,
+    @Query('window') windowRaw?: string,
+  ) {
+    const window = Number.parseInt(windowRaw ?? '1', 10);
+    const hours = Number.isFinite(window) && window > 0 && window <= 168 ? window : 1;
+    return this.adminService.getPerformanceMetrics(req.accessToken, hours);
+  }
+
+  // ─── Phase 2: Alerts ──────────────────────────────────────
+
+  @Get('alerts')
+  @ApiOperation({ summary: 'Current state of all alert rules' })
+  getAlerts(@Req() req: AuthedRequest) {
+    return this.adminService.getAlerts(req.accessToken);
+  }
+
+  @Post('alerts/:alertKey/acknowledge')
+  @ThrottleAdminWrite()
+  @Idempotent()
+  @ApiOperation({ summary: 'Acknowledge (resolve) a firing alert' })
+  acknowledgeAlert(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('alertKey') alertKey: string,
+  ) {
+    return this.adminService.acknowledgeAlert(user.id, alertKey);
+  }
+
+  // ─── Phase 2: Security ────────────────────────────────────
+
+  @Get('security/auth-events')
+  @ApiOperation({ summary: 'Auth-related audit events (logins, MFA, suspensions)' })
+  getAuthEvents(
+    @Req() req: AuthedRequest,
+    @Query('limit') limitRaw?: string,
+    @Query('offset') offsetRaw?: string,
+    @Query('platform') platform?: string,
+  ) {
+    return this.adminService.getAuthEvents(req.accessToken, {
+      limit: limitRaw ? Number(limitRaw) : undefined,
+      offset: offsetRaw ? Number(offsetRaw) : undefined,
+      platform,
+    });
+  }
+
+  @Get('security/sessions')
+  @ApiOperation({ summary: 'All active (non-revoked) device sessions platform-wide' })
+  getActiveSessions(
+    @Req() req: AuthedRequest,
+    @Query('limit') limitRaw?: string,
+    @Query('offset') offsetRaw?: string,
+    @Query('platform') platform?: string,
+  ) {
+    return this.adminService.getActiveSessions(req.accessToken, {
+      limit: limitRaw ? Number(limitRaw) : undefined,
+      offset: offsetRaw ? Number(offsetRaw) : undefined,
+      platform,
+    });
+  }
+
+  @Post('security/sessions/:deviceId/revoke')
+  @ThrottleAdminWrite()
+  @Idempotent()
+  @ApiOperation({ summary: 'Force-revoke a single device session' })
+  revokeSession(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('deviceId', ParseUUIDPipe) deviceId: string,
+  ) {
+    return this.adminService.revokeSession(user.id, deviceId);
+  }
+
+  @Post('security/sessions/revoke-all/:userId')
+  @ThrottleAdminWrite()
+  @Idempotent()
+  @ApiOperation({ summary: 'Force-revoke all sessions for a given user' })
+  revokeAllUserSessions(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('userId', ParseUUIDPipe) userId: string,
+  ) {
+    return this.adminService.revokeAllUserSessions(user.id, userId);
+  }
+
+  @Get('security/anomalies')
+  @ApiOperation({ summary: 'Heuristic security signals: new devices, throttle abusers' })
+  getAnomalies(@Req() req: AuthedRequest) {
+    return this.adminService.getAnomalies(req.accessToken);
+  }
+
+  // ─── Phase 2: Correlated trace view ───────────────────────
+
+  @Get('events/trace/:requestId')
+  @ApiOperation({ summary: 'All system_events for a single X-Request-ID (correlated trace)' })
+  getEventTrace(
+    @Req() req: AuthedRequest,
+    @Param('requestId') requestId: string,
+  ) {
+    return this.adminService.getEventsByRequestId(req.accessToken, requestId);
+  }
 }
+

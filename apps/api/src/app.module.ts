@@ -26,9 +26,11 @@ import { CategoriesModule } from './categories/categories.module';
 import { PlanningModule } from './planning/planning.module';
 import { AdminModule } from './admin/admin.module';
 import { AccountModule } from './account/account.module';
+import { DevicesModule } from './devices/devices.module';
 
 // Middleware, Filters & Interceptors
 import { RequestIdMiddleware } from './common/middleware/request-id.middleware';
+import { ClientContextMiddleware } from './common/middleware/client-context.middleware';
 import { GlobalHttpExceptionFilter } from './common/filters/http-exception.filter';
 import { RequestTelemetryInterceptor } from './common/interceptors/logging.interceptor';
 import { IdentityThrottlerGuard } from './common/guards/identity-throttler.guard';
@@ -80,6 +82,8 @@ import { IdentityThrottlerGuard } from './common/guards/identity-throttler.guard
     // ─── Platform / Admin (DEC-016, DEC-017) ────────────
     AdminModule,
     AccountModule,
+    // Phase 2 — session & device management (gap S2)
+    DevicesModule,
   ],
   providers: [
     // Global auth guard (skip with @Public())
@@ -108,6 +112,9 @@ import { IdentityThrottlerGuard } from './common/guards/identity-throttler.guard
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
-    consumer.apply(RequestIdMiddleware).forRoutes('*');
+    // RequestId must run first so every subsequent middleware and handler has a
+    // trace context. ClientContext runs second so it is available in both the
+    // global interceptor and any handler that reads req.clientContext.
+    consumer.apply(RequestIdMiddleware, ClientContextMiddleware).forRoutes('*');
   }
 }

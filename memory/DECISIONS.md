@@ -1,7 +1,13 @@
 # NoorixFin — DECISIONS LOG
 
-**Last updated:** 2026-08-04 (Session 8)
+**Last updated:** 2026-08-08 (enterprise audit — DEC-025 raised, still open)
 **Product name:** NoorixFin (renamed from MyFin — see DEC-008)
+
+> **Numbering gap:** `DEC-021` (server-side locale resolution) and `DEC-022`
+> (budget figures recomputed from the ledger) are cited by ~10 source files but
+> were never written up here. Their rationale is recoverable only from the code
+> that cites them, so they are recorded as missing rather than reconstructed
+> from guesswork. Next free id is **DEC-026**.
 
 ---
 
@@ -643,3 +649,50 @@ platform. On a plan without it, `/admin` becomes unreachable for anyone not
 already enrolled. Recorded in `supabase/config.toml` above the provider block.
 
 **Status:** Confirmed — 11 live checks, 3 new guard unit tests, 2 E2E specs.
+
+---
+
+## DEC-025: What "enterprise-grade" means here — OPEN, awaiting the owner
+
+**Date raised:** 2026-08-08 (enterprise audit) · **Status: PROPOSED — NOT RATIFIED**
+
+> This entry exists to stop a drift, not to record a choice. **The owner has not
+> answered.** Nothing below has been decided; the working assumption is stated so
+> that Phases 0–5 could proceed, and it is labelled as an assumption everywhere
+> it has consequences.
+
+`audit_and_development.md` asked for the system to be elevated to
+"enterprise-grade." That phrase resolves two different ways here, and the two
+produce different products:
+
+- **Reading A — enterprise *quality*, same audience.** Rigour, observability,
+  security, accessibility and reliability at an enterprise standard, still
+  serving free individual and household users. Achievable on free or
+  self-hosted infrastructure.
+- **Reading B — enterprise *customers*.** Adds multi-member workspaces with a
+  role matrix, SSO/SAML/SCIM, contractual retention, SLAs and a billing
+  surface.
+
+**Why this cannot be left implicit.** Reading B contradicts two things already
+written down: DEC-011 makes the **Supabase Free Tier the design constraint**, and
+the marketing site's central promise is *"100% free, no subscription, no ads."*
+Supabase SSO is a paid-plan feature; multi-year audit retention does not fit the
+free tier's storage; an SLA is a paid-infrastructure commitment by definition.
+Reading B is therefore not a backlog of features — it is an amendment to DEC-011
+and to the product's public promise.
+
+**Working assumption (not a decision): Reading A.** The audit and the Phase 0–5
+roadmap are written for it. Every Reading-B item is tagged `[B-only]` and
+quarantined in Phase 6 so it can be dropped without unpicking anything else.
+
+**What is genuinely blocked on the answer.** Only Phase 6 — the `OWNER`-only
+role check in `workspace_members`, the invitation flow, and the RLS rewrite that
+multi-member workspaces require. Phases 0–5 are identical under both readings,
+which is why work proceeded without an answer.
+
+**To close this:** the owner picks A or B, this entry is rewritten as a decision
+with that rationale, and its status becomes Confirmed. If B, DEC-011 must be
+amended in the same commit rather than left contradicting it.
+
+**Status:** **OPEN.** Assumed-A for planning purposes only. No code depends on
+this entry today.

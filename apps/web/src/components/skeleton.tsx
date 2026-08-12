@@ -13,15 +13,22 @@
  *     trust in a finance app in a way a brief blank never does.
  */
 import type { CSSProperties } from 'react';
+import { Skeleton as UiSkeleton } from '@noorixfin/ui';
 
-const shimmer: CSSProperties = {
-  background:
-    'linear-gradient(90deg, rgba(30,41,59,0.5) 25%, rgba(51,65,85,0.7) 50%, rgba(30,41,59,0.5) 75%)',
-  backgroundSize: '200% 100%',
-  animation: 'nf-shimmer 1.4s ease-in-out infinite',
-  borderRadius: '0.5rem',
-};
-
+/**
+ * The base placeholder now comes from `@noorixfin/ui` (audit gap E2).
+ *
+ * It used to hardcode three `rgba(30,41,59,…)` values and its own keyframe, so
+ * a change to the surface colour left the loading state looking like a
+ * different app for one frame — and, more importantly, it animated regardless
+ * of `prefers-reduced-motion`. The shared component fixes both: its colours are
+ * tokens, and `ui.css` stops the shimmer for users who asked it to.
+ *
+ * The composite skeletons below stay here on purpose. They encode *this app's*
+ * layouts — a 44px row icon, a 200px header — which is product knowledge, not
+ * design-system knowledge, and pushing it into a shared package would make the
+ * package know about pages it should not.
+ */
 export function Skeleton({
   width = '100%',
   height = 16,
@@ -31,13 +38,8 @@ export function Skeleton({
   height?: number | string;
   style?: CSSProperties;
 }) {
-  return (
-    <div
-      aria-hidden="true"
-      data-testid="skeleton"
-      style={{ ...shimmer, width, height, ...style }}
-    />
-  );
+  // `data-testid` is retained: e2e/loading-ux.spec.ts counts these.
+  return <UiSkeleton data-testid="skeleton" width={width} height={height} style={style} />;
 }
 
 /** Screen-reader announcement — the shimmer itself is aria-hidden. */
