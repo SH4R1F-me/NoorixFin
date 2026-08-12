@@ -6,8 +6,9 @@
  * without a network round-trip. On first launch (no stored selection) the app
  * fetches the user's workspaces and lets them pick.
  *
- * The env var is kept as a development fallback only: it is ignored unless
- * SecureStore returns nothing AND we are in __DEV__ mode.
+ * There is deliberately no environment-variable fallback. A build that can
+ * silently select a developer's workspace is not a build that can be handed to
+ * a real user; first launch always goes through the selection screen.
  */
 import * as SecureStore from 'expo-secure-store';
 import { apiFetch } from './api';
@@ -27,10 +28,6 @@ export async function getActiveWorkspaceId(): Promise<string | null> {
   try {
     const stored = await SecureStore.getItemAsync(WORKSPACE_KEY);
     if (stored) return stored;
-    // Dev fallback — never use a real IDFA or hardware ID here
-    if (__DEV__ && process.env.EXPO_PUBLIC_DEV_WORKSPACE_ID) {
-      return process.env.EXPO_PUBLIC_DEV_WORKSPACE_ID;
-    }
     return null;
   } catch {
     return null;

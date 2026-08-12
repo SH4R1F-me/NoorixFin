@@ -32,9 +32,9 @@ name: CI
 
 on:
   push:
-    branches: [master, 'feat/**', 'fix/**']
+    branches: [main, 'feat/**', 'fix/**']
   pull_request:
-    branches: [master]
+    branches: [main]
 
 # A second push supersedes the first. Two runs of the E2E suite against the same
 # branch are two Supabase stacks competing for the same ports.
@@ -50,6 +50,34 @@ env:
   LOCAL_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0'
 
 jobs:
+  mobile:
+    name: Mobile bundle gate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Typecheck and sync-engine tests
+        run: |
+          pnpm --filter @noorixfin/mobile typecheck
+          pnpm --filter @noorixfin/mobile test -- --runInBand
+
+      # A native store build needs Apple/Google credentials, but this export
+      # still resolves every route and bundles both platforms. It catches the
+      # missing-native-module and broken-import failures that TypeScript cannot.
+      - name: Bundle Android and iOS application code
+        run: pnpm --filter @noorixfin/mobile exec expo export --platform all --output-dir /tmp/noorixfin-mobile-dist
+
   # ───────────────────────────────────────────────────────────────────────────
   static:
     name: Typecheck, lint and unit tests
