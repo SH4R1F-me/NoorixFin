@@ -17,8 +17,7 @@ import { LIVE, seedWorkspace, setLocale, type Fixture } from './support/fixture'
 
 /** Bangla codepoints, excluding the Taka sign (৳, U+09F3) which is a currency
  *  symbol and correctly stays put in an English UI. */
-const banglaWords = (text: string) =>
-  (text.match(/[ঀ-৲৴-৿]+/g) ?? []).length;
+const banglaWords = (text: string) => (text.match(/[ঀ-৲৴-৿]+/g) ?? []).length;
 
 /**
  * This spec owns its account.
@@ -38,7 +37,10 @@ async function signIn(page: Page) {
 }
 
 const switchLanguage = (page: Page) =>
-  page.locator('aside button', { hasText: /English|বাংলা/ }).first().click();
+  page
+    .locator('aside button', { hasText: /English|বাংলা/ })
+    .first()
+    .click();
 
 test.describe('i18n', () => {
   /**
@@ -73,21 +75,19 @@ test.describe('i18n', () => {
 
     const mainAfter = banglaWords(await page.locator('main').innerText());
     // The old behaviour was 56 → 52: the body was untouched.
-    expect(mainAfter, 'main content must actually translate').toBeLessThan(
-      mainBefore / 2,
-    );
+    expect(mainAfter, 'main content must actually translate').toBeLessThan(mainBefore / 2);
   });
 
   test('the choice survives a reload', async ({ page }) => {
     await signIn(page);
     await switchLanguage(page);
     await page.waitForTimeout(1200);
-    const after = banglaWords(await page.locator('aside').innerText());
+    const after = banglaWords(await page.locator('.nf-sidebar').innerText());
 
     await page.reload();
     await page.waitForTimeout(1500);
 
-    expect(banglaWords(await page.locator('aside').innerText())).toBe(after);
+    expect(banglaWords(await page.locator('.nf-sidebar').innerText())).toBe(after);
   });
 
   test('the choice reaches every dashboard route', async ({ page }) => {

@@ -63,22 +63,17 @@ test.describe('admin access control', () => {
   test.skip(!LIVE, 'needs E2E_LIVE=1 with supabase and the API running');
 
   test.beforeAll(async () => {
-    [user, operator] = await Promise.all([
-      seedWorkspace('normal-user'),
-      createOperator('console'),
-    ]);
+    [user, operator] = await Promise.all([seedWorkspace('normal-user'), createOperator('console')]);
     // Every selector below is an English catalog string.
     await Promise.all([setLocale(user.token, 'en'), setLocale(operator.token, 'en')]);
   });
 
-  test('a normal user cannot reach the console and is not shown the switch', async ({
-    page,
-  }) => {
+  test('a normal user cannot reach the console and is not shown the switch', async ({ page }) => {
     await signIn(page, user.email, user.password);
 
     // The switch must be absent from the markup, not merely hidden.
-    await expect(page.locator('aside a[href="/admin"]')).toHaveCount(0);
-    await expect(page.locator('aside')).not.toContainText('System Admin');
+    await expect(page.locator('.nf-sidebar a[href="/admin"]')).toHaveCount(0);
+    await expect(page.locator('.nf-sidebar')).not.toContainText('System Admin');
 
     for (const route of ADMIN_ROUTES) {
       const response = await page.goto(route);
@@ -109,9 +104,7 @@ test.describe('admin access control', () => {
     expect(status).toBe(403);
   });
 
-  test('an operator with a password alone is stopped at the second factor', async ({
-    page,
-  }) => {
+  test('an operator with a password alone is stopped at the second factor', async ({ page }) => {
     await signIn(page, operator.email, operator.password);
     await page.goto('/admin');
 
@@ -189,9 +182,7 @@ test.describe('admin access control', () => {
     const body = (await page.locator('body').innerText()).toLowerCase();
     // Column headers that would only exist if finances had leaked in.
     for (const forbidden of ['balance', 'payee', 'transaction amount', 'net worth']) {
-      expect(body, `admin users page must not surface "${forbidden}"`).not.toContain(
-        forbidden,
-      );
+      expect(body, `admin users page must not surface "${forbidden}"`).not.toContain(forbidden);
     }
     // The counts it SHOULD show.
     expect(body).toContain('entries');

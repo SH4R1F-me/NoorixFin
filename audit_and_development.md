@@ -899,9 +899,11 @@ PUT    /v1/admin/releases/mobile
 
 # Part 7 — Master Roadmap
 
-## 7.0 Execution status — updated 2026-08-08
+## 7.0 Execution status — updated 2026-08-14
 
-**Phase 0 and Phase 1 are complete.** 11 of 11 items.
+**The Reading A roadmap is complete.** Phases 0–5 are implemented; Phase 6 is
+excluded by DEC-025 and no commercial, billing, SSO, or shared-tenant scope was
+started.
 
 | Item | Status | Evidence |
 |---|---|---|
@@ -917,9 +919,11 @@ PUT    /v1/admin/releases/mobile
 | P1.6 Shutdown / health | ✅ | `/health/live`, `/health/ready`, SIGTERM drain; 7 unit tests |
 | P1.7 Error catalogue + paging | ✅ | 62 codes in `@noorixfin/domain`, published to Swagger; drift test |
 
-**Gate at completion:** 19/19 typecheck · 14/14 test tasks · 10/10 build · 30
-e2e · lint at zero warnings (api + web) · locale parity · migration drift · API
-client freshness · design-token freshness · backup restore drill — all green.
+**Final gate:** 19/19 typecheck · 14/14 test tasks · 10/10 build · 105 browser
+scenarios (101 passed, 4 environment-dependent scenarios skipped) · lint at
+zero warnings · locale parity · all 32 migrations from scratch · SQL invariants
+· migration drift · API-client freshness · design-token freshness · full
+backup/restore drill with row-count and ledger-balance comparison — all green.
 
 ### Continuation status — updated 2026-08-14
 
@@ -935,6 +939,7 @@ client freshness · design-token freshness · backup restore drill — all green
 | Phase 5 — Recurring page | ✅ complete | Migration `00029_recurring_management`; dedicated route with create/pause/resume/delete lifecycle and live no-ledger-side-effect coverage |
 | Phase 5 — Tags page | ✅ complete | Migration `00030_tag_management`; canonical create/rename/delete management, usage drill-down, and live proof that tag deletion never changes ledger entries |
 | Phase 5 — Debts page | ✅ complete | Migration `00031_debt_management`; dedicated terms lifecycle with ledger-derived outstanding balances and live account-preservation coverage |
+| Phase 5 — restore portability | ✅ complete | Migration `00032_portable_trigram_indexes`; extension-qualified search indexes and a restore drill that recreates the schema-scoped Realtime publication safely |
 | Phase 6 | 🚫 excluded | Reading A ratified in DEC-025; commercial and multi-tenant `[B-only]` work is out of scope |
 
 **Four drift guards now exist**, each proven to fail on real drift before being
@@ -1134,6 +1139,10 @@ Phase 0 ─┬─▶ Phase 1 ─┬─▶ Phase 2 ──────────
 | `00026_imports_attachments` `[implemented]` | `transaction_attachments` + private storage; `import_jobs` + `import_rows` for staged CSV/OFX/QIF ingestion |
 | `00027_theme_preference` `[implemented]` | System/light/dark preference on `profiles` |
 | `00028_notification_worker_grants` `[implemented]` | Least-privilege notification-worker reads for calendar and membership sources |
+| `00029_recurring_management` `[implemented]` | First-class recurring-rule validation, ordering, and lifecycle support |
+| `00030_tag_management` `[implemented]` | Canonical tag names, duplicate consolidation, and workspace uniqueness |
+| `00031_debt_management` `[implemented]` | Validated debt rates, minimum payments, and due-day terms |
+| `00032_portable_trigram_indexes` `[implemented]` | Portable `pg_trgm` extension namespace and schema-qualified search opclasses |
 | Multi-member migration `[excluded by DEC-025]` | No migration number reserved; roles, invites, and the corresponding RLS rewrite will not be implemented |
 
 ---

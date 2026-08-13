@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useTransition } from 'react';
+import { useOptimistic, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Check, Hash, Pencil, Plus, Trash2, X } from 'lucide-react';
@@ -16,14 +16,30 @@ export default function TagsView({ workspaceId, tags }: { workspaceId: string; t
   const [name, setName] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingName, setEditingName] = useState('');
+  const [rows, updateRows] = useOptimistic<
+    TagRow[],
+    { type: 'rename'; id: string; name: string } | { type: 'delete'; id: string }
+  >(tags, (current, action) => {
+    if (action.type === 'delete') return current.filter((tag) => tag.id !== action.id);
+    return current
+      .map((tag) => (tag.id === action.id ? { ...tag, name: action.name } : tag))
+      .sort((a, b) => a.name.localeCompare(b.name));
+  });
   const [notice, setNotice] = useState<{ ok: boolean; text: string } | null>(null);
 
-  function mutate(run: () => Promise<{ ok: boolean; message?: string }>, success: string) {
+  function mutate(
+    run: () => Promise<{ ok: boolean; message?: string }>,
+    success: string,
+    onSuccess?: () => void,
+  ) {
     setNotice(null);
     startTransition(async () => {
       const result = await run();
       setNotice({ ok: result.ok, text: result.ok ? success : (result.message ?? 'Failed') });
-      if (result.ok) router.refresh();
+      if (result.ok) {
+        onSuccess?.();
+        router.refresh();
+      }
     });
   }
 
@@ -36,11 +52,18 @@ export default function TagsView({ workspaceId, tags }: { workspaceId: string; t
   }
 
   function saveRename(tagId: string) {
-    mutate(async () => {
-      const result = await renameTag(workspaceId, tagId, editingName);
-      if (result.ok) setEditingId(null);
-      return result;
-    }, t('tags.renamed'));
+    const canonicalName = editingName.trim().toLocaleLowerCase('en-US');
+    mutate(
+      async () => {
+        const result = await renameTag(workspaceId, tagId, editingName);
+        if (result.ok) setEditingId(null);
+        return result;
+      },
+      t('tags.renamed'),
+      () => {
+        updateRows({ type: 'rename', id: tagId, name: canonicalName });
+      },
+    );
   }
 
   return (
@@ -90,7 +113,7 @@ export default function TagsView({ workspaceId, tags }: { workspaceId: string; t
         </p>
       )}
 
-      {tags.length === 0 ? (
+      {rows.length === 0 ? (
         <EmptyState
           icon={<Hash size={26} aria-hidden="true" />}
           title={t('tags.noTags')}
@@ -98,7 +121,7 @@ export default function TagsView({ workspaceId, tags }: { workspaceId: string; t
         />
       ) : (
         <ul style={styles.list}>
-          {tags.map((tag) => (
+          {rows.map((tag) => (
             <li key={tag.id} style={styles.row}>
               {editingId === tag.id ? (
                 <input
@@ -147,7 +170,13 @@ export default function TagsView({ workspaceId, tags }: { workspaceId: string; t
               <button
                 type="button"
                 disabled={pending}
-                onClick={() => mutate(() => deleteTag(workspaceId, tag.id), t('tags.deleted'))}
+                onClick={() =>
+                  mutate(
+                    () => deleteTag(workspaceId, tag.id),
+                    t('tags.deleted'),
+                    () => updateRows({ type: 'delete', id: tag.id }),
+                  )
+                }
                 style={field.ghost}
                 aria-label={`${t('app.delete')}: ${tag.name}. ${t('tags.deleteNote')}`}
                 title={t('tags.deleteNote')}

@@ -48,7 +48,9 @@ export function FileButton({
         className="nx-visually-hidden"
         type="file"
         accept={accept}
-        aria-label={ariaLabel ?? (typeof children === 'string' ? children : 'Choose file')}
+        // The visible Button is the accessible control. This input is only its
+        // implementation detail and would otherwise create a duplicate button.
+        aria-hidden="true"
         tabIndex={-1}
         onChange={changed}
       />

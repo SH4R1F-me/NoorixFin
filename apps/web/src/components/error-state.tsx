@@ -66,19 +66,19 @@ const PRESENTATION: Record<
 > = {
   crash: {
     icon: <AlertTriangle size={30} />,
-    tint: '#f59e0b',
+    tint: 'var(--color-warning)',
     titleKey: 'app.couldNotLoad',
     bodyKey: 'app.couldNotLoadBody',
   },
   offline: {
     icon: <PlugZap size={30} />,
-    tint: '#38bdf8',
+    tint: 'var(--color-transfer)',
     titleKey: 'app.offline',
     bodyKey: 'app.offlineBody',
   },
   notFound: {
     icon: <SearchX size={30} />,
-    tint: '#94a3b8',
+    tint: 'var(--text-secondary)',
     titleKey: 'app.notFound',
     bodyKey: 'app.notFoundBody',
   },
@@ -108,7 +108,7 @@ export function ErrorState({
   return (
     <div style={styles.wrap} role="alert">
       <div style={styles.card}>
-        <div style={{ ...styles.iconWrap, background: `${tint}1a`, color: tint }}>{icon}</div>
+        <div style={{ ...styles.iconWrap, color: tint }}>{icon}</div>
 
         <h1 style={styles.title}>{t(titleKey)}</h1>
         <p style={styles.body}>{t(bodyKey)}</p>
@@ -141,8 +141,8 @@ const styles: Record<string, CSSProperties> = {
     padding: '2rem 1rem',
   },
   card: {
-    background: 'rgba(30,41,59,0.4)',
-    border: '1px solid #1e293b',
+    background: 'var(--bg-card)',
+    border: '1px solid var(--border-primary)',
     borderRadius: '1rem',
     padding: '2.5rem 2rem',
     display: 'flex',
@@ -158,17 +158,18 @@ const styles: Record<string, CSSProperties> = {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
+    background: 'var(--bg-tertiary)',
     marginBottom: '1.25rem',
   },
   title: {
     fontSize: '1.25rem',
     fontWeight: 700,
-    color: '#f8fafc',
+    color: 'var(--text-primary)',
     margin: 0,
   },
   body: {
     fontSize: '0.875rem',
-    color: '#94a3b8',
+    color: 'var(--text-secondary)',
     marginTop: '0.6rem',
     lineHeight: 1.65,
   },
@@ -185,7 +186,7 @@ const styles: Record<string, CSSProperties> = {
     gap: '0.5rem',
     padding: '0.625rem 1.25rem',
     background: 'linear-gradient(135deg, #059669, #10b981)',
-    color: 'white',
+    color: 'var(--text-on-primary)',
     border: 'none',
     borderRadius: '0.75rem',
     fontSize: '0.875rem',
@@ -199,8 +200,8 @@ const styles: Record<string, CSSProperties> = {
     gap: '0.5rem',
     padding: '0.625rem 1.25rem',
     background: 'transparent',
-    color: '#94a3b8',
-    border: '1px solid #334155',
+    color: 'var(--text-secondary)',
+    border: '1px solid var(--border-secondary)',
     borderRadius: '0.75rem',
     fontSize: '0.875rem',
     fontWeight: 600,
@@ -209,7 +210,7 @@ const styles: Record<string, CSSProperties> = {
   digest: {
     marginTop: '1.25rem',
     fontSize: '0.6875rem',
-    color: '#8b9ab0',
+    color: 'var(--text-tertiary)',
     fontFamily: 'ui-monospace, monospace',
   },
 };

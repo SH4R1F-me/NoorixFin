@@ -366,7 +366,8 @@ const styles: Record<string, React.CSSProperties> = {
   sectionLabel: {
     fontSize: '0.6875rem',
     fontWeight: 700,
-    color: '#78716c',
+    // Small uppercase text needs a stronger tone against the near-black rail.
+    color: '#a8a29e',
     letterSpacing: '0.08em',
     textTransform: 'uppercase' as const,
     padding: '0.875rem 0.75rem 0.25rem',
