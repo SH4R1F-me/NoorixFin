@@ -623,5 +623,44 @@ BEGIN
 END;
 $$;
 
+-- ── Search indexes survive a restore into a fresh Supabase database ────────
+DO $$
+DECLARE
+  v_extension_schema TEXT;
+  v_bad_indexes INTEGER;
+BEGIN
+  SELECT n.nspname INTO v_extension_schema
+    FROM pg_extension e
+    JOIN pg_namespace n ON n.oid = e.extnamespace
+   WHERE e.extname = 'pg_trgm';
+
+  IF v_extension_schema <> 'extensions' THEN
+    RAISE EXCEPTION 'RESTORE-01 FAILED: pg_trgm is in %, expected extensions', v_extension_schema;
+  END IF;
+
+  SELECT count(*) INTO v_bad_indexes
+    FROM pg_index index_row
+    JOIN pg_class index_class ON index_class.oid = index_row.indexrelid
+    JOIN LATERAL unnest(index_row.indclass) AS opclass_oid ON TRUE
+    JOIN pg_opclass opclass ON opclass.oid = opclass_oid
+    JOIN pg_namespace opclass_namespace ON opclass_namespace.oid = opclass.opcnamespace
+   WHERE index_class.relname IN (
+       'idx_journal_entries_search',
+       'idx_ledger_accounts_name_search',
+       'idx_categories_name_search',
+       'idx_tags_name_search',
+       'idx_recurring_rules_search'
+     )
+     AND opclass.opcname = 'gin_trgm_ops'
+     AND opclass_namespace.nspname <> 'extensions';
+
+  IF v_bad_indexes <> 0 THEN
+    RAISE EXCEPTION 'RESTORE-02 FAILED: % trigram indexes use a non-portable operator class', v_bad_indexes;
+  END IF;
+
+  RAISE NOTICE '   pg_trgm and all search indexes use the portable extensions schema';
+END;
+$$;
+
 \echo ''
 \echo '✓ All CI invariants hold.'

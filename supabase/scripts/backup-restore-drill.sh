@@ -85,6 +85,7 @@ DROP SCHEMA IF EXISTS public CASCADE;          -- the dump recreates it
 CREATE SCHEMA IF NOT EXISTS extensions;
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp" WITH SCHEMA extensions;
 CREATE EXTENSION IF NOT EXISTS pgcrypto   WITH SCHEMA extensions;
+CREATE EXTENSION IF NOT EXISTS pg_trgm    WITH SCHEMA extensions;
 SQL
 
 step "Restore"
@@ -130,6 +131,27 @@ if [[ $REAL_COUNT -gt 0 ]]; then
 fi
 green "  restored with no unexpected errors"
 dim "  ($BENIGN_COUNT expected, explained above; pg_restore exit $RESTORE_CODE)"
+
+# Publications are database-level objects and are omitted by this deliberately
+# schema-scoped dump. Recreate only the payload-free invalidation aperture; the
+# notifications table itself must never enter Realtime (DEC-026).
+psql "$RESTORE_URL" -q -v ON_ERROR_STOP=1 <<'SQL'
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_publication WHERE pubname = 'supabase_realtime') THEN
+    CREATE PUBLICATION supabase_realtime;
+  END IF;
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_publication_tables
+     WHERE pubname = 'supabase_realtime'
+       AND schemaname = 'public'
+       AND tablename = 'notification_hints'
+  ) THEN
+    ALTER PUBLICATION supabase_realtime ADD TABLE public.notification_hints;
+  END IF;
+END;
+$$;
+SQL
 
 step "Verify — SQL invariants on the RESTORED database"
 # The same gate CI runs against a fresh migration chain. Every check RAISEs, so
