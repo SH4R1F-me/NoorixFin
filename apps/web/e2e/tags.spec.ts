@@ -138,4 +138,36 @@ test.describe('tags', () => {
     // One chip, not two.
     await expect(page.getByText(/^#dupe$/i)).toHaveCount(1);
   });
+
+  test('the first-class page creates, renames and deletes labels without deleting money', async ({
+    page,
+  }) => {
+    await signIn(page);
+    await page.goto('/dashboard/tags');
+    await expect(page.getByRole('heading', { name: 'Tags' })).toBeVisible();
+    const lunchRow = page.locator('li').filter({ hasText: '#lunch' });
+    await expect(lunchRow).toBeVisible();
+    await expect(lunchRow).toContainText('1 transactions');
+
+    await page.locator('#new-tag').fill('Standalone');
+    await page.getByRole('button', { name: 'Add', exact: true }).click();
+    await expect(page.getByText(/tag created/i)).toBeVisible();
+    await expect(page.getByText('#standalone')).toBeVisible();
+
+    await page.getByRole('button', { name: /rename tag: lunch/i }).click();
+    const rename = page.getByRole('textbox', { name: /rename tag: lunch/i });
+    await rename.fill('meals');
+    await page.getByRole('button', { name: /save: lunch/i }).click();
+    await expect(page.getByText(/tag renamed everywhere/i)).toBeVisible();
+    await expect(page.getByText('#meals')).toBeVisible();
+
+    await page.getByRole('button', { name: /^Delete: meals/i }).click();
+    await expect(page.getByText(/tag deleted/i)).toBeVisible();
+    await expect(page.getByText('#meals')).toHaveCount(0);
+
+    await page.goto('/dashboard/transactions');
+    await expect(page.getByText('Tagged Lunch')).toBeVisible({ timeout: 15_000 });
+    const row = page.locator('div').filter({ hasText: /^Tagged Lunch/ }).first();
+    await expect(row).not.toContainText('#meals');
+  });
 });

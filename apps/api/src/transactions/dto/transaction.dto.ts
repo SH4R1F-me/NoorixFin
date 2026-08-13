@@ -85,6 +85,16 @@ export class CreateTransactionDto {
   idempotency_key!: string;
 }
 
+export class TagNameDto {
+  @ApiProperty({
+    example: 'travel',
+    description: 'Canonical workspace tag name',
+  })
+  @IsString()
+  @Length(1, 40)
+  name!: string;
+}
+
 export class CreateAttachmentDto {
   @ApiProperty({
     description:

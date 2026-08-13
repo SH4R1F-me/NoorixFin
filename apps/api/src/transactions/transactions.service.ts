@@ -205,7 +205,11 @@ export class TransactionsService {
     // Handle tags — three round trips total, regardless of tag count (DEC-011).
     // This was previously a loop doing up to 3 queries *per tag*.
     if (dto.tags && dto.tags.length > 0) {
-      const tagNames = [...new Set(dto.tags)];
+      const tagNames = [
+        ...new Set(
+          dto.tags.map((name) => this.canonicalTagName(name)).filter(Boolean),
+        ),
+      ];
 
       // 1. Upsert every tag in one statement. `tags` has UNIQUE (workspace_id,
       //    name), so existing tags are left alone and new ones are created.
@@ -550,6 +554,63 @@ export class TransactionsService {
       ...tag,
       usage_count: counts.get(tag.id) ?? 0,
     }));
+  }
+
+  private canonicalTagName(name: string) {
+    return name.trim().toLocaleLowerCase('en-US');
+  }
+
+  async createTag(workspaceId: string, accessToken: string, name: string) {
+    const canonicalName = this.canonicalTagName(name);
+    if (!canonicalName) throw new BadRequestException('Give the tag a name');
+
+    const { data, error } = await this.supabaseService
+      .getUserClient(accessToken)
+      .from('tags')
+      .insert({ workspace_id: workspaceId, name: canonicalName })
+      .select('id, name')
+      .single();
+    if (error) {
+      throw new BadRequestException(
+        error.code === '23505'
+          ? 'That tag already exists'
+          : 'Failed to create tag',
+      );
+    }
+    return { ...data, usage_count: 0 };
+  }
+
+  async renameTag(
+    tagId: string,
+    workspaceId: string,
+    accessToken: string,
+    name: string,
+  ) {
+    const canonicalName = this.canonicalTagName(name);
+    if (!canonicalName) throw new BadRequestException('Give the tag a name');
+
+    const { data, error } = await this.supabaseService
+      .getUserClient(accessToken)
+      .from('tags')
+      .update({ name: canonicalName })
+      .eq('id', tagId)
+      .eq('workspace_id', workspaceId)
+      .select('id, name')
+      .single();
+    if (error) {
+      if (error.code === 'PGRST116') {
+        throw new NotFoundException({
+          code: 'TAG_NOT_FOUND',
+          message: 'Tag not found',
+        });
+      }
+      throw new BadRequestException(
+        error.code === '23505'
+          ? 'That tag already exists'
+          : 'Failed to rename tag',
+      );
+    }
+    return data;
   }
 
   /**

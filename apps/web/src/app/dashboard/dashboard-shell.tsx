@@ -28,6 +28,7 @@ import {
   Bell,
   Upload,
   Repeat2,
+  Hash,
 } from 'lucide-react';
 import BroadcastBanner from '../../components/broadcast-banner';
 import CommandPalette from './command-palette';
@@ -51,6 +52,7 @@ const NAV_ITEMS = [
   },
   { id: 'accounts', key: 'nav.accounts', icon: Landmark, href: '/dashboard/accounts' },
   { id: 'categories', key: 'categories.title', icon: Tags, href: '/dashboard/categories' },
+  { id: 'tags', key: 'nav.tags', icon: Hash, href: '/dashboard/tags' },
   { id: 'budgets', key: 'nav.budgets', icon: PiggyBank, href: '/dashboard/budgets' },
   { id: 'calendar', key: 'nav.calendar', icon: Calendar, href: '/dashboard/calendar' },
   { id: 'recurring', key: 'nav.recurring', icon: Repeat2, href: '/dashboard/recurring' },

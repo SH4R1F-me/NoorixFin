@@ -571,5 +571,29 @@ BEGIN
 END;
 $$;
 
+-- ── Canonical tag management (Phase 5) ─────────────────────────────────────
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint
+     WHERE conrelid = 'public.tags'::regclass
+       AND conname = 'tags_name_canonical'
+  ) THEN
+    RAISE EXCEPTION 'TAG-01 FAILED: tag names are not canonicalized';
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_indexes
+     WHERE schemaname = 'public'
+       AND tablename = 'tags'
+       AND indexname = 'idx_tags_workspace_canonical_name'
+  ) THEN
+    RAISE EXCEPTION 'TAG-02 FAILED: canonical tag uniqueness index is missing';
+  END IF;
+
+  RAISE NOTICE '   canonical tag constraints and uniqueness hold';
+END;
+$$;
+
 \echo ''
 \echo '✓ All CI invariants hold.'

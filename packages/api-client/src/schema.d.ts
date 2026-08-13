@@ -423,7 +423,8 @@ export interface paths {
          */
         get: operations["TransactionsController_listTags_v1"];
         put?: never;
-        post?: never;
+        /** Create a workspace tag */
+        post: operations["TransactionsController_createTag_v1"];
         delete?: never;
         options?: never;
         head?: never;
@@ -447,7 +448,8 @@ export interface paths {
         delete: operations["TransactionsController_deleteTag_v1"];
         options?: never;
         head?: never;
-        patch?: never;
+        /** Rename a workspace tag everywhere it is used */
+        patch: operations["TransactionsController_renameTag_v1"];
         trace?: never;
     };
     "/v1/workspaces/{workspaceId}/transactions/{id}": {
@@ -1886,6 +1888,13 @@ export interface components {
             postings?: string[];
             attachments?: components["schemas"]["TransactionAttachmentResponseDto"][];
         };
+        TagNameDto: {
+            /**
+             * @description Canonical workspace tag name
+             * @example travel
+             */
+            name: string;
+        };
         CreateAttachmentDto: {
             /** @description A retry of the same receipt upload returns the original attachment */
             idempotency_key: string;
@@ -2890,6 +2899,29 @@ export interface operations {
             };
         };
     };
+    TransactionsController_createTag_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                workspaceId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TagNameDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     TransactionsController_deleteTag_v1: {
         parameters: {
             query?: never;
@@ -2901,6 +2933,30 @@ export interface operations {
             cookie?: never;
         };
         requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    TransactionsController_renameTag_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                workspaceId: string;
+                tagId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TagNameDto"];
+            };
+        };
         responses: {
             200: {
                 headers: {

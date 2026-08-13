@@ -51,6 +51,7 @@
     "home": "Home",
     "dashboard": "Dashboard",
     "transactions": "Transactions",
+    "tags": "Tags",
     "accounts": "Accounts",
     "budgets": "Budgets",
     "calendar": "Calendar & Bills",
@@ -473,6 +474,19 @@
     "freelance": "Freelance",
     "investment": "Investment",
     "other_income": "Other Income"
+  },
+  "tags": {
+    "organize": "Organize transactions",
+    "subtitle": "Reusable labels for finding related transactions across accounts and categories.",
+    "newTag": "New tag",
+    "rename": "Rename tag",
+    "usageCount": "{{count}} transactions",
+    "created": "Tag created.",
+    "renamed": "Tag renamed everywhere it is used.",
+    "deleted": "Tag deleted.",
+    "deleteNote": "Removes the label from transactions but never changes their money.",
+    "noTags": "No tags yet",
+    "noTagsBody": "Create a label here or add one while recording a transaction."
   },
   "categories": {
     "title": "Categories",

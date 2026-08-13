@@ -58,6 +58,7 @@ function revalidateLedger() {
   revalidatePath('/dashboard/transactions');
   revalidatePath('/dashboard/accounts');
   revalidatePath('/dashboard/categories');
+  revalidatePath('/dashboard/tags');
 }
 
 export async function uploadAttachment(input: {
@@ -286,6 +287,38 @@ export async function reverseTransaction(
 export async function deleteTag(workspaceId: string, tagId: string): Promise<LedgerResult> {
   try {
     await apiFetch(`/workspaces/${workspaceId}/tags/${tagId}`, { method: 'DELETE' });
+    revalidateLedger();
+    return { ok: true };
+  } catch (error) {
+    return fail(error);
+  }
+}
+
+export async function createTag(workspaceId: string, name: string): Promise<LedgerResult> {
+  if (!name.trim()) return { ok: false, message: 'Give the tag a name.' };
+  try {
+    await apiFetch(`/workspaces/${workspaceId}/tags`, {
+      method: 'POST',
+      body: { name: name.trim() },
+    });
+    revalidateLedger();
+    return { ok: true };
+  } catch (error) {
+    return fail(error);
+  }
+}
+
+export async function renameTag(
+  workspaceId: string,
+  tagId: string,
+  name: string,
+): Promise<LedgerResult> {
+  if (!name.trim()) return { ok: false, message: 'Give the tag a name.' };
+  try {
+    await apiFetch(`/workspaces/${workspaceId}/tags/${tagId}`, {
+      method: 'PATCH',
+      body: { name: name.trim() },
+    });
     revalidateLedger();
     return { ok: true };
   } catch (error) {

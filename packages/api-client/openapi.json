@@ -1007,9 +1007,91 @@
         "tags": [
           "Transactions"
         ]
+      },
+      "post": {
+        "operationId": "TransactionsController_createTag_v1",
+        "parameters": [
+          {
+            "name": "workspaceId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TagNameDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "supabase-auth": []
+          }
+        ],
+        "summary": "Create a workspace tag",
+        "tags": [
+          "Transactions"
+        ]
       }
     },
     "/v1/workspaces/{workspaceId}/tags/{tagId}": {
+      "patch": {
+        "operationId": "TransactionsController_renameTag_v1",
+        "parameters": [
+          {
+            "name": "workspaceId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "tagId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TagNameDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "supabase-auth": []
+          }
+        ],
+        "summary": "Rename a workspace tag everywhere it is used",
+        "tags": [
+          "Transactions"
+        ]
+      },
       "delete": {
         "description": "Detaches it from every entry and alters no posting — a tag is a label, not a fact about the money.",
         "operationId": "TransactionsController_deleteTag_v1",
@@ -4635,6 +4717,19 @@
           "created_by",
           "version",
           "created_at"
+        ]
+      },
+      "TagNameDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "travel",
+            "description": "Canonical workspace tag name"
+          }
+        },
+        "required": [
+          "name"
         ]
       },
       "CreateAttachmentDto": {

@@ -10,6 +10,7 @@ import {
   Controller,
   Delete,
   Get,
+  Patch,
   Post,
   Body,
   Param,
@@ -33,6 +34,7 @@ import {
   CreateTransactionDto,
   TransactionResponseDto,
   CreateAttachmentDto,
+  TagNameDto,
 } from './dto/transaction.dto';
 import { AttachmentsService } from './attachments.service';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
@@ -135,6 +137,40 @@ export class TransactionsController {
     @Req() req: Request & { accessToken: string },
   ) {
     return this.transactionsService.listTags(workspaceId, req.accessToken);
+  }
+
+  @Post('workspaces/:workspaceId/tags')
+  @ThrottleLedgerWrite()
+  @UseGuards(WorkspaceMemberGuard)
+  @ApiOperation({ summary: 'Create a workspace tag' })
+  async createTag(
+    @Param('workspaceId') workspaceId: string,
+    @Req() req: Request & { accessToken: string },
+    @Body() dto: TagNameDto,
+  ) {
+    return this.transactionsService.createTag(
+      workspaceId,
+      req.accessToken,
+      dto.name,
+    );
+  }
+
+  @Patch('workspaces/:workspaceId/tags/:tagId')
+  @ThrottleLedgerWrite()
+  @UseGuards(WorkspaceMemberGuard)
+  @ApiOperation({ summary: 'Rename a workspace tag everywhere it is used' })
+  async renameTag(
+    @Param('workspaceId') workspaceId: string,
+    @Param('tagId', ParseUUIDPipe) tagId: string,
+    @Req() req: Request & { accessToken: string },
+    @Body() dto: TagNameDto,
+  ) {
+    return this.transactionsService.renameTag(
+      tagId,
+      workspaceId,
+      req.accessToken,
+      dto.name,
+    );
   }
 
   @Delete('workspaces/:workspaceId/tags/:tagId')
