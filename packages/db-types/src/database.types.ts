@@ -1896,8 +1896,6 @@ export type Database = {
         Args: { p_entry_id: string; p_workspace_id: string }
         Returns: string
       }
-      show_limit: { Args: never; Returns: number }
-      show_trgm: { Args: { "": string }; Returns: string[] }
       workspace_summary: { Args: { p_workspace_id: string }; Returns: Json }
       workspace_tz: { Args: { p_workspace_id: string }; Returns: string }
     }
