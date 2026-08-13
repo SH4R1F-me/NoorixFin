@@ -695,6 +695,57 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/workspaces/{workspaceId}/reports/cash-flow": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Cash-flow time series for a custom local-date range */
+        get: operations["PlanningController_getCashFlow_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/workspaces/{workspaceId}/reports/income-expense": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Income versus expense time series for a custom range */
+        get: operations["PlanningController_getIncomeExpense_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/workspaces/{workspaceId}/reports/net-worth": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Historical assets, liabilities and net worth */
+        get: operations["PlanningController_getNetWorth_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/admin/overview": {
         parameters: {
             query?: never;
@@ -1429,6 +1480,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/workspaces/{workspaceId}/search": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Search the caller workspace across ledger and planning records */
+        get: operations["SearchController_search_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -2031,7 +2099,7 @@ export interface components {
              * @example TRANSACTION_NOT_FOUND
              * @enum {string}
              */
-            code: "MISSING_TOKEN" | "INVALID_TOKEN" | "AUTH_FAILED" | "NOT_WORKSPACE_MEMBER" | "WORKSPACE_ACCESS_DENIED" | "NOT_SUPER_ADMIN" | "MFA_REQUIRED" | "ACCOUNT_NOT_ACTIVE" | "NOT_AUTHENTICATED" | "AUTHZ_CHECK_FAILED" | "IDEMPOTENCY_KEY_REQUIRED" | "IDEMPOTENCY_KEY_REUSED" | "IDEMPOTENCY_KEY_TOO_LONG" | "IDEMPOTENCY_IN_PROGRESS" | "NOT_FOUND" | "WORKSPACE_NOT_FOUND" | "PAIRING_TOKEN_NOT_FOUND" | "PAIRING_TOKEN_EXPIRED" | "RELEASE_CONFIG_UNAVAILABLE" | "INVALID_RELEASE_URL" | "ACCOUNT_NOT_FOUND" | "CATEGORY_NOT_FOUND" | "PARENT_CATEGORY_NOT_FOUND" | "TRANSACTION_NOT_FOUND" | "TAG_NOT_FOUND" | "GOAL_NOT_FOUND" | "EVENT_NOT_FOUND" | "USER_NOT_FOUND" | "DEVICE_NOT_FOUND" | "TRANSACTION_NOT_REVERSIBLE" | "PERSONAL_WORKSPACE_EXISTS" | "INVALID_AMOUNT" | "AMOUNT_TOO_LARGE" | "INVALID_TYPE" | "INVALID_VALUE" | "INVALID_REFERENCE" | "CATEGORY_REQUIRED" | "CATEGORY_KIND_MISMATCH" | "DESTINATION_REQUIRED" | "NOT_A_LIABILITY" | "NO_POSTINGS" | "ALREADY_REVERSED" | "EMPTY_PATCH" | "NO_CHANGES" | "ALREADY_PENDING" | "NOT_PENDING" | "CONFIRMATION_MISMATCH" | "CANNOT_SUSPEND_SELF" | "LAST_SUPER_ADMIN" | "UNKNOWN_SETTING" | "SYNC_CURSOR_STALLED" | "SYNC_FAILED" | "REVERSAL_FAILED" | "SUMMARY_FAILED" | "AGGREGATION_FAILED" | "PLANNING_WRITE_FAILED" | "CATEGORY_CREATE_FAILED" | "CATEGORY_SEED_FAILED" | "ONBOARDING_UPDATE_FAILED" | "DELETION_REQUEST_FAILED" | "CANCEL_FAILED" | "SUSPEND_FAILED" | "REINSTATE_FAILED" | "DISMISS_FAILED" | "BROADCASTS_UNAVAILABLE";
+            code: "MISSING_TOKEN" | "INVALID_TOKEN" | "AUTH_FAILED" | "NOT_WORKSPACE_MEMBER" | "WORKSPACE_ACCESS_DENIED" | "NOT_SUPER_ADMIN" | "MFA_REQUIRED" | "ACCOUNT_NOT_ACTIVE" | "NOT_AUTHENTICATED" | "AUTHZ_CHECK_FAILED" | "IDEMPOTENCY_KEY_REQUIRED" | "IDEMPOTENCY_KEY_REUSED" | "IDEMPOTENCY_KEY_TOO_LONG" | "IDEMPOTENCY_IN_PROGRESS" | "NOT_FOUND" | "WORKSPACE_NOT_FOUND" | "PAIRING_TOKEN_NOT_FOUND" | "PAIRING_TOKEN_EXPIRED" | "RELEASE_CONFIG_UNAVAILABLE" | "INVALID_RELEASE_URL" | "INVALID_REPORT_RANGE" | "ACCOUNT_NOT_FOUND" | "CATEGORY_NOT_FOUND" | "PARENT_CATEGORY_NOT_FOUND" | "TRANSACTION_NOT_FOUND" | "TAG_NOT_FOUND" | "GOAL_NOT_FOUND" | "EVENT_NOT_FOUND" | "USER_NOT_FOUND" | "DEVICE_NOT_FOUND" | "TRANSACTION_NOT_REVERSIBLE" | "PERSONAL_WORKSPACE_EXISTS" | "INVALID_AMOUNT" | "AMOUNT_TOO_LARGE" | "INVALID_TYPE" | "INVALID_VALUE" | "INVALID_REFERENCE" | "CATEGORY_REQUIRED" | "CATEGORY_KIND_MISMATCH" | "DESTINATION_REQUIRED" | "NOT_A_LIABILITY" | "NO_POSTINGS" | "ALREADY_REVERSED" | "EMPTY_PATCH" | "NO_CHANGES" | "ALREADY_PENDING" | "NOT_PENDING" | "CONFIRMATION_MISMATCH" | "CANNOT_SUSPEND_SELF" | "LAST_SUPER_ADMIN" | "UNKNOWN_SETTING" | "SYNC_CURSOR_STALLED" | "SYNC_FAILED" | "REVERSAL_FAILED" | "SUMMARY_FAILED" | "AGGREGATION_FAILED" | "PLANNING_WRITE_FAILED" | "CATEGORY_CREATE_FAILED" | "CATEGORY_SEED_FAILED" | "ONBOARDING_UPDATE_FAILED" | "DELETION_REQUEST_FAILED" | "CANCEL_FAILED" | "SUSPEND_FAILED" | "REINSTATE_FAILED" | "DISMISS_FAILED" | "BROADCASTS_UNAVAILABLE";
             message: string;
             /** @description Echo of X-Request-ID — quote it when reporting a failure. */
             requestId: string;
@@ -3146,8 +3214,86 @@ export interface operations {
     PlanningController_getReport_v1: {
         parameters: {
             query?: {
+                /** @description Inclusive local date */
                 from?: string;
+                /** @description Exclusive local date */
                 to?: string;
+                granularity?: "day" | "week" | "month";
+            };
+            header?: never;
+            path: {
+                workspaceId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    PlanningController_getCashFlow_v1: {
+        parameters: {
+            query?: {
+                /** @description Inclusive local date */
+                from?: string;
+                /** @description Exclusive local date */
+                to?: string;
+                granularity?: "day" | "week" | "month";
+            };
+            header?: never;
+            path: {
+                workspaceId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    PlanningController_getIncomeExpense_v1: {
+        parameters: {
+            query?: {
+                /** @description Inclusive local date */
+                from?: string;
+                /** @description Exclusive local date */
+                to?: string;
+                granularity?: "day" | "week" | "month";
+            };
+            header?: never;
+            path: {
+                workspaceId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    PlanningController_getNetWorth_v1: {
+        parameters: {
+            query?: {
+                /** @description Inclusive local date */
+                from?: string;
+                /** @description Exclusive local date */
+                to?: string;
+                granularity?: "day" | "week" | "month";
             };
             header?: never;
             path: {
@@ -4090,6 +4236,27 @@ export interface operations {
         };
         responses: {
             201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    SearchController_search_v1: {
+        parameters: {
+            query: {
+                q: string;
+            };
+            header?: never;
+            path: {
+                workspaceId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };

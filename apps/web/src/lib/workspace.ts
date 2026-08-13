@@ -337,6 +337,36 @@ export interface CategoryReport {
   trend?: { month: string; income_minor: number; expense_minor: number }[];
 }
 
+export interface CashFlowPeriod {
+  period_start: string;
+  period_end: string;
+  income_minor: number;
+  expense_minor: number;
+  net_minor: number;
+}
+
+export interface NetWorthPeriod {
+  period_start: string;
+  period_end: string;
+  assets_minor: number;
+  liabilities_minor: number;
+  net_worth_minor: number;
+}
+
+export interface TimeSeriesReport<T> {
+  visible: boolean;
+  period_from?: string;
+  period_to?: string;
+  granularity?: 'day' | 'week' | 'month';
+  timezone?: string;
+  currency_basis?: string;
+  generated_at?: string;
+  periods?: T[];
+}
+
+export type CashFlowReport = TimeSeriesReport<CashFlowPeriod>;
+export type NetWorthReport = TimeSeriesReport<NetWorthPeriod>;
+
 const NOT_VISIBLE = { visible: false } as const;
 
 export function getBudgetStatus(workspaceId: string) {
@@ -361,6 +391,50 @@ export function getCategoryReport(workspaceId: string, from?: string, to?: strin
   const suffix = query.size > 0 ? `?${query.toString()}` : '';
   return safeFetch<CategoryReport>(
     `/workspaces/${workspaceId}/reports/categories${suffix}`,
+    NOT_VISIBLE,
+  );
+}
+
+function reportQuery(from?: string, to?: string, granularity?: string): string {
+  const query = new URLSearchParams();
+  if (from) query.set('from', from);
+  if (to) query.set('to', to);
+  if (granularity) query.set('granularity', granularity);
+  return query.size > 0 ? `?${query.toString()}` : '';
+}
+
+export function getCashFlowReport(
+  workspaceId: string,
+  from?: string,
+  to?: string,
+  granularity?: string,
+) {
+  return safeFetch<CashFlowReport>(
+    `/workspaces/${workspaceId}/reports/cash-flow${reportQuery(from, to, granularity)}`,
+    NOT_VISIBLE,
+  );
+}
+
+export function getIncomeExpenseReport(
+  workspaceId: string,
+  from?: string,
+  to?: string,
+  granularity?: string,
+) {
+  return safeFetch<CashFlowReport>(
+    `/workspaces/${workspaceId}/reports/income-expense${reportQuery(from, to, granularity)}`,
+    NOT_VISIBLE,
+  );
+}
+
+export function getNetWorthReport(
+  workspaceId: string,
+  from?: string,
+  to?: string,
+  granularity?: string,
+) {
+  return safeFetch<NetWorthReport>(
+    `/workspaces/${workspaceId}/reports/net-worth${reportQuery(from, to, granularity)}`,
     NOT_VISIBLE,
   );
 }

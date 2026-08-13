@@ -334,3 +334,26 @@ export class CreateRecurringRuleDto {
   @IsIn(['REMIND_ONLY', 'AUTO_CREATE_DRAFT'])
   behavior?: 'REMIND_ONLY' | 'AUTO_CREATE_DRAFT';
 }
+
+export class ReportRangeDto {
+  @ApiPropertyOptional({
+    example: '2026-01-01',
+    description: 'Inclusive local date',
+  })
+  @IsOptional()
+  @Matches(/^\d{4}-\d{2}-\d{2}$/)
+  from?: string;
+
+  @ApiPropertyOptional({
+    example: '2026-08-14',
+    description: 'Exclusive local date',
+  })
+  @IsOptional()
+  @Matches(/^\d{4}-\d{2}-\d{2}$/)
+  to?: string;
+
+  @ApiPropertyOptional({ enum: ['day', 'week', 'month'], default: 'month' })
+  @IsOptional()
+  @IsIn(['day', 'week', 'month'])
+  granularity?: 'day' | 'week' | 'month';
+}

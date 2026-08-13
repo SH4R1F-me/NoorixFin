@@ -21,14 +21,20 @@
 import { useState } from 'react';
 import { BarChart3, TrendingDown, TrendingUp } from 'lucide-react';
 import { useLocale } from '../../../lib/i18n/locale-provider';
-import type { CategoryReport } from '../../../lib/workspace';
+import type { CashFlowReport, CategoryReport, NetWorthReport } from '../../../lib/workspace';
 import { EmptyState, PageHeader, field, labelFor, money, num, percent } from '../planning-ui';
 
 export default function ReportsView({
   report,
+  cashFlow,
+  incomeExpense,
+  netWorth,
   currency,
 }: {
   report: CategoryReport;
+  cashFlow: CashFlowReport;
+  incomeExpense: CashFlowReport;
+  netWorth: NetWorthReport;
   currency: string;
 }) {
   const { t, locale } = useLocale();
@@ -36,6 +42,9 @@ export default function ReportsView({
 
   const categories = report.categories ?? [];
   const trend = report.trend ?? [];
+  const cashPeriods = cashFlow.periods ?? [];
+  const incomeExpensePeriods = incomeExpense.periods ?? [];
+  const worthPeriods = netWorth.periods ?? [];
   const basis = report.currency_basis ?? currency;
   const fmt = (minor: number) => money(minor, basis, locale);
 
@@ -52,7 +61,12 @@ export default function ReportsView({
     ...trend.map((month) => Math.max(month.income_minor, month.expense_minor)),
   );
 
-  if (categories.length === 0 && trend.every((m) => m.income_minor === 0 && m.expense_minor === 0)) {
+  if (
+    categories.length === 0 &&
+    trend.every((m) => m.income_minor === 0 && m.expense_minor === 0) &&
+    cashPeriods.every((p) => p.income_minor === 0 && p.expense_minor === 0) &&
+    worthPeriods.every((p) => p.net_worth_minor === 0)
+  ) {
     return (
       <div>
         <PageHeader title={t('reports.title')} subtitle={t('reports.subtitle')} />
@@ -61,10 +75,7 @@ export default function ReportsView({
           title={t('reports.noData')}
           body={t('reports.noDataBody')}
           action={
-            <a
-              href="/dashboard/transactions"
-              style={{ ...field.primary, textDecoration: 'none' }}
-            >
+            <a href="/dashboard/transactions" style={{ ...field.primary, textDecoration: 'none' }}>
               {t('transactions.addTransaction')}
             </a>
           }
@@ -84,6 +95,41 @@ export default function ReportsView({
           </button>
         }
       />
+
+      <form
+        method="get"
+        style={{ ...field.card, ...styles.rangeForm }}
+        aria-label={t('reports.custom')}
+      >
+        <label style={styles.rangeLabel}>
+          {t('reports.from')}
+          <input
+            name="from"
+            type="date"
+            defaultValue={cashFlow.period_from}
+            style={styles.dateInput}
+          />
+        </label>
+        <label style={styles.rangeLabel}>
+          {t('reports.to')}
+          <input name="to" type="date" defaultValue={cashFlow.period_to} style={styles.dateInput} />
+        </label>
+        <label style={styles.rangeLabel}>
+          {t('reports.granularity')}
+          <select
+            name="granularity"
+            defaultValue={cashFlow.granularity ?? 'month'}
+            style={styles.dateInput}
+          >
+            <option value="day">{t('reports.day')}</option>
+            <option value="week">{t('reports.week')}</option>
+            <option value="month">{t('reports.month')}</option>
+          </select>
+        </label>
+        <button type="submit" style={field.primary}>
+          {t('reports.apply')}
+        </button>
+      </form>
 
       <div style={styles.totals}>
         <div style={field.card}>
@@ -111,8 +157,47 @@ export default function ReportsView({
         </div>
       </div>
 
+      <TimeSeriesTable
+        heading={t('reports.cashFlow')}
+        periods={cashPeriods.map((period) => ({
+          date: period.period_start,
+          first: period.income_minor,
+          second: period.expense_minor,
+          total: period.net_minor,
+        }))}
+        labels={[t('transactions.income'), t('transactions.expense'), t('reports.cashFlow')]}
+        fmt={fmt}
+      />
+
+      <TimeSeriesTable
+        heading={t('reports.netWorth')}
+        periods={worthPeriods.map((period) => ({
+          date: period.period_start,
+          first: period.assets_minor,
+          second: period.liabilities_minor,
+          total: period.net_worth_minor,
+        }))}
+        labels={[t('reports.assets'), t('reports.liabilities'), t('reports.netWorth')]}
+        fmt={fmt}
+      />
+
+      <TimeSeriesTable
+        heading={t('reports.incomeVsExpense')}
+        periods={incomeExpensePeriods.map((period) => ({
+          date: period.period_start,
+          first: period.income_minor,
+          second: period.expense_minor,
+          total: period.net_minor,
+        }))}
+        labels={[t('transactions.income'), t('transactions.expense'), t('reports.cashFlow')]}
+        fmt={fmt}
+      />
+
       {/* ── Category breakdown ────────────────────────────────────────────── */}
-      <section style={{ ...field.card, marginBottom: '1.5rem' }} aria-labelledby="breakdown-heading">
+      <section
+        style={{ ...field.card, marginBottom: '1.5rem' }}
+        aria-labelledby="breakdown-heading"
+      >
         <h2 id="breakdown-heading" style={styles.sectionTitle}>
           {t('reports.categoryBreakdown')}
         </h2>
@@ -246,8 +331,7 @@ export default function ReportsView({
                   return (
                     <tr key={category.category_id}>
                       <th scope="row" style={styles.td}>
-                        <span aria-hidden="true">{category.icon}</span>{' '}
-                        {labelFor(category, t)}
+                        <span aria-hidden="true">{category.icon}</span> {labelFor(category, t)}
                       </th>
                       <td style={styles.td}>
                         {category.kind === 'EXPENSE'
@@ -291,6 +375,69 @@ export default function ReportsView({
   );
 }
 
+function TimeSeriesTable({
+  heading,
+  periods,
+  labels,
+  fmt,
+}: {
+  heading: string;
+  periods: { date: string; first: number; second: number; total: number }[];
+  labels: [string, string, string];
+  fmt: (minor: number) => string;
+}) {
+  return (
+    <section
+      style={{ ...field.card, marginBottom: '1.5rem' }}
+      aria-labelledby={`${heading.replace(/\s/g, '-')}-heading`}
+    >
+      <h2 id={`${heading.replace(/\s/g, '-')}-heading`} style={styles.sectionTitle}>
+        {heading}
+      </h2>
+      <div style={{ overflowX: 'auto' }}>
+        <table style={styles.table}>
+          <thead>
+            <tr>
+              <th scope="col" style={styles.th}>
+                Date
+              </th>
+              <th scope="col" style={{ ...styles.th, textAlign: 'right' }}>
+                {labels[0]}
+              </th>
+              <th scope="col" style={{ ...styles.th, textAlign: 'right' }}>
+                {labels[1]}
+              </th>
+              <th scope="col" style={{ ...styles.th, textAlign: 'right' }}>
+                {labels[2]}
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {periods.map((period) => (
+              <tr key={period.date}>
+                <th scope="row" style={styles.td}>
+                  {period.date}
+                </th>
+                <td style={{ ...styles.td, textAlign: 'right' }}>{fmt(period.first)}</td>
+                <td style={{ ...styles.td, textAlign: 'right' }}>{fmt(period.second)}</td>
+                <td
+                  style={{
+                    ...styles.td,
+                    textAlign: 'right',
+                    color: period.total >= 0 ? '#10b981' : '#f87171',
+                  }}
+                >
+                  {fmt(period.total)}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </section>
+  );
+}
+
 /**
  * The trend chart's accessible name.
  *
@@ -313,6 +460,23 @@ function buildTrendSummary(
 }
 
 const styles: Record<string, React.CSSProperties> = {
+  rangeForm: {
+    display: 'flex',
+    alignItems: 'end',
+    flexWrap: 'wrap',
+    gap: '0.8rem',
+    marginBottom: '1.5rem',
+  },
+  rangeLabel: { display: 'grid', gap: 5, color: '#94a3b8', fontSize: 12, fontWeight: 600 },
+  dateInput: {
+    height: 38,
+    minWidth: 130,
+    borderRadius: 7,
+    border: '1px solid #334155',
+    background: '#0f172a',
+    color: '#f8fafc',
+    padding: '0 9px',
+  },
   totals: {
     display: 'grid',
     gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
@@ -354,15 +518,46 @@ const styles: Record<string, React.CSSProperties> = {
     height: 180,
     padding: '0.5rem 0',
   },
-  trendColumn: { flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.4rem', height: '100%' },
-  trendBars: { flex: 1, display: 'flex', alignItems: 'flex-end', gap: 3, width: '100%', justifyContent: 'center' },
-  trendBar: { width: '42%', minHeight: 2, borderRadius: '3px 3px 0 0', transition: 'height 600ms ease-out' },
+  trendColumn: {
+    flex: 1,
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    gap: '0.4rem',
+    height: '100%',
+  },
+  trendBars: {
+    flex: 1,
+    display: 'flex',
+    alignItems: 'flex-end',
+    gap: 3,
+    width: '100%',
+    justifyContent: 'center',
+  },
+  trendBar: {
+    width: '42%',
+    minHeight: 2,
+    borderRadius: '3px 3px 0 0',
+    transition: 'height 600ms ease-out',
+  },
   trendLabel: { fontSize: '0.6875rem', color: '#8b9ab0' },
   legend: { display: 'flex', gap: '1rem', marginTop: '0.5rem' },
-  legendItem: { display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.75rem', color: '#94a3b8' },
+  legendItem: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.35rem',
+    fontSize: '0.75rem',
+    color: '#94a3b8',
+  },
   swatch: { width: 10, height: 10, borderRadius: 2, display: 'inline-block' },
   table: { width: '100%', borderCollapse: 'collapse', fontSize: '0.8125rem' },
-  caption: { captionSide: 'bottom', textAlign: 'left', fontSize: '0.6875rem', color: '#8b9ab0', paddingTop: '0.6rem' },
+  caption: {
+    captionSide: 'bottom',
+    textAlign: 'left',
+    fontSize: '0.6875rem',
+    color: '#8b9ab0',
+    paddingTop: '0.6rem',
+  },
   th: {
     textAlign: 'left',
     padding: '0.55rem 0.6rem',

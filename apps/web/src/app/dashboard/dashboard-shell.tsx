@@ -28,6 +28,7 @@ import {
   Bell,
 } from 'lucide-react';
 import BroadcastBanner from '../../components/broadcast-banner';
+import CommandPalette from './command-palette';
 import { useLocale } from '../../lib/i18n/locale-provider';
 import type { Broadcast } from '../../lib/session';
 
@@ -289,6 +290,7 @@ export default function DashboardShell({
           marginLeft: collapsed ? 72 : 280,
         }}
       >
+        <CommandPalette />
         <a
           href="/dashboard/notifications"
           onClick={(event) => {

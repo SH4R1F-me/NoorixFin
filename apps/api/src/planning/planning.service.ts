@@ -33,6 +33,7 @@ import type {
   UpdateGoalDto,
   UpsertBudgetDto,
   UpsertDebtDto,
+  ReportRangeDto,
 } from './dto/planning.dto';
 
 /**
@@ -42,7 +43,12 @@ import type {
  * arguments against the generated function map.
  */
 type PlanningFunction =
-  'budget_status' | 'calendar_overview' | 'goals_overview' | 'category_report';
+  | 'budget_status'
+  | 'calendar_overview'
+  | 'goals_overview'
+  | 'category_report'
+  | 'cash_flow_report'
+  | 'net_worth_report';
 
 /** Postgres foreign-key violation — a referenced row is not visible or gone. */
 const FK_VIOLATION = '23503';
@@ -617,6 +623,32 @@ export class PlanningService {
       // (`p_from?: string`) says so.
       ...(from ? { p_from: from } : {}),
       ...(to ? { p_to: to } : {}),
+    });
+  }
+
+  getCashFlowReport(
+    workspaceId: string,
+    accessToken: string,
+    range: ReportRangeDto,
+  ) {
+    return this.rpc(accessToken, 'cash_flow_report', {
+      p_workspace_id: workspaceId,
+      ...(range.from ? { p_from: range.from } : {}),
+      ...(range.to ? { p_to: range.to } : {}),
+      p_granularity: range.granularity ?? 'month',
+    });
+  }
+
+  getNetWorthReport(
+    workspaceId: string,
+    accessToken: string,
+    range: ReportRangeDto,
+  ) {
+    return this.rpc(accessToken, 'net_worth_report', {
+      p_workspace_id: workspaceId,
+      ...(range.from ? { p_from: range.from } : {}),
+      ...(range.to ? { p_to: range.to } : {}),
+      p_granularity: range.granularity ?? 'month',
     });
   }
 }

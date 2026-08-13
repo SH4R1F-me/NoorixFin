@@ -239,14 +239,15 @@ BEGIN
     JOIN pg_namespace n ON n.oid = p.pronamespace
    WHERE n.nspname = 'public'
      AND p.proname IN ('workspace_summary','budget_status','calendar_overview',
-                       'goals_overview','category_report','workspace_tz')
+                       'goals_overview','category_report','workspace_tz',
+                       'cash_flow_report','net_worth_report')
      AND p.prosecdef;   -- true = SECURITY DEFINER
 
   IF v_definer IS NOT NULL THEN
     RAISE EXCEPTION 'SEC FAILED: these read a user''s ledger and are SECURITY DEFINER: %', v_definer;
   END IF;
 
-  RAISE NOTICE '   all six are INVOKER';
+  RAISE NOTICE '   all eight are INVOKER';
 END;
 $$;
 

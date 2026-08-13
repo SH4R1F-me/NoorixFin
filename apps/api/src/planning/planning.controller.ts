@@ -12,6 +12,7 @@
  * rather than quietly returning zero rows.
  */
 import {
+  BadRequestException,
   Body,
   Controller,
   Delete,
@@ -42,6 +43,7 @@ import {
   UpdateGoalDto,
   UpsertBudgetDto,
   UpsertDebtDto,
+  ReportRangeDto,
 } from './dto/planning.dto';
 import { ThrottleLedgerWrite, ThrottleReport } from '../common/throttle';
 import { WorkspaceMemberGuard } from '../auth/guards/workspace-member.guard';
@@ -49,6 +51,20 @@ import { CurrentUser } from '../common/decorators/current-user.decorator';
 import type { AuthenticatedUser } from '../common/decorators/current-user.decorator';
 
 type AuthedRequest = Request & { accessToken: string };
+
+function validateReportRange(query: ReportRangeDto): ReportRangeDto {
+  if (!query.from || !query.to) return query;
+  const from = new Date(`${query.from}T00:00:00Z`);
+  const to = new Date(`${query.to}T00:00:00Z`);
+  const days = (to.getTime() - from.getTime()) / 86_400_000;
+  if (days <= 0 || days > 3660) {
+    throw new BadRequestException({
+      code: 'INVALID_REPORT_RANGE',
+      message: 'Report range must be positive and no longer than ten years',
+    });
+  }
+  return query;
+}
 
 @ApiTags('Planning')
 @ApiBearerAuth('supabase-auth')
@@ -288,17 +304,63 @@ export class PlanningController {
   getReport(
     @Param('workspaceId') workspaceId: string,
     @Req() req: AuthedRequest,
-    @Query('from') from?: string,
-    @Query('to') to?: string,
+    @Query() query: ReportRangeDto,
   ) {
-    // ISO date shape only. Anything else goes to Postgres as a date literal,
-    // and a malformed one is a 500 for what is a client mistake.
-    const iso = /^\d{4}-\d{2}-\d{2}$/;
+    const range = validateReportRange(query);
     return this.planning.getCategoryReport(
       workspaceId,
       req.accessToken,
-      from && iso.test(from) ? from : undefined,
-      to && iso.test(to) ? to : undefined,
+      range.from,
+      range.to,
+    );
+  }
+
+  @Get('reports/cash-flow')
+  @ThrottleReport()
+  @ApiOperation({
+    summary: 'Cash-flow time series for a custom local-date range',
+  })
+  getCashFlow(
+    @Param('workspaceId') workspaceId: string,
+    @Req() req: AuthedRequest,
+    @Query() query: ReportRangeDto,
+  ) {
+    return this.planning.getCashFlowReport(
+      workspaceId,
+      req.accessToken,
+      validateReportRange(query),
+    );
+  }
+
+  @Get('reports/income-expense')
+  @ThrottleReport()
+  @ApiOperation({
+    summary: 'Income versus expense time series for a custom range',
+  })
+  getIncomeExpense(
+    @Param('workspaceId') workspaceId: string,
+    @Req() req: AuthedRequest,
+    @Query() query: ReportRangeDto,
+  ) {
+    return this.planning.getCashFlowReport(
+      workspaceId,
+      req.accessToken,
+      validateReportRange(query),
+    );
+  }
+
+  @Get('reports/net-worth')
+  @ThrottleReport()
+  @ApiOperation({ summary: 'Historical assets, liabilities and net worth' })
+  getNetWorth(
+    @Param('workspaceId') workspaceId: string,
+    @Req() req: AuthedRequest,
+    @Query() query: ReportRangeDto,
+  ) {
+    return this.planning.getNetWorthReport(
+      workspaceId,
+      req.accessToken,
+      validateReportRange(query),
     );
   }
 }

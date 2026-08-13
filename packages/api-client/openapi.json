@@ -1849,6 +1849,7 @@
             "name": "from",
             "required": false,
             "in": "query",
+            "description": "Inclusive local date",
             "schema": {
               "example": "2026-08-01",
               "type": "string"
@@ -1858,9 +1859,24 @@
             "name": "to",
             "required": false,
             "in": "query",
+            "description": "Exclusive local date",
             "schema": {
               "example": "2026-09-01",
               "type": "string"
+            }
+          },
+          {
+            "name": "granularity",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": "month",
+              "type": "string",
+              "enum": [
+                "day",
+                "week",
+                "month"
+              ]
             }
           }
         ],
@@ -1875,6 +1891,195 @@
           }
         ],
         "summary": "Category breakdown and 6-month trend (§11.3 contract)",
+        "tags": [
+          "Planning"
+        ]
+      }
+    },
+    "/v1/workspaces/{workspaceId}/reports/cash-flow": {
+      "get": {
+        "operationId": "PlanningController_getCashFlow_v1",
+        "parameters": [
+          {
+            "name": "workspaceId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "from",
+            "required": false,
+            "in": "query",
+            "description": "Inclusive local date",
+            "schema": {
+              "example": "2026-01-01",
+              "type": "string"
+            }
+          },
+          {
+            "name": "to",
+            "required": false,
+            "in": "query",
+            "description": "Exclusive local date",
+            "schema": {
+              "example": "2026-08-14",
+              "type": "string"
+            }
+          },
+          {
+            "name": "granularity",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": "month",
+              "type": "string",
+              "enum": [
+                "day",
+                "week",
+                "month"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "supabase-auth": []
+          }
+        ],
+        "summary": "Cash-flow time series for a custom local-date range",
+        "tags": [
+          "Planning"
+        ]
+      }
+    },
+    "/v1/workspaces/{workspaceId}/reports/income-expense": {
+      "get": {
+        "operationId": "PlanningController_getIncomeExpense_v1",
+        "parameters": [
+          {
+            "name": "workspaceId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "from",
+            "required": false,
+            "in": "query",
+            "description": "Inclusive local date",
+            "schema": {
+              "example": "2026-01-01",
+              "type": "string"
+            }
+          },
+          {
+            "name": "to",
+            "required": false,
+            "in": "query",
+            "description": "Exclusive local date",
+            "schema": {
+              "example": "2026-08-14",
+              "type": "string"
+            }
+          },
+          {
+            "name": "granularity",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": "month",
+              "type": "string",
+              "enum": [
+                "day",
+                "week",
+                "month"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "supabase-auth": []
+          }
+        ],
+        "summary": "Income versus expense time series for a custom range",
+        "tags": [
+          "Planning"
+        ]
+      }
+    },
+    "/v1/workspaces/{workspaceId}/reports/net-worth": {
+      "get": {
+        "operationId": "PlanningController_getNetWorth_v1",
+        "parameters": [
+          {
+            "name": "workspaceId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "from",
+            "required": false,
+            "in": "query",
+            "description": "Inclusive local date",
+            "schema": {
+              "example": "2026-01-01",
+              "type": "string"
+            }
+          },
+          {
+            "name": "to",
+            "required": false,
+            "in": "query",
+            "description": "Exclusive local date",
+            "schema": {
+              "example": "2026-08-14",
+              "type": "string"
+            }
+          },
+          {
+            "name": "granularity",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": "month",
+              "type": "string",
+              "enum": [
+                "day",
+                "week",
+                "month"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "supabase-auth": []
+          }
+        ],
+        "summary": "Historical assets, liabilities and net worth",
         "tags": [
           "Planning"
         ]
@@ -3296,6 +3501,46 @@
         "summary": "Sign out of all other devices",
         "tags": [
           "Devices & Sessions"
+        ]
+      }
+    },
+    "/v1/workspaces/{workspaceId}/search": {
+      "get": {
+        "operationId": "SearchController_search_v1",
+        "parameters": [
+          {
+            "name": "workspaceId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "q",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "minLength": 2,
+              "maxLength": 100,
+              "example": "groceries",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "supabase-auth": []
+          }
+        ],
+        "summary": "Search the caller workspace across ledger and planning records",
+        "tags": [
+          "Search"
         ]
       }
     }
@@ -4809,6 +5054,7 @@
               "PAIRING_TOKEN_EXPIRED",
               "RELEASE_CONFIG_UNAVAILABLE",
               "INVALID_RELEASE_URL",
+              "INVALID_REPORT_RANGE",
               "ACCOUNT_NOT_FOUND",
               "CATEGORY_NOT_FOUND",
               "PARENT_CATEGORY_NOT_FOUND",

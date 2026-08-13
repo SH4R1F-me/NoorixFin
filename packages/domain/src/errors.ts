@@ -139,6 +139,11 @@ export const API_ERRORS = {
     retryable: false,
     description: 'A mobile release URL is not a safe HTTPS or relative URL.',
   },
+  INVALID_REPORT_RANGE: {
+    status: 400,
+    retryable: false,
+    description: 'A custom report range is empty, reversed, or longer than ten years.',
+  },
   ACCOUNT_NOT_FOUND: { status: 404, retryable: false, description: 'No such financial account.' },
   CATEGORY_NOT_FOUND: { status: 404, retryable: false, description: 'No such category.' },
   PARENT_CATEGORY_NOT_FOUND: {
