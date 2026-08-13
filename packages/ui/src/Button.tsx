@@ -1,10 +1,14 @@
-import { forwardRef, type ButtonHTMLAttributes, type ReactNode } from 'react';
+'use client';
+
+import { forwardRef, type ReactNode } from 'react';
+import { motion, useReducedMotion, type HTMLMotionProps } from 'framer-motion';
 import { cx } from './cx';
+import { fluidSpring } from './motion';
 
 export type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger';
 export type ButtonSize = 'sm' | 'md' | 'lg';
 
-export interface ButtonProps extends Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'className'> {
+export interface ButtonProps extends Omit<HTMLMotionProps<'button'>, 'className' | 'children'> {
   variant?: ButtonVariant;
   size?: ButtonSize;
   /** Shows a spinner and blocks activation without collapsing the layout. */
@@ -12,6 +16,7 @@ export interface ButtonProps extends Omit<ButtonHTMLAttributes<HTMLButtonElement
   /** Full width — for forms and mobile layouts. */
   block?: boolean;
   leadingIcon?: ReactNode;
+  children?: ReactNode;
   className?: string;
 }
 
@@ -49,9 +54,10 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
   ref,
 ) {
   const inert = disabled || loading;
+  const reducedMotion = useReducedMotion();
 
   return (
-    <button
+    <motion.button
       ref={ref}
       type={type}
       // Genuinely disabled buttons keep `disabled`; only the loading state uses
@@ -74,9 +80,11 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
         className,
       )}
       {...rest}
+      whileTap={!inert && !reducedMotion ? { scale: 0.97 } : undefined}
+      transition={fluidSpring}
     >
       {loading ? <span className="nx-spinner" aria-hidden="true" /> : leadingIcon}
       <span aria-hidden={loading || undefined}>{children}</span>
-    </button>
+    </motion.button>
   );
 });

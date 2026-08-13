@@ -18,11 +18,14 @@ import {
   fontFamilies,
   layout,
   marketing,
+  materials,
   radiiCss,
   semantic,
   shadows,
   spacingCss,
   transitions,
+  letterSpacing,
+  lineHeights,
 } from './index';
 
 /** Every custom property the app defines, as `name → value`. */
@@ -60,6 +63,15 @@ export function cssVariables(): Record<string, string> {
   }
   for (const [name, value] of Object.entries(transitions)) {
     vars[`--transition-${name}`] = value;
+  }
+  for (const [name, value] of Object.entries(materials)) {
+    vars[`--material-${name.replace(/[A-Z]/g, (match) => `-${match.toLowerCase()}`)}`] = value;
+  }
+  for (const [name, value] of Object.entries(letterSpacing)) {
+    vars[`--tracking-${name}`] = value;
+  }
+  for (const [name, value] of Object.entries(lineHeights)) {
+    vars[`--leading-${name}`] = String(value);
   }
 
   vars['--bg-primary'] = semantic.bgPrimary;

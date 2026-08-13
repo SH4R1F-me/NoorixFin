@@ -24,6 +24,7 @@ import {
   subscribeToNotificationHints,
 } from '../src/lib/notifications';
 import ForcedUpgradeGate from '../src/components/ForcedUpgradeGate';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -116,23 +117,25 @@ export default function RootLayout() {
   if (!ready) return null;
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <WorkspaceProvider>
-        <NavigationGuard session={session} />
-        <NotificationBridge session={session} />
-        <Stack screenOptions={{ headerShown: false }}>
-          <Stack.Screen name="(tabs)" />
-          <Stack.Screen name="sign-in" />
-          <Stack.Screen name="workspace-select" />
-          <Stack.Screen name="pair" />
-          <Stack.Screen
-            name="notifications"
-            options={{ headerShown: true, title: 'Notifications' }}
-          />
-          <Stack.Screen name="add-transaction" options={{ presentation: 'modal' }} />
-        </Stack>
-        <ForcedUpgradeGate />
-      </WorkspaceProvider>
-    </QueryClientProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <QueryClientProvider client={queryClient}>
+        <WorkspaceProvider>
+          <NavigationGuard session={session} />
+          <NotificationBridge session={session} />
+          <Stack screenOptions={{ headerShown: false }}>
+            <Stack.Screen name="(tabs)" />
+            <Stack.Screen name="sign-in" />
+            <Stack.Screen name="workspace-select" />
+            <Stack.Screen name="pair" />
+            <Stack.Screen
+              name="notifications"
+              options={{ headerShown: true, title: 'Notifications' }}
+            />
+            <Stack.Screen name="add-transaction" options={{ presentation: 'modal' }} />
+          </Stack>
+          <ForcedUpgradeGate />
+        </WorkspaceProvider>
+      </QueryClientProvider>
+    </GestureHandlerRootView>
   );
 }

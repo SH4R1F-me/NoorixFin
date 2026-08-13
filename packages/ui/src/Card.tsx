@@ -1,7 +1,11 @@
-import type { HTMLAttributes, ReactNode } from 'react';
-import { cx } from './cx';
+'use client';
 
-export interface CardProps extends Omit<HTMLAttributes<HTMLDivElement>, 'title' | 'className'> {
+import type { ReactNode } from 'react';
+import { motion, useReducedMotion, type HTMLMotionProps } from 'framer-motion';
+import { cx } from './cx';
+import { fluidSpring } from './motion';
+
+export interface CardProps extends Omit<HTMLMotionProps<'div'>, 'title' | 'className'> {
   title?: ReactNode;
   subtitle?: ReactNode;
   /** Right-hand slot in the header — usually a Button or a Badge. */
@@ -31,10 +35,24 @@ export function Card({
   titleAs: Heading = 'h3',
   ...rest
 }: CardProps) {
+  const reducedMotion = useReducedMotion();
   return (
-    <div className={cx('nx-card', interactive && 'nx-card--interactive', className)} {...rest}>
+    <motion.div
+      className={cx('nx-card', interactive && 'nx-card--interactive', className)}
+      whileHover={interactive && !reducedMotion ? { y: -2, scale: 1.005 } : undefined}
+      whileTap={interactive && !reducedMotion ? { scale: 0.99 } : undefined}
+      transition={fluidSpring}
+      {...rest}
+    >
       {(title || action) && (
-        <div style={{ display: 'flex', alignItems: 'start', justifyContent: 'space-between', gap: '1rem' }}>
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'start',
+            justifyContent: 'space-between',
+            gap: '1rem',
+          }}
+        >
           <div>
             {title ? <Heading className="nx-card__title">{title}</Heading> : null}
             {subtitle ? <p className="nx-card__subtitle">{subtitle}</p> : null}
@@ -42,7 +60,9 @@ export function Card({
           {action}
         </div>
       )}
-      {children ? <div className={title || action ? 'nx-card__body' : undefined}>{children}</div> : null}
-    </div>
+      {children ? (
+        <div className={title || action ? 'nx-card__body' : undefined}>{children}</div>
+      ) : null}
+    </motion.div>
   );
 }

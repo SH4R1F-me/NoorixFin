@@ -1,8 +1,10 @@
 'use client';
 
 import { useEffect, useId, useRef } from 'react';
-import type { ReactNode } from 'react';
+import type { ReactNode, RefObject } from 'react';
+import { AnimatePresence, motion, useIsPresent, useReducedMotion } from 'framer-motion';
 import { Button } from './Button';
+import { fluidSpring } from './motion';
 
 export interface ConfirmDialogProps {
   open: boolean;
@@ -15,6 +17,48 @@ export interface ConfirmDialogProps {
   busy?: boolean;
   onConfirm: () => void;
   onCancel: () => void;
+}
+
+interface DialogSurfaceProps {
+  dialogRef: RefObject<HTMLDivElement | null>;
+  titleId: string;
+  bodyId?: string;
+  reducedMotion: boolean;
+  children: ReactNode;
+}
+
+/**
+ * Presence state belongs to the element AnimatePresence is removing. Keeping
+ * it here lets the spring finish visually while the outgoing dialog becomes
+ * inert and disappears from the accessibility tree immediately.
+ */
+function DialogSurface({
+  dialogRef,
+  titleId,
+  bodyId,
+  reducedMotion,
+  children,
+}: DialogSurfaceProps) {
+  const isPresent = useIsPresent();
+
+  return (
+    <motion.div
+      ref={dialogRef}
+      className="nx-dialog"
+      role={isPresent ? 'alertdialog' : undefined}
+      aria-hidden={!isPresent || undefined}
+      inert={!isPresent || undefined}
+      aria-modal={isPresent ? 'true' : undefined}
+      aria-labelledby={isPresent ? titleId : undefined}
+      aria-describedby={isPresent ? bodyId : undefined}
+      initial={reducedMotion ? { opacity: 0 } : { opacity: 0, scale: 0.96, y: 12 }}
+      animate={{ opacity: 1, scale: 1, y: 0 }}
+      exit={reducedMotion ? { opacity: 0 } : { opacity: 0, scale: 0.96, y: 12 }}
+      transition={reducedMotion ? { duration: 0 } : fluidSpring}
+    >
+      {children}
+    </motion.div>
+  );
 }
 
 /**
@@ -52,6 +96,7 @@ export function ConfirmDialog({
   const cancelRef = useRef<HTMLButtonElement>(null);
   const titleId = useId();
   const bodyId = useId();
+  const reducedMotion = useReducedMotion();
 
   useEffect(() => {
     if (!open) return;
@@ -93,36 +138,46 @@ export function ConfirmDialog({
     };
   }, [open, onCancel]);
 
-  if (!open) return null;
-
   return (
-    <div className="nx-dialog-backdrop">
-      <div
-        ref={dialogRef}
-        className="nx-dialog"
-        role="alertdialog"
-        aria-modal="true"
-        aria-labelledby={titleId}
-        aria-describedby={body ? bodyId : undefined}
-      >
-        <h2 id={titleId} className="nx-dialog__title">
-          {title}
-        </h2>
-        {body ? (
-          <div id={bodyId} className="nx-dialog__body">
-            {body}
-          </div>
-        ) : null}
+    <AnimatePresence>
+      {open && (
+        <motion.div
+          className="nx-dialog-backdrop"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={reducedMotion ? { duration: 0 } : fluidSpring}
+        >
+          <DialogSurface
+            dialogRef={dialogRef}
+            titleId={titleId}
+            bodyId={body ? bodyId : undefined}
+            reducedMotion={Boolean(reducedMotion)}
+          >
+            <h2 id={titleId} className="nx-dialog__title">
+              {title}
+            </h2>
+            {body ? (
+              <div id={bodyId} className="nx-dialog__body">
+                {body}
+              </div>
+            ) : null}
 
-        <div className="nx-dialog__actions">
-          <Button ref={cancelRef} variant="ghost" onClick={onCancel} disabled={busy}>
-            {cancelLabel}
-          </Button>
-          <Button variant={destructive ? 'danger' : 'primary'} onClick={onConfirm} loading={busy}>
-            {confirmLabel}
-          </Button>
-        </div>
-      </div>
-    </div>
+            <div className="nx-dialog__actions">
+              <Button ref={cancelRef} variant="ghost" onClick={onCancel} disabled={busy}>
+                {cancelLabel}
+              </Button>
+              <Button
+                variant={destructive ? 'danger' : 'primary'}
+                onClick={onConfirm}
+                loading={busy}
+              >
+                {confirmLabel}
+              </Button>
+            </div>
+          </DialogSurface>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 }

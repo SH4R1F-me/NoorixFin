@@ -55,7 +55,12 @@ export function Table<T>({
         <caption
           style={
             captionVisible
-              ? { textAlign: 'start', padding: '0 0 0.75rem', color: 'var(--text-tertiary)', fontSize: '0.8125rem' }
+              ? {
+                  textAlign: 'start',
+                  padding: '0 0 0.75rem',
+                  color: 'var(--text-tertiary)',
+                  fontSize: '0.8125rem',
+                }
               : {
                   position: 'absolute',
                   width: 1,

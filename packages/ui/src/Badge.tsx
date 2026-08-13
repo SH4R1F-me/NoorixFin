@@ -2,13 +2,7 @@ import type { HTMLAttributes, ReactNode } from 'react';
 import { cx } from './cx';
 
 export type BadgeTone =
-  | 'neutral'
-  | 'success'
-  | 'warning'
-  | 'danger'
-  | 'income'
-  | 'expense'
-  | 'transfer';
+  'neutral' | 'success' | 'warning' | 'danger' | 'income' | 'expense' | 'transfer';
 
 export interface BadgeProps extends Omit<HTMLAttributes<HTMLSpanElement>, 'className'> {
   tone?: BadgeTone;

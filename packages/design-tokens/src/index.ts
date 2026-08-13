@@ -158,8 +158,7 @@ export const fontFamilies = {
   /** Latin UI text. Self-hosted by next/font — never fetched from Google. */
   ui: "var(--font-inter), 'Inter', system-ui, -apple-system, sans-serif",
   /** Bangla. The product is Bangla-first, so this is not a fallback. */
-  bangla:
-    "var(--font-hind-siliguri), 'Hind Siliguri', var(--font-inter), sans-serif",
+  bangla: "var(--font-hind-siliguri), 'Hind Siliguri', var(--font-inter), sans-serif",
   mono: "'Fira Code', 'Cascadia Code', ui-monospace, monospace",
 } as const;
 
@@ -183,9 +182,20 @@ export const fontWeights = {
 } as const;
 
 export const lineHeights = {
+  display: 1.05,
+  heading: 1.2,
   tight: 1.3,
   normal: 1.6,
   relaxed: 1.7,
+} as const;
+
+/** Size-specific tracking; large type tightens while small labels open up. */
+export const letterSpacing = {
+  display: '-0.025em',
+  heading: '-0.015em',
+  body: '0em',
+  label: '0.025em',
+  overline: '0.06em',
 } as const;
 
 // ─── Shape and elevation ─────────────────────────────────────────────
@@ -215,6 +225,27 @@ export const shadows = {
   lg: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1)',
   xl: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)',
   glow: '0 0 20px rgba(16, 185, 129, 0.15)',
+} as const;
+
+/** Functional translucent layers. Avoid stacking thin/light materials. */
+export const materials = {
+  thin: 'rgba(15, 23, 42, 0.62)',
+  regular: 'rgba(15, 23, 42, 0.78)',
+  thick: 'rgba(15, 23, 42, 0.9)',
+  edge: 'rgba(255, 255, 255, 0.1)',
+  scrim: 'rgba(2, 6, 23, 0.72)',
+  blurThin: '14px',
+  blurRegular: '22px',
+  blurThick: '32px',
+} as const;
+
+/** Physical spring values shared with Reanimated; damping ratio is explicit. */
+export const motion = {
+  critical: { mass: 1, stiffness: 420, damping: 2 * Math.sqrt(420), dampingRatio: 1 },
+  momentum: { mass: 1, stiffness: 500, damping: 0.8 * 2 * Math.sqrt(500), dampingRatio: 0.8 },
+  pressScale: 0.97,
+  hysteresis: 10,
+  decelerationRate: 0.998,
 } as const;
 
 export const transitions = {

@@ -14,7 +14,7 @@
 import { describe, it, expect } from 'vitest';
 import { readFileSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
-import { cssVariables, toCssText, colors, semantic, spacing, spacingCss } from './index';
+import { cssVariables, toCssText, colors, semantic, spacing, spacingCss, motion } from './index';
 
 const REPO = join(__dirname, '..', '..', '..');
 const WEB_STYLESHEETS = [
@@ -44,6 +44,11 @@ describe('token generation', () => {
     // e2e/accessibility.spec.ts, and this says so at the source.
     expect(semantic.textTertiary).toBe('#8b9ab0'); // 6.62:1 on bgPrimary
     expect(colors.primary[500]).toBe('#10b981'); // brand + focus ring
+  });
+
+  it('keeps the default spring critically damped', () => {
+    expect(motion.critical.dampingRatio).toBe(1);
+    expect(motion.critical.damping).toBeCloseTo(2 * Math.sqrt(motion.critical.stiffness));
   });
 });
 

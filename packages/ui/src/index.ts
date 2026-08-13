@@ -27,7 +27,10 @@
  * global CSS while the 662 inline styles are migrated incrementally.
  */
 export { Button, type ButtonProps, type ButtonVariant, type ButtonSize } from './Button';
+export { ActionLink, type ActionLinkProps } from './ActionLink';
+export { FileButton, type FileButtonProps } from './FileButton';
 export { Input, type InputProps } from './Input';
+export { Select, type SelectProps } from './Select';
 export { Card, type CardProps } from './Card';
 export { Badge, type BadgeProps, type BadgeTone } from './Badge';
 export { EmptyState, type EmptyStateProps } from './EmptyState';
@@ -35,3 +38,6 @@ export { Skeleton, SkeletonText, type SkeletonProps } from './Skeleton';
 export { ConfirmDialog, type ConfirmDialogProps } from './ConfirmDialog';
 export { Table, type TableProps, type Column } from './Table';
 export { cx, type ClassValue } from './cx';
+export { Material, type MaterialProps } from './Material';
+export { FluidSheet, type FluidSheetProps } from './FluidSheet';
+export { fluidSpring, momentumSpring, projectMomentum } from './motion';

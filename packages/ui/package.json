@@ -19,6 +19,7 @@
     "@noorixfin/design-tokens": "workspace:*"
   },
   "peerDependencies": {
+    "framer-motion": ">=12",
     "react": ">=19",
     "react-dom": ">=19"
   },
@@ -28,6 +29,7 @@
     "@testing-library/user-event": "^14.6.3",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "framer-motion": "^12.43.0",
     "happy-dom": "^20.11.2",
     "storybook": "^10.5.7",
     "typescript": "^5.8.0",

@@ -18,7 +18,12 @@ export const Cards: Story = {
       <Card title="This month" subtitle="1–31 August">
         <p style={{ color: 'var(--text-secondary)', margin: 0 }}>৳ 42,500 spent of ৳ 60,000</p>
       </Card>
-      <Card title="Groceries" subtitle="Budget" action={<Badge tone="warning">92%</Badge>} interactive>
+      <Card
+        title="Groceries"
+        subtitle="Budget"
+        action={<Badge tone="warning">92%</Badge>}
+        interactive
+      >
         <p style={{ color: 'var(--text-secondary)', margin: 0 }}>৳ 9,200 of ৳ 10,000</p>
       </Card>
     </div>
