@@ -1,5 +1,10 @@
 /** Accounts loading state — 3 summary cards (assets/liabilities/net worth) + cards. */
-import { LoadingRegion, PageHeaderSkeleton, SummaryCardsSkeleton, ListRowsSkeleton } from '../../../components/skeleton';
+import {
+  LoadingRegion,
+  PageHeaderSkeleton,
+  SummaryCardsSkeleton,
+  ListRowsSkeleton,
+} from '../../../components/skeleton';
 
 export default function Loading() {
   return (

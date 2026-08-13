@@ -164,7 +164,7 @@ export default function DashboardView({
             <Smartphone size={22} />
           </div>
           <div style={{ flex: 1 }}>
-            <strong style={{ color: '#f8fafc' }}>Continue on mobile</strong>
+            <strong style={{ color: 'var(--text-primary)' }}>Continue on mobile</strong>
             <p style={{ ...styles.emptyHint, padding: '.25rem 0 0' }}>
               Work offline, unlock with biometrics, and pair this workspace with a secure one-time
               QR code.
@@ -207,7 +207,7 @@ export default function DashboardView({
                   <span
                     style={{
                       ...styles.cardChange,
-                      color: card.positive ? '#10b981' : '#f87171',
+                      color: card.positive ? 'var(--color-primary-500)' : 'var(--color-error)',
                       background: card.positive ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)',
                     }}
                   >
@@ -245,9 +245,9 @@ export default function DashboardView({
                     }}
                   >
                     {tx.amount > 0 ? (
-                      <TrendingUp size={16} color="#10b981" />
+                      <TrendingUp size={16} color="var(--color-primary-500)" />
                     ) : (
-                      <CreditCard size={16} color="#f87171" />
+                      <CreditCard size={16} color="var(--color-error)" />
                     )}
                   </div>
                   <div style={styles.txInfo}>
@@ -259,7 +259,7 @@ export default function DashboardView({
                   <span
                     style={{
                       ...styles.txAmount,
-                      color: tx.amount > 0 ? '#10b981' : '#f87171',
+                      color: tx.amount > 0 ? 'var(--color-primary-500)' : 'var(--color-error)',
                     }}
                   >
                     {tx.amount > 0 ? '+' : ''}
@@ -314,7 +314,7 @@ export default function DashboardView({
                           style={{
                             ...styles.progressFill,
                             width: `${Math.min(percent, 100)}%`,
-                            background: line.over ? '#ef4444' : '#10b981',
+                            background: line.over ? '#ef4444' : 'var(--color-primary-500)',
                           }}
                         />
                       </div>
@@ -349,7 +349,10 @@ export default function DashboardView({
                           ...styles.billDue,
                           // Colour AND word — the word is what survives
                           // greyscale and a screen reader (§5.5).
-                          color: bill.status === 'OVERDUE' ? '#fca5a5' : '#8b9ab0',
+                          color:
+                            bill.status === 'OVERDUE'
+                              ? 'var(--color-error)'
+                              : 'var(--text-tertiary)',
                         }}
                       >
                         {bill.status === 'OVERDUE'
@@ -362,7 +365,7 @@ export default function DashboardView({
                     <span
                       style={{
                         ...styles.billAmount,
-                        color: bill.isIncome ? '#10b981' : '#f8fafc',
+                        color: bill.isIncome ? 'var(--color-primary-500)' : 'var(--text-primary)',
                       }}
                     >
                       {bill.isIncome ? '+' : ''}
@@ -422,7 +425,7 @@ export default function DashboardView({
                           style={{
                             ...styles.progressFill,
                             width: `${Math.min(percent, 100)}%`,
-                            background: '#f59e0b',
+                            background: 'var(--color-warning)',
                           }}
                         />
                       </div>
@@ -442,7 +445,7 @@ export default function DashboardView({
                   {t('dashboard.details')} →
                 </a>
               </div>
-              <p style={{ ...styles.cardAmount, color: '#f87171', margin: 0 }}>
+              <p style={{ ...styles.cardAmount, color: 'var(--color-error)', margin: 0 }}>
                 {amount(totalDebt)}
               </p>
               <p style={styles.emptyHint}>{t('goals.outstanding')}</p>
@@ -471,15 +474,15 @@ const styles: Record<string, React.CSSProperties> = {
     height: 42,
     display: 'grid',
     placeItems: 'center',
-    color: '#34d399',
+    color: 'var(--color-success)',
     background: 'rgba(16,185,129,.14)',
     borderRadius: 10,
   },
   mobileCardLink: {
     padding: '.55rem .8rem',
     borderRadius: 7,
-    background: '#10b981',
-    color: '#04120d',
+    background: 'var(--color-primary-500)',
+    color: 'var(--text-on-primary)',
     fontSize: '.78rem',
     fontWeight: 750,
     textDecoration: 'none',
@@ -488,13 +491,13 @@ const styles: Record<string, React.CSSProperties> = {
     display: 'grid',
     placeItems: 'center',
     background: 'transparent',
-    color: '#94a3b8',
+    color: 'var(--text-secondary)',
     border: 0,
     cursor: 'pointer',
     padding: '.4rem',
   },
   emptyHint: {
-    color: '#8b9ab0',
+    color: 'var(--text-tertiary)',
     fontSize: '0.8125rem',
     padding: '0.75rem 0',
     margin: 0,
@@ -517,7 +520,7 @@ const styles: Record<string, React.CSSProperties> = {
     marginBottom: '0.25rem',
   },
   subGreeting: {
-    color: '#94a3b8',
+    color: 'var(--text-secondary)',
     fontSize: '0.9375rem',
   },
   addBtn: {
@@ -525,7 +528,7 @@ const styles: Record<string, React.CSSProperties> = {
     alignItems: 'center',
     gap: '0.5rem',
     padding: '0.625rem 1.25rem',
-    background: 'linear-gradient(135deg, #059669, #10b981)',
+    background: 'linear-gradient(135deg, var(--color-primary-600), var(--color-primary-500))',
     color: 'white',
     border: 'none',
     borderRadius: '0.75rem',
@@ -543,8 +546,8 @@ const styles: Record<string, React.CSSProperties> = {
     marginBottom: '2rem',
   },
   summaryCard: {
-    background: '#1e293b',
-    border: '1px solid #334155',
+    background: 'var(--bg-card)',
+    border: '1px solid var(--border-primary)',
     borderRadius: '1rem',
     padding: '1.25rem',
     animation: 'fadeIn 0.4s ease-out both',
@@ -576,13 +579,13 @@ const styles: Record<string, React.CSSProperties> = {
   },
   cardTitle: {
     fontSize: '0.8125rem',
-    color: '#94a3b8',
+    color: 'var(--text-secondary)',
     marginBottom: '0.25rem',
   },
   cardAmount: {
     fontSize: '1.375rem',
     fontWeight: 700,
-    color: '#f8fafc',
+    color: 'var(--text-primary)',
     letterSpacing: '-0.01em',
   },
   contentGrid: {
@@ -591,8 +594,8 @@ const styles: Record<string, React.CSSProperties> = {
     gap: '1.5rem',
   },
   section: {
-    background: '#1e293b',
-    border: '1px solid #334155',
+    background: 'var(--bg-card)',
+    border: '1px solid var(--border-primary)',
     borderRadius: '1rem',
     padding: '1.25rem',
     marginBottom: '1rem',
@@ -609,7 +612,7 @@ const styles: Record<string, React.CSSProperties> = {
   },
   viewAll: {
     fontSize: '0.8125rem',
-    color: '#10b981',
+    color: 'var(--color-primary-500)',
     textDecoration: 'none',
   },
   transactionList: {
@@ -621,7 +624,7 @@ const styles: Record<string, React.CSSProperties> = {
     alignItems: 'center',
     gap: '0.75rem',
     padding: '0.75rem 0',
-    borderBottom: '1px solid #1e293b',
+    borderBottom: '1px solid var(--border-primary)',
   },
   txIcon: {
     width: 36,
@@ -640,11 +643,11 @@ const styles: Record<string, React.CSSProperties> = {
   txPayee: {
     fontSize: '0.875rem',
     fontWeight: 500,
-    color: '#f8fafc',
+    color: 'var(--text-primary)',
   },
   txCategory: {
     fontSize: '0.75rem',
-    color: '#8b9ab0',
+    color: 'var(--text-tertiary)',
   },
   txAmount: {
     fontSize: '0.875rem',
@@ -673,15 +676,15 @@ const styles: Record<string, React.CSSProperties> = {
   budgetName: {
     fontSize: '0.875rem',
     fontWeight: 500,
-    color: '#f8fafc',
+    color: 'var(--text-primary)',
   },
   budgetNumbers: {
     fontSize: '0.75rem',
-    color: '#94a3b8',
+    color: 'var(--text-secondary)',
   },
   progressBar: {
     height: 6,
-    background: '#334155',
+    background: 'var(--bg-tertiary)',
     borderRadius: 3,
     overflow: 'hidden',
   },
@@ -712,16 +715,16 @@ const styles: Record<string, React.CSSProperties> = {
   billName: {
     fontSize: '0.8125rem',
     fontWeight: 500,
-    color: '#f8fafc',
+    color: 'var(--text-primary)',
   },
   billDue: {
     fontSize: '0.6875rem',
-    color: '#8b9ab0',
+    color: 'var(--text-tertiary)',
   },
   billAmount: {
     fontSize: '0.875rem',
     fontWeight: 600,
-    color: '#f8fafc',
+    color: 'var(--text-primary)',
   },
   goalCard: {
     display: 'flex',
@@ -736,7 +739,7 @@ const styles: Record<string, React.CSSProperties> = {
   goalName: {
     fontSize: '0.9375rem',
     fontWeight: 600,
-    color: '#f8fafc',
+    color: 'var(--text-primary)',
   },
   goalProgress: {
     display: 'flex',
@@ -745,11 +748,11 @@ const styles: Record<string, React.CSSProperties> = {
   },
   goalAmount: {
     fontSize: '0.8125rem',
-    color: '#94a3b8',
+    color: 'var(--text-secondary)',
   },
   goalPercent: {
     fontSize: '0.8125rem',
     fontWeight: 600,
-    color: '#f59e0b',
+    color: 'var(--color-warning)',
   },
 };

@@ -38,7 +38,10 @@ import DashboardView, {
  * and "+100%" would be a fabricated number on a finance dashboard. The view
  * omits the badge entirely in that case.
  */
-function changeLabel(current: number, previous: number): { text: string | null; positive: boolean } {
+function changeLabel(
+  current: number,
+  previous: number,
+): { text: string | null; positive: boolean } {
   if (previous === 0) return { text: null, positive: current >= 0 };
   const delta = ((current - previous) / Math.abs(previous)) * 100;
   const sign = delta >= 0 ? '+' : '';
@@ -100,18 +103,21 @@ export default async function DashboardPage() {
   // `account_count` is already in the summary payload — and so a user deep in
   // the app is never yanked out of the page they asked for.
   const { profile } = await getSessionContext();
-  if (
-    profile &&
-    profile.onboarding_status !== 'COMPLETED' &&
-    (summary?.account_count ?? 0) === 0
-  ) {
+  if (profile && profile.onboarding_status !== 'COMPLETED' && (summary?.account_count ?? 0) === 0) {
     redirect('/onboarding');
   }
 
   const currency = workspace.base_currency ?? 'BDT';
   const s: WorkspaceSummary = summary ?? {
-    visible: false, net_worth: 0, income: 0, expense: 0, net: 0,
-    prev_income: 0, prev_expense: 0, prev_net: 0, account_count: 0,
+    visible: false,
+    net_worth: 0,
+    income: 0,
+    expense: 0,
+    net: 0,
+    prev_income: 0,
+    prev_expense: 0,
+    prev_net: 0,
+    account_count: 0,
   };
 
   const incomeChange = changeLabel(s.income, s.prev_income);
@@ -127,7 +133,7 @@ export default async function DashboardPage() {
       change: null, // net worth is a stock, not a flow — a MoM % is meaningless
       positive: s.net_worth >= 0,
       iconKey: 'wallet',
-      gradient: 'linear-gradient(135deg, #059669, #10b981)',
+      gradient: 'linear-gradient(135deg, var(--color-primary-600), var(--color-primary-500))',
       // Net worth breaks down by ACCOUNT, not by transaction — it is a stock,
       // and the accounts page is where its components live.
       href: '/dashboard/accounts',
@@ -135,7 +141,8 @@ export default async function DashboardPage() {
     {
       titleKey: 'dashboard.thisMonthIncome',
       amount: money(s.income, currency, locale),
-      change: incomeChange.text, positive: incomeChange.positive,
+      change: incomeChange.text,
+      positive: incomeChange.positive,
       iconKey: 'up',
       gradient: 'linear-gradient(135deg, #0284c7, #38bdf8)',
       href: '/dashboard/reports',
@@ -143,15 +150,17 @@ export default async function DashboardPage() {
     {
       titleKey: 'dashboard.thisMonthExpense',
       amount: money(s.expense, currency, locale),
-      change: expenseChange.text, positive: !expenseChange.positive,
+      change: expenseChange.text,
+      positive: !expenseChange.positive,
       iconKey: 'down',
-      gradient: 'linear-gradient(135deg, #dc2626, #f87171)',
+      gradient: 'linear-gradient(135deg, #dc2626, var(--color-error))',
       href: '/dashboard/reports',
     },
     {
       titleKey: 'dashboard.netCashFlow',
       amount: money(s.net, currency, locale),
-      change: netChange.text, positive: s.net >= 0,
+      change: netChange.text,
+      positive: s.net >= 0,
       iconKey: 'flow',
       gradient: 'linear-gradient(135deg, #7c3aed, #a78bfa)',
       href: '/dashboard/reports',

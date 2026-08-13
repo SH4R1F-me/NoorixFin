@@ -26,6 +26,7 @@ export interface SessionProfile {
   base_currency: string;
   week_starts_on: number;
   amount_privacy_default: boolean;
+  theme_preference: 'SYSTEM' | 'LIGHT' | 'DARK';
   onboarding_status: string;
   is_super_admin: boolean;
   status: 'ACTIVE' | 'SUSPENDED' | 'PENDING_DELETION';

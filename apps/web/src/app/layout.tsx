@@ -1,17 +1,20 @@
-import type { Metadata } from "next";
-import { Inter, Hind_Siliguri } from "next/font/google";
+import type { Metadata } from 'next';
+import { Inter, Hind_Siliguri } from 'next/font/google';
 // Imported BEFORE globals.css so the custom properties exist for anything that
 // reads them. Custom-property resolution is order-independent, but keeping the
 // declaration first is what a reader expects and costs nothing.
-import "@noorixfin/design-tokens/tokens.css";
+import '@noorixfin/design-tokens/tokens.css';
 // Component styles depend on the tokens above, and the app's own globals may
 // legitimately override a component, so the order is tokens → ui → globals.
-import "@noorixfin/ui/ui.css";
-import "./globals.css";
-import { Providers } from "./providers";
-import { getLocale } from "../lib/i18n/locale";
-import { LocaleProvider } from "../lib/i18n/locale-provider";
-import { getSessionContext } from "../lib/session";
+import '@noorixfin/ui/ui.css';
+import './globals.css';
+import { Providers } from './providers';
+import { getLocale } from '../lib/i18n/locale';
+import { LocaleProvider } from '../lib/i18n/locale-provider';
+import { getSessionContext } from '../lib/session';
+import { cookies } from 'next/headers';
+import { isThemePreference, THEME_COOKIE, type ThemePreference } from '../lib/theme/preference';
+import { ThemeProvider } from '../lib/theme/theme-provider';
 
 /**
  * Fonts are self-hosted by `next/font`, not fetched from Google.
@@ -27,25 +30,25 @@ import { getSessionContext } from "../lib/session";
  * custom property so `--font-ui` and `--font-bangla` keep working unchanged.
  */
 const inter = Inter({
-  subsets: ["latin"],
-  variable: "--font-inter",
-  display: "swap",
+  subsets: ['latin'],
+  variable: '--font-inter',
+  display: 'swap',
 });
 
 // Hind Siliguri is not a variable font, so the weights the design uses have to
 // be named explicitly — unlike Inter, where the whole 300–800 range is one file.
 const hindSiliguri = Hind_Siliguri({
-  subsets: ["bengali", "latin"],
-  weight: ["300", "400", "500", "600", "700"],
-  variable: "--font-hind-siliguri",
-  display: "swap",
+  subsets: ['bengali', 'latin'],
+  weight: ['300', '400', '500', '600', '700'],
+  variable: '--font-hind-siliguri',
+  display: 'swap',
 });
 
 export const metadata: Metadata = {
-  title: "NoorixFin — Personal Finance",
+  title: 'NoorixFin — Personal Finance',
   description:
-    "Track income, expenses, budgets, goals and debts in one private workspace. Bangla-first, privacy-safe finance management.",
-  keywords: "finance, budget, expense tracker, bangla, personal finance",
+    'Track income, expenses, budgets, goals and debts in one private workspace. Bangla-first, privacy-safe finance management.',
+  keywords: 'finance, budget, expense tracker, bangla, personal finance',
 };
 
 /**
@@ -66,21 +69,32 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const [locale, { profile }] = await Promise.all([
+  const [locale, { profile }, cookieStore] = await Promise.all([
     getLocale(),
     getSessionContext(),
+    cookies(),
   ]);
+  const cookieTheme = cookieStore.get(THEME_COOKIE)?.value;
+  const initialTheme: ThemePreference = isThemePreference(profile?.theme_preference)
+    ? profile.theme_preference
+    : isThemePreference(cookieTheme)
+      ? cookieTheme
+      : 'SYSTEM';
 
   return (
     <html
       lang={locale}
       className={`${inter.variable} ${hindSiliguri.variable}`}
+      data-theme={initialTheme === 'SYSTEM' ? undefined : initialTheme.toLowerCase()}
+      style={{ colorScheme: initialTheme === 'SYSTEM' ? 'light dark' : initialTheme.toLowerCase() }}
       suppressHydrationWarning
     >
       <body>
-        <LocaleProvider initialLocale={locale} isAuthenticated={profile !== null}>
-          <Providers>{children}</Providers>
-        </LocaleProvider>
+        <ThemeProvider initialPreference={initialTheme}>
+          <LocaleProvider initialLocale={locale} isAuthenticated={profile !== null}>
+            <Providers>{children}</Providers>
+          </LocaleProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

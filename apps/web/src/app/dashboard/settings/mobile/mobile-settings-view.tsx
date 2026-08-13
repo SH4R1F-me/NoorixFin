@@ -46,7 +46,7 @@ export default function MobileSettingsView({
       </header>
       <section style={styles.card}>
         <div style={styles.cardHead}>
-          <Link2 size={18} color="#34d399" />
+          <Link2 size={18} color="var(--color-success)" />
           <div>
             <h2 style={styles.h2}>Pair {workspaceName || 'your workspace'}</h2>
             <p style={styles.sub}>
@@ -54,11 +54,11 @@ export default function MobileSettingsView({
             </p>
           </div>
         </div>
-      {qr ? (
-        <div style={styles.qrWrap}>
-          {/* One-time data URL generated locally; image optimisation cannot add value. */}
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
+        {qr ? (
+          <div style={styles.qrWrap}>
+            {/* One-time data URL generated locally; image optimisation cannot add value. */}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
               src={qr}
               alt="One-time QR code for pairing the NoorixFin mobile app"
               width={240}
@@ -123,24 +123,24 @@ export default function MobileSettingsView({
 
 const styles: Record<string, React.CSSProperties> = {
   page: { maxWidth: 860 },
-  title: { fontSize: '1.65rem', color: '#f8fafc', marginBottom: '.35rem' },
-  sub: { color: '#8b9ab0', fontSize: '.82rem', lineHeight: 1.6 },
+  title: { fontSize: '1.65rem', color: 'var(--text-primary)', marginBottom: '.35rem' },
+  sub: { color: 'var(--text-tertiary)', fontSize: '.82rem', lineHeight: 1.6 },
   card: {
     marginTop: '1.25rem',
     padding: '1.25rem',
     background: '#111827',
-    border: '1px solid #1e293b',
+    border: '1px solid var(--border-primary)',
     borderRadius: 12,
   },
   cardHead: { display: 'flex', alignItems: 'flex-start', gap: '.75rem', marginBottom: '1rem' },
-  h2: { color: '#f8fafc', fontSize: '1rem', marginBottom: '.25rem' },
+  h2: { color: 'var(--text-primary)', fontSize: '1rem', marginBottom: '.25rem' },
   qrWrap: { textAlign: 'center', padding: '1rem' },
   primary: {
     display: 'inline-flex',
     alignItems: 'center',
     gap: '.45rem',
-    background: '#10b981',
-    color: '#04120d',
+    background: 'var(--color-primary-500)',
+    color: 'var(--text-on-primary)',
     border: 0,
     padding: '.65rem 1rem',
     borderRadius: 8,
@@ -153,13 +153,13 @@ const styles: Record<string, React.CSSProperties> = {
     alignItems: 'center',
     gap: '.45rem',
     background: 'transparent',
-    color: '#cbd5e1',
-    border: '1px solid #334155',
+    color: 'var(--text-primary)',
+    border: '1px solid var(--border-primary)',
     padding: '.6rem .9rem',
     borderRadius: 8,
     textDecoration: 'none',
     cursor: 'pointer',
   },
   actions: { display: 'flex', gap: '.75rem', flexWrap: 'wrap' },
-  error: { color: '#f87171', marginTop: '.75rem' },
+  error: { color: 'var(--color-error)', marginTop: '.75rem' },
 };

@@ -71,7 +71,7 @@ export default function ReportsView({
       <div>
         <PageHeader title={t('reports.title')} subtitle={t('reports.subtitle')} />
         <EmptyState
-          icon={<BarChart3 size={30} color="#10b981" aria-hidden="true" />}
+          icon={<BarChart3 size={30} color="var(--color-primary-500)" aria-hidden="true" />}
           title={t('reports.noData')}
           body={t('reports.noDataBody')}
           action={
@@ -136,20 +136,23 @@ export default function ReportsView({
           <span style={field.meta}>
             <TrendingUp size={13} aria-hidden="true" /> {t('transactions.income')}
           </span>
-          <p style={{ ...styles.totalValue, color: '#10b981' }}>{fmt(incomeTotal)}</p>
+          <p style={{ ...styles.totalValue, color: 'var(--color-primary-500)' }}>
+            {fmt(incomeTotal)}
+          </p>
         </div>
         <div style={field.card}>
           <span style={field.meta}>
             <TrendingDown size={13} aria-hidden="true" /> {t('transactions.expense')}
           </span>
-          <p style={{ ...styles.totalValue, color: '#f87171' }}>{fmt(expenseTotal)}</p>
+          <p style={{ ...styles.totalValue, color: 'var(--color-error)' }}>{fmt(expenseTotal)}</p>
         </div>
         <div style={field.card}>
           <span style={field.meta}>{t('reports.cashFlow')}</span>
           <p
             style={{
               ...styles.totalValue,
-              color: incomeTotal - expenseTotal >= 0 ? '#10b981' : '#f87171',
+              color:
+                incomeTotal - expenseTotal >= 0 ? 'var(--color-primary-500)' : 'var(--color-error)',
             }}
           >
             {fmt(incomeTotal - expenseTotal)}
@@ -258,14 +261,15 @@ export default function ReportsView({
                   style={{
                     ...styles.trendBar,
                     height: `${(month.income_minor / trendMax) * 100}%`,
-                    background: 'linear-gradient(180deg,#10b981,#059669)',
+                    background:
+                      'linear-gradient(180deg,var(--color-primary-500),var(--color-primary-600))',
                   }}
                 />
                 <div
                   style={{
                     ...styles.trendBar,
                     height: `${(month.expense_minor / trendMax) * 100}%`,
-                    background: 'linear-gradient(180deg,#f87171,#dc2626)',
+                    background: 'linear-gradient(180deg,var(--color-error),#dc2626)',
                   }}
                 />
               </div>
@@ -276,7 +280,10 @@ export default function ReportsView({
 
         <div style={styles.legend}>
           <span style={styles.legendItem}>
-            <span style={{ ...styles.swatch, background: '#10b981' }} aria-hidden="true" />
+            <span
+              style={{ ...styles.swatch, background: 'var(--color-primary-500)' }}
+              aria-hidden="true"
+            />
             {t('transactions.income')}
           </span>
           <span style={styles.legendItem}>
@@ -424,7 +431,7 @@ function TimeSeriesTable({
                   style={{
                     ...styles.td,
                     textAlign: 'right',
-                    color: period.total >= 0 ? '#10b981' : '#f87171',
+                    color: period.total >= 0 ? 'var(--color-primary-500)' : 'var(--color-error)',
                   }}
                 >
                   {fmt(period.total)}
@@ -467,14 +474,20 @@ const styles: Record<string, React.CSSProperties> = {
     gap: '0.8rem',
     marginBottom: '1.5rem',
   },
-  rangeLabel: { display: 'grid', gap: 5, color: '#94a3b8', fontSize: 12, fontWeight: 600 },
+  rangeLabel: {
+    display: 'grid',
+    gap: 5,
+    color: 'var(--text-secondary)',
+    fontSize: 12,
+    fontWeight: 600,
+  },
   dateInput: {
     height: 38,
     minWidth: 130,
     borderRadius: 7,
-    border: '1px solid #334155',
-    background: '#0f172a',
-    color: '#f8fafc',
+    border: '1px solid var(--border-primary)',
+    background: 'var(--bg-primary)',
+    color: 'var(--text-primary)',
     padding: '0 9px',
   },
   totals: {
@@ -489,28 +502,33 @@ const styles: Record<string, React.CSSProperties> = {
     margin: '0.35rem 0 0',
     fontVariantNumeric: 'tabular-nums',
   },
-  sectionTitle: { fontSize: '1rem', fontWeight: 700, color: '#f8fafc', margin: '0 0 1rem' },
+  sectionTitle: {
+    fontSize: '1rem',
+    fontWeight: 700,
+    color: 'var(--text-primary)',
+    margin: '0 0 1rem',
+  },
   barList: { listStyle: 'none', margin: 0, padding: 0, display: 'grid', gap: '0.85rem' },
   barRow: { display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' },
   barLabel: { display: 'flex', alignItems: 'center', gap: '0.4rem', minWidth: 150 },
-  barName: { fontSize: '0.875rem', color: '#f8fafc' },
+  barName: { fontSize: '0.875rem', color: 'var(--text-primary)' },
   barTrack: {
     flex: 1,
     minWidth: 120,
     height: 10,
-    background: '#334155',
+    background: 'var(--bg-tertiary)',
     borderRadius: 5,
     overflow: 'hidden',
   },
   barFill: { height: '100%', borderRadius: 5, transition: 'width 600ms ease-out' },
   barValue: {
     fontSize: '0.8125rem',
-    color: '#94a3b8',
+    color: 'var(--text-secondary)',
     fontVariantNumeric: 'tabular-nums',
     minWidth: 130,
     textAlign: 'right',
   },
-  drill: { color: '#10b981', textDecoration: 'none', fontSize: '1rem' },
+  drill: { color: 'var(--color-primary-500)', textDecoration: 'none', fontSize: '1rem' },
   trendChart: {
     display: 'flex',
     alignItems: 'flex-end',
@@ -540,14 +558,14 @@ const styles: Record<string, React.CSSProperties> = {
     borderRadius: '3px 3px 0 0',
     transition: 'height 600ms ease-out',
   },
-  trendLabel: { fontSize: '0.6875rem', color: '#8b9ab0' },
+  trendLabel: { fontSize: '0.6875rem', color: 'var(--text-tertiary)' },
   legend: { display: 'flex', gap: '1rem', marginTop: '0.5rem' },
   legendItem: {
     display: 'flex',
     alignItems: 'center',
     gap: '0.35rem',
     fontSize: '0.75rem',
-    color: '#94a3b8',
+    color: 'var(--text-secondary)',
   },
   swatch: { width: 10, height: 10, borderRadius: 2, display: 'inline-block' },
   table: { width: '100%', borderCollapse: 'collapse', fontSize: '0.8125rem' },
@@ -555,14 +573,14 @@ const styles: Record<string, React.CSSProperties> = {
     captionSide: 'bottom',
     textAlign: 'left',
     fontSize: '0.6875rem',
-    color: '#8b9ab0',
+    color: 'var(--text-tertiary)',
     paddingTop: '0.6rem',
   },
   th: {
     textAlign: 'left',
     padding: '0.55rem 0.6rem',
-    borderBottom: '1px solid #334155',
-    color: '#94a3b8',
+    borderBottom: '1px solid var(--border-primary)',
+    color: 'var(--text-secondary)',
     fontWeight: 600,
     fontSize: '0.75rem',
     textTransform: 'uppercase',
@@ -570,8 +588,8 @@ const styles: Record<string, React.CSSProperties> = {
   },
   td: {
     padding: '0.55rem 0.6rem',
-    borderBottom: '1px solid #1e293b',
-    color: '#e2e8f0',
+    borderBottom: '1px solid var(--border-primary)',
+    color: 'var(--text-primary)',
     fontWeight: 400,
     textAlign: 'left',
   },
@@ -581,8 +599,8 @@ const styles: Record<string, React.CSSProperties> = {
     gap: '1rem',
     marginTop: '1.5rem',
     paddingTop: '1rem',
-    borderTop: '1px solid #1e293b',
+    borderTop: '1px solid var(--border-primary)',
     fontSize: '0.6875rem',
-    color: '#8b9ab0',
+    color: 'var(--text-tertiary)',
   },
 };

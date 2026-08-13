@@ -150,13 +150,13 @@ export function ProgressBar({
 }
 
 const TONE = {
-  good: 'linear-gradient(90deg,#059669,#10b981)',
-  warn: 'linear-gradient(90deg,#d97706,#f59e0b)',
+  good: 'linear-gradient(90deg,var(--color-primary-600),var(--color-primary-500))',
+  warn: 'linear-gradient(90deg,#d97706,var(--color-warning))',
   over: 'linear-gradient(90deg,#dc2626,#ef4444)',
   // Left at slate-500: this is a progress-bar FILL, not text, so the 4.5:1
   // rule does not apply — and the state it represents also carries a word and
   // an icon, never colour alone.
-  neutral: 'linear-gradient(90deg,#475569,#64748b)',
+  neutral: 'linear-gradient(90deg,#475569,var(--text-tertiary))',
 } as const;
 
 /** Shared field styles so the four forms look like one product. */
@@ -165,16 +165,16 @@ export const field: Record<string, CSSProperties> = {
   label: {
     fontSize: '0.75rem',
     fontWeight: 500,
-    color: '#94a3b8',
+    color: 'var(--text-secondary)',
     textTransform: 'uppercase',
     letterSpacing: '0.05em',
   },
   input: {
     padding: '0.625rem 0.75rem',
-    background: 'rgba(15,23,42,0.6)',
-    border: '1px solid #334155',
+    background: 'var(--bg-input)',
+    border: '1px solid var(--border-primary)',
     borderRadius: '0.5rem',
-    color: '#f8fafc',
+    color: 'var(--text-primary)',
     fontSize: '0.875rem',
     fontFamily: 'inherit',
     outline: 'none',
@@ -185,7 +185,7 @@ export const field: Record<string, CSSProperties> = {
     alignItems: 'center',
     gap: '0.5rem',
     padding: '0.625rem 1.25rem',
-    background: 'linear-gradient(135deg,#059669,#10b981)',
+    background: 'linear-gradient(135deg,var(--color-primary-600),var(--color-primary-500))',
     border: 'none',
     borderRadius: '0.75rem',
     color: 'white',
@@ -200,29 +200,29 @@ export const field: Record<string, CSSProperties> = {
     alignItems: 'center',
     gap: '0.375rem',
     padding: '0.4rem 0.75rem',
-    background: 'rgba(30,41,59,0.6)',
-    border: '1px solid #334155',
+    background: 'var(--bg-card)',
+    border: '1px solid var(--border-primary)',
     borderRadius: '0.5rem',
-    color: '#94a3b8',
+    color: 'var(--text-secondary)',
     fontSize: '0.8125rem',
     cursor: 'pointer',
     fontFamily: 'inherit',
   },
   card: {
-    background: 'rgba(30,41,59,0.4)',
-    border: '1px solid #1e293b',
+    background: 'var(--bg-card)',
+    border: '1px solid var(--border-primary)',
     borderRadius: '1rem',
     padding: '1.25rem',
   },
   panel: {
-    background: 'rgba(30,41,59,0.6)',
-    border: '1px solid #334155',
+    background: 'var(--bg-card)',
+    border: '1px solid var(--border-primary)',
     borderRadius: '1rem',
     padding: '1.5rem',
     marginBottom: '1.5rem',
   },
-  error: { color: '#fca5a5', fontSize: '0.8125rem', margin: '0.75rem 0 0' },
-  meta: { fontSize: '0.75rem', color: '#8b9ab0' },
+  error: { color: 'var(--color-error)', fontSize: '0.8125rem', margin: '0.75rem 0 0' },
+  meta: { fontSize: '0.75rem', color: 'var(--text-tertiary)' },
 };
 
 const ui: Record<string, CSSProperties> = {
@@ -234,11 +234,23 @@ const ui: Record<string, CSSProperties> = {
     flexWrap: 'wrap',
     gap: '1rem',
   },
-  title: { fontSize: '1.75rem', fontWeight: 800, color: '#f8fafc', margin: 0, letterSpacing: '-0.02em' },
-  subtitle: { fontSize: '0.8125rem', color: '#8b9ab0', margin: '4px 0 0', maxWidth: 620, lineHeight: 1.5 },
+  title: {
+    fontSize: '1.75rem',
+    fontWeight: 800,
+    color: 'var(--text-primary)',
+    margin: 0,
+    letterSpacing: '-0.02em',
+  },
+  subtitle: {
+    fontSize: '0.8125rem',
+    color: 'var(--text-tertiary)',
+    margin: '4px 0 0',
+    maxWidth: 620,
+    lineHeight: 1.5,
+  },
   empty: {
-    background: 'rgba(30,41,59,0.4)',
-    border: '1px solid #1e293b',
+    background: 'var(--bg-card)',
+    border: '1px solid var(--border-primary)',
     borderRadius: '1rem',
     padding: '2.5rem 2rem',
     display: 'flex',
@@ -258,17 +270,17 @@ const ui: Record<string, CSSProperties> = {
     justifyContent: 'center',
     marginBottom: '1.25rem',
   },
-  emptyTitle: { fontSize: '1.125rem', fontWeight: 700, color: '#f8fafc', margin: 0 },
+  emptyTitle: { fontSize: '1.125rem', fontWeight: 700, color: 'var(--text-primary)', margin: 0 },
   emptyBody: {
     fontSize: '0.875rem',
-    color: '#94a3b8',
+    color: 'var(--text-secondary)',
     marginTop: '0.5rem',
     lineHeight: 1.6,
     maxWidth: 420,
   },
   track: {
     height: 8,
-    background: '#334155',
+    background: 'var(--bg-tertiary)',
     borderRadius: 4,
     overflow: 'hidden',
     width: '100%',

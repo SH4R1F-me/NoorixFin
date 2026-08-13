@@ -4064,6 +4064,15 @@
             "type": "boolean",
             "example": false
           },
+          "theme_preference": {
+            "type": "string",
+            "example": "SYSTEM",
+            "enum": [
+              "SYSTEM",
+              "LIGHT",
+              "DARK"
+            ]
+          },
           "onboarding_status": {
             "type": "string",
             "example": "COMPLETED"
@@ -4115,6 +4124,7 @@
           "base_currency",
           "week_starts_on",
           "amount_privacy_default",
+          "theme_preference",
           "onboarding_status",
           "is_super_admin",
           "status",
@@ -4126,6 +4136,16 @@
       "UpdatePreferencesDto": {
         "type": "object",
         "properties": {
+          "theme_preference": {
+            "type": "string",
+            "example": "SYSTEM",
+            "enum": [
+              "SYSTEM",
+              "LIGHT",
+              "DARK"
+            ],
+            "description": "Appearance override; SYSTEM follows the operating system"
+          },
           "locale": {
             "type": "string",
             "example": "bn",

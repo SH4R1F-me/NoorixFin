@@ -68,13 +68,9 @@ export default function RecurringPanel({
   const [categoryId, setCategoryId] = useState('');
   const [frequency, setFrequency] = useState<Frequency>('MONTHLY');
   const [intervalCount, setIntervalCount] = useState(1);
-  const [nextOccurrence, setNextOccurrence] = useState(() =>
-    new Date().toISOString().slice(0, 10),
-  );
+  const [nextOccurrence, setNextOccurrence] = useState(() => new Date().toISOString().slice(0, 10));
   const [endsAt, setEndsAt] = useState('');
-  const [behavior, setBehavior] = useState<'REMIND_ONLY' | 'AUTO_CREATE_DRAFT'>(
-    'REMIND_ONLY',
-  );
+  const [behavior, setBehavior] = useState<'REMIND_ONLY' | 'AUTO_CREATE_DRAFT'>('REMIND_ONLY');
 
   // Only categories matching the direction, for the same reason the transaction
   // form does it: an INCOME rule pointing at an expense category would post
@@ -129,9 +125,7 @@ export default function RecurringPanel({
         ? `${t('calendar.every')} ${rule.interval_count} · ${t(FREQUENCY_KEYS[rule.frequency])}`
         : t(FREQUENCY_KEYS[rule.frequency]);
     const next = `${t('calendar.nextOn')} ${rule.next_occurrence}`;
-    const ends = rule.ends_at
-      ? `${t('calendar.endsOn')} ${rule.ends_at}`
-      : t('calendar.neverEnds');
+    const ends = rule.ends_at ? `${t('calendar.endsOn')} ${rule.ends_at}` : t('calendar.neverEnds');
     return `${every} · ${next} · ${ends}`;
   }
 
@@ -159,7 +153,7 @@ export default function RecurringPanel({
           style={{
             margin: '0 0 0.75rem',
             fontSize: '0.8125rem',
-            color: notice.ok ? '#34d399' : '#f87171',
+            color: notice.ok ? 'var(--color-success)' : 'var(--color-error)',
           }}
         >
           {notice.text}
@@ -170,7 +164,9 @@ export default function RecurringPanel({
         <div style={styles.form}>
           <div style={styles.formGrid}>
             <div style={field.group}>
-              <label style={field.label} htmlFor="rule-name">{t('calendar.ruleName')}</label>
+              <label style={field.label} htmlFor="rule-name">
+                {t('calendar.ruleName')}
+              </label>
               <input
                 id="rule-name"
                 value={name}
@@ -181,7 +177,9 @@ export default function RecurringPanel({
             </div>
 
             <div style={field.group}>
-              <label style={field.label} htmlFor="rule-type">{t('transactions.type')}</label>
+              <label style={field.label} htmlFor="rule-type">
+                {t('transactions.type')}
+              </label>
               <select
                 id="rule-type"
                 value={entryType}
@@ -199,7 +197,9 @@ export default function RecurringPanel({
             </div>
 
             <div style={field.group}>
-              <label style={field.label} htmlFor="rule-amount">{t('transactions.amount')}</label>
+              <label style={field.label} htmlFor="rule-amount">
+                {t('transactions.amount')}
+              </label>
               <input
                 id="rule-amount"
                 value={amount}
@@ -211,7 +211,9 @@ export default function RecurringPanel({
             </div>
 
             <div style={field.group}>
-              <label style={field.label} htmlFor="rule-account">{t('transactions.account')}</label>
+              <label style={field.label} htmlFor="rule-account">
+                {t('transactions.account')}
+              </label>
               <select
                 id="rule-account"
                 value={accountId}
@@ -220,13 +222,17 @@ export default function RecurringPanel({
               >
                 <option value="">{t('transactions.selectAccount')}</option>
                 {accounts.map((account) => (
-                  <option key={account.id} value={account.id}>{account.label}</option>
+                  <option key={account.id} value={account.id}>
+                    {account.label}
+                  </option>
                 ))}
               </select>
             </div>
 
             <div style={field.group}>
-              <label style={field.label} htmlFor="rule-category">{t('transactions.category')}</label>
+              <label style={field.label} htmlFor="rule-category">
+                {t('transactions.category')}
+              </label>
               <select
                 id="rule-category"
                 value={categoryId}
@@ -235,13 +241,17 @@ export default function RecurringPanel({
               >
                 <option value="">{t('transactions.selectCategory')}</option>
                 {selectableCategories.map((category) => (
-                  <option key={category.id} value={category.id}>{category.label}</option>
+                  <option key={category.id} value={category.id}>
+                    {category.label}
+                  </option>
                 ))}
               </select>
             </div>
 
             <div style={field.group}>
-              <label style={field.label} htmlFor="rule-frequency">{t('calendar.frequency')}</label>
+              <label style={field.label} htmlFor="rule-frequency">
+                {t('calendar.frequency')}
+              </label>
               <select
                 id="rule-frequency"
                 value={frequency}
@@ -249,13 +259,17 @@ export default function RecurringPanel({
                 style={field.input}
               >
                 {(Object.keys(FREQUENCY_KEYS) as Frequency[]).map((key) => (
-                  <option key={key} value={key}>{t(FREQUENCY_KEYS[key])}</option>
+                  <option key={key} value={key}>
+                    {t(FREQUENCY_KEYS[key])}
+                  </option>
                 ))}
               </select>
             </div>
 
             <div style={field.group}>
-              <label style={field.label} htmlFor="rule-interval">{t('calendar.every')}</label>
+              <label style={field.label} htmlFor="rule-interval">
+                {t('calendar.every')}
+              </label>
               <input
                 id="rule-interval"
                 type="number"
@@ -268,7 +282,9 @@ export default function RecurringPanel({
             </div>
 
             <div style={field.group}>
-              <label style={field.label} htmlFor="rule-next">{t('calendar.nextOn')}</label>
+              <label style={field.label} htmlFor="rule-next">
+                {t('calendar.nextOn')}
+              </label>
               <input
                 id="rule-next"
                 type="date"
@@ -279,7 +295,9 @@ export default function RecurringPanel({
             </div>
 
             <div style={field.group}>
-              <label style={field.label} htmlFor="rule-ends">{t('calendar.endsOn')}</label>
+              <label style={field.label} htmlFor="rule-ends">
+                {t('calendar.endsOn')}
+              </label>
               <input
                 id="rule-ends"
                 type="date"
@@ -290,7 +308,9 @@ export default function RecurringPanel({
             </div>
 
             <div style={field.group}>
-              <label style={field.label} htmlFor="rule-behavior">{t('calendar.recurring')}</label>
+              <label style={field.label} htmlFor="rule-behavior">
+                {t('calendar.recurring')}
+              </label>
               <select
                 id="rule-behavior"
                 value={behavior}
@@ -318,7 +338,11 @@ export default function RecurringPanel({
           </p>
 
           <button type="button" onClick={submit} disabled={pending} style={field.primary}>
-            {pending ? <Loader2 size={15} aria-hidden="true" /> : <CalendarClock size={15} aria-hidden="true" />}
+            {pending ? (
+              <Loader2 size={15} aria-hidden="true" />
+            ) : (
+              <CalendarClock size={15} aria-hidden="true" />
+            )}
             {t('calendar.saveRule')}
           </button>
         </div>
@@ -363,10 +387,7 @@ export default function RecurringPanel({
                 type="button"
                 disabled={pending}
                 onClick={() =>
-                  mutate(
-                    () => deleteRecurringRule(workspaceId, rule.id),
-                    t('calendar.ruleDeleted'),
-                  )
+                  mutate(() => deleteRecurringRule(workspaceId, rule.id), t('calendar.ruleDeleted'))
                 }
                 style={field.ghost}
                 // The label says what is lost, because "delete" beside a
@@ -400,14 +421,14 @@ const styles: Record<string, React.CSSProperties> = {
     gap: '0.5rem',
     fontSize: '1rem',
     fontWeight: 700,
-    color: '#f8fafc',
+    color: 'var(--text-primary)',
     margin: 0,
   },
   form: {
     padding: '1rem',
     marginBottom: '1rem',
-    background: 'rgba(30,41,59,0.5)',
-    border: '1px solid #334155',
+    background: 'var(--bg-card)',
+    border: '1px solid var(--border-primary)',
     borderRadius: '0.75rem',
   },
   formGrid: {
@@ -422,16 +443,23 @@ const styles: Record<string, React.CSSProperties> = {
     margin: '0.9rem 0',
     fontSize: '0.75rem',
     lineHeight: 1.55,
-    color: '#c9c2bc',
+    color: 'var(--text-secondary)',
   },
-  list: { listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: '0.5rem' },
+  list: {
+    listStyle: 'none',
+    margin: 0,
+    padding: 0,
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.5rem',
+  },
   row: {
     display: 'flex',
     alignItems: 'center',
     gap: '0.85rem',
     padding: '0.8rem 1rem',
-    background: 'rgba(30,41,59,0.4)',
-    border: '1px solid #1e293b',
+    background: 'var(--bg-card)',
+    border: '1px solid var(--border-primary)',
     borderRadius: '0.75rem',
   },
   rowIcon: {
@@ -443,7 +471,7 @@ const styles: Record<string, React.CSSProperties> = {
     flexShrink: 0,
     borderRadius: '0.6rem',
     background: 'rgba(59,130,246,0.12)',
-    color: '#93c5fd',
+    color: 'var(--color-transfer)',
   },
   rowMain: { flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 2 },
   rowTitle: {
@@ -452,21 +480,21 @@ const styles: Record<string, React.CSSProperties> = {
     gap: '0.4rem',
     fontSize: '0.9375rem',
     fontWeight: 600,
-    color: '#f8fafc',
+    color: 'var(--text-primary)',
   },
   statusBadge: {
     padding: '1px 6px',
     borderRadius: '0.35rem',
     background: 'rgba(100,116,139,0.18)',
-    color: '#c9c2bc',
+    color: 'var(--text-secondary)',
     fontSize: '0.6875rem',
     fontWeight: 600,
   },
-  rowMeta: { fontSize: '0.75rem', color: '#8b9ab0' },
+  rowMeta: { fontSize: '0.75rem', color: 'var(--text-tertiary)' },
   rowAmount: {
     fontSize: '0.9375rem',
     fontWeight: 700,
-    color: '#f8fafc',
+    color: 'var(--text-primary)',
     fontVariantNumeric: 'tabular-nums',
     whiteSpace: 'nowrap',
   },

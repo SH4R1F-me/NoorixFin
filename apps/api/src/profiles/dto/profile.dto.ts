@@ -12,6 +12,16 @@ import {
 } from 'class-validator';
 
 export class UpdatePreferencesDto {
+  @ApiPropertyOptional({
+    example: 'SYSTEM',
+    enum: ['SYSTEM', 'LIGHT', 'DARK'],
+    description: 'Appearance override; SYSTEM follows the operating system',
+  })
+  @IsOptional()
+  @IsString()
+  @IsIn(['SYSTEM', 'LIGHT', 'DARK'])
+  theme_preference?: 'SYSTEM' | 'LIGHT' | 'DARK';
+
   @ApiPropertyOptional({ example: 'bn', description: 'User locale: bn or en' })
   @IsOptional()
   @IsString()
@@ -130,6 +140,9 @@ export class ProfileResponseDto {
 
   @ApiProperty({ example: false })
   amount_privacy_default!: boolean;
+
+  @ApiProperty({ example: 'SYSTEM', enum: ['SYSTEM', 'LIGHT', 'DARK'] })
+  theme_preference!: 'SYSTEM' | 'LIGHT' | 'DARK';
 
   @ApiProperty({ example: 'COMPLETED' })
   onboarding_status!: string;

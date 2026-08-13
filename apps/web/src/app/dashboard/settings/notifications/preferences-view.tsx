@@ -169,7 +169,7 @@ export default function NotificationPreferencesView({
 
       <div style={s.pushCard}>
         <div>
-          <strong style={{ color: '#f1f5f9' }}>Web Push</strong>
+          <strong style={{ color: 'var(--text-primary)' }}>Web Push</strong>
           <div style={s.help}>
             Enable this contextually on the browser you want NoorixFin to reach.
           </div>
@@ -193,7 +193,7 @@ export default function NotificationPreferencesView({
         <div style={s.quietIntro}>
           <Clock3 size={20} color="#a78bfa" />
           <div>
-            <strong style={{ color: '#f1f5f9' }}>Quiet hours</strong>
+            <strong style={{ color: 'var(--text-primary)' }}>Quiet hours</strong>
             <div style={s.help}>
               Push and email wait until morning. Critical notices override this window.
             </div>
@@ -249,7 +249,9 @@ export default function NotificationPreferencesView({
             return (
               <div key={preference.category} style={s.row}>
                 <div>
-                  <strong style={{ color: '#e2e8f0' }}>{LABELS[preference.category].title}</strong>
+                  <strong style={{ color: 'var(--text-primary)' }}>
+                    {LABELS[preference.category].title}
+                  </strong>
                   <div style={s.help}>{LABELS[preference.category].body}</div>
                   {locked && (
                     <span style={s.locked}>
@@ -305,7 +307,7 @@ const s: Record<string, React.CSSProperties> = {
     marginBottom: '1.25rem',
   },
   eyebrow: {
-    color: '#34d399',
+    color: 'var(--color-success)',
     display: 'flex',
     gap: 6,
     alignItems: 'center',
@@ -313,14 +315,14 @@ const s: Record<string, React.CSSProperties> = {
     fontWeight: 800,
     letterSpacing: '.13em',
   },
-  title: { color: '#f8fafc', margin: '.35rem 0 0', fontSize: '1.8rem' },
-  subtitle: { color: '#94a3b8', margin: '.35rem 0 0', fontSize: '.82rem' },
+  title: { color: 'var(--text-primary)', margin: '.35rem 0 0', fontSize: '1.8rem' },
+  subtitle: { color: 'var(--text-secondary)', margin: '.35rem 0 0', fontSize: '.82rem' },
   save: {
     border: 0,
     borderRadius: '.65rem',
     padding: '.65rem .9rem',
-    background: '#10b981',
-    color: '#022c22',
+    background: 'var(--color-primary-500)',
+    color: 'var(--text-on-primary)',
     fontWeight: 750,
     display: 'flex',
     gap: 7,
@@ -328,7 +330,7 @@ const s: Record<string, React.CSSProperties> = {
     cursor: 'pointer',
   },
   success: {
-    color: '#6ee7b7',
+    color: 'var(--color-success)',
     border: '1px solid rgba(16,185,129,.3)',
     background: 'rgba(16,185,129,.08)',
     borderRadius: '.7rem',
@@ -336,7 +338,7 @@ const s: Record<string, React.CSSProperties> = {
     marginBottom: '1rem',
   },
   error: {
-    color: '#fda4af',
+    color: 'var(--color-error)',
     border: '1px solid rgba(251,113,133,.3)',
     background: 'rgba(251,113,133,.08)',
     borderRadius: '.7rem',
@@ -370,32 +372,32 @@ const s: Record<string, React.CSSProperties> = {
     display: 'flex',
     alignItems: 'center',
     gap: 6,
-    color: '#6ee7b7',
-    background: '#0f172a',
-    border: '1px solid #334155',
+    color: 'var(--color-success)',
+    background: 'var(--bg-primary)',
+    border: '1px solid var(--border-primary)',
     borderRadius: '.55rem',
     padding: '.55rem .7rem',
     cursor: 'pointer',
   },
   quietIntro: { display: 'flex', gap: '.75rem', alignItems: 'flex-start', flex: 1, minWidth: 260 },
-  field: { display: 'grid', gap: 5, color: '#94a3b8', fontSize: '.7rem' },
+  field: { display: 'grid', gap: 5, color: 'var(--text-secondary)', fontSize: '.7rem' },
   input: {
     colorScheme: 'dark',
-    background: '#0f172a',
-    border: '1px solid #334155',
-    color: '#e2e8f0',
+    background: 'var(--bg-primary)',
+    border: '1px solid var(--border-primary)',
+    color: 'var(--text-primary)',
     borderRadius: '.5rem',
     padding: '.5rem .6rem',
   },
-  tableWrap: { border: '1px solid #1e293b', borderRadius: '1rem', overflowX: 'auto' },
+  tableWrap: { border: '1px solid var(--border-primary)', borderRadius: '1rem', overflowX: 'auto' },
   tableInner: { minWidth: 760 },
   tableHeader: {
     display: 'grid',
     gridTemplateColumns: 'minmax(250px,1fr) repeat(3,90px) 100px',
     gap: '.75rem',
     padding: '.7rem 1rem',
-    background: '#0f172a',
-    color: '#64748b',
+    background: 'var(--bg-primary)',
+    color: 'var(--text-tertiary)',
     fontSize: '.68rem',
     textTransform: 'uppercase',
     letterSpacing: '.08em',
@@ -406,31 +408,31 @@ const s: Record<string, React.CSSProperties> = {
     gap: '.75rem',
     alignItems: 'center',
     padding: '1rem',
-    borderTop: '1px solid #1e293b',
-    background: 'rgba(15,23,42,.42)',
+    borderTop: '1px solid var(--border-primary)',
+    background: 'var(--bg-input)',
   },
-  help: { color: '#7f8da3', fontSize: '.72rem', marginTop: 3, lineHeight: 1.4 },
+  help: { color: 'var(--text-tertiary)', fontSize: '.72rem', marginTop: 3, lineHeight: 1.4 },
   locked: {
     display: 'inline-flex',
     alignItems: 'center',
     gap: 4,
     marginTop: 6,
-    color: '#fbbf24',
+    color: 'var(--color-warning)',
     fontSize: '.65rem',
   },
   toggleLabel: {
     display: 'flex',
     gap: 6,
     alignItems: 'center',
-    color: '#94a3b8',
+    color: 'var(--text-secondary)',
     fontSize: '.7rem',
     textTransform: 'capitalize',
   },
   select: {
     colorScheme: 'dark',
-    background: '#0f172a',
-    color: '#cbd5e1',
-    border: '1px solid #334155',
+    background: 'var(--bg-primary)',
+    color: 'var(--text-primary)',
+    border: '1px solid var(--border-primary)',
     borderRadius: '.45rem',
     padding: '.45rem',
   },

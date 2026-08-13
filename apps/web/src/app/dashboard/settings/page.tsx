@@ -24,11 +24,6 @@ export default async function SettingsPage() {
   if (!profile) redirect('/auth/login');
 
   return (
-    <SettingsView
-      profile={profile}
-      identities={identities}
-      mfa={mfa}
-      isSuperAdmin={isSuperAdmin}
-    />
+    <SettingsView profile={profile} identities={identities} mfa={mfa} isSuperAdmin={isSuperAdmin} />
   );
 }

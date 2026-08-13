@@ -37,11 +37,36 @@ import { EmptyState, PageHeader, field, money, num } from '../planning-ui';
  * kind of state a user must not miss because they cannot distinguish red.
  */
 const STATUS_UI = {
-  OVERDUE: { icon: AlertTriangle, colour: '#fca5a5', bg: 'rgba(239,68,68,0.12)', key: 'calendar.overdue' },
-  DUE: { icon: Clock, colour: '#fcd34d', bg: 'rgba(245,158,11,0.12)', key: 'calendar.due' },
-  UPCOMING: { icon: Clock, colour: '#93c5fd', bg: 'rgba(59,130,246,0.12)', key: 'calendar.upcoming' },
-  PAID: { icon: Check, colour: '#6ee7b7', bg: 'rgba(16,185,129,0.12)', key: 'calendar.paid' },
-  SKIPPED: { icon: SkipForward, colour: '#94a3b8', bg: 'rgba(100,116,139,0.12)', key: 'calendar.skipped' },
+  OVERDUE: {
+    icon: AlertTriangle,
+    colour: 'var(--color-error)',
+    bg: 'rgba(239,68,68,0.12)',
+    key: 'calendar.overdue',
+  },
+  DUE: {
+    icon: Clock,
+    colour: 'var(--color-warning)',
+    bg: 'rgba(245,158,11,0.12)',
+    key: 'calendar.due',
+  },
+  UPCOMING: {
+    icon: Clock,
+    colour: 'var(--color-transfer)',
+    bg: 'rgba(59,130,246,0.12)',
+    key: 'calendar.upcoming',
+  },
+  PAID: {
+    icon: Check,
+    colour: 'var(--color-success)',
+    bg: 'rgba(16,185,129,0.12)',
+    key: 'calendar.paid',
+  },
+  SKIPPED: {
+    icon: SkipForward,
+    colour: 'var(--text-secondary)',
+    bg: 'rgba(100,116,139,0.12)',
+    key: 'calendar.skipped',
+  },
 } as const;
 
 export default function CalendarView({
@@ -138,7 +163,7 @@ export default function CalendarView({
           <div style={styles.typeRow} role="group" aria-label={t('transactions.title')}>
             {(['BILL', 'INCOME'] as const).map((option) => {
               const active = type === option;
-              const colour = option === 'BILL' ? '#f87171' : '#10b981';
+              const colour = option === 'BILL' ? 'var(--color-error)' : 'var(--color-primary-500)';
               return (
                 <button
                   key={option}
@@ -147,7 +172,9 @@ export default function CalendarView({
                   aria-pressed={active}
                   style={{
                     ...field.ghost,
-                    ...(active ? { background: `${colour}18`, borderColor: colour, color: colour } : {}),
+                    ...(active
+                      ? { background: `${colour}18`, borderColor: colour, color: colour }
+                      : {}),
                   }}
                 >
                   {option === 'BILL' ? t('calendar.bill') : t('calendar.expectedIncome')}
@@ -219,7 +246,7 @@ export default function CalendarView({
 
       {sorted.length === 0 && !showAdd && (
         <EmptyState
-          icon={<CalendarDays size={30} color="#10b981" aria-hidden="true" />}
+          icon={<CalendarDays size={30} color="var(--color-primary-500)" aria-hidden="true" />}
           title={t('calendar.noEvents')}
           body={t('calendar.noEventsBody')}
           action={
@@ -269,7 +296,10 @@ export default function CalendarView({
                         <span
                           style={{
                             ...styles.amount,
-                            color: event.type === 'INCOME' ? '#10b981' : '#f8fafc',
+                            color:
+                              event.type === 'INCOME'
+                                ? 'var(--color-primary-500)'
+                                : 'var(--text-primary)',
                           }}
                         >
                           {event.type === 'INCOME' ? '+' : ''}
@@ -336,7 +366,7 @@ const styles: Record<string, React.CSSProperties> = {
     background: 'rgba(239,68,68,0.1)',
     border: '1px solid rgba(239,68,68,0.32)',
     borderRadius: '0.75rem',
-    color: '#fca5a5',
+    color: 'var(--color-error)',
     fontSize: '0.875rem',
     marginBottom: '1.25rem',
   },
@@ -357,7 +387,7 @@ const styles: Record<string, React.CSSProperties> = {
     justifyContent: 'center',
     flexShrink: 0,
   },
-  title: { fontSize: '0.9375rem', fontWeight: 600, color: '#f8fafc', margin: 0 },
+  title: { fontSize: '0.9375rem', fontWeight: 600, color: 'var(--text-primary)', margin: 0 },
   right: { display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' },
   amount: { fontSize: '0.9375rem', fontWeight: 700, fontVariantNumeric: 'tabular-nums' },
   badge: {
@@ -373,7 +403,7 @@ const styles: Record<string, React.CSSProperties> = {
   totalValue: {
     fontSize: '1.5rem',
     fontWeight: 800,
-    color: '#f8fafc',
+    color: 'var(--text-primary)',
     margin: '0.35rem 0 0',
     fontVariantNumeric: 'tabular-nums',
   },

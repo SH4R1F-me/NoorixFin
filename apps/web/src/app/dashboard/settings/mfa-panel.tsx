@@ -110,7 +110,7 @@ export default function MfaPanel({
           style={{
             margin: 0,
             fontSize: '0.8125rem',
-            color: notice.ok ? '#34d399' : '#f87171',
+            color: notice.ok ? 'var(--color-success)' : 'var(--color-error)',
           }}
         >
           {notice.text}
@@ -125,7 +125,7 @@ export default function MfaPanel({
               alignItems: 'center',
               gap: '0.35rem',
               fontSize: '0.8125rem',
-              color: '#34d399',
+              color: 'var(--color-success)',
             }}
           >
             {/* Icon AND word, never colour alone (§5.5). */}
@@ -160,7 +160,9 @@ export default function MfaPanel({
               height={168}
               style={{ background: '#fff', borderRadius: '0.5rem', padding: '0.5rem' }}
             />
-            <div style={{ flex: '1 1 14rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+            <div
+              style={{ flex: '1 1 14rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}
+            >
               <span style={s.rowDesc}>
                 Scan this with your authenticator app, or enter the key below by hand.
               </span>
@@ -170,10 +172,10 @@ export default function MfaPanel({
                     flex: 1,
                     padding: '0.5rem 0.6rem',
                     borderRadius: '0.4rem',
-                    background: 'rgba(255,255,255,0.05)',
+                    background: 'var(--bg-card-hover)',
                     fontSize: '0.75rem',
                     wordBreak: 'break-all',
-                    color: '#e2e8f0',
+                    color: 'var(--text-primary)',
                   }}
                 >
                   {offer.secret}
@@ -187,7 +189,11 @@ export default function MfaPanel({
                   style={s.ghostBtn}
                   aria-label="Copy the setup key"
                 >
-                  {copied ? <Check size={14} aria-hidden="true" /> : <Copy size={14} aria-hidden="true" />}
+                  {copied ? (
+                    <Check size={14} aria-hidden="true" />
+                  ) : (
+                    <Copy size={14} aria-hidden="true" />
+                  )}
                   {copied ? 'Copied' : 'Copy'}
                 </button>
               </div>
@@ -214,7 +220,11 @@ export default function MfaPanel({
               disabled={pending || code.length !== CODE_LENGTH}
               style={{ ...s.primaryBtnSmall, opacity: code.length !== CODE_LENGTH ? 0.5 : 1 }}
             >
-              {pending ? <Loader2 size={14} aria-hidden="true" /> : <ShieldCheck size={14} aria-hidden="true" />}
+              {pending ? (
+                <Loader2 size={14} aria-hidden="true" />
+              ) : (
+                <ShieldCheck size={14} aria-hidden="true" />
+              )}
               Confirm and turn on
             </button>
             <button onClick={() => setOffer(null)} disabled={pending} style={s.ghostBtn}>
@@ -225,7 +235,11 @@ export default function MfaPanel({
       ) : (
         <div>
           <button onClick={begin} disabled={pending} style={s.primaryBtnSmall}>
-            {pending ? <Loader2 size={14} aria-hidden="true" /> : <ShieldCheck size={14} aria-hidden="true" />}
+            {pending ? (
+              <Loader2 size={14} aria-hidden="true" />
+            ) : (
+              <ShieldCheck size={14} aria-hidden="true" />
+            )}
             Set up two-factor authentication
           </button>
         </div>

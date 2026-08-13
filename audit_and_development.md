@@ -931,8 +931,8 @@ client freshness · design-token freshness · backup restore drill — all green
 | Phase 5 — distribution | ✅ complete | `49aab53` |
 | Phase 5 — search & reports | ✅ complete | `a46b5ed` |
 | Phase 5 — imports, CSV/PDF export & receipts | ✅ complete | Migration `00026_imports_attachments`; staged CSV/OFX/QIF jobs, private idempotent receipt storage, and live browser coverage |
-| Phase 5 — dark mode | ⏳ next | Token-driven system preference plus user override and WCAG pass |
-| Phase 5 — Recurring, Tags & Debts pages | ⏳ pending | Starts after dark mode |
+| Phase 5 — dark mode | ✅ complete | Migration `00027_theme_preference`; token-driven system/light/dark preference, persisted profile override, and live WCAG 2.2 AA browser pass across dashboard surfaces |
+| Phase 5 — Recurring, Tags & Debts pages | ⏳ next | Dark-mode prerequisite complete; implement sequentially as first-class features |
 | Phase 6 | 🚫 excluded | Reading A ratified in DEC-025; commercial and multi-tenant `[B-only]` work is out of scope |
 
 **Four drift guards now exist**, each proven to fail on real drift before being

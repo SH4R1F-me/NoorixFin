@@ -1659,6 +1659,11 @@ export interface components {
             week_starts_on: number;
             /** @example false */
             amount_privacy_default: boolean;
+            /**
+             * @example SYSTEM
+             * @enum {string}
+             */
+            theme_preference: "SYSTEM" | "LIGHT" | "DARK";
             /** @example COMPLETED */
             onboarding_status: string;
             /**
@@ -1685,6 +1690,12 @@ export interface components {
             updated_at: string;
         };
         UpdatePreferencesDto: {
+            /**
+             * @description Appearance override; SYSTEM follows the operating system
+             * @example SYSTEM
+             * @enum {string}
+             */
+            theme_preference?: "SYSTEM" | "LIGHT" | "DARK";
             /**
              * @description User locale: bn or en
              * @example bn

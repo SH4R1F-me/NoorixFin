@@ -26,9 +26,9 @@ const CATEGORY_LABEL: Record<string, string> = {
 
 const SEVERITY_COLOR: Record<string, string> = {
   INFO: '#38bdf8',
-  SUCCESS: '#34d399',
-  WARNING: '#fbbf24',
-  CRITICAL: '#fb7185',
+  SUCCESS: 'var(--color-success)',
+  WARNING: 'var(--color-warning)',
+  CRITICAL: 'var(--color-error)',
 };
 
 export default function NotificationsView({ initialItems }: { initialItems: UserNotification[] }) {
@@ -113,8 +113,8 @@ export default function NotificationsView({ initialItems }: { initialItems: User
       <div style={s.list} aria-live="polite" aria-busy={pending}>
         {visible.length === 0 ? (
           <div style={s.empty}>
-            <Bell size={28} color="#64748b" />
-            <strong style={{ color: '#e2e8f0' }}>Nothing here</strong>
+            <Bell size={28} color="var(--text-tertiary)" />
+            <strong style={{ color: 'var(--text-primary)' }}>Nothing here</strong>
             <span>
               New updates will appear here and remain available even if push delivery fails.
             </span>
@@ -179,7 +179,7 @@ export default function NotificationsView({ initialItems }: { initialItems: User
                       <Archive size={14} /> Archive
                     </button>
                     <button
-                      style={{ ...s.action, color: '#fb7185' }}
+                      style={{ ...s.action, color: 'var(--color-error)' }}
                       onClick={() =>
                         run(
                           () => deleteNotification(item.id),
@@ -211,7 +211,7 @@ const s: Record<string, React.CSSProperties> = {
     flexWrap: 'wrap',
   },
   eyebrow: {
-    color: '#34d399',
+    color: 'var(--color-success)',
     fontSize: '0.7rem',
     fontWeight: 800,
     letterSpacing: '0.14em',
@@ -219,13 +219,13 @@ const s: Record<string, React.CSSProperties> = {
     gap: 6,
     alignItems: 'center',
   },
-  title: { margin: '0.35rem 0 0', color: '#f8fafc', fontSize: '2rem', lineHeight: 1.1 },
-  subtitle: { margin: '0.4rem 0 0', color: '#94a3b8', fontSize: '0.875rem' },
+  title: { margin: '0.35rem 0 0', color: 'var(--text-primary)', fontSize: '2rem', lineHeight: 1.1 },
+  subtitle: { margin: '0.4rem 0 0', color: 'var(--text-secondary)', fontSize: '0.875rem' },
   primaryButton: {
     border: 0,
     borderRadius: '0.65rem',
-    background: '#10b981',
-    color: '#022c22',
+    background: 'var(--color-primary-500)',
+    color: 'var(--text-on-primary)',
     padding: '0.65rem 0.9rem',
     display: 'flex',
     gap: 7,
@@ -237,7 +237,7 @@ const s: Record<string, React.CSSProperties> = {
     padding: '0.75rem 1rem',
     border: '1px solid rgba(251,113,133,.35)',
     background: 'rgba(251,113,133,.08)',
-    color: '#fda4af',
+    color: 'var(--color-error)',
     borderRadius: '0.75rem',
     marginBottom: '1rem',
   },
@@ -251,9 +251,9 @@ const s: Record<string, React.CSSProperties> = {
   filter: {
     padding: '0.4rem 0.7rem',
     borderRadius: 999,
-    border: '1px solid #334155',
+    border: '1px solid var(--border-primary)',
     background: 'transparent',
-    color: '#94a3b8',
+    color: 'var(--text-secondary)',
     fontSize: '0.75rem',
     whiteSpace: 'nowrap',
     cursor: 'pointer',
@@ -261,15 +261,15 @@ const s: Record<string, React.CSSProperties> = {
   filterActive: {
     background: 'rgba(16,185,129,.12)',
     borderColor: 'rgba(16,185,129,.45)',
-    color: '#6ee7b7',
+    color: 'var(--color-success)',
   },
   list: { display: 'grid', gap: '0.7rem' },
   card: {
     display: 'flex',
     gap: '0.9rem',
     padding: '1rem',
-    border: '1px solid #1e293b',
-    background: 'rgba(15,23,42,.58)',
+    border: '1px solid var(--border-primary)',
+    background: 'var(--bg-input)',
     borderRadius: '0.9rem',
   },
   unreadCard: { borderColor: 'rgba(16,185,129,.38)', background: 'rgba(16,185,129,.045)' },
@@ -288,13 +288,24 @@ const s: Record<string, React.CSSProperties> = {
     display: 'flex',
     gap: 6,
     alignItems: 'center',
-    color: '#64748b',
+    color: 'var(--text-tertiary)',
     fontSize: '0.7rem',
     flexWrap: 'wrap',
   },
-  dot: { width: 7, height: 7, borderRadius: 99, background: '#10b981', marginLeft: 'auto' },
-  cardTitle: { color: '#f1f5f9', fontSize: '0.95rem', margin: '0.35rem 0 0' },
-  body: { color: '#a8b3c3', fontSize: '0.82rem', lineHeight: 1.55, margin: '0.35rem 0 0.7rem' },
+  dot: {
+    width: 7,
+    height: 7,
+    borderRadius: 99,
+    background: 'var(--color-primary-500)',
+    marginLeft: 'auto',
+  },
+  cardTitle: { color: 'var(--text-primary)', fontSize: '0.95rem', margin: '0.35rem 0 0' },
+  body: {
+    color: 'var(--text-tertiary)',
+    fontSize: '0.82rem',
+    lineHeight: 1.55,
+    margin: '0.35rem 0 0.7rem',
+  },
   actions: { display: 'flex', flexWrap: 'wrap', gap: '0.4rem' },
   action: {
     display: 'inline-flex',
@@ -302,7 +313,7 @@ const s: Record<string, React.CSSProperties> = {
     gap: 5,
     border: 0,
     background: 'transparent',
-    color: '#94a3b8',
+    color: 'var(--text-secondary)',
     fontSize: '0.72rem',
     padding: '0.25rem',
     cursor: 'pointer',
@@ -310,9 +321,9 @@ const s: Record<string, React.CSSProperties> = {
   },
   empty: {
     minHeight: 260,
-    border: '1px dashed #334155',
+    border: '1px dashed var(--border-primary)',
     borderRadius: '1rem',
-    color: '#64748b',
+    color: 'var(--text-tertiary)',
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',

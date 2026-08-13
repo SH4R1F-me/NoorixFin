@@ -199,7 +199,7 @@ export default function GoalsView({
 
       {goals.length === 0 ? (
         <EmptyState
-          icon={<Target size={30} color="#10b981" aria-hidden="true" />}
+          icon={<Target size={30} color="var(--color-primary-500)" aria-hidden="true" />}
           title={t('goals.noGoals')}
           body={t('goals.noGoalsBody')}
           action={
@@ -227,7 +227,11 @@ export default function GoalsView({
                   <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
                     {achieved && (
                       <span
-                        style={{ ...styles.badge, color: '#6ee7b7', background: 'rgba(16,185,129,0.12)' }}
+                        style={{
+                          ...styles.badge,
+                          color: 'var(--color-success)',
+                          background: 'rgba(16,185,129,0.12)',
+                        }}
                       >
                         <Check size={12} aria-hidden="true" /> {t('goals.achieved')}
                       </span>
@@ -257,7 +261,13 @@ export default function GoalsView({
                         {fmt(current, goal.currency_code)} {t('app.of')}{' '}
                         {fmt(goal.target_minor, goal.currency_code)}
                       </span>
-                      <span style={{ ...field.meta, fontWeight: 600, color: '#10b981' }}>
+                      <span
+                        style={{
+                          ...field.meta,
+                          fontWeight: 600,
+                          color: 'var(--color-primary-500)',
+                        }}
+                      >
                         {num(share, locale)}%
                       </span>
                     </div>
@@ -271,7 +281,7 @@ export default function GoalsView({
                   <div style={styles.unlinked}>
                     <Link2Off size={15} aria-hidden="true" style={{ flexShrink: 0 }} />
                     <div>
-                      <p style={{ margin: 0, fontSize: '0.8125rem', color: '#cbd5e1' }}>
+                      <p style={{ margin: 0, fontSize: '0.8125rem', color: 'var(--text-primary)' }}>
                         {t('goals.noLink')} · {t('goals.targetAmount')}:{' '}
                         {fmt(goal.target_minor, goal.currency_code)}
                       </p>
@@ -302,7 +312,7 @@ export default function GoalsView({
 
       {debts.length === 0 ? (
         <EmptyState
-          icon={<Landmark size={30} color="#10b981" aria-hidden="true" />}
+          icon={<Landmark size={30} color="var(--color-primary-500)" aria-hidden="true" />}
           title={t('goals.noDebts')}
           body={t('goals.noDebtsBody')}
           action={
@@ -315,7 +325,7 @@ export default function GoalsView({
         <>
           <div style={{ ...field.card, marginBottom: '1rem' }}>
             <span style={field.meta}>{t('goals.totalDebt')}</span>
-            <p style={{ ...styles.totalValue, color: '#f87171' }}>
+            <p style={{ ...styles.totalValue, color: 'var(--color-error)' }}>
               {fmt(overview.total_debt_minor ?? 0)}
             </p>
           </div>
@@ -329,7 +339,7 @@ export default function GoalsView({
                 <li key={debt.ledger_account_id} style={field.card}>
                   <div style={styles.goalTop}>
                     <span style={styles.goalName}>{debt.name}</span>
-                    <span style={{ ...styles.amount, color: '#f87171' }}>
+                    <span style={{ ...styles.amount, color: 'var(--color-error)' }}>
                       {fmt(debt.outstanding_minor, debt.currency_code)}
                     </span>
                   </div>
@@ -396,7 +406,7 @@ const styles: Record<string, React.CSSProperties> = {
   sectionTitle: {
     fontSize: '1rem',
     fontWeight: 700,
-    color: '#94a3b8',
+    color: 'var(--text-secondary)',
     marginBottom: '0.85rem',
   },
   formGrid: {
@@ -413,7 +423,7 @@ const styles: Record<string, React.CSSProperties> = {
     gap: '0.75rem',
     flexWrap: 'wrap',
   },
-  goalName: { fontSize: '0.9375rem', fontWeight: 600, color: '#f8fafc' },
+  goalName: { fontSize: '0.9375rem', fontWeight: 600, color: 'var(--text-primary)' },
   goalBottom: {
     display: 'flex',
     justifyContent: 'space-between',
@@ -425,10 +435,10 @@ const styles: Record<string, React.CSSProperties> = {
     display: 'flex',
     gap: '0.6rem',
     padding: '0.75rem',
-    background: 'rgba(15,23,42,0.5)',
-    border: '1px dashed #334155',
+    background: 'var(--bg-input)',
+    border: '1px dashed var(--border-primary)',
     borderRadius: '0.625rem',
-    color: '#8b9ab0',
+    color: 'var(--text-tertiary)',
   },
   badge: {
     display: 'inline-flex',
@@ -456,7 +466,7 @@ const styles: Record<string, React.CSSProperties> = {
     margin: '2px 0 0',
     fontSize: '0.875rem',
     fontWeight: 600,
-    color: '#f8fafc',
+    color: 'var(--text-primary)',
     fontVariantNumeric: 'tabular-nums',
   },
 };

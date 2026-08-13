@@ -112,6 +112,42 @@ export const semantic = {
   borderFocus: colors.primary[500],
 } as const;
 
+/** Light roles are paired with the dark roles above; components consume the
+ * same CSS variable names, so switching theme never changes component code. */
+export const semanticLight = {
+  bgPrimary: colors.neutral[50],
+  bgSecondary: colors.neutral[100],
+  bgTertiary: colors.neutral[200],
+  bgCard: colors.neutral[0],
+  bgCardHover: colors.neutral[100],
+  bgInput: colors.neutral[0],
+  bgGlass: 'rgba(255, 255, 255, 0.88)',
+
+  textPrimary: colors.neutral[900],
+  textSecondary: colors.neutral[600],
+  /** 7.58:1 on white; also stays AA on the light tinted status surfaces. */
+  textTertiary: colors.neutral[600],
+  textInverse: colors.neutral[50],
+
+  borderPrimary: colors.neutral[300],
+  borderSecondary: colors.neutral[400],
+  borderFocus: colors.primary[700],
+} as const;
+
+/** Status hues need darker steps on a light canvas to retain text contrast. */
+export const lightStatus = {
+  // 800 stays AA when composited onto the 14% active-control tint. 700 was
+  // 4.49:1 after blending — visually close, but still a real WCAG failure.
+  primary: colors.primary[800],
+  income: colors.primary[800],
+  success: colors.primary[800],
+  warning: '#92400e',
+  error: '#b91c1c',
+  expense: '#b91c1c',
+  info: '#1d4ed8',
+  transfer: '#1d4ed8',
+} as const;
+
 /** Marketing pages run darker than the app; they are a distinct surface. */
 export const marketing = {
   bg: '#030712',

@@ -9,9 +9,7 @@
 import { revalidatePath } from 'next/cache';
 import { apiFetch, ApiError } from '../../../../lib/api-client';
 
-export type SessionsResult =
-  | { ok: true; message?: string }
-  | { ok: false; message: string };
+export type SessionsResult = { ok: true; message?: string } | { ok: false; message: string };
 
 export interface UserDevice {
   id: string;

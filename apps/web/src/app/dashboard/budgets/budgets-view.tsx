@@ -119,7 +119,7 @@ export default function BudgetsView({
 
       {budgetable.length === 0 && (
         <EmptyState
-          icon={<PiggyBank size={30} color="#10b981" aria-hidden="true" />}
+          icon={<PiggyBank size={30} color="var(--color-primary-500)" aria-hidden="true" />}
           title={t('budgets.noBudget')}
           body={t('budgets.needCategories')}
           action={
@@ -229,7 +229,7 @@ export default function BudgetsView({
 
       {!hasBudget && !editing && budgetable.length > 0 && (
         <EmptyState
-          icon={<PiggyBank size={30} color="#10b981" aria-hidden="true" />}
+          icon={<PiggyBank size={30} color="var(--color-primary-500)" aria-hidden="true" />}
           title={t('budgets.noBudget')}
           body={t('budgets.noBudgetBody')}
           action={
@@ -257,7 +257,10 @@ export default function BudgetsView({
               <p
                 style={{
                   ...styles.totalValue,
-                  color: plannedTotal - spentTotal >= 0 ? '#10b981' : '#f87171',
+                  color:
+                    plannedTotal - spentTotal >= 0
+                      ? 'var(--color-primary-500)'
+                      : 'var(--color-error)',
                 }}
               >
                 {fmt(plannedTotal - spentTotal)}
@@ -295,15 +298,33 @@ export default function BudgetsView({
                       screen reader.
                     */}
                     {over ? (
-                      <span style={{ ...styles.badge, color: '#fca5a5', background: 'rgba(239,68,68,0.12)' }}>
+                      <span
+                        style={{
+                          ...styles.badge,
+                          color: 'var(--color-error)',
+                          background: 'rgba(239,68,68,0.12)',
+                        }}
+                      >
                         <AlertTriangle size={13} aria-hidden="true" /> {t('budgets.overBudget')}
                       </span>
                     ) : near ? (
-                      <span style={{ ...styles.badge, color: '#fcd34d', background: 'rgba(245,158,11,0.12)' }}>
+                      <span
+                        style={{
+                          ...styles.badge,
+                          color: 'var(--color-warning)',
+                          background: 'rgba(245,158,11,0.12)',
+                        }}
+                      >
                         <AlertTriangle size={13} aria-hidden="true" /> {t('budgets.nearLimit')}
                       </span>
                     ) : (
-                      <span style={{ ...styles.badge, color: '#6ee7b7', background: 'rgba(16,185,129,0.12)' }}>
+                      <span
+                        style={{
+                          ...styles.badge,
+                          color: 'var(--color-success)',
+                          background: 'rgba(16,185,129,0.12)',
+                        }}
+                      >
                         <Check size={13} aria-hidden="true" /> {t('budgets.onTrack')}
                       </span>
                     )}
@@ -323,7 +344,7 @@ export default function BudgetsView({
                     <span
                       style={{
                         ...field.meta,
-                        color: over ? '#fca5a5' : '#94a3b8',
+                        color: over ? 'var(--color-error)' : 'var(--text-secondary)',
                         fontWeight: 600,
                       }}
                     >
@@ -361,7 +382,7 @@ const styles: Record<string, React.CSSProperties> = {
   totalValue: {
     fontSize: '1.5rem',
     fontWeight: 800,
-    color: '#f8fafc',
+    color: 'var(--text-primary)',
     margin: '0.35rem 0 0',
     fontVariantNumeric: 'tabular-nums',
   },
@@ -374,7 +395,7 @@ const styles: Record<string, React.CSSProperties> = {
     gap: '0.75rem',
     flexWrap: 'wrap',
   },
-  lineName: { fontSize: '0.9375rem', fontWeight: 600, color: '#f8fafc' },
+  lineName: { fontSize: '0.9375rem', fontWeight: 600, color: 'var(--text-primary)' },
   badge: {
     display: 'inline-flex',
     alignItems: 'center',
@@ -395,7 +416,7 @@ const styles: Record<string, React.CSSProperties> = {
     display: 'inline-block',
     marginTop: '0.75rem',
     fontSize: '0.75rem',
-    color: '#10b981',
+    color: 'var(--color-primary-500)',
     textDecoration: 'none',
   },
   editRow: { display: 'flex', gap: '0.75rem', marginBottom: '0.75rem', flexWrap: 'wrap' },

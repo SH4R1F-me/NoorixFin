@@ -39,11 +39,7 @@ export default async function CalendarPage() {
 
   return (
     <>
-      <CalendarView
-        overview={overview}
-        workspaceId={workspace.id}
-        currency={currency}
-      />
+      <CalendarView overview={overview} workspaceId={workspace.id} currency={currency} />
       <RecurringPanel
         rules={rules}
         // Category-backing and system accounts are ledger plumbing, not places

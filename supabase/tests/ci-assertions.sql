@@ -498,5 +498,46 @@ BEGIN
 END;
 $$;
 
+-- ── Appearance preference is constrained at the source of truth ────────────
+DO $$
+DECLARE
+  v_default TEXT;
+  v_constraint TEXT;
+BEGIN
+  SELECT column_default INTO v_default
+    FROM information_schema.columns
+   WHERE table_schema = 'public'
+     AND table_name = 'profiles'
+     AND column_name = 'theme_preference';
+
+  IF v_default IS NULL OR v_default NOT LIKE '%SYSTEM%' THEN
+    RAISE EXCEPTION 'THEME-01 FAILED: profiles.theme_preference does not default to SYSTEM';
+  END IF;
+
+  SELECT pg_get_constraintdef(oid) INTO v_constraint
+    FROM pg_constraint
+   WHERE conrelid = 'public.profiles'::regclass
+     AND conname = 'profiles_theme_preference_check';
+
+  IF v_constraint IS NULL
+     OR v_constraint NOT LIKE '%SYSTEM%'
+     OR v_constraint NOT LIKE '%LIGHT%'
+     OR v_constraint NOT LIKE '%DARK%' THEN
+    RAISE EXCEPTION 'THEME-02 FAILED: appearance values are not constrained';
+  END IF;
+
+  IF NOT has_column_privilege(
+    'authenticated',
+    'public.profiles',
+    'theme_preference',
+    'UPDATE'
+  ) THEN
+    RAISE EXCEPTION 'THEME-03 FAILED: authenticated users cannot persist their appearance preference';
+  END IF;
+
+  RAISE NOTICE '   appearance defaults, constraint, and column-level write privilege hold';
+END;
+$$;
+
 \echo ''
 \echo '✓ All CI invariants hold.'

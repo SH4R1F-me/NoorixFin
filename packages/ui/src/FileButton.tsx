@@ -48,6 +48,7 @@ export function FileButton({
         className="nx-visually-hidden"
         type="file"
         accept={accept}
+        aria-label={ariaLabel ?? (typeof children === 'string' ? children : 'Choose file')}
         tabIndex={-1}
         onChange={changed}
       />

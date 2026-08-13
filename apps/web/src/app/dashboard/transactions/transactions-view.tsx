@@ -253,17 +253,17 @@ export default function TransactionsView({
     title: {
       fontSize: '1.75rem',
       fontWeight: 800,
-      color: '#f8fafc',
+      color: 'var(--text-primary)',
       margin: 0,
       letterSpacing: '-0.02em',
     },
-    sub: { fontSize: '0.8125rem', color: '#8b9ab0', margin: 0, marginTop: 2 },
+    sub: { fontSize: '0.8125rem', color: 'var(--text-tertiary)', margin: 0, marginTop: 2 },
     addBtn: {
       display: 'flex',
       alignItems: 'center',
       gap: '0.5rem',
       padding: '0.625rem 1.25rem',
-      background: 'linear-gradient(135deg,#059669,#10b981)',
+      background: 'linear-gradient(135deg,var(--color-primary-600),var(--color-primary-500))',
       border: 'none',
       borderRadius: '0.75rem',
       color: 'white',
@@ -274,9 +274,9 @@ export default function TransactionsView({
       boxShadow: '0 4px 12px rgba(16,185,129,0.3)',
     },
     qaBox: {
-      background: 'rgba(30,41,59,0.6)',
+      background: 'var(--bg-card)',
       backdropFilter: 'blur(20px)',
-      border: '1px solid #334155',
+      border: '1px solid var(--border-primary)',
       borderRadius: '1rem',
       padding: '1.5rem',
       marginBottom: '1.5rem',
@@ -288,9 +288,9 @@ export default function TransactionsView({
       gap: '0.375rem',
       padding: '0.5rem 1rem',
       background: 'transparent',
-      border: '1px solid #334155',
+      border: '1px solid var(--border-primary)',
       borderRadius: '0.625rem',
-      color: '#94a3b8',
+      color: 'var(--text-secondary)',
       fontSize: '0.8125rem',
       fontWeight: 500,
       cursor: 'pointer',
@@ -307,16 +307,16 @@ export default function TransactionsView({
     lbl: {
       fontSize: '0.75rem',
       fontWeight: 500,
-      color: '#94a3b8',
+      color: 'var(--text-secondary)',
       textTransform: 'uppercase' as const,
       letterSpacing: '0.05em',
     },
     inp: {
       padding: '0.625rem 0.75rem',
-      background: 'rgba(15,23,42,0.6)',
-      border: '1px solid #334155',
+      background: 'var(--bg-input)',
+      border: '1px solid var(--border-primary)',
       borderRadius: '0.5rem',
-      color: '#f8fafc',
+      color: 'var(--text-primary)',
       fontSize: '0.875rem',
       fontFamily: 'inherit',
       outline: 'none',
@@ -324,7 +324,7 @@ export default function TransactionsView({
     saveBtn: {
       alignSelf: 'flex-end' as const,
       padding: '0.625rem 2rem',
-      background: 'linear-gradient(135deg,#059669,#10b981)',
+      background: 'linear-gradient(135deg,var(--color-primary-600),var(--color-primary-500))',
       border: 'none',
       borderRadius: '0.625rem',
       color: 'white',
@@ -339,14 +339,14 @@ export default function TransactionsView({
       alignItems: 'center',
       gap: '1.5rem',
       padding: '1rem 1.25rem',
-      background: 'rgba(30,41,59,0.4)',
-      border: '1px solid #1e293b',
+      background: 'var(--bg-card)',
+      border: '1px solid var(--border-primary)',
       borderRadius: '0.75rem',
       marginBottom: '1rem',
       flexWrap: 'wrap' as const,
     },
     si: { display: 'flex', alignItems: 'center', gap: '0.5rem' },
-    sd: { width: 1, height: 24, background: '#334155' },
+    sd: { width: 1, height: 24, background: 'var(--bg-tertiary)' },
     filters: {
       display: 'flex',
       gap: '0.75rem',
@@ -359,8 +359,8 @@ export default function TransactionsView({
       alignItems: 'center',
       gap: '0.5rem',
       padding: '0.5rem 0.75rem',
-      background: 'rgba(15,23,42,0.6)',
-      border: '1px solid #1e293b',
+      background: 'var(--bg-input)',
+      border: '1px solid var(--border-primary)',
       borderRadius: '0.625rem',
       flex: 1,
       minWidth: 200,
@@ -369,7 +369,7 @@ export default function TransactionsView({
       background: 'transparent',
       border: 'none',
       outline: 'none',
-      color: '#f8fafc',
+      color: 'var(--text-primary)',
       fontSize: '0.875rem',
       fontFamily: 'inherit',
       width: '100%',
@@ -378,28 +378,32 @@ export default function TransactionsView({
     chip: {
       padding: '0.375rem 0.75rem',
       background: 'transparent',
-      border: '1px solid #1e293b',
+      border: '1px solid var(--border-primary)',
       borderRadius: '0.5rem',
-      color: '#94a3b8',
+      color: 'var(--text-secondary)',
       fontSize: '0.8125rem',
       cursor: 'pointer',
       fontFamily: 'inherit',
       transition: 'all 150ms',
     },
-    chipA: { background: 'rgba(16,185,129,0.1)', borderColor: '#10b981', color: '#10b981' },
+    chipA: {
+      background: 'rgba(16,185,129,0.1)',
+      borderColor: 'var(--color-primary-500)',
+      color: 'var(--color-primary-500)',
+    },
     selF: {
       padding: '0.375rem 0.75rem',
-      background: 'rgba(15,23,42,0.6)',
-      border: '1px solid #1e293b',
+      background: 'var(--bg-input)',
+      border: '1px solid var(--border-primary)',
       borderRadius: '0.5rem',
-      color: '#94a3b8',
+      color: 'var(--text-secondary)',
       fontSize: '0.8125rem',
       fontFamily: 'inherit',
       cursor: 'pointer',
     },
     list: {
-      background: 'rgba(30,41,59,0.3)',
-      border: '1px solid #1e293b',
+      background: 'var(--bg-card)',
+      border: '1px solid var(--border-primary)',
       borderRadius: '1rem',
       overflow: 'hidden',
     },
@@ -424,7 +428,7 @@ export default function TransactionsView({
     payee: {
       fontSize: '0.9375rem',
       fontWeight: 600,
-      color: '#f8fafc',
+      color: 'var(--text-primary)',
       whiteSpace: 'nowrap' as const,
       overflow: 'hidden',
       textOverflow: 'ellipsis',
@@ -434,13 +438,13 @@ export default function TransactionsView({
       alignItems: 'center',
       gap: '0.375rem',
       fontSize: '0.75rem',
-      color: '#8b9ab0',
+      color: 'var(--text-tertiary)',
       marginTop: 2,
       flexWrap: 'wrap' as const,
     },
     amtS: { textAlign: 'right' as const, flexShrink: 0 },
     amt: { fontSize: '0.9375rem', fontWeight: 700, fontVariantNumeric: 'tabular-nums' as const },
-    date: { fontSize: '0.75rem', color: '#8b9ab0', marginTop: 2 },
+    date: { fontSize: '0.75rem', color: 'var(--text-tertiary)', marginTop: 2 },
     empty: {
       display: 'flex',
       flexDirection: 'column' as const,
@@ -461,7 +465,7 @@ export default function TransactionsView({
       padding: '2px 6px 2px 8px',
       borderRadius: '0.4rem',
       background: 'rgba(59,130,246,0.14)',
-      color: '#93c5fd',
+      color: 'var(--color-transfer)',
       fontSize: '0.75rem',
       fontWeight: 600,
     },
@@ -470,7 +474,7 @@ export default function TransactionsView({
       alignItems: 'center',
       background: 'transparent',
       border: 'none',
-      color: '#93c5fd',
+      color: 'var(--color-transfer)',
       cursor: 'pointer',
       padding: 0,
       lineHeight: 1,
@@ -481,11 +485,16 @@ export default function TransactionsView({
       padding: '1px 6px',
       borderRadius: '0.35rem',
       background: 'rgba(59,130,246,0.12)',
-      color: '#93c5fd',
+      color: 'var(--color-transfer)',
       fontSize: '0.6875rem',
       fontWeight: 600,
     },
-    hint: { display: 'block', fontSize: '0.6875rem', color: '#8b9ab0', marginTop: '0.3rem' },
+    hint: {
+      display: 'block',
+      fontSize: '0.6875rem',
+      color: 'var(--text-tertiary)',
+      marginTop: '0.3rem',
+    },
     // ── reversal (FIN-03) ──────────────────────────────────────────────────
     badgeVoided: {
       display: 'inline-flex',
@@ -494,7 +503,7 @@ export default function TransactionsView({
       padding: '1px 6px',
       borderRadius: '0.35rem',
       background: 'rgba(248,113,113,0.12)',
-      color: '#f87171',
+      color: 'var(--color-error)',
       fontSize: '0.6875rem',
       fontWeight: 600,
     },
@@ -505,7 +514,7 @@ export default function TransactionsView({
       padding: '1px 6px',
       borderRadius: '0.35rem',
       background: 'rgba(59,130,246,0.12)',
-      color: '#93c5fd',
+      color: 'var(--color-transfer)',
       fontSize: '0.6875rem',
       fontWeight: 600,
     },
@@ -516,9 +525,9 @@ export default function TransactionsView({
       flexShrink: 0,
       padding: '0.35rem 0.6rem',
       background: 'transparent',
-      border: '1px solid #334155',
+      border: '1px solid var(--border-primary)',
       borderRadius: '0.5rem',
-      color: '#c9c2bc',
+      color: 'var(--text-secondary)',
       fontSize: '0.75rem',
       fontFamily: 'inherit',
       cursor: 'pointer',
@@ -533,7 +542,7 @@ export default function TransactionsView({
       borderRadius: '0.75rem',
       background: 'rgba(59,130,246,0.08)',
       border: '1px solid rgba(59,130,246,0.28)',
-      color: '#93c5fd',
+      color: 'var(--color-transfer)',
       fontSize: '0.8125rem',
     },
     confirmBox: {
@@ -549,16 +558,21 @@ export default function TransactionsView({
       gap: 8,
       fontSize: '0.9375rem',
       fontWeight: 700,
-      color: '#f8fafc',
+      color: 'var(--text-primary)',
     },
-    confirmBody: { fontSize: '0.8125rem', lineHeight: 1.6, color: '#c9c2bc', margin: '0.5rem 0 0' },
+    confirmBody: {
+      fontSize: '0.8125rem',
+      lineHeight: 1.6,
+      color: 'var(--text-secondary)',
+      margin: '0.5rem 0 0',
+    },
     confirmTarget: {
       fontSize: '0.8125rem',
       fontWeight: 600,
-      color: '#f8fafc',
+      color: 'var(--text-primary)',
       margin: '0.6rem 0 0',
     },
-    confirmError: { fontSize: '0.8125rem', color: '#f87171', margin: '0.6rem 0 0' },
+    confirmError: { fontSize: '0.8125rem', color: 'var(--color-error)', margin: '0.6rem 0 0' },
     confirmActions: {
       display: 'flex',
       gap: '0.5rem',
@@ -570,10 +584,10 @@ export default function TransactionsView({
       alignItems: 'center',
       gap: 6,
       padding: '0.5rem 0.9rem',
-      background: '#f87171',
+      background: 'var(--color-error)',
       border: 'none',
       borderRadius: '0.5rem',
-      color: '#0b1020',
+      color: 'var(--text-on-primary)',
       fontSize: '0.8125rem',
       fontWeight: 700,
       fontFamily: 'inherit',
@@ -582,9 +596,9 @@ export default function TransactionsView({
     cancelBtn: {
       padding: '0.5rem 0.9rem',
       background: 'transparent',
-      border: '1px solid #334155',
+      border: '1px solid var(--border-primary)',
       borderRadius: '0.5rem',
-      color: '#c9c2bc',
+      color: 'var(--text-secondary)',
       fontSize: '0.8125rem',
       fontFamily: 'inherit',
       cursor: 'pointer',
@@ -598,13 +612,13 @@ export default function TransactionsView({
       background: 'rgba(16,185,129,0.08)',
       border: '1px solid rgba(16,185,129,0.28)',
       borderRadius: '0.75rem',
-      color: '#6ee7b7',
+      color: 'var(--color-success)',
       fontSize: '0.8125rem',
       marginBottom: '1rem',
       flexWrap: 'wrap' as const,
     },
     drillClear: {
-      color: '#10b981',
+      color: 'var(--color-primary-500)',
       textDecoration: 'none',
       fontWeight: 600,
       fontSize: '0.8125rem',
@@ -644,9 +658,9 @@ export default function TransactionsView({
           <div style={s.typeSel}>
             {(
               [
-                ['EXPENSE', 'transactions.expense', '#f87171'],
-                ['INCOME', 'transactions.income', '#10b981'],
-                ['TRANSFER', 'transactions.transfer', '#3b82f6'],
+                ['EXPENSE', 'transactions.expense', 'var(--color-error)'],
+                ['INCOME', 'transactions.income', 'var(--color-primary-500)'],
+                ['TRANSFER', 'transactions.transfer', 'var(--color-transfer)'],
               ] as const
             ).map(([kind, labelKey, colour]) => (
               <button
@@ -840,14 +854,24 @@ export default function TransactionsView({
           </div>
 
           {accounts.length === 0 && (
-            <p style={{ color: '#fbbf24', fontSize: '0.8125rem', marginBottom: '0.75rem' }}>
+            <p
+              style={{
+                color: 'var(--color-warning)',
+                fontSize: '0.8125rem',
+                marginBottom: '0.75rem',
+              }}
+            >
               {tr('transactions.needAccount')}
             </p>
           )}
           {formError && (
             <p
               role="alert"
-              style={{ color: '#fca5a5', fontSize: '0.8125rem', marginBottom: '0.75rem' }}
+              style={{
+                color: 'var(--color-error)',
+                fontSize: '0.8125rem',
+                marginBottom: '0.75rem',
+              }}
             >
               {formError}
             </p>
@@ -867,33 +891,35 @@ export default function TransactionsView({
 
       <div style={s.strip}>
         <div style={s.si}>
-          <TrendingUp size={16} style={{ color: '#10b981' }} />
-          <span style={{ color: '#94a3b8', fontSize: '0.8125rem' }}>
+          <TrendingUp size={16} style={{ color: 'var(--color-primary-500)' }} />
+          <span style={{ color: 'var(--text-secondary)', fontSize: '0.8125rem' }}>
             {tr('transactions.income')}
           </span>
-          <span style={{ color: '#10b981', fontWeight: 600, fontSize: '0.9375rem' }}>
+          <span
+            style={{ color: 'var(--color-primary-500)', fontWeight: 600, fontSize: '0.9375rem' }}
+          >
             {fmt(totIn)}
           </span>
         </div>
         <div style={s.sd} />
         <div style={s.si}>
-          <TrendingDown size={16} style={{ color: '#f87171' }} />
-          <span style={{ color: '#94a3b8', fontSize: '0.8125rem' }}>
+          <TrendingDown size={16} style={{ color: 'var(--color-error)' }} />
+          <span style={{ color: 'var(--text-secondary)', fontSize: '0.8125rem' }}>
             {tr('transactions.expense')}
           </span>
-          <span style={{ color: '#f87171', fontWeight: 600, fontSize: '0.9375rem' }}>
+          <span style={{ color: 'var(--color-error)', fontWeight: 600, fontSize: '0.9375rem' }}>
             {fmt(totEx)}
           </span>
         </div>
         <div style={s.sd} />
         <div style={s.si}>
-          <Repeat size={16} style={{ color: '#3b82f6' }} />
-          <span style={{ color: '#94a3b8', fontSize: '0.8125rem' }}>
+          <Repeat size={16} style={{ color: 'var(--color-transfer)' }} />
+          <span style={{ color: 'var(--text-secondary)', fontSize: '0.8125rem' }}>
             {tr('dashboard.netCashFlow')}
           </span>
           <span
             style={{
-              color: totIn - totEx >= 0 ? '#10b981' : '#f87171',
+              color: totIn - totEx >= 0 ? 'var(--color-primary-500)' : 'var(--color-error)',
               fontWeight: 600,
               fontSize: '0.9375rem',
             }}
@@ -905,7 +931,7 @@ export default function TransactionsView({
 
       <div style={s.filters}>
         <div style={s.srchC}>
-          <Search size={16} style={{ color: '#8b9ab0', flexShrink: 0 }} />
+          <Search size={16} style={{ color: 'var(--text-tertiary)', flexShrink: 0 }} />
           <input
             type="text"
             placeholder={tr('app.search')}
@@ -1046,7 +1072,11 @@ export default function TransactionsView({
         {filtered.map((tx, idx) => {
           const isE = tx.type === 'EXPENSE',
             isI = tx.type === 'INCOME';
-          const col = isE ? '#f87171' : isI ? '#10b981' : '#3b82f6';
+          const col = isE
+            ? 'var(--color-error)'
+            : isI
+              ? 'var(--color-primary-500)'
+              : 'var(--color-transfer)';
           const pfx = isE ? '-' : isI ? '+' : '';
           // A corrected entry still COUNTS — its mirror cancels it rather than
           // removing it — so it is marked, not hidden. Struck through and
@@ -1061,7 +1091,8 @@ export default function TransactionsView({
               key={tx.id}
               style={{
                 ...s.row,
-                borderBottom: idx < filtered.length - 1 ? '1px solid #1e293b' : 'none',
+                borderBottom:
+                  idx < filtered.length - 1 ? '1px solid var(--border-primary)' : 'none',
                 opacity: isCorrected ? 0.6 : 1,
               }}
             >
@@ -1090,16 +1121,16 @@ export default function TransactionsView({
                   {tx.payee}
                 </div>
                 <div style={s.meta}>
-                  <span style={{ color: '#94a3b8' }}>{tx.cat}</span>
+                  <span style={{ color: 'var(--text-secondary)' }}>{tx.cat}</span>
                   {tx.account && (
                     <>
-                      <span style={{ color: '#334155' }}>·</span>
+                      <span style={{ color: 'var(--text-tertiary)' }}>·</span>
                       <span>{tx.account}</span>
                     </>
                   )}
                   {tx.note && (
                     <>
-                      <span style={{ color: '#334155' }}>·</span>
+                      <span style={{ color: 'var(--text-tertiary)' }}>·</span>
                       <span>{tx.note}</span>
                     </>
                   )}
@@ -1190,8 +1221,8 @@ export default function TransactionsView({
         })}
         {filtered.length === 0 && (
           <div style={s.empty}>
-            <Search size={40} style={{ color: '#334155', marginBottom: 12 }} />
-            <p style={{ color: '#8b9ab0' }}>
+            <Search size={40} style={{ color: 'var(--text-tertiary)', marginBottom: 12 }} />
+            <p style={{ color: 'var(--text-tertiary)' }}>
               {transactions.length === 0 ? tr('transactions.noTransactions') : tr('app.filter')}
             </p>
           </div>

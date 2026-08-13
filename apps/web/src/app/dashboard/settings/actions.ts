@@ -13,9 +13,7 @@
 import { revalidatePath } from 'next/cache';
 import { apiFetch, ApiError } from '../../../lib/api-client';
 
-export type SettingsResult =
-  | { ok: true; message?: string }
-  | { ok: false; message: string };
+export type SettingsResult = { ok: true; message?: string } | { ok: false; message: string };
 
 export interface PreferencesInput {
   display_name: string;
@@ -26,9 +24,7 @@ export interface PreferencesInput {
   amount_privacy_default: boolean;
 }
 
-export async function savePreferences(
-  input: PreferencesInput,
-): Promise<SettingsResult> {
+export async function savePreferences(input: PreferencesInput): Promise<SettingsResult> {
   try {
     await apiFetch('/me/preferences', {
       method: 'PATCH',

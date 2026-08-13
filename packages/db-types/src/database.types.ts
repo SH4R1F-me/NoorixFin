@@ -1307,6 +1307,7 @@ export type Database = {
           status: string
           suspended_at: string | null
           suspended_reason: string | null
+          theme_preference: string
           timezone: string
           updated_at: string
           week_starts_on: number
@@ -1330,6 +1331,7 @@ export type Database = {
           status?: string
           suspended_at?: string | null
           suspended_reason?: string | null
+          theme_preference?: string
           timezone?: string
           updated_at?: string
           week_starts_on?: number
@@ -1353,6 +1355,7 @@ export type Database = {
           status?: string
           suspended_at?: string | null
           suspended_reason?: string | null
+          theme_preference?: string
           timezone?: string
           updated_at?: string
           week_starts_on?: number

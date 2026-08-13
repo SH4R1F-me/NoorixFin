@@ -37,7 +37,7 @@ function formatDate(iso: string) {
 const PLATFORM_COLOR: Record<string, string> = {
   web: '#38bdf8',
   ios: '#a3e635',
-  android: '#10b981',
+  android: 'var(--color-primary-500)',
 };
 
 export default function SessionsView({ devices }: { devices: UserDevice[] }) {
@@ -117,7 +117,7 @@ export default function SessionsView({ devices }: { devices: UserDevice[] }) {
               style={{
                 padding: '2rem',
                 textAlign: 'center',
-                color: '#8b9ab0',
+                color: 'var(--text-tertiary)',
                 fontSize: '0.8125rem',
               }}
             >
@@ -162,7 +162,13 @@ export default function SessionsView({ devices }: { devices: UserDevice[] }) {
                         marginBottom: 2,
                       }}
                     >
-                      <span style={{ fontSize: '0.9375rem', fontWeight: 600, color: '#f8fafc' }}>
+                      <span
+                        style={{
+                          fontSize: '0.9375rem',
+                          fontWeight: 600,
+                          color: 'var(--text-primary)',
+                        }}
+                      >
                         {device.device_name ??
                           `${device.platform.charAt(0).toUpperCase() + device.platform.slice(1)} Device`}
                       </span>
@@ -186,7 +192,7 @@ export default function SessionsView({ devices }: { devices: UserDevice[] }) {
                         flexWrap: 'wrap',
                         gap: '0.75rem',
                         fontSize: '0.75rem',
-                        color: '#8b9ab0',
+                        color: 'var(--text-tertiary)',
                       }}
                     >
                       {device.app_version && <span>v{device.app_version}</span>}
@@ -212,7 +218,14 @@ export default function SessionsView({ devices }: { devices: UserDevice[] }) {
         )}
       </div>
 
-      <p style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '1rem', maxWidth: 760 }}>
+      <p
+        style={{
+          fontSize: '0.75rem',
+          color: 'var(--text-tertiary)',
+          marginTop: '1rem',
+          maxWidth: 760,
+        }}
+      >
         Device tracking uses an opaque app-generated ID stored in your device — not an advertising
         ID or hardware serial. Revoking a session prevents it from making new requests but does not
         delete any financial data.
@@ -225,12 +238,12 @@ export default function SessionsView({ devices }: { devices: UserDevice[] }) {
 
 const s: Record<string, React.CSSProperties> = {
   hdr: { marginBottom: '1.5rem' },
-  title: { fontSize: '1.75rem', fontWeight: 800, color: '#f8fafc', margin: 0 },
-  sub: { fontSize: '0.8125rem', color: '#8b9ab0', margin: 0, marginTop: 2 },
+  title: { fontSize: '1.75rem', fontWeight: 800, color: 'var(--text-primary)', margin: 0 },
+  sub: { fontSize: '0.8125rem', color: 'var(--text-tertiary)', margin: 0, marginTop: 2 },
   sections: { display: 'flex', flexDirection: 'column', gap: '0.75rem', maxWidth: 760 },
   section: {
-    background: 'rgba(30,41,59,0.4)',
-    border: '1px solid #1e293b',
+    background: 'var(--bg-card)',
+    border: '1px solid var(--border-primary)',
     borderRadius: '1rem',
     overflow: 'hidden',
   },
@@ -240,9 +253,9 @@ const s: Record<string, React.CSSProperties> = {
     gap: '0.45rem',
     padding: '0.5rem 0.9rem',
     background: 'transparent',
-    border: '1px solid #334155',
+    border: '1px solid var(--border-primary)',
     borderRadius: '0.5rem',
-    color: '#94a3b8',
+    color: 'var(--text-secondary)',
     fontSize: '0.8125rem',
     cursor: 'pointer',
     fontFamily: 'inherit',
@@ -255,7 +268,7 @@ const s: Record<string, React.CSSProperties> = {
     background: 'transparent',
     border: '1px solid rgba(239,68,68,0.3)',
     borderRadius: '0.5rem',
-    color: '#f87171',
+    color: 'var(--color-error)',
     fontSize: '0.8125rem',
     cursor: 'pointer',
     fontFamily: 'inherit',
@@ -267,7 +280,7 @@ const s: Record<string, React.CSSProperties> = {
     borderRadius: '0.6rem',
     background: 'rgba(16,185,129,0.1)',
     border: '1px solid rgba(16,185,129,0.3)',
-    color: '#10b981',
+    color: 'var(--color-primary-500)',
     fontSize: '0.8125rem',
     maxWidth: 760,
   },
@@ -277,7 +290,7 @@ const s: Record<string, React.CSSProperties> = {
     borderRadius: '0.6rem',
     background: 'rgba(239,68,68,0.1)',
     border: '1px solid rgba(239,68,68,0.3)',
-    color: '#fca5a5',
+    color: 'var(--color-error)',
     fontSize: '0.8125rem',
     maxWidth: 760,
   },

@@ -121,7 +121,7 @@ export default function CommandPalette() {
             onMouseDown={(event) => event.stopPropagation()}
           >
             <div style={styles.inputRow}>
-              <Search size={20} color="#94a3b8" aria-hidden="true" />
+              <Search size={20} color="var(--text-secondary)" aria-hidden="true" />
               <input
                 ref={inputRef}
                 value={query}
@@ -172,7 +172,7 @@ export default function CommandPalette() {
                   ))
                 : QUICK_LINKS.map(({ title, subtitle, href, icon: Icon }) => (
                     <button key={href} type="button" onClick={() => go(href)} style={styles.result}>
-                      <Icon size={17} color="#10b981" aria-hidden="true" />
+                      <Icon size={17} color="var(--color-primary-500)" aria-hidden="true" />
                       <span style={styles.copy}>
                         <strong style={styles.title}>{title}</strong>
                         <small style={styles.subtitle}>{subtitle}</small>
@@ -200,17 +200,17 @@ const styles: Record<string, React.CSSProperties> = {
     gap: 8,
     padding: '0 10px',
     borderRadius: 9,
-    border: '1px solid #334155',
-    background: '#0f172a',
-    color: '#cbd5e1',
+    border: '1px solid var(--border-primary)',
+    background: 'var(--bg-primary)',
+    color: 'var(--text-primary)',
     cursor: 'pointer',
   },
   triggerText: { fontSize: 13 },
   kbd: {
     padding: '2px 5px',
     borderRadius: 4,
-    background: '#1e293b',
-    color: '#94a3b8',
+    background: 'var(--bg-card)',
+    color: 'var(--text-secondary)',
     fontSize: 11,
   },
   backdrop: {
@@ -227,8 +227,8 @@ const styles: Record<string, React.CSSProperties> = {
   dialog: {
     width: 'min(680px, 100%)',
     borderRadius: 14,
-    border: '1px solid #334155',
-    background: '#0f172a',
+    border: '1px solid var(--border-primary)',
+    background: 'var(--bg-primary)',
     boxShadow: '0 24px 80px rgba(0,0,0,.45)',
     overflow: 'hidden',
   },
@@ -237,27 +237,33 @@ const styles: Record<string, React.CSSProperties> = {
     alignItems: 'center',
     gap: 10,
     padding: '14px 16px',
-    borderBottom: '1px solid #1e293b',
+    borderBottom: '1px solid var(--border-primary)',
   },
   input: {
     flex: 1,
     border: 0,
     outline: 0,
     background: 'transparent',
-    color: '#f8fafc',
+    color: 'var(--text-primary)',
     fontSize: 16,
   },
-  close: { border: 0, background: 'transparent', color: '#94a3b8', cursor: 'pointer', padding: 4 },
+  close: {
+    border: 0,
+    background: 'transparent',
+    color: 'var(--text-secondary)',
+    cursor: 'pointer',
+    padding: 4,
+  },
   results: { padding: 8, maxHeight: '58vh', overflowY: 'auto' },
   heading: {
     margin: '4px 8px 8px',
-    color: '#64748b',
+    color: 'var(--text-tertiary)',
     fontSize: 11,
     fontWeight: 700,
     textTransform: 'uppercase',
     letterSpacing: '.08em',
   },
-  message: { margin: 0, padding: '22px 12px', color: '#94a3b8', textAlign: 'center' },
+  message: { margin: 0, padding: '22px 12px', color: 'var(--text-secondary)', textAlign: 'center' },
   result: {
     width: '100%',
     minHeight: 54,
@@ -268,18 +274,18 @@ const styles: Record<string, React.CSSProperties> = {
     borderRadius: 9,
     padding: '8px 10px',
     background: 'transparent',
-    color: '#94a3b8',
+    color: 'var(--text-secondary)',
     cursor: 'pointer',
     textAlign: 'left',
   },
   kind: {
     minWidth: 76,
-    color: '#10b981',
+    color: 'var(--color-primary-500)',
     fontSize: 11,
     textTransform: 'uppercase',
     fontWeight: 700,
   },
   copy: { flex: 1, display: 'grid', gap: 2 },
-  title: { color: '#f1f5f9', fontSize: 14, fontWeight: 600 },
-  subtitle: { color: '#94a3b8', fontSize: 12 },
+  title: { color: 'var(--text-primary)', fontSize: 14, fontWeight: 600 },
+  subtitle: { color: 'var(--text-secondary)', fontSize: 12 },
 };

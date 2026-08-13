@@ -161,10 +161,7 @@ export async function createGoal(input: {
   }
 }
 
-export async function deleteGoal(
-  workspaceId: string,
-  goalId: string,
-): Promise<PlanningResult> {
+export async function deleteGoal(workspaceId: string, goalId: string): Promise<PlanningResult> {
   try {
     await apiFetch(`/workspaces/${workspaceId}/goals/${goalId}`, { method: 'DELETE' });
     revalidatePlanning();

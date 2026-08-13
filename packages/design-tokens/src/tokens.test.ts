@@ -14,7 +14,16 @@
 import { describe, it, expect } from 'vitest';
 import { readFileSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
-import { cssVariables, toCssText, colors, semantic, spacing, spacingCss, motion } from './index';
+import {
+  cssVariables,
+  toCssText,
+  colors,
+  semantic,
+  semanticLight,
+  spacing,
+  spacingCss,
+  motion,
+} from './index';
 
 const REPO = join(__dirname, '..', '..', '..');
 const WEB_STYLESHEETS = [
@@ -25,7 +34,9 @@ const WEB_STYLESHEETS = [
 describe('token generation', () => {
   it('emits a :root block containing every variable', () => {
     const css = toCssText();
-    expect(css).toContain(':root {');
+    expect(css).toContain(':root, [data-theme="dark"] {');
+    expect(css).toContain('[data-theme="light"] {');
+    expect(css).toContain('@media (prefers-color-scheme: light)');
     for (const [name, value] of Object.entries(cssVariables())) {
       expect(css).toContain(`${name}: ${value};`);
     }
@@ -44,6 +55,8 @@ describe('token generation', () => {
     // e2e/accessibility.spec.ts, and this says so at the source.
     expect(semantic.textTertiary).toBe('#8b9ab0'); // 6.62:1 on bgPrimary
     expect(colors.primary[500]).toBe('#10b981'); // brand + focus ring
+    expect(semanticLight.textTertiary).toBe('#475569'); // 7.58:1 on white
+    expect(cssVariables('light')['--color-error']).toBe('#b91c1c');
   });
 
   it('keeps the default spring critically damped', () => {

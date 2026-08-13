@@ -10,14 +10,14 @@ import AccountsView, { type AccountItem } from './accounts-view';
 
 /** Icon/colour by subtype — presentation only, not stored in the ledger. */
 const LOOK: Record<string, { icon: string; color: string }> = {
-  CASH: { icon: '💵', color: '#10b981' },
-  BANK: { icon: '🏦', color: '#3b82f6' },
+  CASH: { icon: '💵', color: 'var(--color-primary-500)' },
+  BANK: { icon: '🏦', color: 'var(--color-transfer)' },
   MOBILE_WALLET: { icon: '📱', color: '#e2136e' },
   CREDIT_CARD: { icon: '💳', color: '#8b5cf6' },
-  LOAN: { icon: '🏠', color: '#f87171' },
+  LOAN: { icon: '🏠', color: 'var(--color-error)' },
   SAVINGS: { icon: '🛡️', color: '#06b6d4' },
-  CATEGORY: { icon: '🏷️', color: '#8b9ab0' },
-  SYSTEM: { icon: '⚙️', color: '#8b9ab0' },
+  CATEGORY: { icon: '🏷️', color: 'var(--text-tertiary)' },
+  SYSTEM: { icon: '⚙️', color: 'var(--text-tertiary)' },
 };
 
 export default async function AccountsPage() {
@@ -38,7 +38,7 @@ export default async function AccountsPage() {
       currency: a.currency_code,
       balance: a.balance_minor ?? 0,
       icon: LOOK[a.subtype]?.icon ?? '💼',
-      color: LOOK[a.subtype]?.color ?? '#8b9ab0',
+      color: LOOK[a.subtype]?.color ?? 'var(--text-tertiary)',
     }));
 
   return (

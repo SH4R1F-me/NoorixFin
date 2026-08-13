@@ -180,7 +180,7 @@ export default function DashboardShell({
                 <Icon
                   size={20}
                   style={{
-                    color: isActive ? '#10b981' : '#8b9ab0',
+                    color: isActive ? 'var(--color-primary-500)' : 'var(--text-tertiary)',
                     flexShrink: 0,
                   }}
                 />
@@ -188,7 +188,7 @@ export default function DashboardShell({
                   <span
                     style={{
                       ...styles.navLabel,
-                      color: isActive ? '#f8fafc' : '#94a3b8',
+                      color: isActive ? 'var(--text-primary)' : 'var(--text-secondary)',
                     }}
                   >
                     {t(item.key)}
@@ -233,7 +233,7 @@ export default function DashboardShell({
               href={donationUrl}
               target="_blank"
               rel="noopener noreferrer"
-              style={{ ...styles.footerBtn, color: '#f472b6', textDecoration: 'none' }}
+              style={{ ...styles.footerBtn, color: '#be185d', textDecoration: 'none' }}
             >
               <Heart size={18} />
               <span style={styles.footerBtnLabel}>{t('app.supportUs')}</span>
@@ -384,8 +384,8 @@ const styles: Record<string, React.CSSProperties> = {
     top: 0,
     left: 0,
     bottom: 0,
-    background: '#0f172a',
-    borderRight: '1px solid #1e293b',
+    background: 'var(--bg-primary)',
+    borderRight: '1px solid var(--border-primary)',
     display: 'flex',
     flexDirection: 'column',
     transition: 'width 250ms cubic-bezier(0.4, 0, 0.2, 1)',
@@ -400,7 +400,7 @@ const styles: Record<string, React.CSSProperties> = {
     alignItems: 'center',
     justifyContent: 'space-between',
     padding: '1.25rem 1rem',
-    borderBottom: '1px solid #1e293b',
+    borderBottom: '1px solid var(--border-primary)',
     minHeight: 64,
   },
   logoContainer: {
@@ -412,7 +412,7 @@ const styles: Record<string, React.CSSProperties> = {
     width: 40,
     height: 40,
     borderRadius: '0.625rem',
-    background: 'linear-gradient(135deg, #059669, #10b981)',
+    background: 'var(--color-primary-700)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
@@ -421,14 +421,14 @@ const styles: Record<string, React.CSSProperties> = {
   logoLabel: {
     fontSize: '1.25rem',
     fontWeight: 800,
-    color: '#f8fafc',
+    color: 'var(--text-primary)',
     whiteSpace: 'nowrap',
     letterSpacing: '-0.02em',
   },
   collapseBtn: {
-    background: 'rgba(255,255,255,0.05)',
-    border: '1px solid #1e293b',
-    color: '#8b9ab0',
+    background: 'var(--bg-card-hover)',
+    border: '1px solid var(--border-primary)',
+    color: 'var(--text-tertiary)',
     width: 28,
     height: 28,
     borderRadius: '0.375rem',
@@ -474,10 +474,10 @@ const styles: Record<string, React.CSSProperties> = {
     width: 3,
     height: 20,
     borderRadius: '0 3px 3px 0',
-    background: '#10b981',
+    background: 'var(--color-primary-500)',
   },
   sidebarFooter: {
-    borderTop: '1px solid #1e293b',
+    borderTop: '1px solid var(--border-primary)',
     padding: '0.75rem 0.5rem',
     display: 'flex',
     flexDirection: 'column',
@@ -491,7 +491,7 @@ const styles: Record<string, React.CSSProperties> = {
     background: 'transparent',
     border: 'none',
     borderRadius: '0.5rem',
-    color: '#8b9ab0',
+    color: 'var(--text-tertiary)',
     cursor: 'pointer',
     fontSize: '0.8125rem',
     fontFamily: 'inherit',
@@ -510,7 +510,7 @@ const styles: Record<string, React.CSSProperties> = {
     background: 'rgba(245, 158, 11, 0.1)',
     border: '1px solid rgba(245, 158, 11, 0.28)',
     borderRadius: '0.625rem',
-    color: '#fbbf24',
+    color: 'var(--color-warning)',
     cursor: 'pointer',
     fontSize: '0.8125rem',
     fontWeight: 600,
@@ -529,7 +529,7 @@ const styles: Record<string, React.CSSProperties> = {
     background: 'rgba(56,189,248,0.1)',
     border: '1px solid rgba(56,189,248,0.32)',
     borderRadius: '0.75rem',
-    color: '#7dd3fc',
+    color: 'var(--color-transfer)',
     fontSize: '0.875rem',
     marginBottom: '1rem',
   },
@@ -541,15 +541,15 @@ const styles: Record<string, React.CSSProperties> = {
     background: 'rgba(245,158,11,0.1)',
     border: '1px solid rgba(245,158,11,0.32)',
     borderRadius: '0.75rem',
-    color: '#fbbf24',
+    color: 'var(--color-warning)',
     fontSize: '0.875rem',
     marginBottom: '1rem',
   },
   versionFooter: {
     marginTop: '3rem',
     paddingTop: '1rem',
-    borderTop: '1px solid #1e293b',
-    color: '#8b9ab0',
+    borderTop: '1px solid var(--border-primary)',
+    color: 'var(--text-tertiary)',
     fontSize: '0.75rem',
   },
   notificationBell: {
@@ -560,9 +560,9 @@ const styles: Record<string, React.CSSProperties> = {
     width: 42,
     height: 42,
     borderRadius: '0.75rem',
-    border: '1px solid #334155',
-    background: '#0f172a',
-    color: '#cbd5e1',
+    border: '1px solid var(--border-primary)',
+    background: 'var(--bg-card)',
+    color: 'var(--text-secondary)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
@@ -577,28 +577,28 @@ const styles: Record<string, React.CSSProperties> = {
     height: 20,
     padding: '0 5px',
     borderRadius: 999,
-    background: '#10b981',
-    color: '#022c22',
+    background: 'var(--color-primary-500)',
+    color: 'var(--text-inverse)',
     fontSize: '0.6875rem',
     fontWeight: 800,
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    border: '2px solid #020617',
+    border: '2px solid var(--bg-primary)',
   },
   userSection: {
     display: 'flex',
     alignItems: 'center',
     gap: '0.75rem',
     padding: '0.75rem',
-    borderTop: '1px solid #1e293b',
+    borderTop: '1px solid var(--border-primary)',
     marginTop: '0.25rem',
   },
   avatar: {
     width: 32,
     height: 32,
     borderRadius: '50%',
-    background: 'linear-gradient(135deg, #059669, #10b981)',
+    background: 'var(--color-primary-700)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
@@ -616,14 +616,14 @@ const styles: Record<string, React.CSSProperties> = {
   userName: {
     fontSize: '0.8125rem',
     fontWeight: 500,
-    color: '#f8fafc',
+    color: 'var(--text-primary)',
     whiteSpace: 'nowrap',
     overflow: 'hidden',
     textOverflow: 'ellipsis',
   },
   userEmail: {
     fontSize: '0.6875rem',
-    color: '#8b9ab0',
+    color: 'var(--text-tertiary)',
     whiteSpace: 'nowrap',
     overflow: 'hidden',
     textOverflow: 'ellipsis',
@@ -631,7 +631,7 @@ const styles: Record<string, React.CSSProperties> = {
   logoutBtn: {
     background: 'transparent',
     border: 'none',
-    color: '#8b9ab0',
+    color: 'var(--text-tertiary)',
     cursor: 'pointer',
     padding: '0.25rem',
     display: 'flex',
@@ -641,19 +641,19 @@ const styles: Record<string, React.CSSProperties> = {
     flex: 1,
     transition: 'margin-left 250ms cubic-bezier(0.4, 0, 0.2, 1)',
     minHeight: '100vh',
-    background: '#0f172a',
+    background: 'var(--bg-primary)',
   },
   mobileHeader: {
     display: 'none',
     alignItems: 'center',
     gap: '0.75rem',
     padding: '1rem 1.5rem',
-    borderBottom: '1px solid #1e293b',
+    borderBottom: '1px solid var(--border-primary)',
   },
   menuBtn: {
     background: 'transparent',
     border: 'none',
-    color: '#94a3b8',
+    color: 'var(--text-secondary)',
     cursor: 'pointer',
     padding: '0.25rem',
     display: 'flex',

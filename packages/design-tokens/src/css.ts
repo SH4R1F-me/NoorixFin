@@ -21,6 +21,8 @@ import {
   materials,
   radiiCss,
   semantic,
+  semanticLight,
+  lightStatus,
   shadows,
   spacingCss,
   transitions,
@@ -29,8 +31,9 @@ import {
 } from './index';
 
 /** Every custom property the app defines, as `name → value`. */
-export function cssVariables(): Record<string, string> {
+export function cssVariables(theme: 'dark' | 'light' = 'dark'): Record<string, string> {
   const vars: Record<string, string> = {};
+  const roles = theme === 'light' ? semanticLight : semantic;
 
   for (const [step, value] of Object.entries(colors.primary)) {
     vars[`--color-primary-${step}`] = value;
@@ -45,6 +48,18 @@ export function cssVariables(): Record<string, string> {
   vars['--color-warning'] = colors.warning;
   vars['--color-error'] = colors.error;
   vars['--color-success'] = colors.success;
+
+  if (theme === 'light') {
+    vars['--color-primary-400'] = lightStatus.primary;
+    vars['--color-primary-500'] = lightStatus.primary;
+    vars['--color-primary-600'] = lightStatus.primary;
+    vars['--color-income'] = lightStatus.income;
+    vars['--color-expense'] = lightStatus.expense;
+    vars['--color-transfer'] = lightStatus.transfer;
+    vars['--color-warning'] = lightStatus.warning;
+    vars['--color-error'] = lightStatus.error;
+    vars['--color-success'] = lightStatus.success;
+  }
 
   vars['--font-ui'] = fontFamilies.ui;
   vars['--font-bangla'] = fontFamilies.bangla;
@@ -74,22 +89,23 @@ export function cssVariables(): Record<string, string> {
     vars[`--leading-${name}`] = String(value);
   }
 
-  vars['--bg-primary'] = semantic.bgPrimary;
-  vars['--bg-secondary'] = semantic.bgSecondary;
-  vars['--bg-tertiary'] = semantic.bgTertiary;
-  vars['--bg-card'] = semantic.bgCard;
-  vars['--bg-card-hover'] = semantic.bgCardHover;
-  vars['--bg-input'] = semantic.bgInput;
-  vars['--bg-glass'] = semantic.bgGlass;
+  vars['--bg-primary'] = roles.bgPrimary;
+  vars['--bg-secondary'] = roles.bgSecondary;
+  vars['--bg-tertiary'] = roles.bgTertiary;
+  vars['--bg-card'] = roles.bgCard;
+  vars['--bg-card-hover'] = roles.bgCardHover;
+  vars['--bg-input'] = roles.bgInput;
+  vars['--bg-glass'] = roles.bgGlass;
 
-  vars['--text-primary'] = semantic.textPrimary;
-  vars['--text-secondary'] = semantic.textSecondary;
-  vars['--text-tertiary'] = semantic.textTertiary;
-  vars['--text-inverse'] = semantic.textInverse;
+  vars['--text-primary'] = roles.textPrimary;
+  vars['--text-secondary'] = roles.textSecondary;
+  vars['--text-tertiary'] = roles.textTertiary;
+  vars['--text-inverse'] = roles.textInverse;
+  vars['--text-on-primary'] = theme === 'light' ? colors.neutral[0] : '#04120d';
 
-  vars['--border-primary'] = semantic.borderPrimary;
-  vars['--border-secondary'] = semantic.borderSecondary;
-  vars['--border-focus'] = semantic.borderFocus;
+  vars['--border-primary'] = roles.borderPrimary;
+  vars['--border-secondary'] = roles.borderSecondary;
+  vars['--border-focus'] = roles.borderFocus;
 
   vars['--sidebar-width'] = layout.sidebarWidth;
   vars['--sidebar-collapsed-width'] = layout.sidebarCollapsedWidth;
@@ -113,9 +129,15 @@ export function cssVariables(): Record<string, string> {
 
 /** The `:root { … }` block, ready to write to a stylesheet. */
 export function toCssText(): string {
-  const entries = Object.entries(cssVariables())
-    .map(([name, value]) => `  ${name}: ${value};`)
-    .join('\n');
+  const block = (selector: string, theme: 'dark' | 'light', indent = '') => {
+    const entries = Object.entries(cssVariables(theme))
+      .map(([name, value]) => `  ${name}: ${value};`)
+      .join('\n');
+    return `${indent}${selector} {\n${entries
+      .split('\n')
+      .map((line) => `${indent}${line}`)
+      .join('\n')}\n${indent}}`;
+  };
 
   return [
     '/*',
@@ -128,8 +150,12 @@ export function toCssText(): string {
     ' * values here and the ones in the tokens package silently disagreed, and',
     ' * three different greens shipped at once.',
     ' */',
-    ':root {',
-    entries,
+    block(':root, [data-theme="dark"]', 'dark'),
+    '',
+    block('[data-theme="light"]', 'light'),
+    '',
+    '@media (prefers-color-scheme: light) {',
+    block(':root:not([data-theme])', 'light', '  '),
     '}',
     '',
   ].join('\n');

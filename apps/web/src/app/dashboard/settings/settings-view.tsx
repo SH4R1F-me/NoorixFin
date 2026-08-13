@@ -27,6 +27,9 @@ import {
   Trash2,
   Unlink,
   User,
+  Monitor,
+  Sun,
+  Moon,
 } from 'lucide-react';
 import { savePreferences, requestAccountDeletion } from './actions';
 import { changePassword, linkGoogleIdentity, signOut, unlinkIdentity } from '../../auth/actions';
@@ -39,6 +42,8 @@ import { useLocale } from '../../../lib/i18n/locale-provider';
 import type { SessionProfile } from '../../../lib/session';
 import type { MfaState } from '../../../lib/supabase/server';
 import MfaPanel from './mfa-panel';
+import { useTheme } from '../../../lib/theme/theme-provider';
+import type { ThemePreference } from '../../../lib/theme/preference';
 
 const TIMEZONES = [
   'Asia/Dhaka',
@@ -73,6 +78,7 @@ export default function SettingsView({
   // Shared locale: choosing a language here changes the whole app immediately
   // and persists, instead of only affecting this form's own copy (DEC-021).
   const { locale, setLocale, t } = useLocale();
+  const { preference: theme, setPreference: setTheme, isPending: themePending } = useTheme();
   const [timezone, setTimezone] = useState(profile.timezone);
   const [currency, setCurrency] = useState(profile.base_currency);
   const [weekStart, setWeekStart] = useState(profile.week_starts_on);
@@ -147,12 +153,46 @@ export default function SettingsView({
               style={{ ...s.select, minWidth: 220 }}
             />
           </div>
+          <div style={s.row}>
+            <div style={s.rowLabel}>
+              <span id="pref-appearance" style={s.rowTitle}>
+                {t('settings.appearance')}
+              </span>
+              <span style={s.rowDesc}>{t('settings.appearanceBody')}</span>
+            </div>
+            <div
+              style={s.toggle}
+              role="group"
+              aria-labelledby="pref-appearance"
+              aria-busy={themePending}
+            >
+              {(
+                [
+                  ['SYSTEM', Monitor, 'settings.themeSystem'],
+                  ['LIGHT', Sun, 'settings.themeLight'],
+                  ['DARK', Moon, 'settings.themeDark'],
+                ] as const
+              ).map(([value, Icon, label]) => (
+                <button
+                  key={value}
+                  type="button"
+                  onClick={() => setTheme(value as ThemePreference)}
+                  aria-pressed={theme === value}
+                  disabled={themePending}
+                  style={{ ...s.toggleBtn, ...(theme === value ? s.toggleActive : {}) }}
+                >
+                  <Icon size={13} aria-hidden="true" />
+                  {t(label)}
+                </button>
+              ))}
+            </div>
+          </div>
           <div style={{ ...s.row, borderBottom: 'none' }}>
             <div style={s.rowLabel}>
               <span style={s.rowTitle}>{t('auth.email')}</span>
               <span style={s.rowDesc}>{t('settings.emailChangeUnavailable')}</span>
             </div>
-            <span style={{ ...s.rowDesc, color: '#94a3b8' }}>{profile.email}</span>
+            <span style={{ ...s.rowDesc, color: 'var(--text-secondary)' }}>{profile.email}</span>
           </div>
         </section>
 
@@ -292,7 +332,7 @@ export default function SettingsView({
                   {t('settings.disconnect')}
                 </button>
               ) : (
-                <span style={{ ...s.rowDesc, color: '#8b9ab0' }}>
+                <span style={{ ...s.rowDesc, color: 'var(--text-tertiary)' }}>
                   {t('settings.onlySignInMethod')}
                 </span>
               )}
@@ -444,7 +484,7 @@ export default function SettingsView({
         {/* ── Your data (§15.3, DATA-01) ──────────────────── */}
         <section style={s.section}>
           <div style={s.sectionHeader}>
-            <Download size={18} style={{ color: '#38bdf8' }} />
+            <Download size={18} style={{ color: 'var(--color-transfer)' }} />
             <span style={s.sectionTitle}>{t('settings.exportData')}</span>
           </div>
 
@@ -518,8 +558,10 @@ export default function SettingsView({
         {/* ── Danger zone ─────────────────────────────────── */}
         <section style={s.dangerSection}>
           <div style={{ ...s.sectionHeader, borderBottom: '1px solid rgba(239,68,68,0.15)' }}>
-            <Trash2 size={18} style={{ color: '#f87171' }} />
-            <span style={{ ...s.sectionTitle, color: '#f87171' }}>{t('settings.dangerZone')}</span>
+            <Trash2 size={18} style={{ color: 'var(--color-error)' }} />
+            <span style={{ ...s.sectionTitle, color: 'var(--color-error)' }}>
+              {t('settings.dangerZone')}
+            </span>
           </div>
 
           <div
@@ -533,7 +575,7 @@ export default function SettingsView({
           >
             <div style={s.rowLabel}>
               <span style={s.rowTitle}>{t('settings.deleteAccount')}</span>
-              <span style={s.rowDesc}>
+              <span style={{ ...s.rowDesc, color: 'var(--text-secondary)' }}>
                 Your account is locked immediately and everything is permanently erased after 30
                 days. Nothing is deleted during that window — an operator can restore the account
                 until the grace period ends.
@@ -674,41 +716,41 @@ function GoogleMark() {
 
 const s: Record<string, React.CSSProperties> = {
   hdr: { marginBottom: '2rem' },
-  title: { fontSize: '1.75rem', fontWeight: 800, color: '#f8fafc', margin: 0 },
-  sub: { fontSize: '0.8125rem', color: '#8b9ab0', margin: 0, marginTop: 2 },
+  title: { fontSize: '1.75rem', fontWeight: 800, color: 'var(--text-primary)', margin: 0 },
+  sub: { fontSize: '0.8125rem', color: 'var(--text-tertiary)', margin: 0, marginTop: 2 },
   sections: { display: 'flex', flexDirection: 'column', gap: '1.5rem', maxWidth: 760 },
   section: {
-    background: 'rgba(30,41,59,0.4)',
-    border: '1px solid #1e293b',
+    background: 'var(--bg-card)',
+    border: '1px solid var(--border-primary)',
     borderRadius: '1rem',
     overflow: 'hidden',
   },
   sectionHeader: {
     padding: '1rem 1.25rem',
-    borderBottom: '1px solid #1e293b',
+    borderBottom: '1px solid var(--border-primary)',
     display: 'flex',
     alignItems: 'center',
     gap: '0.625rem',
   },
-  sectionTitle: { fontSize: '0.9375rem', fontWeight: 700, color: '#f8fafc' },
-  sectionIcon: { color: '#10b981' },
+  sectionTitle: { fontSize: '0.9375rem', fontWeight: 700, color: 'var(--text-primary)' },
+  sectionIcon: { color: 'var(--color-primary-500)' },
   row: {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'space-between',
     padding: '1rem 1.25rem',
-    borderBottom: '1px solid rgba(30,41,59,0.5)',
+    borderBottom: '1px solid var(--border-primary)',
     gap: '1rem',
   },
   rowLabel: { display: 'flex', flexDirection: 'column', gap: 2 },
-  rowTitle: { fontSize: '0.875rem', fontWeight: 500, color: '#f8fafc' },
-  rowDesc: { fontSize: '0.75rem', color: '#8b9ab0', lineHeight: 1.5 },
+  rowTitle: { fontSize: '0.875rem', fontWeight: 500, color: 'var(--text-primary)' },
+  rowDesc: { fontSize: '0.75rem', color: 'var(--text-tertiary)', lineHeight: 1.5 },
   select: {
     padding: '0.5rem 0.75rem',
-    background: 'rgba(15,23,42,0.6)',
-    border: '1px solid #334155',
+    background: 'var(--bg-input)',
+    border: '1px solid var(--border-primary)',
     borderRadius: '0.5rem',
-    color: '#f8fafc',
+    color: 'var(--text-primary)',
     fontSize: '0.8125rem',
     fontFamily: 'inherit',
     outline: 'none',
@@ -716,8 +758,8 @@ const s: Record<string, React.CSSProperties> = {
   },
   toggle: {
     display: 'flex',
-    background: 'rgba(15,23,42,0.6)',
-    border: '1px solid #334155',
+    background: 'var(--bg-input)',
+    border: '1px solid var(--border-primary)',
     borderRadius: '0.5rem',
     overflow: 'hidden',
   },
@@ -725,7 +767,7 @@ const s: Record<string, React.CSSProperties> = {
     padding: '0.375rem 0.75rem',
     background: 'transparent',
     border: 'none',
-    color: '#94a3b8',
+    color: 'var(--text-secondary)',
     fontSize: '0.8125rem',
     cursor: 'pointer',
     fontFamily: 'inherit',
@@ -733,14 +775,17 @@ const s: Record<string, React.CSSProperties> = {
     alignItems: 'center',
     gap: '0.375rem',
   },
-  toggleActive: { background: 'rgba(16,185,129,0.15)', color: '#10b981' },
+  toggleActive: {
+    background: 'color-mix(in srgb, var(--color-primary-500) 14%, transparent)',
+    color: 'var(--color-primary-500)',
+  },
   saveBar: { display: 'flex', justifyContent: 'flex-end', marginTop: '1.5rem', maxWidth: 760 },
   saveBtn: {
     display: 'flex',
     alignItems: 'center',
     gap: '0.5rem',
     padding: '0.75rem 2rem',
-    background: 'linear-gradient(135deg,#059669,#10b981)',
+    background: 'var(--color-primary-700)',
     border: 'none',
     borderRadius: '0.75rem',
     color: 'white',
@@ -758,7 +803,7 @@ const s: Record<string, React.CSSProperties> = {
     background: 'rgba(16,185,129,0.12)',
     border: '1px solid rgba(16,185,129,0.35)',
     borderRadius: '0.5rem',
-    color: '#10b981',
+    color: 'var(--color-primary-500)',
     fontSize: '0.8125rem',
     fontWeight: 600,
     cursor: 'pointer',
@@ -768,17 +813,17 @@ const s: Record<string, React.CSSProperties> = {
   ghostBtn: {
     padding: '0.5rem 0.9rem',
     background: 'transparent',
-    border: '1px solid #334155',
+    border: '1px solid var(--border-primary)',
     borderRadius: '0.5rem',
-    color: '#94a3b8',
+    color: 'var(--text-secondary)',
     fontSize: '0.8125rem',
     cursor: 'pointer',
     fontFamily: 'inherit',
   },
   notConfigured: {
     fontSize: '0.75rem',
-    color: '#8b9ab0',
-    border: '1px dashed #334155',
+    color: 'var(--text-tertiary)',
+    border: '1px dashed var(--border-primary)',
     borderRadius: '0.5rem',
     padding: '0.4rem 0.7rem',
     whiteSpace: 'nowrap',
@@ -797,7 +842,7 @@ const s: Record<string, React.CSSProperties> = {
     background: 'transparent',
     border: '1px solid rgba(239,68,68,0.3)',
     borderRadius: '0.5rem',
-    color: '#f87171',
+    color: 'var(--color-error)',
     fontSize: '0.8125rem',
     cursor: 'pointer',
     fontFamily: 'inherit',
@@ -811,7 +856,7 @@ const s: Record<string, React.CSSProperties> = {
     background: 'rgba(239,68,68,0.08)',
     border: '1px solid rgba(239,68,68,0.25)',
     borderRadius: '0.6rem',
-    color: '#fca5a5',
+    color: 'var(--color-error)',
     fontSize: '0.75rem',
     lineHeight: 1.55,
   },
@@ -821,7 +866,7 @@ const s: Record<string, React.CSSProperties> = {
     borderRadius: '0.6rem',
     background: 'rgba(16,185,129,0.1)',
     border: '1px solid rgba(16,185,129,0.3)',
-    color: '#10b981',
+    color: 'var(--color-success)',
     fontSize: '0.8125rem',
     maxWidth: 760,
   },
@@ -831,7 +876,7 @@ const s: Record<string, React.CSSProperties> = {
     borderRadius: '0.6rem',
     background: 'rgba(239,68,68,0.1)',
     border: '1px solid rgba(239,68,68,0.3)',
-    color: '#fca5a5',
+    color: 'var(--color-error)',
     fontSize: '0.8125rem',
     maxWidth: 760,
   },

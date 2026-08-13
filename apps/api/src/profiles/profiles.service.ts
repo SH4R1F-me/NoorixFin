@@ -65,6 +65,7 @@ export class ProfilesService {
         base_currency: 'BDT',
         week_starts_on: 0,
         amount_privacy_default: false,
+        theme_preference: 'SYSTEM',
         // Was 'PENDING', which is not in profiles_onboarding_status_check —
         // this insert could only ever have failed with a 23514. It is reachable
         // when handle_new_user() did not run (a user row created outside the
@@ -125,6 +126,8 @@ export class ProfilesService {
       updatePayload.amount_privacy_default = dto.amount_privacy_default;
     if (dto.display_name !== undefined)
       updatePayload.display_name = dto.display_name;
+    if (dto.theme_preference !== undefined)
+      updatePayload.theme_preference = dto.theme_preference;
 
     if (Object.keys(updatePayload).length === 0) {
       return this.getOrCreateProfile(userId, '', accessToken);
