@@ -1932,6 +1932,51 @@
       }
     },
     "/v1/workspaces/{workspaceId}/recurring/{id}": {
+      "patch": {
+        "operationId": "PlanningController_updateRule_v1",
+        "parameters": [
+          {
+            "name": "workspaceId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateRecurringRuleDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "supabase-auth": []
+          }
+        ],
+        "summary": "Pause or resume a recurring rule",
+        "tags": [
+          "Planning"
+        ]
+      },
       "delete": {
         "operationId": "PlanningController_deleteRule_v1",
         "parameters": [
@@ -5041,6 +5086,22 @@
           "amount_minor",
           "frequency",
           "next_occurrence"
+        ]
+      },
+      "UpdateRecurringRuleDto": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "ACTIVE",
+              "PAUSED"
+            ],
+            "description": "Pause or resume future processing without deleting the template"
+          }
+        },
+        "required": [
+          "status"
         ]
       },
       "EnableTracingDto": {

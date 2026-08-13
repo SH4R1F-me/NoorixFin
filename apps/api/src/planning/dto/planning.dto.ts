@@ -335,6 +335,16 @@ export class CreateRecurringRuleDto {
   behavior?: 'REMIND_ONLY' | 'AUTO_CREATE_DRAFT';
 }
 
+export class UpdateRecurringRuleDto {
+  @ApiProperty({
+    enum: ['ACTIVE', 'PAUSED'],
+    description:
+      'Pause or resume future processing without deleting the template',
+  })
+  @IsIn(['ACTIVE', 'PAUSED'])
+  status!: 'ACTIVE' | 'PAUSED';
+}
+
 export class ReportRangeDto {
   @ApiPropertyOptional({
     example: '2026-01-01',

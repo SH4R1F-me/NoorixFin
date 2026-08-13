@@ -39,6 +39,7 @@ import {
   CreateCalendarEventDto,
   CreateGoalDto,
   CreateRecurringRuleDto,
+  UpdateRecurringRuleDto,
   UpdateCalendarEventDto,
   UpdateGoalDto,
   UpsertBudgetDto,
@@ -274,6 +275,22 @@ export class PlanningController {
       workspaceId,
       user.id,
       req.accessToken,
+      dto,
+    );
+  }
+
+  @Patch('recurring/:id')
+  @ApiOperation({ summary: 'Pause or resume a recurring rule' })
+  updateRule(
+    @Param('workspaceId') workspaceId: string,
+    @Param('id') ruleId: string,
+    @Req() req: AuthedRequest,
+    @Body() dto: UpdateRecurringRuleDto,
+  ) {
+    return this.planning.updateRecurringRule(
+      workspaceId,
+      req.accessToken,
+      ruleId,
       dto,
     );
   }

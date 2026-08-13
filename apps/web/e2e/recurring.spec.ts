@@ -58,7 +58,7 @@ test.describe('recurring rules', () => {
     await signIn(page);
     const before = await transactionPayees(page);
 
-    await page.goto('/dashboard/calendar');
+    await page.goto('/dashboard/recurring');
     // By id, not by name: the empty state's own heading also matches
     // /recurring rules/i, and matching both is a strict-mode failure about the
     // selector rather than about the panel.
@@ -91,7 +91,7 @@ test.describe('recurring rules', () => {
 
   test('the rule reads as a reminder, never as an automatic payment', async ({ page }) => {
     await signIn(page);
-    await page.goto('/dashboard/calendar');
+    await page.goto('/dashboard/recurring');
     await expect(page.locator('body')).toContainText('Rent', { timeout: 15_000 });
 
     // Wording is the feature. "Automatic payment" here would be a lie the
@@ -101,11 +101,23 @@ test.describe('recurring rules', () => {
     await expect(page.locator('body')).not.toContainText(/automatic payment/i);
   });
 
+  test('a rule can be paused and resumed without deleting it', async ({ page }) => {
+    await signIn(page);
+    await page.goto('/dashboard/recurring');
+    await page.getByRole('button', { name: /pause rule: Rent/i }).click();
+    await expect(page.getByText(/recurring rule paused/i)).toBeVisible({ timeout: 20_000 });
+    await expect(page.getByText('Paused', { exact: true })).toBeVisible();
+
+    await page.getByRole('button', { name: /resume rule: Rent/i }).click();
+    await expect(page.getByText(/recurring rule resumed/i)).toBeVisible({ timeout: 20_000 });
+    await expect(page.getByRole('button', { name: /pause rule: Rent/i })).toBeVisible();
+  });
+
   test('deleting a rule removes the reminder and no transaction', async ({ page }) => {
     await signIn(page);
     const transactionsBefore = await transactionPayees(page);
 
-    await page.goto('/dashboard/calendar');
+    await page.goto('/dashboard/recurring');
     await page.getByRole('button', { name: /delete rule: Rent/i }).click();
     await expect(page.getByText(/recurring rule deleted/i)).toBeVisible({ timeout: 20_000 });
 

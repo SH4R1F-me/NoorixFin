@@ -60,6 +60,7 @@ function revalidatePlanning() {
   revalidatePath('/dashboard');
   revalidatePath('/dashboard/budgets');
   revalidatePath('/dashboard/calendar');
+  revalidatePath('/dashboard/recurring');
   revalidatePath('/dashboard/goals');
   revalidatePath('/dashboard/reports');
 }
@@ -371,6 +372,23 @@ export async function deleteRecurringRule(
   try {
     await apiFetch(`/workspaces/${workspaceId}/recurring/${ruleId}`, {
       method: 'DELETE',
+    });
+    revalidatePlanning();
+    return { ok: true };
+  } catch (error) {
+    return fail(error);
+  }
+}
+
+export async function setRecurringRuleStatus(
+  workspaceId: string,
+  ruleId: string,
+  status: 'ACTIVE' | 'PAUSED',
+): Promise<PlanningResult> {
+  try {
+    await apiFetch(`/workspaces/${workspaceId}/recurring/${ruleId}`, {
+      method: 'PATCH',
+      body: { status },
     });
     revalidatePlanning();
     return { ok: true };

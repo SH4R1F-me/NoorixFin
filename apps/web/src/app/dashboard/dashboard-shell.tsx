@@ -27,6 +27,7 @@ import {
   PlugZap,
   Bell,
   Upload,
+  Repeat2,
 } from 'lucide-react';
 import BroadcastBanner from '../../components/broadcast-banner';
 import CommandPalette from './command-palette';
@@ -52,6 +53,7 @@ const NAV_ITEMS = [
   { id: 'categories', key: 'categories.title', icon: Tags, href: '/dashboard/categories' },
   { id: 'budgets', key: 'nav.budgets', icon: PiggyBank, href: '/dashboard/budgets' },
   { id: 'calendar', key: 'nav.calendar', icon: Calendar, href: '/dashboard/calendar' },
+  { id: 'recurring', key: 'nav.recurring', icon: Repeat2, href: '/dashboard/recurring' },
   { id: 'goals', key: 'nav.goals', icon: Target, href: '/dashboard/goals' },
   { id: 'reports', key: 'nav.reports', icon: BarChart3, href: '/dashboard/reports' },
   { id: 'import', key: 'nav.importExport', icon: Upload, href: '/dashboard/import' },

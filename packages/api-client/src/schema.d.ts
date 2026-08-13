@@ -710,7 +710,8 @@ export interface paths {
         delete: operations["PlanningController_deleteRule_v1"];
         options?: never;
         head?: never;
-        patch?: never;
+        /** Pause or resume a recurring rule */
+        patch: operations["PlanningController_updateRule_v1"];
         trace?: never;
     };
     "/v1/workspaces/{workspaceId}/reports/categories": {
@@ -2081,6 +2082,13 @@ export interface components {
             /** @enum {string} */
             behavior?: "REMIND_ONLY" | "AUTO_CREATE_DRAFT";
         };
+        UpdateRecurringRuleDto: {
+            /**
+             * @description Pause or resume future processing without deleting the template
+             * @enum {string}
+             */
+            status: "ACTIVE" | "PAUSED";
+        };
         EnableTracingDto: {
             /**
              * @description How long to trace for. Clamped server-side to at most 60 minutes.
@@ -3399,6 +3407,30 @@ export interface operations {
             cookie?: never;
         };
         requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    PlanningController_updateRule_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                workspaceId: string;
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateRecurringRuleDto"];
+            };
+        };
         responses: {
             200: {
                 headers: {

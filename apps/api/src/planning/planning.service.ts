@@ -29,6 +29,7 @@ import type {
   CreateCalendarEventDto,
   CreateGoalDto,
   CreateRecurringRuleDto,
+  UpdateRecurringRuleDto,
   UpdateCalendarEventDto,
   UpdateGoalDto,
   UpsertBudgetDto,
@@ -604,6 +605,23 @@ export class PlanningService {
     if (error) this.fail(error, 'Recurring rule');
     this.assertDeleted(data, 'Recurring rule');
     return { deleted: true };
+  }
+
+  async updateRecurringRule(
+    workspaceId: string,
+    accessToken: string,
+    ruleId: string,
+    dto: UpdateRecurringRuleDto,
+  ) {
+    const { data, error } = await this.client(accessToken)
+      .from('recurring_rules')
+      .update({ status: dto.status })
+      .eq('id', ruleId)
+      .eq('workspace_id', workspaceId)
+      .select()
+      .single();
+    if (error) this.fail(error, 'Recurring rule');
+    return data;
   }
 
   // ── Reports ────────────────────────────────────────────────────────────────

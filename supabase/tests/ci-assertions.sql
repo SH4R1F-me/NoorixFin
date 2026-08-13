@@ -539,5 +539,37 @@ BEGIN
 END;
 $$;
 
+-- ── Recurring management integrity (Phase 5) ───────────────────────────────
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint
+     WHERE conrelid = 'public.recurring_rules'::regclass
+       AND conname = 'recurring_rules_name_not_blank'
+  ) THEN
+    RAISE EXCEPTION 'RECUR-01 FAILED: blank recurring-rule names are not constrained';
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint
+     WHERE conrelid = 'public.recurring_rules'::regclass
+       AND conname = 'recurring_rules_date_window'
+  ) THEN
+    RAISE EXCEPTION 'RECUR-02 FAILED: recurring date windows are not constrained';
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_indexes
+     WHERE schemaname = 'public'
+       AND tablename = 'recurring_rules'
+       AND indexname = 'idx_recurring_workspace_status'
+  ) THEN
+    RAISE EXCEPTION 'RECUR-03 FAILED: recurring management index is missing';
+  END IF;
+
+  RAISE NOTICE '   recurring-rule integrity and management index hold';
+END;
+$$;
+
 \echo ''
 \echo '✓ All CI invariants hold.'

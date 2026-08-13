@@ -54,6 +54,7 @@
     "accounts": "Accounts",
     "budgets": "Budgets",
     "calendar": "Calendar & Bills",
+    "recurring": "Recurring",
     "goals": "Goals & Debts",
     "reports": "Reports",
     "importExport": "Import & Export",
@@ -326,6 +327,15 @@
     "paused": "Paused",
     "ended": "Ended",
     "ruleDeleteNote": "Deletes the reminder only. Transactions it already created are not affected."
+  },
+  "recurring": {
+    "schedule": "Future schedule",
+    "summary": "Recurring rule summary",
+    "active": "Active",
+    "pause": "Pause rule",
+    "resume": "Resume rule",
+    "rulePaused": "Recurring rule paused.",
+    "ruleResumed": "Recurring rule resumed."
   },
   "reports": {
     "title": "Reports",

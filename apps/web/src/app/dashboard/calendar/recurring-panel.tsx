@@ -26,10 +26,14 @@
  */
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
-import { CalendarClock, Info, Loader2, Plus, Repeat, Trash2, X } from 'lucide-react';
+import { CalendarClock, Info, Loader2, Pause, Play, Plus, Repeat, Trash2, X } from 'lucide-react';
 import { useLocale } from '../../../lib/i18n/locale-provider';
 import type { RecurringRuleRow } from '../../../lib/workspace';
-import { createRecurringRule, deleteRecurringRule } from '../planning-actions';
+import {
+  createRecurringRule,
+  deleteRecurringRule,
+  setRecurringRuleStatus,
+} from '../planning-actions';
 import { EmptyState, field, money } from '../planning-ui';
 
 type Frequency = 'DAILY' | 'WEEKLY' | 'MONTHLY' | 'YEARLY';
@@ -383,6 +387,33 @@ export default function RecurringPanel({
               <span style={styles.rowAmount}>
                 {money(rule.amount_minor, rule.currency_code || currency, locale)}
               </span>
+              {rule.status !== 'ENDED' && (
+                <button
+                  type="button"
+                  disabled={pending}
+                  onClick={() =>
+                    mutate(
+                      () =>
+                        setRecurringRuleStatus(
+                          workspaceId,
+                          rule.id,
+                          rule.status === 'ACTIVE' ? 'PAUSED' : 'ACTIVE',
+                        ),
+                      t(
+                        rule.status === 'ACTIVE' ? 'recurring.rulePaused' : 'recurring.ruleResumed',
+                      ),
+                    )
+                  }
+                  style={field.ghost}
+                  aria-label={`${t(rule.status === 'ACTIVE' ? 'recurring.pause' : 'recurring.resume')}: ${rule.name}`}
+                >
+                  {rule.status === 'ACTIVE' ? (
+                    <Pause size={14} aria-hidden="true" />
+                  ) : (
+                    <Play size={14} aria-hidden="true" />
+                  )}
+                </button>
+              )}
               <button
                 type="button"
                 disabled={pending}
