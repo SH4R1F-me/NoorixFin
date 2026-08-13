@@ -652,14 +652,9 @@ already enrolled. Recorded in `supabase/config.toml` above the provider block.
 
 ---
 
-## DEC-025: What "enterprise-grade" means here — OPEN, awaiting the owner
+## DEC-025: "Enterprise-grade" means enterprise quality for individuals and households
 
-**Date raised:** 2026-08-08 (enterprise audit) · **Status: PROPOSED — NOT RATIFIED**
-
-> This entry exists to stop a drift, not to record a choice. **The owner has not
-> answered.** Nothing below has been decided; the working assumption is stated so
-> that Phases 0–5 could proceed, and it is labelled as an assumption everywhere
-> it has consequences.
+**Date raised:** 2026-08-08 (enterprise audit) · **Ratified:** 2026-08-14
 
 `audit_and_development.md` asked for the system to be elevated to
 "enterprise-grade." That phrase resolves two different ways here, and the two
@@ -681,21 +676,20 @@ free tier's storage; an SLA is a paid-infrastructure commitment by definition.
 Reading B is therefore not a backlog of features — it is an amendment to DEC-011
 and to the product's public promise.
 
-**Working assumption (not a decision): Reading A.** The audit and the Phase 0–5
-roadmap are written for it. Every Reading-B item is tagged `[B-only]` and
-quarantined in Phase 6 so it can be dropped without unpicking anything else.
+**Decision: Reading A.** NoorixFin remains a 100% free, open-source,
+self-hostable personal and family-finance platform. "Family" describes the
+household's finances and planning model; it does not introduce shared account
+membership or a SaaS tenant model. Each workspace therefore retains one owner.
+Rigour, observability, security, accessibility, reliability, backup discipline,
+and operational transparency remain enterprise-quality requirements.
 
-**What is genuinely blocked on the answer.** Only Phase 6 — the `OWNER`-only
-role check in `workspace_members`, the invitation flow, and the RLS rewrite that
-multi-member workspaces require. Phases 0–5 are identical under both readings,
-which is why work proceeded without an answer.
+**Consequence.** Phase 6 and every `[B-only]` item are removed from the execution
+roadmap: roles beyond `OWNER`, workspace invitations, member-permission UI,
+operator workspace management, SSO/SAML/SCIM, webhooks aimed at commercial
+integrations, contractual retention, SLAs, and billing will not be built.
+DEC-011 and the public promise remain unchanged.
 
-**To close this:** the owner picks A or B, this entry is rewritten as a decision
-with that rationale, and its status becomes Confirmed. If B, DEC-011 must be
-amended in the same commit rather than left contradicting it.
-
-**Status:** **OPEN.** Assumed-A for planning purposes only. No code depends on
-this entry today.
+**Status:** **Confirmed — Reading A selected by the owner.**
 
 ---
 

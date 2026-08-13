@@ -185,11 +185,11 @@ different roadmaps:
   SSO, contractual retention, SLAs, and a billing surface — which means a paid
   tier, which changes the product's public promise.
 
-**This document is written for Reading A**, with Reading B items marked
-`[B-only]` and quarantined into Phase 6 so they can be dropped without
-unravelling anything else. If you want Reading B, say so and Phase 6 moves
-forward and grows — but it should be a decision recorded as a `DEC-0xx`, not a
-drift.
+**Reading A was ratified on 2026-08-14** (DEC-025). Reading B items marked
+`[B-only]` and the whole of Phase 6 are permanently excluded from this roadmap.
+Household finance remains a first-class use case under a single workspace
+owner; shared tenancy, commercial billing, and paid SaaS constraints are not
+part of NoorixFin.
 
 ## 1.1 Gap register
 
@@ -908,7 +908,7 @@ PUT    /v1/admin/releases/mobile
 | P0.1 Port drift | ✅ | Converged on **3001**, not 8080 as this document originally proposed — see the note below |
 | P0.2 Stale audit table | ✅ | `memory/MASTER_PLAN.md` refreshed against the live tree |
 | P0.3 Migration drift | ✅ | `pnpm db:check-drift`, in CI; proven to fail on an unapplied migration *and* a mis-named file |
-| P0.4 Scope decision | ✅ recorded, ❗**still open** | `DEC-025` — written up as unratified, because the owner has not answered |
+| P0.4 Scope decision | ✅ ratified | `DEC-025` — Reading A; free, open-source, self-hostable personal/household finance |
 | P1.1 Security headers | ✅ | Nonce CSP + 7 headers; 6 e2e assertions |
 | P1.2 Error tracking / APM | ✅ | `@noorixfin/observability` — release tagging, stable fingerprints, redaction, W3C trace context; 23 tests; verified live against `system_events` |
 | P1.3 Generated API client | ✅ | `openapi.json` (51 paths) → `schema.d.ts`; `check:fresh` in CI, proven to fail on a new route |
@@ -921,7 +921,7 @@ PUT    /v1/admin/releases/mobile
 e2e · lint at zero warnings (api + web) · locale parity · migration drift · API
 client freshness · design-token freshness · backup restore drill — all green.
 
-### Continuation status — updated 2026-08-13
+### Continuation status — updated 2026-08-14
 
 | Phase | Status | Evidence |
 |---|---|---|
@@ -933,7 +933,7 @@ client freshness · design-token freshness · backup restore drill — all green
 | Phase 5 — imports, CSV/PDF export & receipts | ✅ complete | Migration `00026_imports_attachments`; staged CSV/OFX/QIF jobs, private idempotent receipt storage, and live browser coverage |
 | Phase 5 — dark mode | ⏳ next | Token-driven system preference plus user override and WCAG pass |
 | Phase 5 — Recurring, Tags & Debts pages | ⏳ pending | Starts after dark mode |
-| Phase 6 | ⛔ gated | Do not start until the Reading A/B decision in DEC-025 is ratified |
+| Phase 6 | 🚫 excluded | Reading A ratified in DEC-025; commercial and multi-tenant `[B-only]` work is out of scope |
 
 **Four drift guards now exist**, each proven to fail on real drift before being
 trusted: migrations vs database, OpenAPI vs API routes, `tokens.css` vs the
@@ -1082,9 +1082,10 @@ appeal.
 | Dark mode + full WCAG 2.1 AA pass on new surfaces | M |
 | Recurring, Tags, and Debts promoted to first-class pages | S |
 
-## Phase 6 — Multi-tenancy & `[B-only]` items (L)
+## Phase 6 — Multi-tenancy & `[B-only]` items — **excluded**
 
-*Gated on the §1.0 decision. Do not start without it.*
+*Reading A was ratified in DEC-025. This phase is retained only as a record of
+deliberately rejected scope and must not be executed.*
 
 | Task | Size |
 |---|---|
@@ -1104,7 +1105,7 @@ Phase 0 ─┬─▶ Phase 1 ─┬─▶ Phase 2 ──────────
          │            └─▶ Phase 4 (web half) ──┘
          │                     └─ Phase 4 (mobile half) needs Phase 3
          │
-         └─────────────────────────────────────▶ Phase 6 (needs §1.0 decision)
+         └─ Phase 6 excluded by DEC-025 (Reading A)
 ```
 
 ## Risks
@@ -1129,8 +1130,9 @@ Phase 0 ─┬─▶ Phase 1 ─┬─▶ Phase 2 ──────────
 | `00024_search_indexes` | GIN/trigram indexes for global search |
 | `00025_reporting` `[implemented]` | Cash-flow and net-worth reporting functions |
 | `00026_imports_attachments` `[implemented]` | `transaction_attachments` + private storage; `import_jobs` + `import_rows` for staged CSV/OFX/QIF ingestion |
-| `00027_feature_flags` | `feature_flags` + targeting rules |
-| `00028_multi_member` `[Phase 6]` | Relax the `OWNER`-only role check, add `workspace_invites`, rewrite RLS |
+| `00027_theme_preference` `[implemented]` | System/light/dark preference on `profiles` |
+| `00028_notification_worker_grants` `[implemented]` | Least-privilege notification-worker reads for calendar and membership sources |
+| Multi-member migration `[excluded by DEC-025]` | No migration number reserved; roles, invites, and the corresponding RLS rewrite will not be implemented |
 
 ---
 
