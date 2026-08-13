@@ -934,7 +934,7 @@ client freshness · design-token freshness · backup restore drill — all green
 | Phase 5 — dark mode | ✅ complete | Migration `00027_theme_preference`; token-driven system/light/dark preference, persisted profile override, and live WCAG 2.2 AA browser pass across dashboard surfaces |
 | Phase 5 — Recurring page | ✅ complete | Migration `00029_recurring_management`; dedicated route with create/pause/resume/delete lifecycle and live no-ledger-side-effect coverage |
 | Phase 5 — Tags page | ✅ complete | Migration `00030_tag_management`; canonical create/rename/delete management, usage drill-down, and live proof that tag deletion never changes ledger entries |
-| Phase 5 — Debts page | ⏳ next | Final first-class product-depth feature |
+| Phase 5 — Debts page | ✅ complete | Migration `00031_debt_management`; dedicated terms lifecycle with ledger-derived outstanding balances and live account-preservation coverage |
 | Phase 6 | 🚫 excluded | Reading A ratified in DEC-025; commercial and multi-tenant `[B-only]` work is out of scope |
 
 **Four drift guards now exist**, each proven to fail on real drift before being

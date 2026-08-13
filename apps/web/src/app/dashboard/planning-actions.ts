@@ -62,6 +62,7 @@ function revalidatePlanning() {
   revalidatePath('/dashboard/calendar');
   revalidatePath('/dashboard/recurring');
   revalidatePath('/dashboard/goals');
+  revalidatePath('/dashboard/debts');
   revalidatePath('/dashboard/reports');
 }
 
@@ -200,7 +201,7 @@ export async function saveDebtTerms(input: {
 
   let minimum: string | undefined;
   if (input.minimumPayment?.trim()) {
-    const parsed = toMinor(input.minimumPayment, input.currency, { allowZero: true });
+    const parsed = toMinor(input.minimumPayment, input.currency);
     if (!parsed.ok) return parsed;
     minimum = parsed.value;
   }
@@ -216,6 +217,19 @@ export async function saveDebtTerms(input: {
         ...(input.dueDay !== undefined ? { due_day: input.dueDay } : {}),
       },
     });
+    revalidatePlanning();
+    return { ok: true };
+  } catch (error) {
+    return fail(error);
+  }
+}
+
+export async function deleteDebtTerms(
+  workspaceId: string,
+  accountId: string,
+): Promise<PlanningResult> {
+  try {
+    await apiFetch(`/workspaces/${workspaceId}/debts/${accountId}`, { method: 'DELETE' });
     revalidatePlanning();
     return { ok: true };
   } catch (error) {

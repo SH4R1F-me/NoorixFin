@@ -419,6 +419,36 @@ export class PlanningService {
     return data;
   }
 
+  async listDebts(workspaceId: string, accessToken: string) {
+    const overview = await this.getGoalsOverview(workspaceId, accessToken);
+    const value = overview as { debts?: unknown[]; total_debt_minor?: number };
+    return {
+      debts: value.debts ?? [],
+      total_debt_minor: value.total_debt_minor ?? 0,
+    };
+  }
+
+  async deleteDebt(
+    workspaceId: string,
+    accessToken: string,
+    accountId: string,
+  ) {
+    const { data, error } = await this.client(accessToken)
+      .from('debt_details')
+      .delete()
+      .eq('ledger_account_id', accountId)
+      .eq('workspace_id', workspaceId)
+      .select('ledger_account_id');
+    if (error) this.fail(error, 'Debt terms');
+    if (!data?.length) {
+      throw new NotFoundException({
+        code: 'DEBT_TERMS_NOT_FOUND',
+        message: 'Debt terms not found',
+      });
+    }
+    return { deleted: true };
+  }
+
   // ── Calendar ───────────────────────────────────────────────────────────────
 
   getCalendarOverview(workspaceId: string, accessToken: string, days = 30) {

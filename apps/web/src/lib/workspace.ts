@@ -315,6 +315,18 @@ export interface GoalsOverview {
   generated_at?: string;
 }
 
+export interface DebtsOverview {
+  debts: DebtSummary[];
+  total_debt_minor: number;
+}
+
+export function getDebts(workspaceId: string) {
+  return safeFetch<DebtsOverview>(`/workspaces/${workspaceId}/debts`, {
+    debts: [],
+    total_debt_minor: 0,
+  });
+}
+
 export interface CalendarEvent {
   id: string;
   type: 'BILL' | 'INCOME' | 'GOAL' | 'CUSTOM';

@@ -595,5 +595,33 @@ BEGIN
 END;
 $$;
 
+-- ── Debt terms remain metadata over the ledger (Phase 5) ───────────────────
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint
+     WHERE conrelid = 'public.debt_details'::regclass
+       AND conname = 'debt_details_principal_positive'
+  ) OR NOT EXISTS (
+    SELECT 1 FROM pg_constraint
+     WHERE conrelid = 'public.debt_details'::regclass
+       AND conname = 'debt_details_minimum_payment_positive'
+  ) THEN
+    RAISE EXCEPTION 'DEBT-01 FAILED: positive repayment terms are not constrained';
+  END IF;
+
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns
+     WHERE table_schema = 'public'
+       AND table_name = 'debt_details'
+       AND column_name IN ('outstanding_minor', 'current_balance_minor')
+  ) THEN
+    RAISE EXCEPTION 'DEBT-02 FAILED: derived outstanding debt is stored';
+  END IF;
+
+  RAISE NOTICE '   debt terms stay constrained metadata over ledger-derived balances';
+END;
+$$;
+
 \echo ''
 \echo '✓ All CI invariants hold.'

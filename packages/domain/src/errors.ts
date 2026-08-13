@@ -169,6 +169,11 @@ export const API_ERRORS = {
   },
   TAG_NOT_FOUND: { status: 404, retryable: false, description: 'No such tag.' },
   GOAL_NOT_FOUND: { status: 404, retryable: false, description: 'No such savings goal.' },
+  DEBT_TERMS_NOT_FOUND: {
+    status: 404,
+    retryable: false,
+    description: 'No repayment terms are attached to that liability account.',
+  },
   EVENT_NOT_FOUND: { status: 404, retryable: false, description: 'No such calendar event.' },
   USER_NOT_FOUND: { status: 404, retryable: false, description: 'No such user profile.' },
   DEVICE_NOT_FOUND: { status: 404, retryable: false, description: 'No such active user device.' },

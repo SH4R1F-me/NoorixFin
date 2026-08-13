@@ -180,6 +180,31 @@ export class PlanningController {
     return this.planning.upsertDebt(workspaceId, req.accessToken, dto);
   }
 
+  @Get('debts')
+  @ApiOperation({
+    summary:
+      'List debt terms with outstanding balances derived from the ledger',
+  })
+  listDebts(
+    @Param('workspaceId') workspaceId: string,
+    @Req() req: AuthedRequest,
+  ) {
+    return this.planning.listDebts(workspaceId, req.accessToken);
+  }
+
+  @Delete('debts/:accountId')
+  @ApiOperation({
+    summary:
+      'Remove debt terms without deleting the liability account or balance',
+  })
+  deleteDebt(
+    @Param('workspaceId') workspaceId: string,
+    @Param('accountId') accountId: string,
+    @Req() req: AuthedRequest,
+  ) {
+    return this.planning.deleteDebt(workspaceId, req.accessToken, accountId);
+  }
+
   // ── Calendar ───────────────────────────────────────────────────────────────
 
   @Get('calendar')

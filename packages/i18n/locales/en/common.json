@@ -57,6 +57,7 @@
     "calendar": "Calendar & Bills",
     "recurring": "Recurring",
     "goals": "Goals & Debts",
+    "debts": "Debts",
     "reports": "Reports",
     "importExport": "Import & Export",
     "settings": "Settings",
@@ -281,6 +282,18 @@
     "overdue": "Past target date",
     "noRate": "Rate not recorded",
     "payoffEstimate": "About {{months}} months at the minimum payment. Estimate only — it ignores fees and rate changes."
+  },
+  "debts": {
+    "title": "Debts",
+    "repaymentPlan": "Repayment planning",
+    "subtitle": "Terms live here; every outstanding balance still comes directly from your liability account.",
+    "addTerms": "Add debt terms",
+    "removeTerms": "Remove terms",
+    "saved": "Debt terms saved.",
+    "removed": "Debt terms removed. The account and its balance are unchanged.",
+    "balanceNote": "Outstanding debt is derived from ledger postings. Editing these terms never changes the balance.",
+    "noTerms": "No repayment terms yet",
+    "noTermsBody": "Choose a liability account and record its original principal, rate, minimum payment, and due day."
   },
   "calendar": {
     "title": "Calendar & Bills",

@@ -29,6 +29,7 @@ import {
   Upload,
   Repeat2,
   Hash,
+  HandCoins,
 } from 'lucide-react';
 import BroadcastBanner from '../../components/broadcast-banner';
 import CommandPalette from './command-palette';
@@ -57,6 +58,7 @@ const NAV_ITEMS = [
   { id: 'calendar', key: 'nav.calendar', icon: Calendar, href: '/dashboard/calendar' },
   { id: 'recurring', key: 'nav.recurring', icon: Repeat2, href: '/dashboard/recurring' },
   { id: 'goals', key: 'nav.goals', icon: Target, href: '/dashboard/goals' },
+  { id: 'debts', key: 'nav.debts', icon: HandCoins, href: '/dashboard/debts' },
   { id: 'reports', key: 'nav.reports', icon: BarChart3, href: '/dashboard/reports' },
   { id: 'import', key: 'nav.importExport', icon: Upload, href: '/dashboard/import' },
   { id: 'settings', key: 'nav.settings', icon: Settings, href: '/dashboard/settings' },

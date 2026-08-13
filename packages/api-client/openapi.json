@@ -1789,6 +1789,70 @@
         "tags": [
           "Planning"
         ]
+      },
+      "get": {
+        "operationId": "PlanningController_listDebts_v1",
+        "parameters": [
+          {
+            "name": "workspaceId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "supabase-auth": []
+          }
+        ],
+        "summary": "List debt terms with outstanding balances derived from the ledger",
+        "tags": [
+          "Planning"
+        ]
+      }
+    },
+    "/v1/workspaces/{workspaceId}/debts/{accountId}": {
+      "delete": {
+        "operationId": "PlanningController_deleteDebt_v1",
+        "parameters": [
+          {
+            "name": "workspaceId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "accountId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "supabase-auth": []
+          }
+        ],
+        "summary": "Remove debt terms without deleting the liability account or balance",
+        "tags": [
+          "Planning"
+        ]
       }
     },
     "/v1/workspaces/{workspaceId}/calendar": {
@@ -5616,6 +5680,7 @@
               "IMPORT_NOT_FOUND",
               "TAG_NOT_FOUND",
               "GOAL_NOT_FOUND",
+              "DEBT_TERMS_NOT_FOUND",
               "EVENT_NOT_FOUND",
               "USER_NOT_FOUND",
               "DEVICE_NOT_FOUND",

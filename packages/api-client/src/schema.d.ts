@@ -634,11 +634,29 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get?: never;
+        /** List debt terms with outstanding balances derived from the ledger */
+        get: operations["PlanningController_listDebts_v1"];
         /** Attach or replace repayment terms on a liability account */
         put: operations["PlanningController_upsertDebt_v1"];
         post?: never;
         delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/workspaces/{workspaceId}/debts/{accountId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Remove debt terms without deleting the liability account or balance */
+        delete: operations["PlanningController_deleteDebt_v1"];
         options?: never;
         head?: never;
         patch?: never;
@@ -2247,7 +2265,7 @@ export interface components {
              * @example TRANSACTION_NOT_FOUND
              * @enum {string}
              */
-            code: "MISSING_TOKEN" | "INVALID_TOKEN" | "AUTH_FAILED" | "NOT_WORKSPACE_MEMBER" | "WORKSPACE_ACCESS_DENIED" | "NOT_SUPER_ADMIN" | "MFA_REQUIRED" | "ACCOUNT_NOT_ACTIVE" | "NOT_AUTHENTICATED" | "AUTHZ_CHECK_FAILED" | "IDEMPOTENCY_KEY_REQUIRED" | "IDEMPOTENCY_KEY_REUSED" | "IDEMPOTENCY_KEY_TOO_LONG" | "IDEMPOTENCY_IN_PROGRESS" | "NOT_FOUND" | "WORKSPACE_NOT_FOUND" | "PAIRING_TOKEN_NOT_FOUND" | "PAIRING_TOKEN_EXPIRED" | "RELEASE_CONFIG_UNAVAILABLE" | "INVALID_RELEASE_URL" | "INVALID_REPORT_RANGE" | "INVALID_EXPORT_FORMAT" | "ACCOUNT_NOT_FOUND" | "CATEGORY_NOT_FOUND" | "PARENT_CATEGORY_NOT_FOUND" | "TRANSACTION_NOT_FOUND" | "ATTACHMENT_NOT_FOUND" | "IMPORT_NOT_FOUND" | "TAG_NOT_FOUND" | "GOAL_NOT_FOUND" | "EVENT_NOT_FOUND" | "USER_NOT_FOUND" | "DEVICE_NOT_FOUND" | "TRANSACTION_NOT_REVERSIBLE" | "PERSONAL_WORKSPACE_EXISTS" | "INVALID_AMOUNT" | "AMOUNT_TOO_LARGE" | "INVALID_TYPE" | "INVALID_VALUE" | "INVALID_REFERENCE" | "INVALID_ATTACHMENT" | "IMPORT_PARSE_FAILED" | "CATEGORY_REQUIRED" | "CATEGORY_KIND_MISMATCH" | "DESTINATION_REQUIRED" | "NOT_A_LIABILITY" | "NO_POSTINGS" | "ALREADY_REVERSED" | "EMPTY_PATCH" | "NO_CHANGES" | "ALREADY_PENDING" | "NOT_PENDING" | "CONFIRMATION_MISMATCH" | "CANNOT_SUSPEND_SELF" | "LAST_SUPER_ADMIN" | "UNKNOWN_SETTING" | "SYNC_CURSOR_STALLED" | "SYNC_FAILED" | "REVERSAL_FAILED" | "SUMMARY_FAILED" | "AGGREGATION_FAILED" | "PLANNING_WRITE_FAILED" | "CATEGORY_CREATE_FAILED" | "CATEGORY_SEED_FAILED" | "ONBOARDING_UPDATE_FAILED" | "DELETION_REQUEST_FAILED" | "CANCEL_FAILED" | "SUSPEND_FAILED" | "REINSTATE_FAILED" | "DISMISS_FAILED" | "BROADCASTS_UNAVAILABLE" | "IMPORT_CREATE_FAILED" | "IMPORT_STAGE_FAILED" | "ATTACHMENT_UPLOAD_FAILED" | "ATTACHMENT_DOWNLOAD_FAILED" | "ATTACHMENT_DELETE_FAILED";
+            code: "MISSING_TOKEN" | "INVALID_TOKEN" | "AUTH_FAILED" | "NOT_WORKSPACE_MEMBER" | "WORKSPACE_ACCESS_DENIED" | "NOT_SUPER_ADMIN" | "MFA_REQUIRED" | "ACCOUNT_NOT_ACTIVE" | "NOT_AUTHENTICATED" | "AUTHZ_CHECK_FAILED" | "IDEMPOTENCY_KEY_REQUIRED" | "IDEMPOTENCY_KEY_REUSED" | "IDEMPOTENCY_KEY_TOO_LONG" | "IDEMPOTENCY_IN_PROGRESS" | "NOT_FOUND" | "WORKSPACE_NOT_FOUND" | "PAIRING_TOKEN_NOT_FOUND" | "PAIRING_TOKEN_EXPIRED" | "RELEASE_CONFIG_UNAVAILABLE" | "INVALID_RELEASE_URL" | "INVALID_REPORT_RANGE" | "INVALID_EXPORT_FORMAT" | "ACCOUNT_NOT_FOUND" | "CATEGORY_NOT_FOUND" | "PARENT_CATEGORY_NOT_FOUND" | "TRANSACTION_NOT_FOUND" | "ATTACHMENT_NOT_FOUND" | "IMPORT_NOT_FOUND" | "TAG_NOT_FOUND" | "GOAL_NOT_FOUND" | "DEBT_TERMS_NOT_FOUND" | "EVENT_NOT_FOUND" | "USER_NOT_FOUND" | "DEVICE_NOT_FOUND" | "TRANSACTION_NOT_REVERSIBLE" | "PERSONAL_WORKSPACE_EXISTS" | "INVALID_AMOUNT" | "AMOUNT_TOO_LARGE" | "INVALID_TYPE" | "INVALID_VALUE" | "INVALID_REFERENCE" | "INVALID_ATTACHMENT" | "IMPORT_PARSE_FAILED" | "CATEGORY_REQUIRED" | "CATEGORY_KIND_MISMATCH" | "DESTINATION_REQUIRED" | "NOT_A_LIABILITY" | "NO_POSTINGS" | "ALREADY_REVERSED" | "EMPTY_PATCH" | "NO_CHANGES" | "ALREADY_PENDING" | "NOT_PENDING" | "CONFIRMATION_MISMATCH" | "CANNOT_SUSPEND_SELF" | "LAST_SUPER_ADMIN" | "UNKNOWN_SETTING" | "SYNC_CURSOR_STALLED" | "SYNC_FAILED" | "REVERSAL_FAILED" | "SUMMARY_FAILED" | "AGGREGATION_FAILED" | "PLANNING_WRITE_FAILED" | "CATEGORY_CREATE_FAILED" | "CATEGORY_SEED_FAILED" | "ONBOARDING_UPDATE_FAILED" | "DELETION_REQUEST_FAILED" | "CANCEL_FAILED" | "SUSPEND_FAILED" | "REINSTATE_FAILED" | "DISMISS_FAILED" | "BROADCASTS_UNAVAILABLE" | "IMPORT_CREATE_FAILED" | "IMPORT_STAGE_FAILED" | "ATTACHMENT_UPLOAD_FAILED" | "ATTACHMENT_DOWNLOAD_FAILED" | "ATTACHMENT_DELETE_FAILED";
             message: string;
             /** @description Echo of X-Request-ID — quote it when reporting a failure. */
             requestId: string;
@@ -3299,6 +3317,25 @@ export interface operations {
             };
         };
     };
+    PlanningController_listDebts_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                workspaceId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     PlanningController_upsertDebt_v1: {
         parameters: {
             query?: never;
@@ -3313,6 +3350,26 @@ export interface operations {
                 "application/json": components["schemas"]["UpsertDebtDto"];
             };
         };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    PlanningController_deleteDebt_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                workspaceId: string;
+                accountId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
         responses: {
             200: {
                 headers: {
