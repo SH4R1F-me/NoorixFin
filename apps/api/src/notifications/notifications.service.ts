@@ -670,8 +670,14 @@ export class NotificationsService implements OnModuleInit, OnModuleDestroy {
       await this.processPendingDeliveries();
       await this.processExpoReceipts();
     } catch (error) {
+      const detail =
+        error instanceof Error
+          ? error.message
+          : error && typeof error === 'object'
+            ? JSON.stringify(error)
+            : String(error);
       this.logger.warn(
-        `Notification worker failed: ${error instanceof Error ? error.message : String(error)}`,
+        `Notification worker failed: ${detail}`,
       );
     } finally {
       this.workerRunning = false;
