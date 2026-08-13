@@ -921,6 +921,20 @@ PUT    /v1/admin/releases/mobile
 e2e · lint at zero warnings (api + web) · locale parity · migration drift · API
 client freshness · design-token freshness · backup restore drill — all green.
 
+### Continuation status — updated 2026-08-13
+
+| Phase | Status | Evidence |
+|---|---|---|
+| Phase 2 — observability & telemetry | ✅ complete | `7d771cb` |
+| Phase 3 — mobile product foundation | ✅ complete | `e76546d`, `850a8a2` |
+| Phase 4 — global notifications | ✅ complete | `1690601` |
+| Phase 5 — distribution | ✅ complete | `49aab53` |
+| Phase 5 — search & reports | ✅ complete | `a46b5ed` |
+| Phase 5 — imports, CSV/PDF export & receipts | ✅ complete | Migration `00026_imports_attachments`; staged CSV/OFX/QIF jobs, private idempotent receipt storage, and live browser coverage |
+| Phase 5 — dark mode | ⏳ next | Token-driven system preference plus user override and WCAG pass |
+| Phase 5 — Recurring, Tags & Debts pages | ⏳ pending | Starts after dark mode |
+| Phase 6 | ⛔ gated | Do not start until the Reading A/B decision in DEC-025 is ratified |
+
 **Four drift guards now exist**, each proven to fail on real drift before being
 trusted: migrations vs database, OpenAPI vs API routes, `tokens.css` vs the
 tokens, and stylesheets vs the token set. They exist because every problem this
@@ -1113,8 +1127,8 @@ Phase 0 ─┬─▶ Phase 1 ─┬─▶ Phase 2 ──────────
 | `00022_client_telemetry` | `system_events` +platform/app_version/device_id/session_id · `audit_events` +user_agent/platform/device_id · `user_devices` |
 | `00023_notifications` | `notifications` · `notification_preferences` · `notification_deliveries` · quiet-hours columns on `profiles` |
 | `00024_search_indexes` | GIN/trigram indexes for global search |
-| `00025_attachments` | `transaction_attachments` + a private storage bucket |
-| `00026_import_jobs` | `import_jobs` + `import_rows` for staged CSV/OFX ingestion |
+| `00025_reporting` `[implemented]` | Cash-flow and net-worth reporting functions |
+| `00026_imports_attachments` `[implemented]` | `transaction_attachments` + private storage; `import_jobs` + `import_rows` for staged CSV/OFX/QIF ingestion |
 | `00027_feature_flags` | `feature_flags` + targeting rules |
 | `00028_multi_member` `[Phase 6]` | Relax the `OWNER`-only role check, add `workspace_invites`, rewrite RLS |
 

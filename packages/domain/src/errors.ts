@@ -144,6 +144,11 @@ export const API_ERRORS = {
     retryable: false,
     description: 'A custom report range is empty, reversed, or longer than ten years.',
   },
+  INVALID_EXPORT_FORMAT: {
+    status: 400,
+    retryable: false,
+    description: 'The requested ledger export format is not CSV or PDF.',
+  },
   ACCOUNT_NOT_FOUND: { status: 404, retryable: false, description: 'No such financial account.' },
   CATEGORY_NOT_FOUND: { status: 404, retryable: false, description: 'No such category.' },
   PARENT_CATEGORY_NOT_FOUND: {
@@ -152,6 +157,16 @@ export const API_ERRORS = {
     description: 'The requested parent category does not exist in this workspace.',
   },
   TRANSACTION_NOT_FOUND: { status: 404, retryable: false, description: 'No such journal entry.' },
+  ATTACHMENT_NOT_FOUND: {
+    status: 404,
+    retryable: false,
+    description: 'No such receipt attachment on this transaction.',
+  },
+  IMPORT_NOT_FOUND: {
+    status: 404,
+    retryable: false,
+    description: 'No such import job for this user and workspace.',
+  },
   TAG_NOT_FOUND: { status: 404, retryable: false, description: 'No such tag.' },
   GOAL_NOT_FOUND: { status: 404, retryable: false, description: 'No such savings goal.' },
   EVENT_NOT_FOUND: { status: 404, retryable: false, description: 'No such calendar event.' },
@@ -193,6 +208,16 @@ export const API_ERRORS = {
     status: 400,
     retryable: false,
     description: 'A referenced row does not exist or belongs to another workspace.',
+  },
+  INVALID_ATTACHMENT: {
+    status: 400,
+    retryable: false,
+    description: 'The receipt is empty, too large, or its bytes do not match its media type.',
+  },
+  IMPORT_PARSE_FAILED: {
+    status: 400,
+    retryable: false,
+    description: 'The statement does not contain valid CSV, OFX, or QIF transaction rows.',
   },
   CATEGORY_REQUIRED: {
     status: 400,
@@ -334,6 +359,31 @@ export const API_ERRORS = {
     status: 400,
     retryable: true,
     description: 'Broadcasts could not be read.',
+  },
+  IMPORT_CREATE_FAILED: {
+    status: 400,
+    retryable: true,
+    description: 'The staged import job could not be created.',
+  },
+  IMPORT_STAGE_FAILED: {
+    status: 400,
+    retryable: true,
+    description: 'Parsed statement rows could not be written to the staging table.',
+  },
+  ATTACHMENT_UPLOAD_FAILED: {
+    status: 400,
+    retryable: true,
+    description: 'The receipt bytes or their metadata could not be stored.',
+  },
+  ATTACHMENT_DOWNLOAD_FAILED: {
+    status: 400,
+    retryable: true,
+    description: 'A private signed receipt URL could not be created.',
+  },
+  ATTACHMENT_DELETE_FAILED: {
+    status: 400,
+    retryable: true,
+    description: 'The receipt bytes or their metadata could not be removed.',
   },
 } as const satisfies Record<string, ApiErrorDefinition>;
 

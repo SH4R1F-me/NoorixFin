@@ -82,6 +82,7 @@ export class ExportService {
         rules,
         tags,
         entryTags,
+        attachments,
       ] = await Promise.all([
         client.from('ledger_accounts').select('*').eq('workspace_id', id),
         client.from('categories').select('*').eq('workspace_id', id),
@@ -97,6 +98,12 @@ export class ExportService {
         client.from('recurring_rules').select('*').eq('workspace_id', id),
         client.from('tags').select('*').eq('workspace_id', id),
         client.from('journal_entry_tags').select('*').eq('workspace_id', id),
+        client
+          .from('transaction_attachments')
+          .select(
+            'id, workspace_id, journal_entry_id, original_name, content_type, size_bytes, checksum_sha256, created_at',
+          )
+          .eq('workspace_id', id),
       ]);
 
       bundles.push({
@@ -113,6 +120,7 @@ export class ExportService {
         recurring_rules: rules.data ?? [],
         tags: tags.data ?? [],
         journal_entry_tags: entryTags.data ?? [],
+        transaction_attachments: attachments.data ?? [],
       });
     }
 

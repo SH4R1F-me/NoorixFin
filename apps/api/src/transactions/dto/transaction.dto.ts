@@ -9,7 +9,9 @@ import {
   IsArray,
   IsUUID,
   Length,
+  MaxLength,
   IsDateString,
+  Matches,
 } from 'class-validator';
 
 // ─── Create Transaction (Simple Form) ─────────────────
@@ -83,6 +85,35 @@ export class CreateTransactionDto {
   idempotency_key!: string;
 }
 
+export class CreateAttachmentDto {
+  @ApiProperty({
+    description:
+      'A retry of the same receipt upload returns the original attachment',
+  })
+  @IsUUID()
+  idempotency_key!: string;
+
+  @ApiProperty({ example: 'receipt.jpg' })
+  @IsString()
+  @Length(1, 180)
+  filename!: string;
+
+  @ApiProperty({
+    enum: ['image/jpeg', 'image/png', 'image/webp', 'application/pdf'],
+  })
+  @IsIn(['image/jpeg', 'image/png', 'image/webp', 'application/pdf'])
+  content_type!: 'image/jpeg' | 'image/png' | 'image/webp' | 'application/pdf';
+
+  @ApiProperty({
+    description:
+      'Base64 bytes without a data-URL prefix; maximum decoded size 5 MB',
+  })
+  @IsString()
+  @MaxLength(7_000_000)
+  @Matches(/^[A-Za-z0-9+/]+={0,2}$/)
+  data_base64!: string;
+}
+
 // ─── Transaction Response ─────────────────────────────
 export class TransactionResponseDto {
   @ApiProperty() id!: string;
@@ -98,6 +129,16 @@ export class TransactionResponseDto {
   @ApiProperty() version!: number;
   @ApiProperty() created_at!: string;
   @ApiPropertyOptional() postings?: PostingResponseDto[];
+  @ApiPropertyOptional({ type: () => [TransactionAttachmentResponseDto] })
+  attachments?: TransactionAttachmentResponseDto[];
+}
+
+export class TransactionAttachmentResponseDto {
+  @ApiProperty() id!: string;
+  @ApiProperty() original_name!: string;
+  @ApiProperty() content_type!: string;
+  @ApiProperty() size_bytes!: number;
+  @ApiProperty() created_at!: string;
 }
 
 export class PostingResponseDto {

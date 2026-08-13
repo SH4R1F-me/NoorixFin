@@ -467,6 +467,41 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/workspaces/{workspaceId}/transactions/{id}/attachments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Upload a private receipt image or PDF (maximum 5 MB) */
+        post: operations["TransactionsController_attach_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/workspaces/{workspaceId}/transactions/{id}/attachments/{attachmentId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Create a one-minute signed receipt download URL */
+        get: operations["TransactionsController_attachmentUrl_v1"];
+        put?: never;
+        post?: never;
+        /** Permanently delete a receipt owned by the caller */
+        delete: operations["TransactionsController_deleteAttachment_v1"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/workspaces/{workspaceId}/transactions/{id}/reverse": {
         parameters: {
             query?: never;
@@ -1497,6 +1532,57 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/workspaces/{workspaceId}/import": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List recent staged import jobs */
+        get: operations["ImportsController_list_v1"];
+        put?: never;
+        /** Parse, stage, and post a CSV, OFX, or QIF statement */
+        post: operations["ImportsController_create_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/workspaces/{workspaceId}/import/{jobId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ImportsController_get_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/workspaces/{workspaceId}/export": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Download the workspace ledger as CSV or PDF */
+        get: operations["ImportsController_export_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -1765,6 +1851,13 @@ export interface components {
              */
             idempotency_key: string;
         };
+        TransactionAttachmentResponseDto: {
+            id: string;
+            original_name: string;
+            content_type: string;
+            size_bytes: number;
+            created_at: string;
+        };
         TransactionResponseDto: {
             id: string;
             workspace_id: string;
@@ -1779,6 +1872,17 @@ export interface components {
             version: number;
             created_at: string;
             postings?: string[];
+            attachments?: components["schemas"]["TransactionAttachmentResponseDto"][];
+        };
+        CreateAttachmentDto: {
+            /** @description A retry of the same receipt upload returns the original attachment */
+            idempotency_key: string;
+            /** @example receipt.jpg */
+            filename: string;
+            /** @enum {string} */
+            content_type: "image/jpeg" | "image/png" | "image/webp" | "application/pdf";
+            /** @description Base64 bytes without a data-URL prefix; maximum decoded size 5 MB */
+            data_base64: string;
         };
         CategoryResponseDto: {
             id: string;
@@ -2091,6 +2195,22 @@ export interface components {
             /** @description Keep this device_id active (the caller's own device) */
             currentDeviceId?: string;
         };
+        CreateImportDto: {
+            /** @enum {string} */
+            format: "CSV" | "OFX" | "QIF";
+            /** @description UTF-8 file content; maximum 5 MB */
+            content: string;
+            /** @example statement.csv */
+            filename: string;
+            /** @description Account affected by every imported statement row */
+            account_id: string;
+            /** @description Default category for negative/expense rows */
+            expense_category_id: string;
+            /** @description Default category for positive/income rows */
+            income_category_id?: string;
+            /** @description A retry of this import returns the original job */
+            idempotency_key: string;
+        };
         /** @description The shape of every failure, produced by GlobalHttpExceptionFilter. `code` is the stable identifier — branch on it, not on `message`, which is prose and may be reworded or translated. */
         ApiErrorBody: {
             /** @example 404 */
@@ -2099,7 +2219,7 @@ export interface components {
              * @example TRANSACTION_NOT_FOUND
              * @enum {string}
              */
-            code: "MISSING_TOKEN" | "INVALID_TOKEN" | "AUTH_FAILED" | "NOT_WORKSPACE_MEMBER" | "WORKSPACE_ACCESS_DENIED" | "NOT_SUPER_ADMIN" | "MFA_REQUIRED" | "ACCOUNT_NOT_ACTIVE" | "NOT_AUTHENTICATED" | "AUTHZ_CHECK_FAILED" | "IDEMPOTENCY_KEY_REQUIRED" | "IDEMPOTENCY_KEY_REUSED" | "IDEMPOTENCY_KEY_TOO_LONG" | "IDEMPOTENCY_IN_PROGRESS" | "NOT_FOUND" | "WORKSPACE_NOT_FOUND" | "PAIRING_TOKEN_NOT_FOUND" | "PAIRING_TOKEN_EXPIRED" | "RELEASE_CONFIG_UNAVAILABLE" | "INVALID_RELEASE_URL" | "INVALID_REPORT_RANGE" | "ACCOUNT_NOT_FOUND" | "CATEGORY_NOT_FOUND" | "PARENT_CATEGORY_NOT_FOUND" | "TRANSACTION_NOT_FOUND" | "TAG_NOT_FOUND" | "GOAL_NOT_FOUND" | "EVENT_NOT_FOUND" | "USER_NOT_FOUND" | "DEVICE_NOT_FOUND" | "TRANSACTION_NOT_REVERSIBLE" | "PERSONAL_WORKSPACE_EXISTS" | "INVALID_AMOUNT" | "AMOUNT_TOO_LARGE" | "INVALID_TYPE" | "INVALID_VALUE" | "INVALID_REFERENCE" | "CATEGORY_REQUIRED" | "CATEGORY_KIND_MISMATCH" | "DESTINATION_REQUIRED" | "NOT_A_LIABILITY" | "NO_POSTINGS" | "ALREADY_REVERSED" | "EMPTY_PATCH" | "NO_CHANGES" | "ALREADY_PENDING" | "NOT_PENDING" | "CONFIRMATION_MISMATCH" | "CANNOT_SUSPEND_SELF" | "LAST_SUPER_ADMIN" | "UNKNOWN_SETTING" | "SYNC_CURSOR_STALLED" | "SYNC_FAILED" | "REVERSAL_FAILED" | "SUMMARY_FAILED" | "AGGREGATION_FAILED" | "PLANNING_WRITE_FAILED" | "CATEGORY_CREATE_FAILED" | "CATEGORY_SEED_FAILED" | "ONBOARDING_UPDATE_FAILED" | "DELETION_REQUEST_FAILED" | "CANCEL_FAILED" | "SUSPEND_FAILED" | "REINSTATE_FAILED" | "DISMISS_FAILED" | "BROADCASTS_UNAVAILABLE";
+            code: "MISSING_TOKEN" | "INVALID_TOKEN" | "AUTH_FAILED" | "NOT_WORKSPACE_MEMBER" | "WORKSPACE_ACCESS_DENIED" | "NOT_SUPER_ADMIN" | "MFA_REQUIRED" | "ACCOUNT_NOT_ACTIVE" | "NOT_AUTHENTICATED" | "AUTHZ_CHECK_FAILED" | "IDEMPOTENCY_KEY_REQUIRED" | "IDEMPOTENCY_KEY_REUSED" | "IDEMPOTENCY_KEY_TOO_LONG" | "IDEMPOTENCY_IN_PROGRESS" | "NOT_FOUND" | "WORKSPACE_NOT_FOUND" | "PAIRING_TOKEN_NOT_FOUND" | "PAIRING_TOKEN_EXPIRED" | "RELEASE_CONFIG_UNAVAILABLE" | "INVALID_RELEASE_URL" | "INVALID_REPORT_RANGE" | "INVALID_EXPORT_FORMAT" | "ACCOUNT_NOT_FOUND" | "CATEGORY_NOT_FOUND" | "PARENT_CATEGORY_NOT_FOUND" | "TRANSACTION_NOT_FOUND" | "ATTACHMENT_NOT_FOUND" | "IMPORT_NOT_FOUND" | "TAG_NOT_FOUND" | "GOAL_NOT_FOUND" | "EVENT_NOT_FOUND" | "USER_NOT_FOUND" | "DEVICE_NOT_FOUND" | "TRANSACTION_NOT_REVERSIBLE" | "PERSONAL_WORKSPACE_EXISTS" | "INVALID_AMOUNT" | "AMOUNT_TOO_LARGE" | "INVALID_TYPE" | "INVALID_VALUE" | "INVALID_REFERENCE" | "INVALID_ATTACHMENT" | "IMPORT_PARSE_FAILED" | "CATEGORY_REQUIRED" | "CATEGORY_KIND_MISMATCH" | "DESTINATION_REQUIRED" | "NOT_A_LIABILITY" | "NO_POSTINGS" | "ALREADY_REVERSED" | "EMPTY_PATCH" | "NO_CHANGES" | "ALREADY_PENDING" | "NOT_PENDING" | "CONFIRMATION_MISMATCH" | "CANNOT_SUSPEND_SELF" | "LAST_SUPER_ADMIN" | "UNKNOWN_SETTING" | "SYNC_CURSOR_STALLED" | "SYNC_FAILED" | "REVERSAL_FAILED" | "SUMMARY_FAILED" | "AGGREGATION_FAILED" | "PLANNING_WRITE_FAILED" | "CATEGORY_CREATE_FAILED" | "CATEGORY_SEED_FAILED" | "ONBOARDING_UPDATE_FAILED" | "DELETION_REQUEST_FAILED" | "CANCEL_FAILED" | "SUSPEND_FAILED" | "REINSTATE_FAILED" | "DISMISS_FAILED" | "BROADCASTS_UNAVAILABLE" | "IMPORT_CREATE_FAILED" | "IMPORT_STAGE_FAILED" | "ATTACHMENT_UPLOAD_FAILED" | "ATTACHMENT_DOWNLOAD_FAILED" | "ATTACHMENT_DELETE_FAILED";
             message: string;
             /** @description Echo of X-Request-ID — quote it when reporting a failure. */
             requestId: string;
@@ -2790,6 +2910,72 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["TransactionResponseDto"];
                 };
+            };
+        };
+    };
+    TransactionsController_attach_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                workspaceId: string;
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateAttachmentDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    TransactionsController_attachmentUrl_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                workspaceId: string;
+                id: string;
+                attachmentId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    TransactionsController_deleteAttachment_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                workspaceId: string;
+                id: string;
+                attachmentId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };
@@ -4248,6 +4434,87 @@ export interface operations {
             query: {
                 q: string;
             };
+            header?: never;
+            path: {
+                workspaceId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ImportsController_list_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                workspaceId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ImportsController_create_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                workspaceId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateImportDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ImportsController_get_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                workspaceId: string;
+                jobId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ImportsController_export_v1: {
+        parameters: {
+            query?: never;
             header?: never;
             path: {
                 workspaceId: string;

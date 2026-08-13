@@ -95,6 +95,15 @@ export interface TransactionRow {
    * matching it against the already-fetched category list costs no extra query.
    */
   ledger_account_ids?: string[];
+  attachments?: TransactionAttachment[];
+}
+
+export interface TransactionAttachment {
+  id: string;
+  original_name: string;
+  content_type: string;
+  size_bytes: number;
+  created_at: string;
 }
 
 export interface CategoryRow {
@@ -144,6 +153,23 @@ export interface TagRow {
 /** Every tag in the workspace, alphabetical, with usage counts (§6.3). */
 export async function getTags(workspaceId: string) {
   return safeFetch<TagRow[]>(`/workspaces/${workspaceId}/tags`, []);
+}
+
+export interface ImportJob {
+  id: string;
+  format: 'CSV' | 'OFX' | 'QIF';
+  filename: string;
+  status: 'PENDING' | 'PROCESSING' | 'COMPLETED' | 'COMPLETED_WITH_ERRORS' | 'FAILED';
+  total_rows: number;
+  imported_rows: number;
+  failed_rows: number;
+  error_message: string | null;
+  created_at: string;
+  completed_at: string | null;
+}
+
+export function getImportJobs(workspaceId: string) {
+  return safeFetch<ImportJob[]>(`/workspaces/${workspaceId}/import`, []);
 }
 
 export async function getTransactions(

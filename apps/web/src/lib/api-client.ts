@@ -78,6 +78,8 @@ type RequestOptions = {
   idempotencyKey?: string;
   /** Next.js fetch cache hint. Defaults to no-store — financial data is never stale-safe. */
   cache?: RequestCache;
+  /** Slow, explicitly bounded jobs (for example statement import) can opt into a larger window. */
+  timeoutMs?: number;
 };
 
 export async function apiFetch<T>(path: string, options: RequestOptions = {}): Promise<T> {
@@ -93,7 +95,13 @@ export async function apiFetch<T>(path: string, options: RequestOptions = {}): P
     throw new ApiError(401, 'NOT_AUTHENTICATED', 'No active session');
   }
 
-  const { method = 'GET', body, idempotencyKey, cache = 'no-store' } = options;
+  const {
+    method = 'GET',
+    body,
+    idempotencyKey,
+    cache = 'no-store',
+    timeoutMs = REQUEST_TIMEOUT_MS,
+  } = options;
 
   const headers: Record<string, string> = {
     Authorization: `Bearer ${session.access_token}`,
@@ -119,7 +127,7 @@ export async function apiFetch<T>(path: string, options: RequestOptions = {}): P
       method,
       headers,
       cache,
-      signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+      signal: AbortSignal.timeout(timeoutMs),
       ...(body !== undefined ? { body: JSON.stringify(body) } : {}),
     });
   } catch (error) {
@@ -130,9 +138,7 @@ export async function apiFetch<T>(path: string, options: RequestOptions = {}): P
     throw new ApiError(
       503,
       'API_UNREACHABLE',
-      timedOut
-        ? `The API did not respond within ${REQUEST_TIMEOUT_MS / 1000}s`
-        : 'Could not reach the API',
+      timedOut ? `The API did not respond within ${timeoutMs / 1000}s` : 'Could not reach the API',
     );
   }
 
@@ -155,4 +161,25 @@ export async function apiFetch<T>(path: string, options: RequestOptions = {}): P
 
   if (response.status === 204) return undefined as T;
   return (await response.json()) as T;
+}
+
+/** Authenticated raw GET for route handlers that must stream CSV/PDF bytes. */
+export async function apiFetchRaw(path: string): Promise<Response> {
+  const supabase = await createClient();
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+  if (!session?.access_token) throw new ApiError(401, 'NOT_AUTHENTICATED', 'No active session');
+  let response: Response;
+  try {
+    response = await fetch(`${API_URL}/v1${path}`, {
+      headers: { Authorization: `Bearer ${session.access_token}` },
+      cache: 'no-store',
+      signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+    });
+  } catch {
+    throw new ApiError(503, 'API_UNREACHABLE', 'Could not reach the API');
+  }
+  if (!response.ok) throw new ApiError(response.status, 'UNKNOWN', response.statusText);
+  return response;
 }

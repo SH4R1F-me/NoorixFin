@@ -1091,6 +1091,141 @@
         ]
       }
     },
+    "/v1/workspaces/{workspaceId}/transactions/{id}/attachments": {
+      "post": {
+        "operationId": "TransactionsController_attach_v1",
+        "parameters": [
+          {
+            "name": "workspaceId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateAttachmentDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "supabase-auth": []
+          }
+        ],
+        "summary": "Upload a private receipt image or PDF (maximum 5 MB)",
+        "tags": [
+          "Transactions"
+        ]
+      }
+    },
+    "/v1/workspaces/{workspaceId}/transactions/{id}/attachments/{attachmentId}": {
+      "get": {
+        "operationId": "TransactionsController_attachmentUrl_v1",
+        "parameters": [
+          {
+            "name": "workspaceId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "attachmentId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "supabase-auth": []
+          }
+        ],
+        "summary": "Create a one-minute signed receipt download URL",
+        "tags": [
+          "Transactions"
+        ]
+      },
+      "delete": {
+        "operationId": "TransactionsController_deleteAttachment_v1",
+        "parameters": [
+          {
+            "name": "workspaceId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "attachmentId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "supabase-auth": []
+          }
+        ],
+        "summary": "Permanently delete a receipt owned by the caller",
+        "tags": [
+          "Transactions"
+        ]
+      }
+    },
     "/v1/workspaces/{workspaceId}/transactions/{id}/reverse": {
       "post": {
         "operationId": "TransactionsController_reverse_v1",
@@ -3543,6 +3678,137 @@
           "Search"
         ]
       }
+    },
+    "/v1/workspaces/{workspaceId}/import": {
+      "get": {
+        "operationId": "ImportsController_list_v1",
+        "parameters": [
+          {
+            "name": "workspaceId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "supabase-auth": []
+          }
+        ],
+        "summary": "List recent staged import jobs",
+        "tags": [
+          "Data portability"
+        ]
+      },
+      "post": {
+        "operationId": "ImportsController_create_v1",
+        "parameters": [
+          {
+            "name": "workspaceId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateImportDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "supabase-auth": []
+          }
+        ],
+        "summary": "Parse, stage, and post a CSV, OFX, or QIF statement",
+        "tags": [
+          "Data portability"
+        ]
+      }
+    },
+    "/v1/workspaces/{workspaceId}/import/{jobId}": {
+      "get": {
+        "operationId": "ImportsController_get_v1",
+        "parameters": [
+          {
+            "name": "workspaceId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "jobId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "supabase-auth": []
+          }
+        ],
+        "tags": [
+          "Data portability"
+        ]
+      }
+    },
+    "/v1/workspaces/{workspaceId}/export": {
+      "get": {
+        "operationId": "ImportsController_export_v1",
+        "parameters": [
+          {
+            "name": "workspaceId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "supabase-auth": []
+          }
+        ],
+        "summary": "Download the workspace ledger as CSV or PDF",
+        "tags": [
+          "Data portability"
+        ]
+      }
     }
   },
   "info": {
@@ -4214,6 +4480,33 @@
           "idempotency_key"
         ]
       },
+      "TransactionAttachmentResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "original_name": {
+            "type": "string"
+          },
+          "content_type": {
+            "type": "string"
+          },
+          "size_bytes": {
+            "type": "number"
+          },
+          "created_at": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "original_name",
+          "content_type",
+          "size_bytes",
+          "created_at"
+        ]
+      },
       "TransactionResponseDto": {
         "type": "object",
         "properties": {
@@ -4258,6 +4551,12 @@
             "items": {
               "type": "string"
             }
+          },
+          "attachments": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TransactionAttachmentResponseDto"
+            }
           }
         },
         "required": [
@@ -4271,6 +4570,38 @@
           "created_by",
           "version",
           "created_at"
+        ]
+      },
+      "CreateAttachmentDto": {
+        "type": "object",
+        "properties": {
+          "idempotency_key": {
+            "type": "string",
+            "description": "A retry of the same receipt upload returns the original attachment"
+          },
+          "filename": {
+            "type": "string",
+            "example": "receipt.jpg"
+          },
+          "content_type": {
+            "type": "string",
+            "enum": [
+              "image/jpeg",
+              "image/png",
+              "image/webp",
+              "application/pdf"
+            ]
+          },
+          "data_base64": {
+            "type": "string",
+            "description": "Base64 bytes without a data-URL prefix; maximum decoded size 5 MB"
+          }
+        },
+        "required": [
+          "idempotency_key",
+          "filename",
+          "content_type",
+          "data_base64"
         ]
       },
       "CategoryResponseDto": {
@@ -5015,6 +5346,51 @@
           }
         }
       },
+      "CreateImportDto": {
+        "type": "object",
+        "properties": {
+          "format": {
+            "type": "string",
+            "enum": [
+              "CSV",
+              "OFX",
+              "QIF"
+            ]
+          },
+          "content": {
+            "type": "string",
+            "description": "UTF-8 file content; maximum 5 MB"
+          },
+          "filename": {
+            "type": "string",
+            "example": "statement.csv"
+          },
+          "account_id": {
+            "type": "string",
+            "description": "Account affected by every imported statement row"
+          },
+          "expense_category_id": {
+            "type": "string",
+            "description": "Default category for negative/expense rows"
+          },
+          "income_category_id": {
+            "type": "string",
+            "description": "Default category for positive/income rows"
+          },
+          "idempotency_key": {
+            "type": "string",
+            "description": "A retry of this import returns the original job"
+          }
+        },
+        "required": [
+          "format",
+          "content",
+          "filename",
+          "account_id",
+          "expense_category_id",
+          "idempotency_key"
+        ]
+      },
       "ApiErrorBody": {
         "type": "object",
         "description": "The shape of every failure, produced by GlobalHttpExceptionFilter. `code` is the stable identifier — branch on it, not on `message`, which is prose and may be reworded or translated.",
@@ -5055,10 +5431,13 @@
               "RELEASE_CONFIG_UNAVAILABLE",
               "INVALID_RELEASE_URL",
               "INVALID_REPORT_RANGE",
+              "INVALID_EXPORT_FORMAT",
               "ACCOUNT_NOT_FOUND",
               "CATEGORY_NOT_FOUND",
               "PARENT_CATEGORY_NOT_FOUND",
               "TRANSACTION_NOT_FOUND",
+              "ATTACHMENT_NOT_FOUND",
+              "IMPORT_NOT_FOUND",
               "TAG_NOT_FOUND",
               "GOAL_NOT_FOUND",
               "EVENT_NOT_FOUND",
@@ -5071,6 +5450,8 @@
               "INVALID_TYPE",
               "INVALID_VALUE",
               "INVALID_REFERENCE",
+              "INVALID_ATTACHMENT",
+              "IMPORT_PARSE_FAILED",
               "CATEGORY_REQUIRED",
               "CATEGORY_KIND_MISMATCH",
               "DESTINATION_REQUIRED",
@@ -5099,7 +5480,12 @@
               "SUSPEND_FAILED",
               "REINSTATE_FAILED",
               "DISMISS_FAILED",
-              "BROADCASTS_UNAVAILABLE"
+              "BROADCASTS_UNAVAILABLE",
+              "IMPORT_CREATE_FAILED",
+              "IMPORT_STAGE_FAILED",
+              "ATTACHMENT_UPLOAD_FAILED",
+              "ATTACHMENT_DOWNLOAD_FAILED",
+              "ATTACHMENT_DELETE_FAILED"
             ],
             "example": "TRANSACTION_NOT_FOUND"
           },

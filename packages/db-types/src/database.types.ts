@@ -636,6 +636,126 @@ export type Database = {
         }
         Relationships: []
       }
+      import_jobs: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          created_by: string
+          error_message: string | null
+          failed_rows: number
+          filename: string
+          format: string
+          id: string
+          idempotency_key: string
+          imported_rows: number
+          started_at: string | null
+          status: string
+          total_rows: number
+          workspace_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          created_by: string
+          error_message?: string | null
+          failed_rows?: number
+          filename: string
+          format: string
+          id?: string
+          idempotency_key: string
+          imported_rows?: number
+          started_at?: string | null
+          status?: string
+          total_rows?: number
+          workspace_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          created_by?: string
+          error_message?: string | null
+          failed_rows?: number
+          filename?: string
+          format?: string
+          id?: string
+          idempotency_key?: string
+          imported_rows?: number
+          started_at?: string | null
+          status?: string
+          total_rows?: number
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "import_jobs_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      import_rows: {
+        Row: {
+          created_at: string
+          error_message: string | null
+          id: string
+          job_id: string
+          journal_entry_id: string | null
+          normalized_payload: Json | null
+          raw_payload: Json
+          row_number: number
+          status: string
+          workspace_id: string
+        }
+        Insert: {
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          job_id: string
+          journal_entry_id?: string | null
+          normalized_payload?: Json | null
+          raw_payload: Json
+          row_number: number
+          status?: string
+          workspace_id: string
+        }
+        Update: {
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          job_id?: string
+          journal_entry_id?: string | null
+          normalized_payload?: Json | null
+          raw_payload?: Json
+          row_number?: number
+          status?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "import_rows_job_id_workspace_id_fkey"
+            columns: ["job_id", "workspace_id"]
+            isOneToOne: false
+            referencedRelation: "import_jobs"
+            referencedColumns: ["id", "workspace_id"]
+          },
+          {
+            foreignKeyName: "import_rows_journal_entry_id_workspace_id_fkey"
+            columns: ["journal_entry_id", "workspace_id"]
+            isOneToOne: false
+            referencedRelation: "journal_entries"
+            referencedColumns: ["id", "workspace_id"]
+          },
+          {
+            foreignKeyName: "import_rows_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       journal_entries: {
         Row: {
           client_entry_id: string
@@ -1508,6 +1628,63 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "tags_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      transaction_attachments: {
+        Row: {
+          checksum_sha256: string
+          content_type: string
+          created_at: string
+          id: string
+          idempotency_key: string
+          journal_entry_id: string
+          original_name: string
+          owner_id: string
+          size_bytes: number
+          storage_path: string
+          workspace_id: string
+        }
+        Insert: {
+          checksum_sha256: string
+          content_type: string
+          created_at?: string
+          id?: string
+          idempotency_key: string
+          journal_entry_id: string
+          original_name: string
+          owner_id: string
+          size_bytes: number
+          storage_path: string
+          workspace_id: string
+        }
+        Update: {
+          checksum_sha256?: string
+          content_type?: string
+          created_at?: string
+          id?: string
+          idempotency_key?: string
+          journal_entry_id?: string
+          original_name?: string
+          owner_id?: string
+          size_bytes?: number
+          storage_path?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "transaction_attachments_journal_entry_id_workspace_id_fkey"
+            columns: ["journal_entry_id", "workspace_id"]
+            isOneToOne: false
+            referencedRelation: "journal_entries"
+            referencedColumns: ["id", "workspace_id"]
+          },
+          {
+            foreignKeyName: "transaction_attachments_workspace_id_fkey"
             columns: ["workspace_id"]
             isOneToOne: false
             referencedRelation: "workspaces"

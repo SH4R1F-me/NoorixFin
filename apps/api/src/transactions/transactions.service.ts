@@ -38,6 +38,7 @@ export class TransactionsService {
     userId: string,
     accessToken: string,
     dto: CreateTransactionDto,
+    options: { source?: string; evaluateNotifications?: boolean } = {},
   ) {
     const client = this.supabaseService.getUserClient(accessToken);
 
@@ -117,7 +118,7 @@ export class TransactionsService {
         payee: dto.payee || null,
         note: dto.note || null,
         status: 'POSTED',
-        source: 'MANUAL',
+        source: options.source ?? 'MANUAL',
         client_entry_id: dto.idempotency_key,
         idempotency_key_hash: idempotencyHash,
         created_by: userId,
@@ -248,19 +249,20 @@ export class TransactionsService {
       }
     }
 
-    try {
-      await this.notifications.evaluateFinancialRules(
-        accessToken,
-        userId,
-        workspaceId,
-      );
-    } catch (error) {
-      // The ledger write is already durable. A provider/rule outage must not
-      // turn a successful financial mutation into a retryable client error.
-      this.logger.warn(
-        `Post-transaction notification rules failed: ${error instanceof Error ? error.message : String(error)}`,
-      );
-    }
+    if (options.evaluateNotifications !== false)
+      try {
+        await this.notifications.evaluateFinancialRules(
+          accessToken,
+          userId,
+          workspaceId,
+        );
+      } catch (error) {
+        // The ledger write is already durable. A provider/rule outage must not
+        // turn a successful financial mutation into a retryable client error.
+        this.logger.warn(
+          `Post-transaction notification rules failed: ${error instanceof Error ? error.message : String(error)}`,
+        );
+      }
 
     return { ...entry, postings: createdPostings || [] };
   }
@@ -353,7 +355,7 @@ export class TransactionsService {
       // entry belongs to. A posting references the category's BACKING ledger
       // account, never the category id (DEC-015), so this is the only link.
       .select(
-        'id, workspace_id, entry_type, occurred_at, local_date, payee, note, status, source, reverses_entry_id, created_by, posted_at, created_at, updated_at, version, journal_postings(ledger_account_id, debit_minor, credit_minor, currency_code)',
+        'id, workspace_id, entry_type, occurred_at, local_date, payee, note, status, source, reverses_entry_id, created_by, posted_at, created_at, updated_at, version, journal_postings(ledger_account_id, debit_minor, credit_minor, currency_code), transaction_attachments(id, original_name, content_type, size_bytes, created_at)',
       )
       .eq('workspace_id', workspaceId)
       .order('occurred_at', { ascending: false })
@@ -388,6 +390,18 @@ export class TransactionsService {
             }[];
           }
         ).journal_postings ?? [];
+      const attachments =
+        (
+          entry as unknown as {
+            transaction_attachments?: Array<{
+              id: string;
+              original_name: string;
+              content_type: string;
+              size_bytes: number;
+              created_at: string;
+            }>;
+          }
+        ).transaction_attachments ?? [];
 
       const total = postings.reduce(
         (sum, p) => sum + p.debit_minor + p.credit_minor,
@@ -402,6 +416,10 @@ export class TransactionsService {
         // the category list it already has, so naming the category costs no
         // extra query.
         ledger_account_ids: postings.map((p) => p.ledger_account_id),
+        // PostgREST names an embedded relation after its table. The public API
+        // contract deliberately uses the shorter resource name consumed by
+        // web/mobile clients.
+        attachments,
       };
     });
 

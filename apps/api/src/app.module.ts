@@ -30,6 +30,7 @@ import { DevicesModule } from './devices/devices.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { ReleasesModule } from './releases/releases.module';
 import { SearchModule } from './search/search.module';
+import { ImportsModule } from './imports/imports.module';
 
 // Middleware, Filters & Interceptors
 import { RequestIdMiddleware } from './common/middleware/request-id.middleware';
@@ -91,6 +92,7 @@ import { IdentityThrottlerGuard } from './common/guards/identity-throttler.guard
     NotificationsModule,
     ReleasesModule,
     SearchModule,
+    ImportsModule,
   ],
   providers: [
     // Global auth guard (skip with @Public())

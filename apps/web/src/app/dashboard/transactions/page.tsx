@@ -104,15 +104,14 @@ export default async function TransactionsPage({
       reversed: row.reversed === true,
       isReversal: row.entry_type === 'REVERSAL',
       tags: row.tags ?? [],
+      attachments: row.attachments ?? [],
     };
   });
 
   const activeCategory = filterCategoryId
     ? categoryRows.find((category) => category.id === filterCategoryId)
     : undefined;
-  const activeTag = filterTagId
-    ? tagRows.find((tag) => tag.id === filterTagId)
-    : undefined;
+  const activeTag = filterTagId ? tagRows.find((tag) => tag.id === filterTagId) : undefined;
 
   return (
     <TransactionsView
@@ -130,9 +129,7 @@ export default async function TransactionsPage({
       accounts={accountRows
         .filter(
           (account) =>
-            !account.archived_at &&
-            account.subtype !== 'CATEGORY' &&
-            account.subtype !== 'SYSTEM',
+            !account.archived_at && account.subtype !== 'CATEGORY' && account.subtype !== 'SYSTEM',
         )
         .map((account) => ({ id: account.id, label: account.name }))}
       tags={tagRows}

@@ -26,6 +26,7 @@ import {
   Wrench,
   PlugZap,
   Bell,
+  Upload,
 } from 'lucide-react';
 import BroadcastBanner from '../../components/broadcast-banner';
 import CommandPalette from './command-palette';
@@ -53,6 +54,7 @@ const NAV_ITEMS = [
   { id: 'calendar', key: 'nav.calendar', icon: Calendar, href: '/dashboard/calendar' },
   { id: 'goals', key: 'nav.goals', icon: Target, href: '/dashboard/goals' },
   { id: 'reports', key: 'nav.reports', icon: BarChart3, href: '/dashboard/reports' },
+  { id: 'import', key: 'nav.importExport', icon: Upload, href: '/dashboard/import' },
   { id: 'settings', key: 'nav.settings', icon: Settings, href: '/dashboard/settings' },
 ] as const;
 
@@ -662,7 +664,9 @@ const styles: Record<string, React.CSSProperties> = {
     gap: '0.5rem',
   },
   pageContent: {
-    padding: '2rem',
+    // Fixed shell actions occupy the top-right chrome. Reserving their row
+    // keeps page-level actions pointer-reachable instead of layered below it.
+    padding: '5rem 2rem 2rem',
     maxWidth: 1400,
   },
 };

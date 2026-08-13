@@ -450,6 +450,11 @@ input::placeholder {
   .nf-notification-grid > * {
     grid-column: 1 !important;
   }
+
+  .nf-import-job {
+    grid-template-columns: 1fr !important;
+    align-items: start !important;
+  }
 }
 
 /* ── The flexbox min-width trap ──────────────────────────────────────────────

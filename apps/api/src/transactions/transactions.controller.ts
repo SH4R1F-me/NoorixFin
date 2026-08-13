@@ -32,7 +32,9 @@ import { TransactionsService } from './transactions.service';
 import {
   CreateTransactionDto,
   TransactionResponseDto,
+  CreateAttachmentDto,
 } from './dto/transaction.dto';
+import { AttachmentsService } from './attachments.service';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import type { AuthenticatedUser } from '../common/decorators/current-user.decorator';
 import { ThrottleLedgerWrite } from '../common/throttle';
@@ -42,7 +44,10 @@ import { WorkspaceMemberGuard } from '../auth/guards/workspace-member.guard';
 @ApiBearerAuth('supabase-auth')
 @Controller()
 export class TransactionsController {
-  constructor(private readonly transactionsService: TransactionsService) {}
+  constructor(
+    private readonly transactionsService: TransactionsService,
+    private readonly attachments: AttachmentsService,
+  ) {}
 
   @Post('workspaces/:workspaceId/transactions')
   @ThrottleLedgerWrite()
@@ -169,6 +174,65 @@ export class TransactionsController {
     return this.transactionsService.getTransaction(
       transactionId,
       workspaceId,
+      req.accessToken,
+    );
+  }
+
+  @Post('workspaces/:workspaceId/transactions/:id/attachments')
+  @ThrottleLedgerWrite()
+  @UseGuards(WorkspaceMemberGuard)
+  @ApiOperation({
+    summary: 'Upload a private receipt image or PDF (maximum 5 MB)',
+  })
+  attach(
+    @Param('workspaceId') workspaceId: string,
+    @Param('id', ParseUUIDPipe) transactionId: string,
+    @CurrentUser() user: AuthenticatedUser,
+    @Req() req: Request & { accessToken: string },
+    @Body() dto: CreateAttachmentDto,
+  ) {
+    return this.attachments.create(
+      workspaceId,
+      transactionId,
+      user.id,
+      req.accessToken,
+      dto,
+    );
+  }
+
+  @Get('workspaces/:workspaceId/transactions/:id/attachments/:attachmentId')
+  @UseGuards(WorkspaceMemberGuard)
+  @ApiOperation({ summary: 'Create a one-minute signed receipt download URL' })
+  attachmentUrl(
+    @Param('workspaceId') workspaceId: string,
+    @Param('id', ParseUUIDPipe) transactionId: string,
+    @Param('attachmentId', ParseUUIDPipe) attachmentId: string,
+    @Req() req: Request & { accessToken: string },
+  ) {
+    return this.attachments.signedUrl(
+      workspaceId,
+      transactionId,
+      attachmentId,
+      req.accessToken,
+    );
+  }
+
+  @Delete('workspaces/:workspaceId/transactions/:id/attachments/:attachmentId')
+  @ThrottleLedgerWrite()
+  @UseGuards(WorkspaceMemberGuard)
+  @ApiOperation({ summary: 'Permanently delete a receipt owned by the caller' })
+  deleteAttachment(
+    @Param('workspaceId') workspaceId: string,
+    @Param('id', ParseUUIDPipe) transactionId: string,
+    @Param('attachmentId', ParseUUIDPipe) attachmentId: string,
+    @CurrentUser() user: AuthenticatedUser,
+    @Req() req: Request & { accessToken: string },
+  ) {
+    return this.attachments.remove(
+      workspaceId,
+      transactionId,
+      attachmentId,
+      user.id,
       req.accessToken,
     );
   }

@@ -1,5 +1,5 @@
-import path from "node:path";
-import type { NextConfig } from "next";
+import path from 'node:path';
+import type { NextConfig } from 'next';
 
 /**
  * Security headers (audit gap S1).
@@ -73,6 +73,12 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
+  experimental: {
+    // CSV/OFX/QIF imports and base64 receipt uploads pass through authenticated
+    // Server Actions. Base64 and JSON escaping expand the wire payload; the API
+    // and Storage still enforce the actual decoded/content limit of 5 MB.
+    serverActions: { bodySizeLimit: '12mb' },
+  },
   // Lets CI and local verification build beside a running dev server instead
   // of fighting it for `.next/lock`.
   distDir: process.env.NEXT_DIST_DIR ?? '.next',

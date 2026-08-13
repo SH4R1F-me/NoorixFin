@@ -60,6 +60,55 @@ function revalidateLedger() {
   revalidatePath('/dashboard/categories');
 }
 
+export async function uploadAttachment(input: {
+  workspaceId: string;
+  transactionId: string;
+  filename: string;
+  contentType: string;
+  dataBase64: string;
+}): Promise<LedgerResult> {
+  if (!['image/jpeg', 'image/png', 'image/webp', 'application/pdf'].includes(input.contentType)) {
+    return { ok: false, message: 'Receipt must be a JPG, PNG, WebP, or PDF.' };
+  }
+  try {
+    const idempotencyKey = randomUUID();
+    await apiFetch(
+      `/workspaces/${input.workspaceId}/transactions/${input.transactionId}/attachments`,
+      {
+        method: 'POST',
+        body: {
+          idempotency_key: idempotencyKey,
+          filename: input.filename,
+          content_type: input.contentType,
+          data_base64: input.dataBase64,
+        },
+        idempotencyKey,
+      },
+    );
+    revalidatePath('/dashboard/transactions');
+    return { ok: true };
+  } catch (error) {
+    return fail(error);
+  }
+}
+
+export async function deleteAttachment(
+  workspaceId: string,
+  transactionId: string,
+  attachmentId: string,
+): Promise<LedgerResult> {
+  try {
+    await apiFetch(
+      `/workspaces/${workspaceId}/transactions/${transactionId}/attachments/${attachmentId}`,
+      { method: 'DELETE' },
+    );
+    revalidatePath('/dashboard/transactions');
+    return { ok: true };
+  } catch (error) {
+    return fail(error);
+  }
+}
+
 export interface NewTransactionInput {
   workspaceId: string;
   /** Free-form labels (§6.3). Created on first use by the API. */
@@ -77,9 +126,7 @@ export interface NewTransactionInput {
   occurredAt?: string;
 }
 
-export async function createTransaction(
-  input: NewTransactionInput,
-): Promise<LedgerResult> {
+export async function createTransaction(input: NewTransactionInput): Promise<LedgerResult> {
   if (!input.accountId) return { ok: false, message: 'Choose an account.' };
 
   if (input.type === 'TRANSFER') {
@@ -119,11 +166,7 @@ export async function createTransaction(
         // rather than an error — silent, but still wrong.
         ...(input.tags?.length
           ? {
-              tags: [
-                ...new Set(
-                  input.tags.map((tag) => tag.trim()).filter((tag) => tag !== ''),
-                ),
-              ],
+              tags: [...new Set(input.tags.map((tag) => tag.trim()).filter((tag) => tag !== ''))],
             }
           : {}),
         // Generated per submission, server-side. A retry of the SAME submission
@@ -240,10 +283,7 @@ export async function reverseTransaction(
  * without a reversal-style confirmation: what is lost is a way of FINDING
  * transactions, never a transaction.
  */
-export async function deleteTag(
-  workspaceId: string,
-  tagId: string,
-): Promise<LedgerResult> {
+export async function deleteTag(workspaceId: string, tagId: string): Promise<LedgerResult> {
   try {
     await apiFetch(`/workspaces/${workspaceId}/tags/${tagId}`, { method: 'DELETE' });
     revalidateLedger();

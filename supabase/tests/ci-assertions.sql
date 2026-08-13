@@ -96,6 +96,112 @@ BEGIN
 END;
 $$;
 
+-- ── Private receipt and import staging boundaries (Phase 5) ─────────────────
+DO $$
+DECLARE
+  v_count BIGINT;
+BEGIN
+  RAISE NOTICE '── Import and receipt isolation (Phase 5) ──';
+
+  IF NOT EXISTS (
+    SELECT 1 FROM storage.buckets
+     WHERE id = 'transaction-receipts' AND public = false
+       AND file_size_limit = 5242880
+  ) THEN
+    RAISE EXCEPTION 'ATTACHMENT FAILED: private 5 MB receipt bucket is missing';
+  END IF;
+
+  INSERT INTO transaction_attachments
+    (id, workspace_id, journal_entry_id, owner_id, idempotency_key, storage_path,
+     original_name, content_type, size_bytes, checksum_sha256)
+  VALUES
+    ('e1000000-0000-0000-0000-000000000001',
+     '22222222-2222-2222-2222-222222222222',
+     '55555555-5555-5555-5555-555555555555',
+     'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb',
+     'e1000000-0000-0000-0000-000000000002',
+     '22222222-2222-2222-2222-222222222222/bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb/ci.pdf',
+     'ci.pdf', 'application/pdf', 5, repeat('a', 64));
+
+  INSERT INTO import_jobs
+    (id, workspace_id, created_by, idempotency_key, format, filename, status)
+  VALUES
+    ('e1000000-0000-0000-0000-000000000011',
+     '11111111-1111-1111-1111-111111111111',
+     'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
+     'e1000000-0000-0000-0000-000000000012', 'CSV', 'alice.csv', 'PENDING'),
+    ('e1000000-0000-0000-0000-000000000021',
+     '22222222-2222-2222-2222-222222222222',
+     'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb',
+     'e1000000-0000-0000-0000-000000000022', 'QIF', 'bob.qif', 'PENDING');
+
+  SET LOCAL ROLE authenticated;
+  PERFORM set_config('request.jwt.claim.sub', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', true);
+
+  SELECT count(*) INTO v_count FROM transaction_attachments
+   WHERE id = 'e1000000-0000-0000-0000-000000000001';
+  IF v_count <> 0 THEN
+    RAISE EXCEPTION 'ATTACHMENT FAILED: Alice sees Bob''s receipt metadata';
+  END IF;
+
+  SELECT count(*) INTO v_count FROM import_jobs
+   WHERE id IN ('e1000000-0000-0000-0000-000000000011',
+                'e1000000-0000-0000-0000-000000000021');
+  IF v_count <> 1 THEN
+    RAISE EXCEPTION 'IMPORT FAILED: Alice sees % of two cross-user jobs (expected own only)', v_count;
+  END IF;
+
+  BEGIN
+    INSERT INTO transaction_attachments
+      (workspace_id, journal_entry_id, owner_id, idempotency_key, storage_path,
+       original_name, content_type, size_bytes, checksum_sha256)
+    VALUES
+      ('11111111-1111-1111-1111-111111111111',
+       '55555555-5555-5555-5555-555555555555',
+       'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
+       'e1000000-0000-0000-0000-000000000003',
+       '11111111-1111-1111-1111-111111111111/aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa/forged.pdf',
+       'forged.pdf', 'application/pdf', 5, repeat('b', 64));
+    RAISE EXCEPTION 'ATTACHMENT FAILED: cross-workspace journal reference was accepted';
+  EXCEPTION WHEN foreign_key_violation THEN NULL;
+  END;
+
+  BEGIN
+    INSERT INTO import_rows (job_id, workspace_id, row_number, raw_payload)
+    VALUES ('e1000000-0000-0000-0000-000000000011',
+            '22222222-2222-2222-2222-222222222222', 1, '{}'::jsonb);
+    RAISE EXCEPTION 'IMPORT FAILED: a staged row escaped its job workspace';
+  EXCEPTION WHEN foreign_key_violation THEN NULL;
+  END;
+
+  RESET ROLE;
+
+  BEGIN
+    INSERT INTO transaction_attachments
+      (workspace_id, journal_entry_id, owner_id, idempotency_key, storage_path,
+       original_name, content_type, size_bytes, checksum_sha256)
+    VALUES
+      ('22222222-2222-2222-2222-222222222222',
+       '55555555-5555-5555-5555-555555555555',
+       'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb',
+       'e1000000-0000-0000-0000-000000000002',
+       '22222222-2222-2222-2222-222222222222/bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb/retry.pdf',
+       'retry.pdf', 'application/pdf', 5, repeat('c', 64));
+    RAISE EXCEPTION 'ATTACHMENT FAILED: a duplicate receipt idempotency key was accepted';
+  EXCEPTION WHEN unique_violation THEN NULL;
+  END;
+
+  DELETE FROM import_jobs WHERE id IN (
+    'e1000000-0000-0000-0000-000000000011',
+    'e1000000-0000-0000-0000-000000000021'
+  );
+  DELETE FROM transaction_attachments
+   WHERE id = 'e1000000-0000-0000-0000-000000000001';
+
+  RAISE NOTICE '   import and receipt boundaries hold';
+END;
+$$;
+
 -- ── Ledger invariants (FIN-01) ───────────────────────────────────────────────
 -- Asserted by attempting the write and requiring it to FAIL. A constraint that
 -- exists but is not enforced looks identical to one that is, until data is

@@ -9,14 +9,30 @@ import {
   type INestApplication,
 } from '@nestjs/common';
 import { SwaggerModule } from '@nestjs/swagger';
+import { json } from 'express';
 import { AppModule } from './app.module';
 import { ReadinessService } from './health/readiness.service';
 import { buildOpenApiDocument } from './openapi';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
+    // Route-scoped parsers below keep ordinary JSON endpoints on Express's
+    // small default while allowing the two authenticated 5 MB workflows.
+    bodyParser: false,
     logger: ['error', 'warn', 'log', 'debug', 'verbose'],
   });
+
+  app.use(
+    '/v1/workspaces/:workspaceId/import',
+    // Escaping quotes and backslashes can nearly double UTF-8 statement JSON.
+    json({ limit: '12mb' }),
+  );
+  app.use(
+    '/v1/workspaces/:workspaceId/transactions/:id/attachments',
+    // Base64 expands decoded bytes by roughly one third.
+    json({ limit: '8mb' }),
+  );
+  app.use(json({ limit: '100kb' }));
 
   // ─── URI Versioning (§11.1: /v1) ───────────────────────
   app.enableVersioning({
