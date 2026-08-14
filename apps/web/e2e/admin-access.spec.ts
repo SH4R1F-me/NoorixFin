@@ -170,7 +170,7 @@ test.describe('admin access control', () => {
     await exit.click();
     await page.waitForURL(/\/dashboard$/, { timeout: 15_000 });
     // Back in their OWN finances — the dual-role requirement.
-    await expect(page.locator('aside')).toContainText('NoorixFin');
+    await expect(page.locator('aside.nf-sidebar')).toContainText('NoorixFin');
     await expect(page.locator('body')).not.toContainText('OPERATOR MODE');
   });
 
@@ -178,6 +178,13 @@ test.describe('admin access control', () => {
     await signInAsOperator(page);
     await page.goto('/admin/users');
     await expect(page.locator('body')).toContainText('User Management');
+
+    // The route-level loading shell also contains the page heading. Wait for
+    // the real users table before inspecting its security boundary.
+    await expect(page.getByRole('columnheader', { name: 'Accounts' })).toBeVisible({
+      timeout: 15_000,
+    });
+    await expect(page.getByRole('columnheader', { name: 'Entries' })).toBeVisible();
 
     const body = (await page.locator('body').innerText()).toLowerCase();
     // Column headers that would only exist if finances had leaked in.
