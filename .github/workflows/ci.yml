@@ -43,7 +43,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  NODE_VERSION: '20'
+  NODE_VERSION: '24'
   PNPM_VERSION: '11.18.0'
   API_URL: 'http://localhost:8080'
   # The published Supabase local default. Not a secret — it is in every
