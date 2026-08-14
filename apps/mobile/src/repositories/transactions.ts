@@ -33,24 +33,25 @@ export interface TransactionRow {
  * the postings are the source of truth (DEC-006), so summing them here keeps
  * the list honest even if an entry is later reversed.
  */
-export async function listRecent(
-  workspaceId: string,
-  limit = 50,
-): Promise<TransactionRow[]> {
+export async function listRecent(workspaceId: string, limit = 50): Promise<TransactionRow[]> {
   const db = await getDb();
   return db.getAllAsync<TransactionRow>(
     `SELECT
        e.id, e.workspace_id, e.entry_type, e.occurred_at, e.local_date,
        e.payee, e.note, e.status, e.is_pending,
-       COALESCE((
+       CASE WHEN e.is_pending = 1 AND e.pending_amount_minor IS NOT NULL
+         THEN e.pending_amount_minor
+         ELSE COALESCE((
          SELECT SUM(p.debit_minor + p.credit_minor) / 2
            FROM journal_postings p
           WHERE p.journal_entry_id = e.id
-       ), 0) AS amount_minor,
-       COALESCE((
+       ), 0) END AS amount_minor,
+       CASE WHEN e.is_pending = 1 AND e.pending_currency_code IS NOT NULL
+         THEN e.pending_currency_code
+         ELSE COALESCE((
          SELECT p.currency_code FROM journal_postings p
           WHERE p.journal_entry_id = e.id LIMIT 1
-       ), 'BDT') AS currency_code
+       ), 'BDT') END AS currency_code
      FROM journal_entries e
      WHERE e.workspace_id = ? AND e.status != 'VOIDED'
      ORDER BY e.occurred_at DESC, e.id DESC
@@ -63,6 +64,7 @@ export interface CreateTransactionInput {
   type: 'INCOME' | 'EXPENSE' | 'TRANSFER';
   amount: string;
   account_id: string;
+  currency_code: string;
   category_id?: string;
   transfer_to_account_id?: string;
   payee?: string;
@@ -95,8 +97,9 @@ export async function createTransaction(
   await db.runAsync(
     `INSERT INTO journal_entries
        (id, workspace_id, entry_type, occurred_at, local_date, payee, note,
-        status, source, client_entry_id, created_at, updated_at, version, is_pending)
-     VALUES (?, ?, ?, ?, ?, ?, ?, 'POSTED', 'MANUAL', ?, ?, ?, 1, 1)`,
+        status, source, client_entry_id, created_at, updated_at, version, is_pending,
+        pending_amount_minor, pending_currency_code)
+     VALUES (?, ?, ?, ?, ?, ?, ?, 'POSTED', 'MANUAL', ?, ?, ?, 1, 1, ?, ?)`,
     [
       id,
       workspaceId,
@@ -108,6 +111,8 @@ export async function createTransaction(
       id,
       now,
       now,
+      Number(input.amount),
+      input.currency_code,
     ],
   );
 

@@ -15,7 +15,7 @@
  *  - Mirrored rows keep `updated_at` so the pull can upsert idempotently.
  */
 
-export const SCHEMA_VERSION = 2;
+export const SCHEMA_VERSION = 3;
 
 export const CREATE_TABLES = `
 PRAGMA journal_mode = WAL;
@@ -78,7 +78,12 @@ CREATE TABLE IF NOT EXISTS journal_entries (
   version INTEGER NOT NULL DEFAULT 1,
   -- 1 while this row is an unconfirmed local write (DEC-012 optimistic UI).
   -- Cleared when the server's own copy arrives on the next pull.
-  is_pending INTEGER NOT NULL DEFAULT 0
+  is_pending INTEGER NOT NULL DEFAULT 0,
+  -- The server remains the posting authority. These two values exist only so
+  -- an optimistic entry can display what the user actually typed before the
+  -- authoritative balanced postings arrive.
+  pending_amount_minor INTEGER,
+  pending_currency_code TEXT
 );
 CREATE INDEX IF NOT EXISTS idx_entries_ws_date ON journal_entries(workspace_id, occurred_at DESC);
 

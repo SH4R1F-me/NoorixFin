@@ -27,16 +27,34 @@ export interface CurrencyInfo {
  * Blueprint §8.1: currency metadata with decimal exponent.
  */
 export const CURRENCIES: Record<string, CurrencyInfo> = {
-  BDT: { code: 'BDT', exponent: 2, symbol: '৳', nameEn: 'Bangladeshi Taka', nameBn: 'বাংলাদেশী টাকা' },
+  BDT: {
+    code: 'BDT',
+    exponent: 2,
+    symbol: '৳',
+    nameEn: 'Bangladeshi Taka',
+    nameBn: 'বাংলাদেশী টাকা',
+  },
   SAR: { code: 'SAR', exponent: 2, symbol: '﷼', nameEn: 'Saudi Riyal', nameBn: 'সৌদি রিয়াল' },
   USD: { code: 'USD', exponent: 2, symbol: '$', nameEn: 'US Dollar', nameBn: 'মার্কিন ডলার' },
   EUR: { code: 'EUR', exponent: 2, symbol: '€', nameEn: 'Euro', nameBn: 'ইউরো' },
   GBP: { code: 'GBP', exponent: 2, symbol: '£', nameEn: 'British Pound', nameBn: 'ব্রিটিশ পাউন্ড' },
   INR: { code: 'INR', exponent: 2, symbol: '₹', nameEn: 'Indian Rupee', nameBn: 'ভারতীয় রুপি' },
   JPY: { code: 'JPY', exponent: 0, symbol: '¥', nameEn: 'Japanese Yen', nameBn: 'জাপানি ইয়েন' },
-  KWD: { code: 'KWD', exponent: 3, symbol: 'د.ك', nameEn: 'Kuwaiti Dinar', nameBn: 'কুয়েতি দিনার' },
+  KWD: {
+    code: 'KWD',
+    exponent: 3,
+    symbol: 'د.ك',
+    nameEn: 'Kuwaiti Dinar',
+    nameBn: 'কুয়েতি দিনার',
+  },
   AED: { code: 'AED', exponent: 2, symbol: 'د.إ', nameEn: 'UAE Dirham', nameBn: 'ইউএই দিরহাম' },
-  MYR: { code: 'MYR', exponent: 2, symbol: 'RM', nameEn: 'Malaysian Ringgit', nameBn: 'মালয়েশিয়ান রিঙ্গিত' },
+  MYR: {
+    code: 'MYR',
+    exponent: 2,
+    symbol: 'RM',
+    nameEn: 'Malaysian Ringgit',
+    nameBn: 'মালয়েশিয়ান রিঙ্গিত',
+  },
 };
 
 export function getCurrency(code: string): CurrencyInfo {
@@ -58,6 +76,43 @@ export function toMinorUnits(majorAmount: number, currencyCode: string): number 
   const multiplier = Math.pow(10, currency.exponent);
   // Round to avoid floating-point artifacts (e.g. 10.25 * 100 = 1024.9999...)
   return Math.round(majorAmount * multiplier);
+}
+
+/**
+ * Convert a user-entered major-unit decimal string to minor units exactly.
+ *
+ * This is the input-boundary counterpart to `formatMoney`. It deliberately
+ * avoids `Number`, `parseFloat`, multiplication, and rounding: all four can
+ * silently change a financial value before it reaches the ledger. The parsed
+ * digits are assembled as a BigInt and narrowed only after the safe-integer
+ * range has been checked.
+ */
+export function majorStringToMinorUnits(value: string, currencyCode: string): number {
+  const currency = getCurrency(currencyCode);
+  const match = /^(-?)(\d+)(?:\.(\d+))?$/.exec(value);
+  if (!match) {
+    throw new Error(`Invalid major-unit amount: "${value}"`);
+  }
+
+  const sign = match[1] ?? '';
+  const whole = match[2]!;
+  const fraction = match[3] ?? '';
+  if (fraction.length > currency.exponent) {
+    throw new Error(
+      `${currencyCode} accepts at most ${currency.exponent} decimal place${currency.exponent === 1 ? '' : 's'}`,
+    );
+  }
+
+  const paddedFraction = fraction.padEnd(currency.exponent, '0');
+  const scale = 10n ** BigInt(currency.exponent);
+  let minor = BigInt(whole) * scale + BigInt(paddedFraction || '0');
+  if (sign === '-') minor = -minor;
+
+  const max = BigInt(Number.MAX_SAFE_INTEGER);
+  if (minor > max || minor < -max) {
+    throw new Error(`Amount exceeds safe integer range: "${value}"`);
+  }
+  return Number(minor);
 }
 
 /**
@@ -141,9 +196,11 @@ export function negateMinorUnits(amount: number): number {
  * Check that total debits equal total credits in a set of postings.
  * Blueprint §8.2: every journal entry must balance.
  */
-export function validateBalance(
-  postings: Array<{ debitMinor: number; creditMinor: number }>,
-): { balanced: boolean; totalDebit: number; totalCredit: number } {
+export function validateBalance(postings: Array<{ debitMinor: number; creditMinor: number }>): {
+  balanced: boolean;
+  totalDebit: number;
+  totalCredit: number;
+} {
   let totalDebit = 0;
   let totalCredit = 0;
 

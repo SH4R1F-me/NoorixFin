@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { CheckCircle2, Fingerprint, Lock, RefreshCw, WifiOff } from 'lucide-react';
+import { CheckCircle2, Lock, RefreshCw, WifiOff } from 'lucide-react';
 import { getMobileRelease } from '../../../lib/releases';
 import InstallQrCode from './qr-code';
 import PlatformLinks from './platform-links';
@@ -30,8 +30,8 @@ export default async function DownloadPage() {
             Your finances, ready when you are.
           </h1>
           <p className="m-lead">
-            Offline-first money management with biometric protection, fast sync, and Bangla and
-            English built in.
+            A transparent preview of offline-first money management, secure sessions, and reliable
+            synchronization. Store links appear only after a verified release is published.
           </p>
           <PlatformLinks release={release} />
           <p className="m-download-trust">
@@ -84,9 +84,9 @@ export default async function DownloadPage() {
         <div className="m-feature-strip">
           {[
             [WifiOff, 'Works offline'],
-            [Lock, 'Biometric lock'],
-            [RefreshCw, 'Instant sync'],
-            [Fingerprint, 'Bangla & English'],
+            [Lock, 'Secure sessions'],
+            [RefreshCw, 'Reliable sync'],
+            [CheckCircle2, 'Open source'],
           ].map(([Icon, label]) => {
             const FeatureIcon = Icon as typeof WifiOff;
             return (

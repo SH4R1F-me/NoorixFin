@@ -122,8 +122,9 @@ export default async function DocsPage() {
                 Take your workspace offline
               </h2>
               <p className="m-lead" style={{ margin: '.75rem 0 1.25rem' }}>
-                Install from the App Store, Google Play, or the verified direct APK. After signing
-                in, open Settings → Mobile app on the web and scan its one-time pairing code.
+                When a verified release is marked live, use the published App Store, Google Play, or
+                checksum-verified direct APK link. Preview builds must not be treated as a public
+                release.
               </p>
               <div style={{ display: 'flex', gap: '.75rem', flexWrap: 'wrap' }}>
                 <Link href="/download" className="m-btn-primary">
@@ -153,7 +154,8 @@ export default async function DocsPage() {
               Full API Documentation
             </h2>
             <p className="m-lead" style={{ marginBottom: '2rem' }}>
-              Building an integration or self-hosting? Read our developer documentation on GitHub.
+              Building an integration? Read the current source and developer notes on GitHub. The
+              reproducible self-hosting guide is being completed before the first stable release.
             </p>
             <a
               href="https://github.com/SH4R1F-me/NoorixFin"

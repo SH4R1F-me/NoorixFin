@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import {
   toMinorUnits,
+  majorStringToMinorUnits,
   toMajorUnits,
   parseMinorUnits,
   serializeMinorUnits,
@@ -57,12 +58,42 @@ describe('@noorixfin/money', () => {
     });
 
     it('handles negative amounts', () => {
-      expect(toMinorUnits(-5.50, 'USD')).toBe(-550);
+      expect(toMinorUnits(-5.5, 'USD')).toBe(-550);
     });
 
     it('rounds floating-point artifacts correctly', () => {
       // 0.1 + 0.2 = 0.30000000000000004 in JS
       expect(toMinorUnits(0.1 + 0.2, 'USD')).toBe(30);
+    });
+  });
+
+  describe('majorStringToMinorUnits', () => {
+    it.each([
+      ['10.25', 'BDT', 1025],
+      ['100', 'JPY', 100],
+      ['1.234', 'KWD', 1234],
+      ['0.10', 'USD', 10],
+      ['-5.50', 'USD', -550],
+    ])('parses %s %s without floating point', (value, currency, expected) => {
+      expect(majorStringToMinorUnits(value, currency)).toBe(expected);
+    });
+
+    it('rejects fractions beyond the currency exponent', () => {
+      expect(() => majorStringToMinorUnits('1.001', 'USD')).toThrow('at most 2 decimal places');
+      expect(() => majorStringToMinorUnits('1.0', 'JPY')).toThrow('at most 0 decimal places');
+    });
+
+    it.each(['1e3', '0x10', '+1', ' 1', '1 ', '.5', '1.'])(
+      'rejects non-canonical input %s',
+      (value) => {
+        expect(() => majorStringToMinorUnits(value, 'USD')).toThrow('Invalid major-unit amount');
+      },
+    );
+
+    it('rejects values outside the exact JavaScript integer range', () => {
+      expect(() => majorStringToMinorUnits('90071992547410.00', 'USD')).toThrow(
+        'safe integer range',
+      );
     });
   });
 
@@ -189,8 +220,8 @@ describe('@noorixfin/money', () => {
     it('returns balanced for valid expense posting', () => {
       // Expense: Asset credit + Expense debit
       const result = validateBalance([
-        { debitMinor: 0, creditMinor: 1000 },  // Asset account credit
-        { debitMinor: 1000, creditMinor: 0 },  // Expense category debit
+        { debitMinor: 0, creditMinor: 1000 }, // Asset account credit
+        { debitMinor: 1000, creditMinor: 0 }, // Expense category debit
       ]);
       expect(result.balanced).toBe(true);
       expect(result.totalDebit).toBe(1000);
@@ -200,8 +231,8 @@ describe('@noorixfin/money', () => {
     it('returns balanced for income posting', () => {
       // Income: Income credit + Asset debit
       const result = validateBalance([
-        { debitMinor: 5000, creditMinor: 0 },  // Asset account debit
-        { debitMinor: 0, creditMinor: 5000 },  // Income category credit
+        { debitMinor: 5000, creditMinor: 0 }, // Asset account debit
+        { debitMinor: 0, creditMinor: 5000 }, // Income category credit
       ]);
       expect(result.balanced).toBe(true);
     });
@@ -209,8 +240,8 @@ describe('@noorixfin/money', () => {
     it('returns balanced for transfer', () => {
       // Transfer: Source credit + Destination debit
       const result = validateBalance([
-        { debitMinor: 0, creditMinor: 2000 },  // Source account credit
-        { debitMinor: 2000, creditMinor: 0 },  // Destination account debit
+        { debitMinor: 0, creditMinor: 2000 }, // Source account credit
+        { debitMinor: 2000, creditMinor: 0 }, // Destination account debit
       ]);
       expect(result.balanced).toBe(true);
     });
@@ -224,29 +255,29 @@ describe('@noorixfin/money', () => {
     });
 
     it('throws for both debit and credit positive', () => {
-      expect(() =>
-        validateBalance([{ debitMinor: 100, creditMinor: 100 }]),
-      ).toThrow('cannot have both debit and credit positive');
+      expect(() => validateBalance([{ debitMinor: 100, creditMinor: 100 }])).toThrow(
+        'cannot have both debit and credit positive',
+      );
     });
 
     it('throws for both debit and credit zero', () => {
-      expect(() =>
-        validateBalance([{ debitMinor: 0, creditMinor: 0 }]),
-      ).toThrow('cannot have both debit and credit zero');
+      expect(() => validateBalance([{ debitMinor: 0, creditMinor: 0 }])).toThrow(
+        'cannot have both debit and credit zero',
+      );
     });
 
     it('throws for negative amounts', () => {
-      expect(() =>
-        validateBalance([{ debitMinor: -100, creditMinor: 0 }]),
-      ).toThrow('must be non-negative');
+      expect(() => validateBalance([{ debitMinor: -100, creditMinor: 0 }])).toThrow(
+        'must be non-negative',
+      );
     });
 
     it('handles split transactions (multiple postings)', () => {
       // Split expense: Cash pays for Food (600) and Transport (400)
       const result = validateBalance([
-        { debitMinor: 0, creditMinor: 1000 },   // Cash credit
-        { debitMinor: 600, creditMinor: 0 },     // Food debit
-        { debitMinor: 400, creditMinor: 0 },     // Transport debit
+        { debitMinor: 0, creditMinor: 1000 }, // Cash credit
+        { debitMinor: 600, creditMinor: 0 }, // Food debit
+        { debitMinor: 400, creditMinor: 0 }, // Transport debit
       ]);
       expect(result.balanced).toBe(true);
     });

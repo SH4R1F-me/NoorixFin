@@ -714,8 +714,8 @@
         "desc": "The psychology of saving: how to set realistic goals and use our trackers to actually achieve them."
       },
       "selfHost": {
-        "title": "Self-Hosting Guide",
-        "desc": "For the tech-savvy: How to deploy your own private instance of NoorixFin on Vercel and Supabase for free."
+        "title": "Self-Hosting Status",
+        "desc": "The reproducible deployment and upgrade guide is being completed before NoorixFin's first stable release."
       }
     },
     "faqPage": {
@@ -724,15 +724,15 @@
       "items": [
         {
           "q": "Is NoorixFin really free?",
-          "a": "Yes — completely. NoorixFin is MIT licensed open-source software. There are no plans, no tiers, no credit card required. The hosted instance is free. Self-hosting is free. It will stay free."
+          "a": "Yes — completely. NoorixFin is MIT licensed open-source software. There are no plans, paid tiers, advertisements, or billing features."
         },
         {
           "q": "Can I self-host NoorixFin?",
-          "a": "Absolutely. Fork the GitHub repo, create a free Supabase project, run the migrations, and deploy the web app to Vercel or any Node.js host. The self-hosting guide is in /docs."
+          "a": "The MIT license permits it, but the tested container deployment and upgrade guide are still being completed. Do not treat the current tree as a stable self-host release yet."
         },
         {
           "q": "Where is my data stored?",
-          "a": "On the hosted instance, data is stored in Supabase (PostgreSQL). Row-Level Security ensures only you can read your data — not us, not other users. If you self-host, your data lives wherever your Supabase project is."
+          "a": "Data is stored in Supabase PostgreSQL. Row-Level Security limits financial rows to the authenticated owner. Review the security documentation and deployment model before operating an instance."
         },
         {
           "q": "Does NoorixFin track me?",
@@ -807,15 +807,15 @@
     "homePage": {
       "privacyTitle": "Your data belongs to you. Only you.",
       "privacyBody1": "Most finance apps make money by selling your spending data to advertisers. We think that is wrong. NoorixFin is funded by voluntary donations, not data brokering. Your financial life is private — mathematically enforced at the database level with Row-Level Security.",
-      "privacyBody2": "Since our code is fully open source, you do not have to take our word for it. Read every line. Audit it. Host it yourself. That transparency is the point.",
+      "privacyBody2": "Since our code is fully open source, you do not have to take our word for it. Read every line and audit it. That transparency is the point.",
       "privacyCta": "Read our Security Policy",
       "openSourceTitle": "Built in public. For everyone.",
       "openSourceBody1": "Finance is personal. You should never have to blindly trust a company with your most sensitive data. NoorixFin publishes every line of code under the MIT license. If you want to know exactly how we store, encrypt, and protect your data — you can read it right now, on GitHub.",
-      "openSourceBody2": "This also means NoorixFin will never be acquired, shut down, or put behind a paywall. The code exists. You can always run it yourself.",
+      "openSourceBody2": "The MIT-licensed code remains available to inspect, fork, and improve without a commercial billing dependency.",
       "communityTitle": "Join the movement",
       "communitySubtitle": "NoorixFin is not just software — it is a growing community of people who believe managing your money should be free and dignified.",
       "fork": "Fork & Customise",
-      "forkDesc": "Run your own instance with your own rules. Self-hosting is a first-class, documented path.",
+      "forkDesc": "Inspect and adapt the source now. A tested self-host deployment path is being completed before the stable release.",
       "star": "Star on GitHub",
       "starDesc": "Show your support and help more people discover a free alternative to paid finance apps.",
       "donate": "Donate to Support",
@@ -830,7 +830,7 @@
         "Double-entry ledger — mathematically balanced, always"
       ],
       "heroBadge": "100% Free & Open-Source · No Subscriptions · No Ads",
-      "heroStars": "Open on GitHub · MIT Licensed · Self-hostable",
+      "heroStars": "Open on GitHub · MIT Licensed · Self-host guide in progress",
       "stats": [
         {
           "value": "100%",

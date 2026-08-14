@@ -166,8 +166,8 @@ export default function DashboardView({
           <div style={{ flex: 1 }}>
             <strong style={{ color: 'var(--text-primary)' }}>Continue on mobile</strong>
             <p style={{ ...styles.emptyHint, padding: '.25rem 0 0' }}>
-              Work offline, unlock with biometrics, and pair this workspace with a secure one-time
-              QR code.
+              Work offline and pair this workspace with a secure one-time QR code. App-lock support
+              is not advertised until its device acceptance checks pass.
             </p>
           </div>
           <a href="/dashboard/settings/mobile" style={styles.mobileCardLink}>

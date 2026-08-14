@@ -21,6 +21,13 @@ export function getDb(): Promise<SQLite.SQLiteDatabase> {
     dbPromise = (async () => {
       const db = await SQLite.openDatabaseAsync(DB_NAME);
       await db.execAsync(CREATE_TABLES);
+      const entryColumns = await getLocalColumns(db, 'journal_entries');
+      if (!entryColumns.has('pending_amount_minor')) {
+        await db.execAsync('ALTER TABLE journal_entries ADD COLUMN pending_amount_minor INTEGER;');
+      }
+      if (!entryColumns.has('pending_currency_code')) {
+        await db.execAsync('ALTER TABLE journal_entries ADD COLUMN pending_currency_code TEXT;');
+      }
       return db;
     })();
   }

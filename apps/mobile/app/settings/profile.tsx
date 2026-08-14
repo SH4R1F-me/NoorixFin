@@ -3,8 +3,15 @@
  */
 import { useCallback, useState } from 'react';
 import {
-  View, Text, ScrollView, StyleSheet, TextInput,
-  TouchableOpacity, ActivityIndicator, Alert, SafeAreaView,
+  View,
+  Text,
+  ScrollView,
+  StyleSheet,
+  TextInput,
+  TouchableOpacity,
+  ActivityIndicator,
+  Alert,
+  SafeAreaView,
 } from 'react-native';
 import { useFocusEffect } from 'expo-router';
 import { apiFetch } from '../../src/lib/api';
@@ -25,7 +32,7 @@ export default function ProfileScreen() {
 
   const load = useCallback(async () => {
     try {
-      const data = await apiFetch<Profile>('/profiles/me');
+      const data = await apiFetch<Profile>('/me');
       setProfile(data);
       setDisplayName(data.display_name);
     } catch (e) {
@@ -35,16 +42,22 @@ export default function ProfileScreen() {
     }
   }, []);
 
-  useFocusEffect(useCallback(() => { void load(); }, [load]));
+  useFocusEffect(
+    useCallback(() => {
+      void load();
+    }, [load]),
+  );
 
   async function save() {
     if (!profile) return;
     setSaving(true);
     try {
-      await apiFetch('/profiles/me', {
+      const updated = await apiFetch<Profile>('/me/preferences', {
         method: 'PATCH',
         body: { display_name: displayName.trim() },
       });
+      setProfile(updated);
+      setDisplayName(updated.display_name);
       Alert.alert('Saved', 'Profile updated.');
     } catch (e) {
       Alert.alert('Error', 'Failed to save profile.');
@@ -62,9 +75,7 @@ export default function ProfileScreen() {
           <>
             {/* Avatar */}
             <View style={styles.avatar}>
-              <Text style={styles.avatarText}>
-                {(displayName || 'U').charAt(0).toUpperCase()}
-              </Text>
+              <Text style={styles.avatarText}>{(displayName || 'U').charAt(0).toUpperCase()}</Text>
             </View>
 
             <View style={styles.fieldGroup}>
@@ -80,24 +91,35 @@ export default function ProfileScreen() {
 
             <View style={styles.fieldGroup}>
               <Text style={styles.fieldLabel}>Locale</Text>
-              <View style={styles.readOnly}><Text style={styles.readOnlyText}>{profile?.locale}</Text></View>
+              <View style={styles.readOnly}>
+                <Text style={styles.readOnlyText}>{profile?.locale}</Text>
+              </View>
             </View>
 
             <View style={styles.fieldGroup}>
               <Text style={styles.fieldLabel}>Base Currency</Text>
-              <View style={styles.readOnly}><Text style={styles.readOnlyText}>{profile?.base_currency}</Text></View>
+              <View style={styles.readOnly}>
+                <Text style={styles.readOnlyText}>{profile?.base_currency}</Text>
+              </View>
             </View>
 
             <View style={styles.fieldGroup}>
               <Text style={styles.fieldLabel}>Timezone</Text>
-              <View style={styles.readOnly}><Text style={styles.readOnlyText}>{profile?.timezone}</Text></View>
+              <View style={styles.readOnly}>
+                <Text style={styles.readOnlyText}>{profile?.timezone}</Text>
+              </View>
             </View>
 
-            <TouchableOpacity onPress={save} disabled={saving} style={[styles.btn, saving && styles.btnDisabled]}>
-              {saving
-                ? <ActivityIndicator color="#fff" size="small" />
-                : <Text style={styles.btnText}>Save Changes</Text>
-              }
+            <TouchableOpacity
+              onPress={save}
+              disabled={saving}
+              style={[styles.btn, saving && styles.btnDisabled]}
+            >
+              {saving ? (
+                <ActivityIndicator color="#fff" size="small" />
+              ) : (
+                <Text style={styles.btnText}>Save Changes</Text>
+              )}
             </TouchableOpacity>
           </>
         )}
@@ -110,27 +132,41 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.bg },
   content: { padding: Spacing.lg, paddingBottom: Spacing.xxl, gap: Spacing.md },
   avatar: {
-    width: 80, height: 80, borderRadius: 40,
+    width: 80,
+    height: 80,
+    borderRadius: 40,
     backgroundColor: Colors.accentLight,
-    alignItems: 'center', justifyContent: 'center',
-    alignSelf: 'center', marginBottom: Spacing.lg,
+    alignItems: 'center',
+    justifyContent: 'center',
+    alignSelf: 'center',
+    marginBottom: Spacing.lg,
   },
   avatarText: { fontSize: 36, fontWeight: '800', color: Colors.accent },
   fieldGroup: { gap: Spacing.xs },
   fieldLabel: { ...Typography.label },
   input: {
-    backgroundColor: Colors.bgCard, borderRadius: Radius.md,
-    padding: Spacing.md, color: Colors.text, fontSize: 15,
-    borderWidth: 1, borderColor: Colors.border,
+    backgroundColor: Colors.bgCard,
+    borderRadius: Radius.md,
+    padding: Spacing.md,
+    color: Colors.text,
+    fontSize: 15,
+    borderWidth: 1,
+    borderColor: Colors.border,
   },
   readOnly: {
-    backgroundColor: Colors.bgElevated, borderRadius: Radius.md,
-    padding: Spacing.md, borderWidth: 1, borderColor: Colors.border,
+    backgroundColor: Colors.bgElevated,
+    borderRadius: Radius.md,
+    padding: Spacing.md,
+    borderWidth: 1,
+    borderColor: Colors.border,
   },
   readOnlyText: { ...Typography.body, color: Colors.textDim },
   btn: {
-    backgroundColor: Colors.accent, borderRadius: Radius.lg,
-    padding: Spacing.md, alignItems: 'center', marginTop: Spacing.md,
+    backgroundColor: Colors.accent,
+    borderRadius: Radius.lg,
+    padding: Spacing.md,
+    alignItems: 'center',
+    marginTop: Spacing.md,
   },
   btnDisabled: { opacity: 0.5 },
   btnText: { fontSize: 16, fontWeight: '700', color: '#fff' },

@@ -1,6 +1,7 @@
 {
   "name": "noorixfin",
   "version": "0.1.0",
+  "license": "MIT",
   "private": true,
   "description": "NoorixFin — Personal finance management system",
   "engines": {

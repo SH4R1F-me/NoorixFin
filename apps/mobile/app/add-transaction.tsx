@@ -9,8 +9,15 @@
  */
 import { useCallback, useEffect, useState } from 'react';
 import {
-  View, Text, StyleSheet, TouchableOpacity, ScrollView,
-  TextInput, SafeAreaView, ActivityIndicator, Alert,
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  ScrollView,
+  TextInput,
+  SafeAreaView,
+  ActivityIndicator,
+  Alert,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useWorkspace } from '../src/lib/WorkspaceContext';
@@ -19,6 +26,7 @@ import { listAccounts, type AccountRow } from '../src/repositories/accounts';
 import { createTransaction } from '../src/repositories/transactions';
 import { Colors, Typography, Spacing, Radius } from '../src/lib/theme';
 import { X, ChevronDown, Check } from 'lucide-react-native';
+import { CURRENCIES, majorStringToMinorUnits } from '@noorixfin/money';
 
 type TxnType = 'EXPENSE' | 'INCOME' | 'TRANSFER';
 
@@ -28,11 +36,13 @@ const TYPE_LABELS: Record<TxnType, string> = {
   TRANSFER: 'Transfer',
 };
 
+const ENABLED_TYPES: TxnType[] = ['EXPENSE', 'INCOME'];
+
 const DIGITS = ['7', '8', '9', '4', '5', '6', '1', '2', '3', '.', '0', '⌫'];
 
 export default function AddTransactionModal() {
   const router = useRouter();
-  const { workspaceId } = useWorkspace();
+  const { workspaceId, workspaceCurrency } = useWorkspace();
   const [type, setType] = useState<TxnType>('EXPENSE');
   const [amountStr, setAmountStr] = useState('0');
   const [note, setNote] = useState('');
@@ -43,6 +53,15 @@ export default function AddTransactionModal() {
   const [selectedAccount, setSelectedAccount] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [step, setStep] = useState<'amount' | 'details'>('amount');
+  const selectedAccountRow = accounts.find((account) => account.id === selectedAccount);
+  const currencyCode = selectedAccountRow?.currency_code ?? workspaceCurrency;
+  const currency = CURRENCIES[currencyCode] ?? {
+    code: currencyCode,
+    exponent: 2,
+    symbol: currencyCode,
+    nameEn: currencyCode,
+    nameBn: currencyCode,
+  };
 
   useEffect(() => {
     if (!workspaceId) return;
@@ -56,36 +75,55 @@ export default function AddTransactionModal() {
     });
   }, [workspaceId, type]);
 
-  const handleDigit = useCallback((digit: string) => {
-    if (digit === '⌫') {
-      setAmountStr((prev) => (prev.length <= 1 ? '0' : prev.slice(0, -1)));
-      return;
-    }
-    setAmountStr((prev) => {
-      if (prev === '0' && digit !== '.') return digit;
-      if (digit === '.' && prev.includes('.')) return prev;
-      if (prev.includes('.') && prev.split('.')[1]!.length >= 2) return prev;
-      return prev + digit;
-    });
-  }, []);
+  const handleDigit = useCallback(
+    (digit: string) => {
+      if (digit === '⌫') {
+        setAmountStr((prev) => (prev.length <= 1 ? '0' : prev.slice(0, -1)));
+        return;
+      }
+      setAmountStr((prev) => {
+        if (prev === '0' && digit !== '.') return digit;
+        if (digit === '.' && currency.exponent === 0) return prev;
+        if (digit === '.' && prev.includes('.')) return prev;
+        if (prev.includes('.') && prev.split('.')[1]!.length >= currency.exponent) return prev;
+        return prev + digit;
+      });
+    },
+    [currency.exponent],
+  );
 
   const handleSave = useCallback(async () => {
     if (!workspaceId || !selectedAccount) return;
-    const floatAmount = parseFloat(amountStr);
-    if (!floatAmount || floatAmount <= 0) {
-      Alert.alert('Invalid amount', 'Please enter an amount greater than 0.');
+    if (type === 'TRANSFER') {
+      Alert.alert(
+        'Transfer unavailable',
+        'Choose Expense or Income until destination-account support is enabled.',
+      );
       return;
     }
 
-    // Convert to minor units (2 decimal places)
-    const amountMinorStr = String(Math.round(floatAmount * 100));
+    let amountMinor: number;
+    try {
+      amountMinor = majorStringToMinorUnits(amountStr, currencyCode);
+    } catch (error) {
+      Alert.alert(
+        'Invalid amount',
+        error instanceof Error ? error.message : 'Enter a valid amount.',
+      );
+      return;
+    }
+    if (amountMinor <= 0) {
+      Alert.alert('Invalid amount', 'Please enter an amount greater than 0.');
+      return;
+    }
 
     setSaving(true);
     try {
       await createTransaction(workspaceId, {
         type,
-        amount: amountMinorStr,
+        amount: String(amountMinor),
         account_id: selectedAccount,
+        currency_code: currencyCode,
         category_id: selectedCategory ?? undefined,
         payee: payee.trim() || undefined,
         note: note.trim() || undefined,
@@ -96,11 +134,22 @@ export default function AddTransactionModal() {
     } finally {
       setSaving(false);
     }
-  }, [workspaceId, selectedAccount, amountStr, type, selectedCategory, payee, note, router]);
+  }, [
+    workspaceId,
+    selectedAccount,
+    amountStr,
+    type,
+    selectedCategory,
+    payee,
+    note,
+    router,
+    currencyCode,
+  ]);
 
-  const displayAmount = amountStr.startsWith('0') && amountStr.length > 1 && !amountStr.startsWith('0.')
-    ? amountStr.replace(/^0+/, '')
-    : amountStr;
+  const displayAmount =
+    amountStr.startsWith('0') && amountStr.length > 1 && !amountStr.startsWith('0.')
+      ? amountStr.replace(/^0+/, '')
+      : amountStr;
 
   return (
     <SafeAreaView style={styles.container}>
@@ -115,24 +164,38 @@ export default function AddTransactionModal() {
 
       {/* Type selector */}
       <View style={styles.typeRow}>
-        {(Object.keys(TYPE_LABELS) as TxnType[]).map((t) => (
-          <TouchableOpacity
-            key={t}
-            onPress={() => setType(t)}
-            style={[styles.typeChip, type === t && styles.typeChipActive]}
-          >
-            <Text style={[styles.typeText, type === t && styles.typeTextActive]}>
-              {TYPE_LABELS[t]}
-            </Text>
-          </TouchableOpacity>
-        ))}
+        {(Object.keys(TYPE_LABELS) as TxnType[]).map((t) => {
+          const disabled = !ENABLED_TYPES.includes(t);
+          return (
+            <TouchableOpacity
+              key={t}
+              onPress={() => setType(t)}
+              disabled={disabled}
+              accessibilityRole="button"
+              accessibilityState={{ selected: type === t, disabled }}
+              accessibilityHint={
+                disabled ? 'Destination account support is not enabled yet' : undefined
+              }
+              style={[
+                styles.typeChip,
+                type === t && styles.typeChipActive,
+                disabled && styles.typeChipDisabled,
+              ]}
+            >
+              <Text style={[styles.typeText, type === t && styles.typeTextActive]}>
+                {TYPE_LABELS[t]}
+                {disabled ? ' — unavailable' : ''}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
       </View>
 
       {step === 'amount' ? (
         <>
           {/* Amount display */}
           <View style={styles.amountDisplay}>
-            <Text style={styles.currencySymbol}>৳</Text>
+            <Text style={styles.currencySymbol}>{currency.symbol}</Text>
             <Text style={styles.amountText}>{displayAmount}</Text>
           </View>
 
@@ -144,30 +207,25 @@ export default function AddTransactionModal() {
                 onPress={() => handleDigit(digit)}
                 style={[styles.padKey, digit === '⌫' && styles.padKeyBack]}
               >
-                <Text style={[styles.padKeyText, digit === '⌫' && { fontSize: 20 }]}>
-                  {digit}
-                </Text>
+                <Text style={[styles.padKeyText, digit === '⌫' && { fontSize: 20 }]}>{digit}</Text>
               </TouchableOpacity>
             ))}
           </View>
 
-          <TouchableOpacity
-            onPress={() => setStep('details')}
-            style={styles.nextBtn}
-          >
+          <TouchableOpacity onPress={() => setStep('details')} style={styles.nextBtn}>
             <Text style={styles.nextBtnText}>Continue →</Text>
           </TouchableOpacity>
         </>
       ) : (
         <ScrollView contentContainerStyle={styles.detailsContent}>
           {/* Amount summary */}
-          <TouchableOpacity
-            onPress={() => setStep('amount')}
-            style={styles.amountSummary}
-          >
+          <TouchableOpacity onPress={() => setStep('amount')} style={styles.amountSummary}>
             <Text style={styles.amountSummaryLabel}>Amount</Text>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-              <Text style={styles.amountSummaryValue}>৳{displayAmount}</Text>
+              <Text style={styles.amountSummaryValue}>
+                {currency.symbol}
+                {displayAmount}
+              </Text>
               <ChevronDown size={16} color={Colors.accent} />
             </View>
           </TouchableOpacity>
@@ -189,7 +247,11 @@ export default function AddTransactionModal() {
           {type !== 'TRANSFER' && (
             <View style={styles.fieldGroup}>
               <Text style={styles.fieldLabel}>Category</Text>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.chipScroll}>
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                style={styles.chipScroll}
+              >
                 {categories.map((cat) => {
                   const label = cat.custom_name ?? cat.translation_key ?? cat.id.slice(0, 8);
                   return (
@@ -199,7 +261,12 @@ export default function AddTransactionModal() {
                       style={[styles.catChip, selectedCategory === cat.id && styles.catChipActive]}
                     >
                       {cat.icon && <Text>{cat.icon} </Text>}
-                      <Text style={[styles.catChipText, selectedCategory === cat.id && { color: '#000' }]}>
+                      <Text
+                        style={[
+                          styles.catChipText,
+                          selectedCategory === cat.id && { color: '#000' },
+                        ]}
+                      >
                         {label}
                       </Text>
                     </TouchableOpacity>
@@ -220,7 +287,9 @@ export default function AddTransactionModal() {
               >
                 <View style={styles.acctDot} />
                 <Text style={styles.acctName}>{acct.name}</Text>
-                {selectedAccount === acct.id && <Check size={16} color={Colors.accent} strokeWidth={2.5} />}
+                {selectedAccount === acct.id && (
+                  <Check size={16} color={Colors.accent} strokeWidth={2.5} />
+                )}
               </TouchableOpacity>
             ))}
           </View>
@@ -260,62 +329,92 @@ export default function AddTransactionModal() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.bg },
   header: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    paddingHorizontal: Spacing.lg, paddingVertical: Spacing.md,
-    borderBottomWidth: 1, borderBottomColor: Colors.border,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.md,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.border,
   },
   closeBtn: {
-    width: 36, height: 36, borderRadius: 18,
-    backgroundColor: Colors.bgElevated, alignItems: 'center', justifyContent: 'center',
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: Colors.bgElevated,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   headerTitle: { ...Typography.h3 },
 
   typeRow: {
-    flexDirection: 'row', gap: Spacing.xs,
-    paddingHorizontal: Spacing.lg, paddingVertical: Spacing.md,
+    flexDirection: 'row',
+    gap: Spacing.xs,
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.md,
     justifyContent: 'center',
   },
   typeChip: {
-    paddingHorizontal: Spacing.md, paddingVertical: Spacing.xs,
-    borderRadius: Radius.full, borderWidth: 1, borderColor: Colors.border,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.xs,
+    borderRadius: Radius.full,
+    borderWidth: 1,
+    borderColor: Colors.border,
   },
   typeChipActive: { backgroundColor: Colors.accent, borderColor: Colors.accent },
+  typeChipDisabled: { opacity: 0.45 },
   typeText: { fontSize: 13, color: Colors.textDim, fontWeight: '600' },
   typeTextActive: { color: '#000' },
 
   amountDisplay: {
-    alignItems: 'center', justifyContent: 'center',
-    flexDirection: 'row', gap: Spacing.sm,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexDirection: 'row',
+    gap: Spacing.sm,
     paddingVertical: Spacing.xl,
   },
   currencySymbol: { fontSize: 28, fontWeight: '800', color: Colors.textDim, marginTop: 8 },
   amountText: { fontSize: 52, fontWeight: '800', color: Colors.text },
 
   pad: {
-    flexDirection: 'row', flexWrap: 'wrap',
-    paddingHorizontal: Spacing.lg, gap: Spacing.xs,
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    paddingHorizontal: Spacing.lg,
+    gap: Spacing.xs,
   },
   padKey: {
-    width: '30%', aspectRatio: 2,
-    backgroundColor: Colors.bgCard, borderRadius: Radius.md,
-    alignItems: 'center', justifyContent: 'center',
-    borderWidth: 1, borderColor: Colors.border,
+    width: '30%',
+    aspectRatio: 2,
+    backgroundColor: Colors.bgCard,
+    borderRadius: Radius.md,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: Colors.border,
   },
   padKeyBack: { backgroundColor: Colors.bgElevated },
   padKeyText: { fontSize: 22, fontWeight: '600', color: Colors.text },
 
   nextBtn: {
-    marginHorizontal: Spacing.lg, marginTop: Spacing.lg,
-    backgroundColor: Colors.accent, borderRadius: Radius.lg,
-    padding: Spacing.md, alignItems: 'center',
+    marginHorizontal: Spacing.lg,
+    marginTop: Spacing.lg,
+    backgroundColor: Colors.accent,
+    borderRadius: Radius.lg,
+    padding: Spacing.md,
+    alignItems: 'center',
   },
   nextBtnText: { fontSize: 16, fontWeight: '700', color: '#fff' },
 
   detailsContent: { padding: Spacing.lg, paddingBottom: Spacing.xxl, gap: Spacing.md },
   amountSummary: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    backgroundColor: Colors.bgCard, borderRadius: Radius.md,
-    padding: Spacing.md, borderWidth: 1, borderColor: Colors.border,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: Colors.bgCard,
+    borderRadius: Radius.md,
+    padding: Spacing.md,
+    borderWidth: 1,
+    borderColor: Colors.border,
   },
   amountSummaryLabel: { ...Typography.caption },
   amountSummaryValue: { fontSize: 20, fontWeight: '800', color: Colors.accent },
@@ -323,32 +422,50 @@ const styles = StyleSheet.create({
   fieldGroup: { gap: Spacing.xs },
   fieldLabel: { ...Typography.label },
   fieldInput: {
-    backgroundColor: Colors.bgCard, borderRadius: Radius.md,
-    padding: Spacing.md, color: Colors.text, fontSize: 15,
-    borderWidth: 1, borderColor: Colors.border,
+    backgroundColor: Colors.bgCard,
+    borderRadius: Radius.md,
+    padding: Spacing.md,
+    color: Colors.text,
+    fontSize: 15,
+    borderWidth: 1,
+    borderColor: Colors.border,
   },
   chipScroll: { marginTop: 4 },
   catChip: {
-    flexDirection: 'row', alignItems: 'center',
-    paddingHorizontal: Spacing.sm, paddingVertical: Spacing.xs,
-    borderRadius: Radius.full, borderWidth: 1, borderColor: Colors.border,
-    backgroundColor: Colors.bgCard, marginRight: Spacing.xs,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: Spacing.xs,
+    borderRadius: Radius.full,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    backgroundColor: Colors.bgCard,
+    marginRight: Spacing.xs,
   },
   catChipActive: { backgroundColor: Colors.accent, borderColor: Colors.accent },
   catChipText: { fontSize: 13, color: Colors.textDim, fontWeight: '500' },
 
   acctRow: {
-    flexDirection: 'row', alignItems: 'center', gap: Spacing.sm,
-    backgroundColor: Colors.bgCard, borderRadius: Radius.md,
-    padding: Spacing.sm + 2, borderWidth: 1, borderColor: Colors.border, marginBottom: 4,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+    backgroundColor: Colors.bgCard,
+    borderRadius: Radius.md,
+    padding: Spacing.sm + 2,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    marginBottom: 4,
   },
   acctRowActive: { borderColor: Colors.accent },
   acctDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: Colors.accent },
   acctName: { ...Typography.body, flex: 1 },
 
   saveBtn: {
-    backgroundColor: Colors.accent, borderRadius: Radius.lg,
-    padding: Spacing.md, alignItems: 'center', marginTop: Spacing.md,
+    backgroundColor: Colors.accent,
+    borderRadius: Radius.lg,
+    padding: Spacing.md,
+    alignItems: 'center',
+    marginTop: Spacing.md,
   },
   saveBtnDisabled: { opacity: 0.5 },
   saveBtnText: { fontSize: 16, fontWeight: '700', color: '#fff' },
