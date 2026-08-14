@@ -100,11 +100,15 @@ test.describe('ledger CRUD', () => {
 
     await page.waitForTimeout(2500);
     await page.reload();
-    const body = await page.locator('body').innerText();
-    expect(body).toContain(payee);
+    const body = page.locator('body');
+    // A production reload can briefly render the route-level loading region
+    // while its server component fetches the ledger. Assert against the live
+    // locator so Playwright waits for the persisted row instead of snapshotting
+    // that transient shell.
+    await expect(body).toContainText(payee, { timeout: 15_000 });
     // 321.50 major → 32150 minor → rendered back as 321.50, so the round trip
     // through minor units did not lose or scale the value (DEC-004).
-    expect(body).toMatch(/321[.,]50/);
+    await expect(body).toContainText(/321[.,]50/, { timeout: 15_000 });
   });
 
   test('an invalid amount is refused with a message, not silently dropped', async ({ page }) => {
