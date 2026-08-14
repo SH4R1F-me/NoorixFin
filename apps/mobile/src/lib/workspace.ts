@@ -77,5 +77,5 @@ export async function clearActiveWorkspaceId(): Promise<void> {
 
 /** Fetch the workspaces this user is a member of. */
 export async function fetchWorkspaces(): Promise<WorkspaceSummary[]> {
-  return apiFetch<WorkspaceSummary[]>('/workspaces');
+  return apiFetch('/workspaces');
 }

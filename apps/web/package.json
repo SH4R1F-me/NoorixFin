@@ -12,6 +12,7 @@
     "test:e2e": "playwright test"
   },
   "dependencies": {
+    "@noorixfin/api-client": "workspace:*",
     "@noorixfin/design-tokens": "workspace:*",
     "@noorixfin/domain": "workspace:*",
     "@noorixfin/i18n": "workspace:*",

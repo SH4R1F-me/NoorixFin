@@ -5,6 +5,7 @@
   "main": "expo-router/entry",
   "dependencies": {
     "@expo/metro-runtime": "~57.0.8",
+    "@noorixfin/api-client": "workspace:*",
     "@noorixfin/design-tokens": "workspace:*",
     "@noorixfin/domain": "workspace:*",
     "@noorixfin/i18n": "workspace:*",

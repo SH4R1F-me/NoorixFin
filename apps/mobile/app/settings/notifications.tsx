@@ -57,7 +57,7 @@ export default function NotificationSettingsScreen() {
   const [saving, setSaving] = useState(false);
   const load = useCallback(async () => {
     try {
-      setData(await apiFetch<Payload>('/me/notification-preferences'));
+      setData(await apiFetch('/me/notification-preferences'));
     } catch {
       setData(null);
     }

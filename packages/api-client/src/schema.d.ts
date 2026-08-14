@@ -1618,6 +1618,29 @@ export interface components {
             /** @description Changed rows per table, keyed by table name. */
             changes: Record<string, never>;
         };
+        NotificationResponseDto: {
+            id: string;
+            /** @enum {string} */
+            category: "security" | "budget" | "goal" | "recurring" | "transaction" | "sync" | "account" | "system" | "operator";
+            /** @enum {string} */
+            severity: "INFO" | "SUCCESS" | "WARNING" | "CRITICAL";
+            title_en: string;
+            title_bn?: string | null;
+            body_en: string;
+            body_bn?: string | null;
+            action_url?: string | null;
+            read_at?: string | null;
+            archived_at?: string | null;
+            created_at: string;
+        };
+        NotificationPageResponseDto: {
+            items: components["schemas"]["NotificationResponseDto"][];
+            next_cursor?: string | null;
+            has_more: boolean;
+        };
+        UnreadCountResponseDto: {
+            count: number;
+        };
         NotificationPreferenceDto: {
             /** @enum {string} */
             category: "security" | "budget" | "goal" | "recurring" | "transaction" | "sync" | "account" | "system" | "operator";
@@ -1627,14 +1650,20 @@ export interface components {
             /** @enum {string} */
             digest: "NONE" | "DAILY" | "WEEKLY";
         };
+        NotificationPreferencesResponseDto: {
+            preferences: components["schemas"]["NotificationPreferenceDto"][];
+            quiet_hours_start: string | null;
+            quiet_hours_end: string | null;
+            quiet_hours_tz: string | null;
+        };
         UpdateNotificationPreferencesDto: {
             preferences: components["schemas"]["NotificationPreferenceDto"][];
             /** @example 22:00 */
-            quiet_hours_start?: Record<string, never> | null;
+            quiet_hours_start?: string | null;
             /** @example 07:00 */
-            quiet_hours_end?: Record<string, never> | null;
+            quiet_hours_end?: string | null;
             /** @example Asia/Riyadh */
-            quiet_hours_tz?: Record<string, never> | null;
+            quiet_hours_tz?: string | null;
         };
         ComposeNotificationDto: {
             /** @enum {string} */
@@ -1984,6 +2013,32 @@ export interface components {
             /** @description Archive this category */
             archived?: boolean;
         };
+        BudgetLineResponseDto: {
+            line_id: string;
+            category_id: string;
+            name: string;
+            translation_key?: string | null;
+            custom_name?: string | null;
+            icon: string;
+            color: string;
+            planned_minor: number;
+            spent_minor: number;
+            remaining_minor: number;
+            alert_threshold_pct: number;
+        };
+        BudgetStatusResponseDto: {
+            visible: boolean;
+            has_budget?: boolean;
+            budget_id?: string;
+            name?: string;
+            /** @enum {string} */
+            cadence?: "MONTHLY" | "WEEKLY";
+            planned_total?: number;
+            spent_total?: number;
+            lines?: components["schemas"]["BudgetLineResponseDto"][];
+            timezone?: string;
+            generated_at?: string;
+        };
         BudgetLineInputDto: {
             /** @description Category this limit applies to */
             category_id: string;
@@ -2006,6 +2061,24 @@ export interface components {
             /** @description Whether unspent limit carries into the next period */
             rollover?: boolean;
             lines: components["schemas"]["BudgetLineInputDto"][];
+        };
+        GoalProgressResponseDto: {
+            id: string;
+            name: string;
+            target_minor: number;
+            current_minor?: number | null;
+            currency_code: string;
+            target_date?: string | null;
+            status: string;
+            priority: number;
+        };
+        GoalsOverviewResponseDto: {
+            visible: boolean;
+            goals?: components["schemas"]["GoalProgressResponseDto"][];
+            debts?: Record<string, never>[];
+            total_debt_minor?: number;
+            timezone?: string;
+            generated_at?: string;
         };
         CreateGoalDto: {
             /** @example Emergency fund */
@@ -2220,6 +2293,19 @@ export interface components {
              */
             reason?: string;
         };
+        DeviceResponseDto: {
+            id: string;
+            device_id: string;
+            /** @enum {string} */
+            platform: "web" | "ios" | "android";
+            device_name: string | null;
+            os_version: string | null;
+            app_version: string | null;
+            last_seen_at: string;
+            last_ip: string | null;
+            first_seen_at: string;
+            revoked_at: string | null;
+        };
         RegisterDeviceDto: {
             /** @description Opaque app-generated UUID stored in SecureStore/sessionStorage */
             deviceId: string;
@@ -2233,9 +2319,21 @@ export interface components {
         CreatePairingDto: {
             workspaceId: string;
         };
+        PairingTokenResponseDto: {
+            token: string;
+            expires_at: string;
+        };
         ConsumePairingDto: {
             /** @description One-time token read from the pairing QR code */
             token: string;
+        };
+        PairedWorkspaceResponseDto: {
+            id: string;
+            name: string;
+            base_currency: string;
+        };
+        RevokedResponseDto: {
+            revoked: boolean;
         };
         RevokeAllDto: {
             /** @description Keep this device_id active (the caller's own device) */
@@ -2331,7 +2429,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["NotificationPageResponseDto"];
+                };
             };
         };
     };
@@ -2348,7 +2448,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["UnreadCountResponseDto"];
+                };
             };
         };
     };
@@ -2439,7 +2541,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["NotificationPreferencesResponseDto"];
+                };
             };
         };
     };
@@ -3184,7 +3288,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["BudgetStatusResponseDto"];
+                };
             };
         };
     };
@@ -3246,7 +3352,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["GoalsOverviewResponseDto"];
+                };
             };
         };
     };
@@ -4459,7 +4567,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["DeviceResponseDto"][];
+                };
             };
         };
     };
@@ -4501,7 +4611,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["PairingTokenResponseDto"];
+                };
             };
         };
     };
@@ -4522,7 +4634,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["PairedWorkspaceResponseDto"];
+                };
             };
         };
     };
@@ -4541,7 +4655,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["RevokedResponseDto"];
+                };
             };
         };
     };
@@ -4560,7 +4676,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["RevokedResponseDto"];
+                };
             };
         };
     };
@@ -4577,11 +4695,13 @@ export interface operations {
             };
         };
         responses: {
-            201: {
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["RevokedResponseDto"];
+                };
             };
         };
     };

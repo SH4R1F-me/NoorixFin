@@ -58,3 +58,32 @@ export class ConsumePairingDto {
   @MaxLength(256)
   token!: string;
 }
+
+export class DeviceResponseDto {
+  @ApiProperty() id!: string;
+  @ApiProperty() device_id!: string;
+  @ApiProperty({ enum: ['web', 'ios', 'android'] }) platform!:
+    'web' | 'ios' | 'android';
+  @ApiProperty({ type: String, nullable: true }) device_name!: string | null;
+  @ApiProperty({ type: String, nullable: true }) os_version!: string | null;
+  @ApiProperty({ type: String, nullable: true }) app_version!: string | null;
+  @ApiProperty() last_seen_at!: string;
+  @ApiProperty({ type: String, nullable: true }) last_ip!: string | null;
+  @ApiProperty() first_seen_at!: string;
+  @ApiProperty({ type: String, nullable: true }) revoked_at!: string | null;
+}
+
+export class PairingTokenResponseDto {
+  @ApiProperty() token!: string;
+  @ApiProperty() expires_at!: string;
+}
+
+export class PairedWorkspaceResponseDto {
+  @ApiProperty() id!: string;
+  @ApiProperty() name!: string;
+  @ApiProperty({ minLength: 3, maxLength: 3 }) base_currency!: string;
+}
+
+export class RevokedResponseDto {
+  @ApiProperty() revoked!: boolean;
+}

@@ -676,9 +676,7 @@ export class NotificationsService implements OnModuleInit, OnModuleDestroy {
           : error && typeof error === 'object'
             ? JSON.stringify(error)
             : String(error);
-      this.logger.warn(
-        `Notification worker failed: ${detail}`,
-      );
+      this.logger.warn(`Notification worker failed: ${detail}`);
     } finally {
       this.workerRunning = false;
     }

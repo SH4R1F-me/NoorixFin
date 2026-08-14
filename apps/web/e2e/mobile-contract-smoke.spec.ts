@@ -1,7 +1,8 @@
 import { expect, test } from '@playwright/test';
 import { LIVE, createUser } from './support/fixture';
+import { E2E_API_URL } from './support/runtime';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8080';
+const API_URL = E2E_API_URL;
 
 async function mobileCall<T>(
   token: string,

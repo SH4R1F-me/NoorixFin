@@ -14,6 +14,7 @@ import 'server-only';
  * unique index on one active personal workspace per user.
  */
 import { apiFetch, ApiError } from './api-client';
+import type { ApiRuntimePath } from '@noorixfin/api-client';
 
 export interface Workspace {
   id: string;
@@ -121,7 +122,7 @@ export interface CategoryRow {
 }
 
 /** Never throws — a dashboard panel degrades to empty rather than 500ing. */
-async function safeFetch<T>(path: string, fallback: T): Promise<T> {
+async function safeFetch<T>(path: ApiRuntimePath, fallback: T): Promise<T> {
   try {
     return await apiFetch<T>(path);
   } catch {
@@ -426,14 +427,14 @@ export function getCategoryReport(workspaceId: string, from?: string, to?: strin
   const query = new URLSearchParams();
   if (from) query.set('from', from);
   if (to) query.set('to', to);
-  const suffix = query.size > 0 ? `?${query.toString()}` : '';
+  const suffix: '' | `?${string}` = query.size > 0 ? `?${query.toString()}` : '';
   return safeFetch<CategoryReport>(
     `/workspaces/${workspaceId}/reports/categories${suffix}`,
     NOT_VISIBLE,
   );
 }
 
-function reportQuery(from?: string, to?: string, granularity?: string): string {
+function reportQuery(from?: string, to?: string, granularity?: string): '' | `?${string}` {
   const query = new URLSearchParams();
   if (from) query.set('from', from);
   if (to) query.set('to', to);

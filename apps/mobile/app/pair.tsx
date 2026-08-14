@@ -20,7 +20,7 @@ export default function PairScreen() {
     setPending(true);
     setError(null);
     try {
-      const workspace = await apiFetch<PairedWorkspace>('/me/devices/pairing/consume', {
+      const workspace: PairedWorkspace = await apiFetch('/me/devices/pairing/consume', {
         method: 'POST',
         body: { token },
       });

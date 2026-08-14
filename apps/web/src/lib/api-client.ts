@@ -17,8 +17,16 @@ import 'server-only';
  */
 import { createClient } from './supabase/server';
 import { isRetryable, type ApiErrorCode } from '@noorixfin/domain';
+import type {
+  ApiHttpMethod,
+  ApiRuntimeMethod,
+  ApiRuntimePath,
+  ApiRuntimePathForMethod,
+  ApiRuntimeRequestOptions,
+  ApiRuntimeResponse,
+} from '@noorixfin/api-client';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001';
+const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8080';
 
 /**
  * Codes this client synthesises, which the API can never send.
@@ -71,7 +79,7 @@ export class ApiError extends Error {
  */
 const REQUEST_TIMEOUT_MS = 10_000;
 
-type RequestOptions = {
+type TransportOptions = {
   method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
   body?: unknown;
   /** Required on every mutating call (Blueprint §8.3, DEC-010). */
@@ -82,7 +90,32 @@ type RequestOptions = {
   timeoutMs?: number;
 };
 
-export async function apiFetch<T>(path: string, options: RequestOptions = {}): Promise<T> {
+type TypedOptions<
+  P extends ApiRuntimePath,
+  M extends ApiHttpMethod,
+> = ApiRuntimeRequestOptions<P, M> & Omit<TransportOptions, 'method' | 'body'>;
+
+type TypedGetOptions<P extends ApiRuntimePathForMethod<'GET'>> = Omit<
+  TypedOptions<P, 'GET'>,
+  'method'
+> & {
+  method?: 'GET';
+};
+
+export function apiFetch<P extends ApiRuntimePathForMethod<'GET'>>(
+  path: P,
+  options?: TypedGetOptions<P>,
+): Promise<ApiRuntimeResponse<P, 'GET'>>;
+export function apiFetch<P extends ApiRuntimePath, M extends Exclude<ApiRuntimeMethod<P>, 'GET'>>(
+  path: P,
+  options: TypedOptions<P, M>,
+): Promise<ApiRuntimeResponse<P, M>>;
+/** Temporary response override for operations whose Nest Swagger response DTO is still being migrated. */
+export function apiFetch<T>(path: ApiRuntimePath, options?: TransportOptions): Promise<T>;
+export async function apiFetch(
+  path: ApiRuntimePath,
+  options: TransportOptions = {},
+): Promise<unknown> {
   // getSession() here is deliberate and is NOT an authorization decision — we
   // only need the raw access_token to forward. NestJS verifies its signature on
   // arrival. Authorization checks still use getUser() (see supabase/server.ts).
@@ -159,12 +192,12 @@ export async function apiFetch<T>(path: string, options: RequestOptions = {}): P
     throw new ApiError(response.status, code, message);
   }
 
-  if (response.status === 204) return undefined as T;
-  return (await response.json()) as T;
+  if (response.status === 204) return undefined;
+  return response.json();
 }
 
 /** Authenticated raw GET for route handlers that must stream CSV/PDF bytes. */
-export async function apiFetchRaw(path: string): Promise<Response> {
+export async function apiFetchRaw(path: ApiRuntimePath): Promise<Response> {
   const supabase = await createClient();
   const {
     data: { session },

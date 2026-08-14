@@ -111,7 +111,7 @@ export function subscribeToNotificationLifecycle(): () => void {
   void Notifications.getLastNotificationResponseAsync().then(openResponse);
   const response = Notifications.addNotificationResponseReceivedListener(openResponse);
   const received = Notifications.addNotificationReceivedListener(() => {
-    void apiFetch<{ count: number }>('/notifications/unread-count').then(({ count }) =>
+    void apiFetch('/notifications/unread-count').then(({ count }) =>
       Notifications.setBadgeCountAsync(count),
     );
   });

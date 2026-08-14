@@ -12,6 +12,7 @@
 import type { SQLiteDatabase } from 'expo-sqlite';
 import { getDb } from '../db';
 import { apiFetch, ApiError } from '../lib/api';
+import type { ApiRuntimePathForMethod } from '@noorixfin/api-client';
 
 export type MutationKind =
   'CREATE_TRANSACTION' | 'REVERSE_TRANSACTION' | 'READ_NOTIFICATION' | 'READ_ALL_NOTIFICATIONS';
@@ -120,7 +121,10 @@ async function claimNext(db: SQLiteDatabase, workspaceId: string): Promise<Queue
   );
 }
 
-function endpointFor(m: QueuedMutation): { path: string; body: unknown } {
+function endpointFor(m: QueuedMutation): {
+  path: ApiRuntimePathForMethod<'POST'>;
+  body: unknown;
+} {
   const payload = JSON.parse(m.payload) as Record<string, unknown>;
   switch (m.kind) {
     case 'CREATE_TRANSACTION':
@@ -175,7 +179,7 @@ export async function drain(workspaceId: string): Promise<DrainResult> {
     const { path, body } = endpointFor(mutation);
 
     try {
-      await apiFetch(path, {
+      await apiFetch<unknown>(path, {
         method: 'POST',
         body,
         idempotencyKey: mutation.id,

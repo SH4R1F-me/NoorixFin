@@ -16,7 +16,7 @@
  */
 import { createClient } from '../../../../lib/supabase/server';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001';
+const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8080';
 
 export async function GET(request: Request) {
   const supabase = await createClient();

@@ -32,7 +32,7 @@ export default function ProfileScreen() {
 
   const load = useCallback(async () => {
     try {
-      const data = await apiFetch<Profile>('/me');
+      const data = await apiFetch('/me');
       setProfile(data);
       setDisplayName(data.display_name);
     } catch (e) {
@@ -52,7 +52,7 @@ export default function ProfileScreen() {
     if (!profile) return;
     setSaving(true);
     try {
-      const updated = await apiFetch<Profile>('/me/preferences', {
+      const updated = await apiFetch('/me/preferences', {
         method: 'PATCH',
         body: { display_name: displayName.trim() },
       });

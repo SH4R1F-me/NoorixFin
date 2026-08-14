@@ -16,6 +16,7 @@ import {
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
+  ApiCreatedResponse,
   ApiOperation,
   ApiOkResponse,
   ApiTags,
@@ -27,6 +28,10 @@ import {
   CreatePairingDto,
   RegisterDeviceDto,
   RevokeAllDto,
+  DeviceResponseDto,
+  PairedWorkspaceResponseDto,
+  PairingTokenResponseDto,
+  RevokedResponseDto,
 } from './dto/device.dto';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import type { AuthenticatedUser } from '../common/decorators/current-user.decorator';
@@ -42,7 +47,10 @@ export class DevicesController {
 
   @Get()
   @ApiOperation({ summary: 'List active devices for the current user' })
-  @ApiOkResponse({ description: 'Active sessions across all platforms' })
+  @ApiOkResponse({
+    description: 'Active sessions across all platforms',
+    type: [DeviceResponseDto],
+  })
   list(@Req() req: AuthedRequest) {
     return this.devices.listDevices(req.accessToken);
   }
@@ -65,6 +73,7 @@ export class DevicesController {
   }
 
   @Post('pairing')
+  @ApiCreatedResponse({ type: PairingTokenResponseDto })
   @ApiOperation({
     summary: 'Issue a ten-minute, one-time mobile workspace pairing token',
   })
@@ -76,6 +85,7 @@ export class DevicesController {
   }
 
   @Post('pairing/consume')
+  @ApiCreatedResponse({ type: PairedWorkspaceResponseDto })
   @ApiOperation({
     summary: 'Consume a pairing token after signing in on mobile',
   })
@@ -87,6 +97,7 @@ export class DevicesController {
   }
 
   @Delete('current/:opaqueDeviceId')
+  @ApiOkResponse({ type: RevokedResponseDto })
   @ApiOperation({
     summary: 'Revoke the caller device by its app-generated device_id',
   })
@@ -103,6 +114,7 @@ export class DevicesController {
   }
 
   @Delete(':deviceId')
+  @ApiOkResponse({ type: RevokedResponseDto })
   @ApiOperation({
     summary: 'Revoke a specific device / sign out of that session',
   })
@@ -115,6 +127,7 @@ export class DevicesController {
   }
 
   @Post('revoke-all')
+  @ApiOkResponse({ type: RevokedResponseDto })
   @ApiOperation({ summary: 'Sign out of all other devices' })
   revokeAll(
     @Req() req: AuthedRequest,

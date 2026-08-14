@@ -9,9 +9,10 @@
 import { test, expect, type Page } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 import { LIVE, seedWorkspace, setLocale, type Fixture } from './support/fixture';
+import { E2E_API_URL } from './support/runtime';
 
 let fixture: Fixture;
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://127.0.0.1:3001';
+const API_URL = E2E_API_URL;
 
 async function signIn(page: Page) {
   await page.goto('/auth/login');

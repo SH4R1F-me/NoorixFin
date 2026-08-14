@@ -9,7 +9,7 @@ export interface MobileRelease {
   apk_url: string | null;
 }
 
-const API_URL = process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:3001';
+const API_URL = process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:8080';
 
 export async function fetchMobileRelease(): Promise<MobileRelease | null> {
   try {

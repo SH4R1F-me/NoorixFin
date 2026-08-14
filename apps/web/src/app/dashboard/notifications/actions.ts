@@ -1,6 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
+import type { ApiRuntimePath } from '@noorixfin/api-client';
 import { apiFetch, ApiError } from '../../../lib/api-client';
 
 export type NotificationCategory =
@@ -49,9 +50,12 @@ export async function listNotifications(
   }
 }
 
-async function mutate(path: string, method: 'POST' | 'DELETE' = 'POST'): Promise<ActionResult> {
+async function mutate(
+  path: ApiRuntimePath,
+  method: 'POST' | 'DELETE' = 'POST',
+): Promise<ActionResult> {
   try {
-    await apiFetch(path, { method });
+    await apiFetch<unknown>(path, { method });
     revalidatePath('/dashboard', 'layout');
     revalidatePath('/dashboard/notifications');
     return { ok: true };

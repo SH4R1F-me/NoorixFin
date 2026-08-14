@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 import { expect, test } from '@playwright/test';
 import { LIVE, seedWorkspace, setLocale, type Fixture } from './support/fixture';
 import { signIn } from './support/sign-in';
+import { E2E_API_URL } from './support/runtime';
 
 let fixture: Fixture;
 
@@ -78,7 +79,7 @@ test.describe('statement portability and private receipts', () => {
       'Content-Type': 'application/json',
     };
     const largeImport = await page.request.post(
-      `http://127.0.0.1:3001/v1/workspaces/${fixture.workspaceId}/import`,
+      `${E2E_API_URL}/v1/workspaces/${fixture.workspaceId}/import`,
       {
         headers,
         data: {
@@ -95,7 +96,7 @@ test.describe('statement portability and private receipts', () => {
     expect((await largeImport.json()).code).toBe('IMPORT_PARSE_FAILED');
 
     const transactionPage = await page.request.get(
-      `http://127.0.0.1:3001/v1/workspaces/${fixture.workspaceId}/transactions?limit=1`,
+      `${E2E_API_URL}/v1/workspaces/${fixture.workspaceId}/transactions?limit=1`,
       { headers },
     );
     const transactionId = ((await transactionPage.json()) as { items: Array<{ id: string }> })
@@ -110,7 +111,7 @@ test.describe('statement portability and private receipts', () => {
         Buffer.alloc(128 * 1024),
       ]).toString('base64'),
     };
-    const receiptEndpoint = `http://127.0.0.1:3001/v1/workspaces/${fixture.workspaceId}/transactions/${transactionId}/attachments`;
+    const receiptEndpoint = `${E2E_API_URL}/v1/workspaces/${fixture.workspaceId}/transactions/${transactionId}/attachments`;
     const firstLargeReceipt = await page.request.post(receiptEndpoint, {
       headers,
       data: largeReceipt,

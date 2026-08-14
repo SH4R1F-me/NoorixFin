@@ -16,6 +16,7 @@ import 'server-only';
  * pulling in this server-only file.
  */
 import { apiFetch, ApiError } from './api-client';
+import type { ApiRuntimePath } from '@noorixfin/api-client';
 
 // Re-export everything from admin-types.ts so existing imports from 'lib/admin'
 // still work for server components.
@@ -80,7 +81,7 @@ import type {
  * that happened to be the empty string would not narrow, and TypeScript is right
  * to refuse. `ok` makes every call site's null-check provable.
  */
-async function get<T>(path: string): Promise<Result<T>> {
+async function get<T>(path: ApiRuntimePath): Promise<Result<T>> {
   try {
     return { ok: true, data: await apiFetch<T>(path) };
   } catch (error) {

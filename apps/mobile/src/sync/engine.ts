@@ -93,10 +93,8 @@ async function execute(workspaceId: string): Promise<SyncOutcome> {
     // the server says it is done. Bounded so a misbehaving cursor cannot spin
     // forever (the API also guards this with SYNC_CURSOR_STALLED).
     for (let page = 0; page < 50; page += 1) {
-      const query = cursor ? `?since=${encodeURIComponent(cursor)}` : '';
-      const response = await apiFetch<SyncResponse>(
-        `/workspaces/${workspaceId}/sync${query}`,
-      );
+      const query: '' | `?${string}` = cursor ? `?since=${encodeURIComponent(cursor)}` : '';
+      const response: SyncResponse = await apiFetch(`/workspaces/${workspaceId}/sync${query}`);
 
       await db.withTransactionAsync(async () => {
         for (const table of SYNCABLE_TABLES) {

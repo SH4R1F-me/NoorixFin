@@ -10,8 +10,16 @@
  */
 import { getAccessToken } from './supabase';
 import { getClientInfoHeader } from './device';
+import type {
+  ApiHttpMethod,
+  ApiRuntimeMethod,
+  ApiRuntimePath,
+  ApiRuntimePathForMethod,
+  ApiRuntimeRequestOptions,
+  ApiRuntimeResponse,
+} from '@noorixfin/api-client';
 
-const API_URL = process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:3001';
+const API_URL = process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:8080';
 
 export class ApiError extends Error {
   constructor(
@@ -29,7 +37,7 @@ export class ApiError extends Error {
   }
 }
 
-type RequestOptions = {
+type TransportOptions = {
   method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
   body?: unknown;
   /** Reused across every retry of the same logical write (FIN-02). */
@@ -37,7 +45,32 @@ type RequestOptions = {
   signal?: AbortSignal;
 };
 
-export async function apiFetch<T>(path: string, options: RequestOptions = {}): Promise<T> {
+type TypedOptions<
+  P extends ApiRuntimePath,
+  M extends ApiHttpMethod,
+> = ApiRuntimeRequestOptions<P, M> & Omit<TransportOptions, 'method' | 'body'>;
+
+type TypedGetOptions<P extends ApiRuntimePathForMethod<'GET'>> = Omit<
+  TypedOptions<P, 'GET'>,
+  'method'
+> & {
+  method?: 'GET';
+};
+
+export function apiFetch<P extends ApiRuntimePathForMethod<'GET'>>(
+  path: P,
+  options?: TypedGetOptions<P>,
+): Promise<ApiRuntimeResponse<P, 'GET'>>;
+export function apiFetch<P extends ApiRuntimePath, M extends Exclude<ApiRuntimeMethod<P>, 'GET'>>(
+  path: P,
+  options: TypedOptions<P, M>,
+): Promise<ApiRuntimeResponse<P, M>>;
+/** Temporary response override for operations whose Nest Swagger response DTO is still being migrated. */
+export function apiFetch<T>(path: ApiRuntimePath, options?: TransportOptions): Promise<T>;
+export async function apiFetch(
+  path: ApiRuntimePath,
+  options: TransportOptions = {},
+): Promise<unknown> {
   const token = await getAccessToken();
   if (!token) {
     throw new ApiError(401, 'NOT_AUTHENTICATED', 'No active session');
@@ -83,6 +116,6 @@ export async function apiFetch<T>(path: string, options: RequestOptions = {}): P
     throw new ApiError(response.status, code, message);
   }
 
-  if (response.status === 204) return undefined as T;
-  return (await response.json()) as T;
+  if (response.status === 204) return undefined;
+  return response.json();
 }

@@ -119,7 +119,14 @@
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotificationPageResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -139,7 +146,14 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": ""
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnreadCountResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -266,7 +280,14 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": ""
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotificationPreferencesResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -1516,7 +1537,14 @@
         ],
         "responses": {
           "200": {
-            "description": "One payload per DEC-011; spend derived from postings"
+            "description": "One payload per DEC-011; spend derived from postings",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BudgetStatusResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -1619,7 +1647,14 @@
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GoalsOverviewResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -3640,7 +3675,17 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": "Active sessions across all platforms"
+            "description": "Active sessions across all platforms",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/DeviceResponseDto"
+                  }
+                }
+              }
+            }
           }
         },
         "security": [
@@ -3698,7 +3743,14 @@
         },
         "responses": {
           "201": {
-            "description": ""
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PairingTokenResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -3728,7 +3780,14 @@
         },
         "responses": {
           "201": {
-            "description": ""
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PairedWorkspaceResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -3757,7 +3816,14 @@
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RevokedResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -3786,7 +3852,14 @@
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RevokedResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -3815,8 +3888,15 @@
           }
         },
         "responses": {
-          "201": {
-            "description": ""
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RevokedResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -4047,6 +4127,108 @@
           "changes"
         ]
       },
+      "NotificationResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "category": {
+            "type": "string",
+            "enum": [
+              "security",
+              "budget",
+              "goal",
+              "recurring",
+              "transaction",
+              "sync",
+              "account",
+              "system",
+              "operator"
+            ]
+          },
+          "severity": {
+            "type": "string",
+            "enum": [
+              "INFO",
+              "SUCCESS",
+              "WARNING",
+              "CRITICAL"
+            ]
+          },
+          "title_en": {
+            "type": "string"
+          },
+          "title_bn": {
+            "type": "string",
+            "nullable": true
+          },
+          "body_en": {
+            "type": "string"
+          },
+          "body_bn": {
+            "type": "string",
+            "nullable": true
+          },
+          "action_url": {
+            "type": "string",
+            "nullable": true
+          },
+          "read_at": {
+            "type": "string",
+            "nullable": true
+          },
+          "archived_at": {
+            "type": "string",
+            "nullable": true
+          },
+          "created_at": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "category",
+          "severity",
+          "title_en",
+          "body_en",
+          "created_at"
+        ]
+      },
+      "NotificationPageResponseDto": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/NotificationResponseDto"
+            }
+          },
+          "next_cursor": {
+            "type": "string",
+            "nullable": true
+          },
+          "has_more": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "items",
+          "has_more"
+        ]
+      },
+      "UnreadCountResponseDto": {
+        "type": "object",
+        "properties": {
+          "count": {
+            "type": "number",
+            "minimum": 0
+          }
+        },
+        "required": [
+          "count"
+        ]
+      },
       "NotificationPreferenceDto": {
         "type": "object",
         "properties": {
@@ -4090,6 +4272,35 @@
           "digest"
         ]
       },
+      "NotificationPreferencesResponseDto": {
+        "type": "object",
+        "properties": {
+          "preferences": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/NotificationPreferenceDto"
+            }
+          },
+          "quiet_hours_start": {
+            "type": "string",
+            "nullable": true
+          },
+          "quiet_hours_end": {
+            "type": "string",
+            "nullable": true
+          },
+          "quiet_hours_tz": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "preferences",
+          "quiet_hours_start",
+          "quiet_hours_end",
+          "quiet_hours_tz"
+        ]
+      },
       "UpdateNotificationPreferencesDto": {
         "type": "object",
         "properties": {
@@ -4100,17 +4311,17 @@
             }
           },
           "quiet_hours_start": {
-            "type": "object",
+            "type": "string",
             "example": "22:00",
             "nullable": true
           },
           "quiet_hours_end": {
-            "type": "object",
+            "type": "string",
             "example": "07:00",
             "nullable": true
           },
           "quiet_hours_tz": {
-            "type": "object",
+            "type": "string",
             "example": "Asia/Riyadh",
             "nullable": true
           }
@@ -4959,6 +5170,102 @@
           }
         }
       },
+      "BudgetLineResponseDto": {
+        "type": "object",
+        "properties": {
+          "line_id": {
+            "type": "string"
+          },
+          "category_id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "translation_key": {
+            "type": "string",
+            "nullable": true
+          },
+          "custom_name": {
+            "type": "string",
+            "nullable": true
+          },
+          "icon": {
+            "type": "string"
+          },
+          "color": {
+            "type": "string"
+          },
+          "planned_minor": {
+            "type": "number"
+          },
+          "spent_minor": {
+            "type": "number"
+          },
+          "remaining_minor": {
+            "type": "number"
+          },
+          "alert_threshold_pct": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "line_id",
+          "category_id",
+          "name",
+          "icon",
+          "color",
+          "planned_minor",
+          "spent_minor",
+          "remaining_minor",
+          "alert_threshold_pct"
+        ]
+      },
+      "BudgetStatusResponseDto": {
+        "type": "object",
+        "properties": {
+          "visible": {
+            "type": "boolean"
+          },
+          "has_budget": {
+            "type": "boolean"
+          },
+          "budget_id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "cadence": {
+            "type": "string",
+            "enum": [
+              "MONTHLY",
+              "WEEKLY"
+            ]
+          },
+          "planned_total": {
+            "type": "number"
+          },
+          "spent_total": {
+            "type": "number"
+          },
+          "lines": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BudgetLineResponseDto"
+            }
+          },
+          "timezone": {
+            "type": "string"
+          },
+          "generated_at": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "visible"
+        ]
+      },
       "BudgetLineInputDto": {
         "type": "object",
         "properties": {
@@ -5009,6 +5316,77 @@
         },
         "required": [
           "lines"
+        ]
+      },
+      "GoalProgressResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "target_minor": {
+            "type": "number"
+          },
+          "current_minor": {
+            "type": "number",
+            "nullable": true
+          },
+          "currency_code": {
+            "type": "string"
+          },
+          "target_date": {
+            "type": "string",
+            "nullable": true
+          },
+          "status": {
+            "type": "string"
+          },
+          "priority": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "target_minor",
+          "currency_code",
+          "status",
+          "priority"
+        ]
+      },
+      "GoalsOverviewResponseDto": {
+        "type": "object",
+        "properties": {
+          "visible": {
+            "type": "boolean"
+          },
+          "goals": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/GoalProgressResponseDto"
+            }
+          },
+          "debts": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          },
+          "total_debt_minor": {
+            "type": "number"
+          },
+          "timezone": {
+            "type": "string"
+          },
+          "generated_at": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "visible"
         ]
       },
       "CreateGoalDto": {
@@ -5525,6 +5903,63 @@
           "confirm_email"
         ]
       },
+      "DeviceResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "device_id": {
+            "type": "string"
+          },
+          "platform": {
+            "type": "string",
+            "enum": [
+              "web",
+              "ios",
+              "android"
+            ]
+          },
+          "device_name": {
+            "type": "string",
+            "nullable": true
+          },
+          "os_version": {
+            "type": "string",
+            "nullable": true
+          },
+          "app_version": {
+            "type": "string",
+            "nullable": true
+          },
+          "last_seen_at": {
+            "type": "string"
+          },
+          "last_ip": {
+            "type": "string",
+            "nullable": true
+          },
+          "first_seen_at": {
+            "type": "string"
+          },
+          "revoked_at": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "device_id",
+          "platform",
+          "device_name",
+          "os_version",
+          "app_version",
+          "last_seen_at",
+          "last_ip",
+          "first_seen_at",
+          "revoked_at"
+        ]
+      },
       "RegisterDeviceDto": {
         "type": "object",
         "properties": {
@@ -5565,6 +6000,21 @@
           "workspaceId"
         ]
       },
+      "PairingTokenResponseDto": {
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string"
+          },
+          "expires_at": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "token",
+          "expires_at"
+        ]
+      },
       "ConsumePairingDto": {
         "type": "object",
         "properties": {
@@ -5575,6 +6025,38 @@
         },
         "required": [
           "token"
+        ]
+      },
+      "PairedWorkspaceResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "base_currency": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 3
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "base_currency"
+        ]
+      },
+      "RevokedResponseDto": {
+        "type": "object",
+        "properties": {
+          "revoked": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "revoked"
         ]
       },
       "RevokeAllDto": {

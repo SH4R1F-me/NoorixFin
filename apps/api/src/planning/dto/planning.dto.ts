@@ -30,6 +30,60 @@ import { Type } from 'class-transformer';
 /** A non-negative integer in minor units, as digits only. */
 const MINOR_UNITS = /^\d{1,18}$/;
 
+export class BudgetLineResponseDto {
+  @ApiProperty() line_id!: string;
+  @ApiProperty() category_id!: string;
+  @ApiProperty() name!: string;
+  @ApiPropertyOptional({ type: String, nullable: true }) translation_key!:
+    string | null;
+  @ApiPropertyOptional({ type: String, nullable: true }) custom_name!:
+    string | null;
+  @ApiProperty() icon!: string;
+  @ApiProperty() color!: string;
+  @ApiProperty() planned_minor!: number;
+  @ApiProperty() spent_minor!: number;
+  @ApiProperty() remaining_minor!: number;
+  @ApiProperty() alert_threshold_pct!: number;
+}
+
+export class BudgetStatusResponseDto {
+  @ApiProperty() visible!: boolean;
+  @ApiPropertyOptional() has_budget?: boolean;
+  @ApiPropertyOptional() budget_id?: string;
+  @ApiPropertyOptional() name?: string;
+  @ApiPropertyOptional({ enum: ['MONTHLY', 'WEEKLY'] }) cadence?: string;
+  @ApiPropertyOptional() planned_total?: number;
+  @ApiPropertyOptional() spent_total?: number;
+  @ApiPropertyOptional({ type: [BudgetLineResponseDto] })
+  lines?: BudgetLineResponseDto[];
+  @ApiPropertyOptional() timezone?: string;
+  @ApiPropertyOptional() generated_at?: string;
+}
+
+export class GoalProgressResponseDto {
+  @ApiProperty() id!: string;
+  @ApiProperty() name!: string;
+  @ApiProperty() target_minor!: number;
+  @ApiPropertyOptional({ type: Number, nullable: true }) current_minor!:
+    number | null;
+  @ApiProperty() currency_code!: string;
+  @ApiPropertyOptional({ type: String, nullable: true }) target_date!:
+    string | null;
+  @ApiProperty() status!: string;
+  @ApiProperty() priority!: number;
+}
+
+export class GoalsOverviewResponseDto {
+  @ApiProperty() visible!: boolean;
+  @ApiPropertyOptional({ type: [GoalProgressResponseDto] })
+  goals?: GoalProgressResponseDto[];
+  @ApiPropertyOptional({ type: 'array', items: { type: 'object' } })
+  debts?: unknown[];
+  @ApiPropertyOptional() total_debt_minor?: number;
+  @ApiPropertyOptional() timezone?: string;
+  @ApiPropertyOptional() generated_at?: string;
+}
+
 // ─── Budgets ─────────────────────────────────────────────────────────────────
 
 export class BudgetLineInputDto {

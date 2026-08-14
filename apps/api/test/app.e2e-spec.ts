@@ -1,29 +1,48 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
-import { App } from 'supertest/types';
-import { AppModule } from './../src/app.module';
 
-describe('AppController (e2e)', () => {
-  let app: INestApplication<App>;
+const API_URL = process.env.E2E_API_URL ?? 'http://localhost:8080';
 
-  beforeEach(async () => {
-    const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [AppModule],
-    }).compile();
+/**
+ * Black-box tests against the built, bootstrapped Nest application. This is
+ * deliberately not a TestingModule: the production body parser, versioning,
+ * middleware, filters, guards, and graceful-start path are the contract under
+ * test, and recreating them in Jest was the stale scaffold's original flaw.
+ */
+describe('NoorixFin application boundary (e2e)', () => {
+  it('serves the real versioned liveness contract and trace headers', async () => {
+    const response = await request(API_URL)
+      .get('/v1/health')
+      .set('X-Request-ID', 'api-e2e-health')
+      .expect(200);
 
-    app = moduleFixture.createNestApplication();
-    await app.init();
+    expect(response.headers['x-request-id']).toBe('api-e2e-health');
+    expect(response.headers.traceparent).toMatch(
+      /^00-[0-9a-f]{32}-[0-9a-f]{16}-0[01]$/,
+    );
+    const body = response.body as unknown as Record<string, unknown>;
+    expect(body.status).toBe('ok');
+    expect(typeof body.version).toBe('string');
+    expect(typeof body.timestamp).toBe('string');
   });
 
-  it('/ (GET)', () => {
-    return request(app.getHttpServer())
-      .get('/')
-      .expect(200)
-      .expect('Hello World!');
+  it('protects authenticated routes with the production error envelope', async () => {
+    const response = await request(API_URL)
+      .get('/v1/me')
+      .set('X-Request-ID', 'api-e2e-auth')
+      .expect(401);
+
+    expect(response.body as unknown).toEqual(
+      expect.objectContaining({
+        statusCode: 401,
+        code: 'MISSING_TOKEN',
+        requestId: 'api-e2e-auth',
+        path: '/v1/me',
+      }),
+    );
+    expect(response.body as unknown).not.toHaveProperty('stack');
   });
 
-  afterEach(async () => {
-    await app.close();
+  it('does not expose the removed Nest starter route', async () => {
+    await request(API_URL).get('/').expect(404);
   });
 });

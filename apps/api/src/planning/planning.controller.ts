@@ -45,6 +45,8 @@ import {
   UpsertBudgetDto,
   UpsertDebtDto,
   ReportRangeDto,
+  BudgetStatusResponseDto,
+  GoalsOverviewResponseDto,
 } from './dto/planning.dto';
 import { ThrottleLedgerWrite, ThrottleReport } from '../common/throttle';
 import { WorkspaceMemberGuard } from '../auth/guards/workspace-member.guard';
@@ -83,6 +85,7 @@ export class PlanningController {
   @ApiParam({ name: 'workspaceId', type: 'string' })
   @ApiOkResponse({
     description: 'One payload per DEC-011; spend derived from postings',
+    type: BudgetStatusResponseDto,
   })
   getBudget(
     @Param('workspaceId') workspaceId: string,
@@ -126,6 +129,7 @@ export class PlanningController {
   // ── Goals and debts ────────────────────────────────────────────────────────
 
   @Get('goals')
+  @ApiOkResponse({ type: GoalsOverviewResponseDto })
   @ApiOperation({
     summary: 'Savings goals and debt summary, progress read from the ledger',
   })

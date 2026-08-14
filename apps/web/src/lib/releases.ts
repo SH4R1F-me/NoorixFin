@@ -24,7 +24,7 @@ export const FALLBACK_MOBILE_RELEASE: MobileRelease = {
 };
 
 export async function getMobileRelease(): Promise<MobileRelease> {
-  const api = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001';
+  const api = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8080';
   try {
     const response = await fetch(`${api}/v1/releases/mobile`, {
       next: { revalidate: 300 }, signal: AbortSignal.timeout(5_000),
@@ -35,4 +35,3 @@ export async function getMobileRelease(): Promise<MobileRelease> {
     return FALLBACK_MOBILE_RELEASE;
   }
 }
-

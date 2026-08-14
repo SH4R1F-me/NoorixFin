@@ -88,9 +88,10 @@ async function bootstrap() {
   });
 
   // ─── Start ─────────────────────────────────────────────
-  // 3001 is the documented contract (see .env.example and both clients'
-  // API_URL defaults). The fallback was 3000, which collides with `next dev`.
-  const port = process.env.API_PORT || 3001;
+  // 8080 is the single development, CI, and deployment contract. Keeping one
+  // default prevents health checks and direct E2E calls from targeting a
+  // different API than the applications under test.
+  const port = process.env.API_PORT || 8080;
   await app.listen(port);
   console.log(`🚀 NoorixFin API running on http://localhost:${port}`);
   console.log(`📚 Swagger UI: http://localhost:${port}/api/docs`);

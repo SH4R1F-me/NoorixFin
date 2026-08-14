@@ -40,7 +40,7 @@ export default function SecurityScreen() {
 
   const load = useCallback(async () => {
     try {
-      const data = await apiFetch<Device[]>('/me/devices');
+      const data = await apiFetch('/me/devices');
       setDevices(data);
     } catch (e) {
       Alert.alert('Error', 'Failed to load sessions.');

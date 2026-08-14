@@ -13,13 +13,21 @@ import {
   Req,
   UseGuards,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiOkResponse,
+  ApiOperation,
+  ApiTags,
+} from '@nestjs/swagger';
 import type { Request } from 'express';
 import { NotificationsService } from './notifications.service';
 import {
   ComposeNotificationDto,
   ListNotificationsDto,
   NotificationTemplateDto,
+  NotificationPageResponseDto,
+  NotificationPreferencesResponseDto,
+  UnreadCountResponseDto,
   UpdateNotificationPreferencesDto,
 } from './dto/notification.dto';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
@@ -38,12 +46,14 @@ export class NotificationsController {
 
   @Get()
   @ApiOperation({ summary: "List the current user's notifications" })
+  @ApiOkResponse({ type: NotificationPageResponseDto })
   list(@Req() req: AuthedRequest, @Query() query: ListNotificationsDto) {
     return this.notifications.list(req.accessToken, query);
   }
 
   @Get('unread-count')
   @ApiOperation({ summary: 'Unread notification badge count' })
+  @ApiOkResponse({ type: UnreadCountResponseDto })
   async unreadCount(@Req() req: AuthedRequest) {
     return { count: await this.notifications.unreadCount(req.accessToken) };
   }
@@ -94,6 +104,7 @@ export class NotificationPreferencesController {
 
   @Get()
   @ApiOperation({ summary: 'Get channel preferences and quiet hours' })
+  @ApiOkResponse({ type: NotificationPreferencesResponseDto })
   get(@Req() req: AuthedRequest, @CurrentUser() user: AuthenticatedUser) {
     return this.notifications.getPreferences(req.accessToken, user.id);
   }

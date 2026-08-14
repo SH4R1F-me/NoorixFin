@@ -96,17 +96,17 @@ export class UpdateNotificationPreferencesDto {
   @Type(() => NotificationPreferenceDto)
   preferences!: NotificationPreferenceDto[];
 
-  @ApiPropertyOptional({ example: '22:00', nullable: true })
+  @ApiPropertyOptional({ type: String, example: '22:00', nullable: true })
   @IsOptional()
   @Matches(/^([01]\d|2[0-3]):[0-5]\d$/)
   quiet_hours_start?: string | null;
 
-  @ApiPropertyOptional({ example: '07:00', nullable: true })
+  @ApiPropertyOptional({ type: String, example: '07:00', nullable: true })
   @IsOptional()
   @Matches(/^([01]\d|2[0-3]):[0-5]\d$/)
   quiet_hours_end?: string | null;
 
-  @ApiPropertyOptional({ example: 'Asia/Riyadh', nullable: true })
+  @ApiPropertyOptional({ type: String, example: 'Asia/Riyadh', nullable: true })
   @IsOptional()
   @IsString()
   @Length(1, 64)
@@ -213,4 +213,48 @@ export class NotificationTemplateDto {
 export class TemplateIdDto {
   @IsUUID(4)
   id!: string;
+}
+
+/** Published response contracts; these mirror the RLS-filtered rows returned by the service. */
+export class NotificationResponseDto {
+  @ApiProperty() id!: string;
+  @ApiProperty({ enum: NOTIFICATION_CATEGORIES })
+  category!: NotificationCategory;
+  @ApiProperty({ enum: NOTIFICATION_SEVERITIES })
+  severity!: NotificationSeverity;
+  @ApiProperty() title_en!: string;
+  @ApiPropertyOptional({ type: String, nullable: true }) title_bn!:
+    string | null;
+  @ApiProperty() body_en!: string;
+  @ApiPropertyOptional({ type: String, nullable: true }) body_bn!:
+    string | null;
+  @ApiPropertyOptional({ type: String, nullable: true }) action_url!:
+    string | null;
+  @ApiPropertyOptional({ type: String, nullable: true }) read_at!:
+    string | null;
+  @ApiPropertyOptional({ type: String, nullable: true }) archived_at!:
+    string | null;
+  @ApiProperty() created_at!: string;
+}
+
+export class NotificationPageResponseDto {
+  @ApiProperty({ type: [NotificationResponseDto] })
+  items!: NotificationResponseDto[];
+  @ApiPropertyOptional({ type: String, nullable: true }) next_cursor!:
+    string | null;
+  @ApiProperty() has_more!: boolean;
+}
+
+export class UnreadCountResponseDto {
+  @ApiProperty({ minimum: 0 }) count!: number;
+}
+
+export class NotificationPreferencesResponseDto {
+  @ApiProperty({ type: [NotificationPreferenceDto] })
+  preferences!: NotificationPreferenceDto[];
+  @ApiProperty({ type: String, nullable: true }) quiet_hours_start!:
+    string | null;
+  @ApiProperty({ type: String, nullable: true }) quiet_hours_end!:
+    string | null;
+  @ApiProperty({ type: String, nullable: true }) quiet_hours_tz!: string | null;
 }
