@@ -42,7 +42,7 @@ function run(cmd, args, opts = {}) {
 // ── 1. Is the committed spec still what the API produces? ────────────────
 let freshSpec;
 try {
-  run('npx', ['pnpm', '--filter', '@noorixfin/api', 'openapi:generate'], { cwd: repo });
+  run('pnpm', ['--filter', '@noorixfin/api', 'openapi:generate'], { cwd: repo });
   freshSpec = readFileSync(committedSpec, 'utf8');
 } catch (error) {
   console.error(red('✗ Could not generate the OpenAPI document.'));
@@ -74,7 +74,7 @@ if (committedFromGit !== null && committedFromGit !== freshSpec) {
 // ── 2. Do the committed types still match the spec? ──────────────────────
 const scratch = join(mkdtempSync(join(tmpdir(), 'noorix-apitypes-')), 'schema.d.ts');
 try {
-  run('npx', ['openapi-typescript', committedSpec, '-o', scratch], { cwd: pkg });
+  run('pnpm', ['exec', 'openapi-typescript', committedSpec, '-o', scratch], { cwd: pkg });
 } catch (error) {
   console.error(red('✗ Type generation failed.'));
   console.error(dim(String(error.stderr || error.message).trim()));

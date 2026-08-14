@@ -19,6 +19,15 @@ import { buildOpenApiDocument } from '../src/openapi';
 const OUTPUT = join(__dirname, '..', '..', '..', 'packages', 'api-client', 'openapi.json');
 
 async function main() {
+  // Building decorator metadata does not contact Supabase, but constructing
+  // the application graph still validates that these keys exist. Placeholder
+  // values keep generation usable in a clean clone and the static CI job;
+  // real runtime values always win because these are fallback-only.
+  process.env.SUPABASE_URL ??= 'http://127.0.0.1:54321';
+  process.env.SUPABASE_ANON_KEY ??= 'openapi-generation-placeholder';
+  process.env.SUPABASE_SERVICE_ROLE_KEY ??= 'openapi-generation-placeholder';
+  process.env.SUPABASE_JWT_SECRET ??= 'openapi-generation-placeholder-32-bytes';
+
   // Errors and warnings only: booting the graph logs every mapped route, and
   // ~70 lines of noise before one line of output makes a failure hard to spot.
   const app = await NestFactory.create(AppModule, { logger: ['error', 'warn'] });

@@ -54,23 +54,50 @@ CLIENT_MAJOR="$(pg_dump --version | grep -oE '[0-9]+' | head -1)"
 SERVER_FULL="$(psql "$SOURCE_URL" -tAc 'show server_version')"
 SERVER_MAJOR="${SERVER_FULL%%.*}"
 echo "  pg_dump $CLIENT_MAJOR · server $SERVER_FULL"
-if (( CLIENT_MAJOR < SERVER_MAJOR )); then
-  red "  pg_dump ($CLIENT_MAJOR) is older than the server ($SERVER_MAJOR) — it cannot dump this database."
-  exit 1
+USE_CONTAINER_TOOLS=0
+DB_CONTAINER=""
+if [[ "${FORCE_CONTAINER_DB_TOOLS:-0}" == "1" ]] || (( CLIENT_MAJOR < SERVER_MAJOR )); then
+  # GitHub's Ubuntu image can lag Supabase's Postgres major. For the local
+  # stack, use the database container's matching pg_dump/pg_restore instead of
+  # weakening the drill or depending on the runner's apt repository timing.
+  DB_CONTAINER="$(docker ps --format '{{.Names}}' | awk '/^supabase_db_/ { print; exit }')"
+  if [[ -z "$DB_CONTAINER" ]]; then
+    red "  pg_dump ($CLIENT_MAJOR) is older than the server ($SERVER_MAJOR), and no local Supabase DB container was found."
+    exit 1
+  fi
+  CONTAINER_MAJOR="$(docker exec "$DB_CONTAINER" pg_dump --version | grep -oE '[0-9]+' | head -1)"
+  if (( CONTAINER_MAJOR < SERVER_MAJOR )); then
+    red "  container pg_dump ($CONTAINER_MAJOR) is older than the server ($SERVER_MAJOR)."
+    exit 1
+  fi
+  USE_CONTAINER_TOOLS=1
+  dim "  using matching pg_dump $CONTAINER_MAJOR from $DB_CONTAINER"
 fi
 
 step "Dump"
 # Flags are the runbook's §2, and each one is there because leaving it out
 # broke a rehearsal: --schema=extensions (or every CREATE TABLE fails on its
 # uuid default) and privileges retained (or the restore has rows nobody can read).
-pg_dump "$SOURCE_URL" \
-  --format=custom \
-  --no-owner \
-  --schema=public \
-  --schema=auth \
-  --schema=storage \
-  --schema=extensions \
-  --file="$DUMP"
+if [[ $USE_CONTAINER_TOOLS -eq 1 ]]; then
+  docker exec "$DB_CONTAINER" pg_dump \
+    --username=postgres \
+    --dbname=postgres \
+    --format=custom \
+    --no-owner \
+    --schema=public \
+    --schema=auth \
+    --schema=storage \
+    --schema=extensions > "$DUMP"
+else
+  pg_dump "$SOURCE_URL" \
+    --format=custom \
+    --no-owner \
+    --schema=public \
+    --schema=auth \
+    --schema=storage \
+    --schema=extensions \
+    --file="$DUMP"
+fi
 dim "  $(du -h "$DUMP" | cut -f1) → $DUMP"
 
 step "Prepare the restore target"
@@ -113,7 +140,13 @@ step "Restore"
 #     proves rather than assumes.
 #
 set +e
-pg_restore --dbname "$RESTORE_URL" --no-owner -j 1 "$DUMP" 2>"$WORK/restore.err"
+if [[ $USE_CONTAINER_TOOLS -eq 1 ]]; then
+  docker exec -i "$DB_CONTAINER" pg_restore \
+    --dbname "postgresql://postgres:postgres@127.0.0.1:5432/$RESTORE_DB" \
+    --no-owner -j 1 < "$DUMP" 2>"$WORK/restore.err"
+else
+  pg_restore --dbname "$RESTORE_URL" --no-owner -j 1 "$DUMP" 2>"$WORK/restore.err"
+fi
 RESTORE_CODE=$?
 set -e
 

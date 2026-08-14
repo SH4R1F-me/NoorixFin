@@ -70,8 +70,8 @@ jobs:
 
       - name: Typecheck and sync-engine tests
         run: |
-          pnpm --filter @noorixfin/mobile typecheck
-          pnpm --filter @noorixfin/mobile test -- --runInBand
+          pnpm exec turbo typecheck --filter=@noorixfin/mobile
+          pnpm exec turbo test --filter=@noorixfin/mobile
 
       # A native store build needs Apple/Google credentials, but this export
       # still resolves every route and bundles both platforms. It catches the
@@ -268,6 +268,7 @@ jobs:
         working-directory: apps/api
         run: |
           node dist/main.js &
+          echo $! > /tmp/noorixfin-api.pid
           # Poll rather than sleep: a fixed wait is either flaky or slow, and on
           # a cold runner it is usually both.
           for i in $(seq 1 30); do
@@ -312,10 +313,15 @@ jobs:
 
       - name: Stop the API
         run: |
-          pkill -f 'node dist/main.js' || true
+          kill -TERM "$(cat /tmp/noorixfin-api.pid)"
           # Confirm it is actually gone. A test asserting "graceful with the API
           # down" that runs against a live API passes for the wrong reason.
-          sleep 2
+          for i in $(seq 1 15); do
+            if ! curl -sf --max-time 1 "${API_URL}/v1/health" > /dev/null; then
+              break
+            fi
+            sleep 1
+          done
           if curl -sf --max-time 2 "${API_URL}/v1/health" > /dev/null; then
             echo "API is still up — the degraded run would prove nothing"; exit 1
           fi
