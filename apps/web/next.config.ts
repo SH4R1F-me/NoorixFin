@@ -73,6 +73,16 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
+  // Produces a dependency-traced server bundle for the pinned self-host image.
+  // The root must include workspace packages imported by the web application.
+  output: 'standalone',
+  outputFileTracingRoot: path.join(import.meta.dirname, '..', '..'),
+  // Next 16's server entry imports the ESM SWC interoperability helper through
+  // pnpm's nested symlink. Automatic tracing retained the CJS helper but not
+  // the ESM directory, producing a green build that crashed at container boot.
+  outputFileTracingIncludes: {
+    '/*': ['../../node_modules/.pnpm/@swc+helpers@*/node_modules/@swc/helpers/**/*'],
+  },
   experimental: {
     // CSV/OFX/QIF imports and base64 receipt uploads pass through authenticated
     // Server Actions. Base64 and JSON escaping expand the wire payload; the API

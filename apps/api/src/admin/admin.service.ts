@@ -157,14 +157,20 @@ export class AdminService {
       this.probe('auth', async () => {
         const response = await fetch(
           `${this.supabaseService.getSupabaseUrl()}/auth/v1/health`,
-          { signal: AbortSignal.timeout(5000) },
+          {
+            headers: this.supabaseService.getGatewayHeaders(),
+            signal: AbortSignal.timeout(5000),
+          },
         );
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
       }),
       this.probe('storage', async () => {
         const response = await fetch(
           `${this.supabaseService.getSupabaseUrl()}/storage/v1/version`,
-          { signal: AbortSignal.timeout(5000) },
+          {
+            headers: this.supabaseService.getGatewayHeaders(),
+            signal: AbortSignal.timeout(5000),
+          },
         );
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
       }),

@@ -16,6 +16,8 @@ dist/
 # Supabase
 supabase/.temp/
 supabase/.branches/
+infra/docker/supabase/volumes/db/data/
+infra/docker/supabase/volumes/storage/
 
 # IDE
 .idea/

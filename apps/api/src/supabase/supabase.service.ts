@@ -87,6 +87,11 @@ export class SupabaseService {
     return this.supabaseUrl;
   }
 
+  /** Headers required by the self-hosted API gateway for public service probes. */
+  getGatewayHeaders(): Record<string, string> {
+    return { apikey: this.supabaseAnonKey };
+  }
+
   /** Get the JWKS URL for JWT verification */
   getJwksUrl(): string {
     return `${this.supabaseUrl}/auth/v1/.well-known/jwks.json`;

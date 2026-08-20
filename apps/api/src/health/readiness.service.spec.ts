@@ -23,6 +23,7 @@ function supabaseStub(options: { dbError?: string } = {}) {
       }),
     }),
     getSupabaseUrl: () => 'http://supabase.test',
+    getGatewayHeaders: () => ({ apikey: 'test-anon-key' }),
   } as unknown as SupabaseService;
 }
 
@@ -51,6 +52,12 @@ describe('ReadinessService', () => {
       'database',
     ]);
     expect(report.checks.every((c) => c.ok)).toBe(true);
+    expect(global.fetch).toHaveBeenCalledWith(
+      'http://supabase.test/auth/v1/health',
+      expect.objectContaining({
+        headers: { apikey: 'test-anon-key' },
+      }),
+    );
   });
 
   it('reports not_ready when the database errors, and names the reason', async () => {

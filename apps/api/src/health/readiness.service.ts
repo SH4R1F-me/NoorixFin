@@ -95,7 +95,10 @@ export class ReadinessService implements OnApplicationShutdown {
       this.probe('auth', async () => {
         const response = await fetch(
           `${this.supabaseService.getSupabaseUrl()}/auth/v1/health`,
-          { signal: AbortSignal.timeout(PROBE_TIMEOUT_MS) },
+          {
+            headers: this.supabaseService.getGatewayHeaders(),
+            signal: AbortSignal.timeout(PROBE_TIMEOUT_MS),
+          },
         );
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
       }),

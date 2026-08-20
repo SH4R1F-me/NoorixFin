@@ -127,6 +127,7 @@ function makeHarness(
     getUserClient: makeClient,
     getServiceClient: makeClient,
     getSupabaseUrl: () => 'http://localhost:54321',
+    getGatewayHeaders: () => ({ apikey: 'test-anon-key' }),
   } as unknown as SupabaseService;
 
   const audit = { write: jest.fn().mockResolvedValue(true) };
