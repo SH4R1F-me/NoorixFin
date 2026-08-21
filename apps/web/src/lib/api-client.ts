@@ -90,10 +90,11 @@ type TransportOptions = {
   timeoutMs?: number;
 };
 
-type TypedOptions<
-  P extends ApiRuntimePath,
-  M extends ApiHttpMethod,
-> = ApiRuntimeRequestOptions<P, M> & Omit<TransportOptions, 'method' | 'body'>;
+type TypedOptions<P extends ApiRuntimePath, M extends ApiHttpMethod> = ApiRuntimeRequestOptions<
+  P,
+  M
+> &
+  Omit<TransportOptions, 'method' | 'body'>;
 
 type TypedGetOptions<P extends ApiRuntimePathForMethod<'GET'>> = Omit<
   TypedOptions<P, 'GET'>,
@@ -195,7 +196,7 @@ export async function apiFetch(
 }
 
 /** Authenticated raw GET for route handlers that must stream CSV/PDF bytes. */
-export async function apiFetchRaw(path: ApiRuntimePath): Promise<Response> {
+export async function apiFetchRaw(path: ApiRuntimePathForMethod<'GET'>): Promise<Response> {
   const supabase = await createClient();
   const {
     data: { session },

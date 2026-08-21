@@ -16,6 +16,7 @@ module.exports = {
     '^expo-crypto$': '<rootDir>/src/__tests__/mocks/expo-native.ts',
     '^expo-secure-store$': '<rootDir>/src/__tests__/mocks/expo-native.ts',
     '^expo-local-authentication$': '<rootDir>/src/__tests__/mocks/expo-native.ts',
+    '^expo-file-system$': '<rootDir>/src/__tests__/mocks/expo-native.ts',
     '^expo-constants$': '<rootDir>/src/__tests__/mocks/expo-native.ts',
     '^expo-network$': '<rootDir>/src/__tests__/mocks/rn-stub.ts',
     '^react-native$': '<rootDir>/src/__tests__/mocks/rn-stub.ts',

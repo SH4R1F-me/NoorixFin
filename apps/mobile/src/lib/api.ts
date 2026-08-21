@@ -45,10 +45,11 @@ type TransportOptions = {
   signal?: AbortSignal;
 };
 
-type TypedOptions<
-  P extends ApiRuntimePath,
-  M extends ApiHttpMethod,
-> = ApiRuntimeRequestOptions<P, M> & Omit<TransportOptions, 'method' | 'body'>;
+type TypedOptions<P extends ApiRuntimePath, M extends ApiHttpMethod> = ApiRuntimeRequestOptions<
+  P,
+  M
+> &
+  Omit<TransportOptions, 'method' | 'body'>;
 
 type TypedGetOptions<P extends ApiRuntimePathForMethod<'GET'>> = Omit<
   TypedOptions<P, 'GET'>,
@@ -116,4 +117,19 @@ export async function apiFetch(
 
   if (response.status === 204) return undefined;
   return response.json();
+}
+
+/** Authenticated descriptor for native streaming downloads (never JSON-parsed). */
+export async function apiDownloadDescriptor<P extends ApiRuntimePathForMethod<'GET'>>(
+  path: P,
+): Promise<{ url: string; headers: Record<string, string> }> {
+  const token = await getAccessToken();
+  if (!token) throw new ApiError(401, 'NOT_AUTHENTICATED', 'No active session');
+  return {
+    url: `${API_URL}/v1${path}`,
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'X-Client-Info': await getClientInfoHeader(),
+    },
+  };
 }

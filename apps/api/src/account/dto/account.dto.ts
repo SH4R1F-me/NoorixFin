@@ -36,6 +36,25 @@ export class AccountStatusResponseDto {
   @ApiProperty({ enum: ['ACTIVE'] }) status!: string;
 }
 
+export class DataExportArtifactResponseDto {
+  @ApiProperty() id!: string;
+  @ApiProperty({ enum: ['PROCESSING', 'READY', 'FAILED', 'EXPIRED'] })
+  status!: string;
+  @ApiProperty({ enum: ['ndjson-v1'] }) format!: string;
+  @ApiProperty() size_bytes!: number;
+  @ApiProperty() row_count!: number;
+  @ApiProperty({ type: String, nullable: true }) checksum_sha256!:
+    string | null;
+  @ApiProperty() expires_at!: string;
+  @ApiProperty() created_at!: string;
+  @ApiProperty({ type: String, nullable: true }) completed_at!: string | null;
+  @ApiProperty({ type: String, nullable: true }) download_url!: string | null;
+}
+
+export class DataExportDeletedResponseDto {
+  @ApiProperty() deleted!: boolean;
+}
+
 export class BroadcastResponseDto {
   @ApiProperty() id!: string;
   @ApiProperty({ enum: ['INFO', 'SUCCESS', 'WARNING', 'CRITICAL'] })

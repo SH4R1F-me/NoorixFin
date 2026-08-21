@@ -648,6 +648,9 @@ services:
       APP_ENV: production
       ERROR_EXPORT_URL: ${ERROR_EXPORT_URL:-}
       ERROR_EXPORT_HEADERS: ${ERROR_EXPORT_HEADERS:-}
+      ERROR_EXPORT_QUEUE_PATH: /var/lib/noorixfin/error-export-queue.json
+    volumes:
+      - api-error-queue:/var/lib/noorixfin
     ports:
       - ${NOORIXFIN_API_PORT:-8080}:8080
     healthcheck:
@@ -670,6 +673,7 @@ services:
         NEXT_PUBLIC_VAPID_PUBLIC_KEY: ${VAPID_PUBLIC_KEY}
         NEXT_PUBLIC_APP_VERSION: ${NOORIXFIN_VERSION:-0.1.0}
         NEXT_PUBLIC_APP_COMMIT: ${NOORIXFIN_COMMIT:-self-host}
+        NEXT_PUBLIC_ERROR_EXPORT_URL: ${NEXT_PUBLIC_ERROR_EXPORT_URL:-}
     restart: unless-stopped
     depends_on:
       api:
@@ -683,6 +687,7 @@ services:
       NEXT_PUBLIC_SUPABASE_ANON_KEY: ${ANON_KEY}
       NEXT_PUBLIC_API_URL: ${NOORIXFIN_API_PUBLIC_URL}
       NEXT_PUBLIC_SITE_URL: ${SITE_URL}
+      NEXT_PUBLIC_ERROR_EXPORT_URL: ${NEXT_PUBLIC_ERROR_EXPORT_URL:-}
       SUPABASE_SERVICE_ROLE_KEY: ${SERVICE_ROLE_KEY}
     ports:
       - ${NOORIXFIN_WEB_PORT:-3000}:3000
@@ -694,5 +699,6 @@ services:
       start_period: 20s
 
 volumes:
+  api-error-queue:
   db-config:
   deno-cache:

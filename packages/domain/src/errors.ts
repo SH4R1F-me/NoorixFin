@@ -176,6 +176,11 @@ export const API_ERRORS = {
   },
   EVENT_NOT_FOUND: { status: 404, retryable: false, description: 'No such calendar event.' },
   USER_NOT_FOUND: { status: 404, retryable: false, description: 'No such user profile.' },
+  EXPORT_NOT_FOUND: {
+    status: 404,
+    retryable: false,
+    description: 'No account export artifact exists for this user and identifier.',
+  },
   DEVICE_NOT_FOUND: { status: 404, retryable: false, description: 'No such active user device.' },
   TRANSACTION_NOT_REVERSIBLE: {
     status: 404,
@@ -190,6 +195,11 @@ export const API_ERRORS = {
     status: 409,
     retryable: false,
     description: 'This user already has a personal workspace (DEC-007 allows exactly one).',
+  },
+  EXPORT_EXPIRED: {
+    status: 410,
+    retryable: false,
+    description: 'The account export expired and its chunks were deleted.',
   },
 
   // ── Validation and state (400) ──────────────────────────────────────────
@@ -319,6 +329,16 @@ export const API_ERRORS = {
   // but which is reported as 400 today rather than 5xx. Grouped so that is
   // visible rather than scattered.
   SYNC_FAILED: { status: 400, retryable: true, description: 'The delta-sync query failed.' },
+  EXPORT_NOT_READY: {
+    status: 503,
+    retryable: true,
+    description: 'The requested account export artifact has not completed yet.',
+  },
+  EXPORT_FAILED: {
+    status: 503,
+    retryable: true,
+    description: 'The bounded account export artifact could not be created.',
+  },
   REVERSAL_FAILED: {
     status: 400,
     retryable: true,

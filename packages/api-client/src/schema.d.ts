@@ -13,7 +13,7 @@ export interface paths {
         };
         /**
          * Delta sync — all rows changed since the given cursor
-         * @description Omit `since` for a full initial pull. Delivery is at-least-once: boundary rows may repeat, so the client must upsert by primary key. Advance your stored cursor only when `has_more` is false.
+         * @description Omit `cursor` for a full initial pull. The versioned cursor tracks an independent (updated_at, stable primary key) position for every source, so arbitrarily large same-timestamp batches drain without gaps or loops.
          */
         get: operations["SyncController_delta_v1"];
         put?: never;
@@ -1404,21 +1404,50 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/v1/me/export": {
+    "/v1/me/exports": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /**
-         * Export every row this account owns (§15.3)
-         * @description Runs on the USER's client, so RLS is the scope boundary and a bug here cannot widen it. Operational logs are excluded: an audit trail a user can export is an audit trail an attacker can read after taking an account.
-         */
-        get: operations["AccountController_exportData_v1"];
+        get?: never;
+        put?: never;
+        /** Create a bounded, expiring NDJSON export artifact */
+        post: operations["AccountController_requestExport_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/me/exports/{id}/download": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["AccountController_downloadExport_v1"];
         put?: never;
         post?: never;
         delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/me/exports/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["AccountController_getExport_v1"];
+        put?: never;
+        post?: never;
+        delete: operations["AccountController_deleteExport_v1"];
         options?: never;
         head?: never;
         patch?: never;
@@ -1678,9 +1707,9 @@ export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
         SyncResponseDto: {
-            /** @description Cursor to pass as `since` on the next pull. Advance it ONLY when has_more is false — see the partial-page note in the service. */
+            /** @description Opaque versioned cursor to pass as `cursor` on the next pull. It safely advances every source independently. */
             cursor: string;
-            /** @description True if any table hit the row limit. Call again with the same cursor to drain the remainder. */
+            /** @description True if any source exceeded the page limit. Call again with the returned cursor to drain the remainder. */
             has_more: boolean;
             /** @description Server time when this delta was computed (ISO-8601). */
             server_time: string;
@@ -2955,6 +2984,23 @@ export interface components {
             new_devices: components["schemas"]["NewDeviceAnomalyResponseDto"][];
             throttle_abusers: components["schemas"]["ThrottleAnomalyResponseDto"][];
         };
+        DataExportArtifactResponseDto: {
+            id: string;
+            /** @enum {string} */
+            status: "PROCESSING" | "READY" | "FAILED" | "EXPIRED";
+            /** @enum {string} */
+            format: "ndjson-v1";
+            size_bytes: number;
+            row_count: number;
+            checksum_sha256: string | null;
+            expires_at: string;
+            created_at: string;
+            completed_at: string | null;
+            download_url: string | null;
+        };
+        DataExportDeletedResponseDto: {
+            deleted: boolean;
+        };
         RequestDeletionDto: {
             /**
              * @description Must exactly equal the signed-in account's email address. A typed confirmation, so an accidental or CSRF-driven POST cannot schedule the deletion of an entire ledger.
@@ -3107,7 +3153,7 @@ export interface components {
              * @example TRANSACTION_NOT_FOUND
              * @enum {string}
              */
-            code: "MISSING_TOKEN" | "INVALID_TOKEN" | "AUTH_FAILED" | "NOT_WORKSPACE_MEMBER" | "WORKSPACE_ACCESS_DENIED" | "NOT_SUPER_ADMIN" | "MFA_REQUIRED" | "ACCOUNT_NOT_ACTIVE" | "NOT_AUTHENTICATED" | "AUTHZ_CHECK_FAILED" | "IDEMPOTENCY_KEY_REQUIRED" | "IDEMPOTENCY_KEY_REUSED" | "IDEMPOTENCY_KEY_TOO_LONG" | "IDEMPOTENCY_IN_PROGRESS" | "NOT_FOUND" | "WORKSPACE_NOT_FOUND" | "PAIRING_TOKEN_NOT_FOUND" | "PAIRING_TOKEN_EXPIRED" | "RELEASE_CONFIG_UNAVAILABLE" | "INVALID_RELEASE_URL" | "INVALID_REPORT_RANGE" | "INVALID_EXPORT_FORMAT" | "ACCOUNT_NOT_FOUND" | "CATEGORY_NOT_FOUND" | "PARENT_CATEGORY_NOT_FOUND" | "TRANSACTION_NOT_FOUND" | "ATTACHMENT_NOT_FOUND" | "IMPORT_NOT_FOUND" | "TAG_NOT_FOUND" | "GOAL_NOT_FOUND" | "DEBT_TERMS_NOT_FOUND" | "EVENT_NOT_FOUND" | "USER_NOT_FOUND" | "DEVICE_NOT_FOUND" | "TRANSACTION_NOT_REVERSIBLE" | "PERSONAL_WORKSPACE_EXISTS" | "INVALID_AMOUNT" | "AMOUNT_TOO_LARGE" | "INVALID_TYPE" | "INVALID_VALUE" | "INVALID_REFERENCE" | "INVALID_ATTACHMENT" | "IMPORT_PARSE_FAILED" | "CATEGORY_REQUIRED" | "CATEGORY_KIND_MISMATCH" | "DESTINATION_REQUIRED" | "NOT_A_LIABILITY" | "NO_POSTINGS" | "ALREADY_REVERSED" | "EMPTY_PATCH" | "NO_CHANGES" | "ALREADY_PENDING" | "NOT_PENDING" | "CONFIRMATION_MISMATCH" | "CANNOT_SUSPEND_SELF" | "LAST_SUPER_ADMIN" | "UNKNOWN_SETTING" | "SYNC_CURSOR_STALLED" | "SYNC_FAILED" | "REVERSAL_FAILED" | "SUMMARY_FAILED" | "AGGREGATION_FAILED" | "PLANNING_WRITE_FAILED" | "CATEGORY_CREATE_FAILED" | "CATEGORY_SEED_FAILED" | "ONBOARDING_UPDATE_FAILED" | "DELETION_REQUEST_FAILED" | "CANCEL_FAILED" | "SUSPEND_FAILED" | "REINSTATE_FAILED" | "DISMISS_FAILED" | "BROADCASTS_UNAVAILABLE" | "IMPORT_CREATE_FAILED" | "IMPORT_STAGE_FAILED" | "ATTACHMENT_UPLOAD_FAILED" | "ATTACHMENT_DOWNLOAD_FAILED" | "ATTACHMENT_DELETE_FAILED";
+            code: "MISSING_TOKEN" | "INVALID_TOKEN" | "AUTH_FAILED" | "NOT_WORKSPACE_MEMBER" | "WORKSPACE_ACCESS_DENIED" | "NOT_SUPER_ADMIN" | "MFA_REQUIRED" | "ACCOUNT_NOT_ACTIVE" | "NOT_AUTHENTICATED" | "AUTHZ_CHECK_FAILED" | "IDEMPOTENCY_KEY_REQUIRED" | "IDEMPOTENCY_KEY_REUSED" | "IDEMPOTENCY_KEY_TOO_LONG" | "IDEMPOTENCY_IN_PROGRESS" | "NOT_FOUND" | "WORKSPACE_NOT_FOUND" | "PAIRING_TOKEN_NOT_FOUND" | "PAIRING_TOKEN_EXPIRED" | "RELEASE_CONFIG_UNAVAILABLE" | "INVALID_RELEASE_URL" | "INVALID_REPORT_RANGE" | "INVALID_EXPORT_FORMAT" | "ACCOUNT_NOT_FOUND" | "CATEGORY_NOT_FOUND" | "PARENT_CATEGORY_NOT_FOUND" | "TRANSACTION_NOT_FOUND" | "ATTACHMENT_NOT_FOUND" | "IMPORT_NOT_FOUND" | "TAG_NOT_FOUND" | "GOAL_NOT_FOUND" | "DEBT_TERMS_NOT_FOUND" | "EVENT_NOT_FOUND" | "USER_NOT_FOUND" | "EXPORT_NOT_FOUND" | "DEVICE_NOT_FOUND" | "TRANSACTION_NOT_REVERSIBLE" | "PERSONAL_WORKSPACE_EXISTS" | "EXPORT_EXPIRED" | "INVALID_AMOUNT" | "AMOUNT_TOO_LARGE" | "INVALID_TYPE" | "INVALID_VALUE" | "INVALID_REFERENCE" | "INVALID_ATTACHMENT" | "INVALID_LOGO" | "INVALID_DONATION_TYPE" | "INVALID_PAYMENT_METHOD" | "IMPORT_PARSE_FAILED" | "CATEGORY_REQUIRED" | "CATEGORY_KIND_MISMATCH" | "DESTINATION_REQUIRED" | "NOT_A_LIABILITY" | "NO_POSTINGS" | "ALREADY_REVERSED" | "EMPTY_PATCH" | "NO_CHANGES" | "ALREADY_PENDING" | "NOT_PENDING" | "CONFIRMATION_MISMATCH" | "CANNOT_SUSPEND_SELF" | "LAST_SUPER_ADMIN" | "UNKNOWN_SETTING" | "SYNC_CURSOR_STALLED" | "SYNC_FAILED" | "EXPORT_NOT_READY" | "EXPORT_FAILED" | "REVERSAL_FAILED" | "SUMMARY_FAILED" | "AGGREGATION_FAILED" | "PLANNING_WRITE_FAILED" | "CATEGORY_CREATE_FAILED" | "CATEGORY_SEED_FAILED" | "ONBOARDING_UPDATE_FAILED" | "DELETION_REQUEST_FAILED" | "CANCEL_FAILED" | "SUSPEND_FAILED" | "REINSTATE_FAILED" | "DISMISS_FAILED" | "BROADCASTS_UNAVAILABLE" | "IMPORT_CREATE_FAILED" | "IMPORT_STAGE_FAILED" | "ATTACHMENT_UPLOAD_FAILED" | "ATTACHMENT_DOWNLOAD_FAILED" | "ATTACHMENT_DELETE_FAILED";
             message: string;
             /** @description Echo of X-Request-ID — quote it when reporting a failure. */
             requestId: string;
@@ -3131,8 +3177,13 @@ export interface operations {
     SyncController_delta_v1: {
         parameters: {
             query?: {
-                /** @description ISO-8601 timestamp cursor. Returns rows with updated_at > since. Omit for a full initial pull. */
+                /**
+                 * @deprecated
+                 * @description Deprecated timestamp cursor accepted from pre-v1 clients. New clients use cursor.
+                 */
                 since?: string;
+                /** @description Opaque versioned cursor containing an independent (updated_at, stable primary key) position for every sync source. */
+                cursor?: string;
                 /** @description Max rows per table in one page. The response says whether more remain. */
                 limit?: number;
             };
@@ -5401,7 +5452,7 @@ export interface operations {
             };
         };
     };
-    AccountController_exportData_v1: {
+    AccountController_requestExport_v1: {
         parameters: {
             query?: never;
             header?: never;
@@ -5410,15 +5461,76 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description A single JSON document. See ExportService for the shape. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DataExportArtifactResponseDto"];
+                };
+            };
+        };
+    };
+    AccountController_downloadExport_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Chunk-streamed NDJSON with Content-Digest and expiry metadata. */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        [key: string]: unknown;
-                    };
+                    "application/x-ndjson": string;
+                };
+            };
+        };
+    };
+    AccountController_getExport_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DataExportArtifactResponseDto"];
+                };
+            };
+        };
+    };
+    AccountController_deleteExport_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DataExportDeletedResponseDto"];
                 };
             };
         };

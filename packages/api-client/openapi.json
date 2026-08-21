@@ -3,7 +3,7 @@
   "paths": {
     "/v1/workspaces/{workspaceId}/sync": {
       "get": {
-        "description": "Omit `since` for a full initial pull. Delivery is at-least-once: boundary rows may repeat, so the client must upsert by primary key. Advance your stored cursor only when `has_more` is false.",
+        "description": "Omit `cursor` for a full initial pull. The versioned cursor tracks an independent (updated_at, stable primary key) position for every source, so arbitrarily large same-timestamp batches drain without gaps or loops.",
         "operationId": "SyncController_delta_v1",
         "parameters": [
           {
@@ -18,9 +18,19 @@
             "name": "since",
             "required": false,
             "in": "query",
-            "description": "ISO-8601 timestamp cursor. Returns rows with updated_at > since. Omit for a full initial pull.",
+            "description": "Deprecated timestamp cursor accepted from pre-v1 clients. New clients use cursor.",
+            "deprecated": true,
             "schema": {
               "example": "2026-08-04T10:15:00.000Z",
+              "type": "string"
+            }
+          },
+          {
+            "name": "cursor",
+            "required": false,
+            "in": "query",
+            "description": "Opaque versioned cursor containing an independent (updated_at, stable primary key) position for every sync source.",
+            "schema": {
               "type": "string"
             }
           },
@@ -4095,19 +4105,17 @@
         ]
       }
     },
-    "/v1/me/export": {
-      "get": {
-        "description": "Runs on the USER's client, so RLS is the scope boundary and a bug here cannot widen it. Operational logs are excluded: an audit trail a user can export is an audit trail an attacker can read after taking an account.",
-        "operationId": "AccountController_exportData_v1",
+    "/v1/me/exports": {
+      "post": {
+        "operationId": "AccountController_requestExport_v1",
         "parameters": [],
         "responses": {
-          "200": {
-            "description": "A single JSON document. See ExportService for the shape.",
+          "201": {
+            "description": "",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "additionalProperties": true
+                  "$ref": "#/components/schemas/DataExportArtifactResponseDto"
                 }
               }
             }
@@ -4118,7 +4126,111 @@
             "supabase-auth": []
           }
         ],
-        "summary": "Export every row this account owns (§15.3)",
+        "summary": "Create a bounded, expiring NDJSON export artifact",
+        "tags": [
+          "Account"
+        ]
+      }
+    },
+    "/v1/me/exports/{id}/download": {
+      "get": {
+        "operationId": "AccountController_downloadExport_v1",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Chunk-streamed NDJSON with Content-Digest and expiry metadata.",
+            "content": {
+              "application/x-ndjson": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "supabase-auth": []
+          }
+        ],
+        "tags": [
+          "Account"
+        ]
+      }
+    },
+    "/v1/me/exports/{id}": {
+      "get": {
+        "operationId": "AccountController_getExport_v1",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DataExportArtifactResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "supabase-auth": []
+          }
+        ],
+        "tags": [
+          "Account"
+        ]
+      },
+      "delete": {
+        "operationId": "AccountController_deleteExport_v1",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DataExportDeletedResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "supabase-auth": []
+          }
+        ],
         "tags": [
           "Account"
         ]
@@ -4749,11 +4861,11 @@
         "properties": {
           "cursor": {
             "type": "string",
-            "description": "Cursor to pass as `since` on the next pull. Advance it ONLY when has_more is false — see the partial-page note in the service."
+            "description": "Opaque versioned cursor to pass as `cursor` on the next pull. It safely advances every source independently."
           },
           "has_more": {
             "type": "boolean",
-            "description": "True if any table hit the row limit. Call again with the same cursor to drain the remainder."
+            "description": "True if any source exceeded the page limit. Call again with the returned cursor to drain the remainder."
           },
           "server_time": {
             "type": "string",
@@ -8998,6 +9110,76 @@
           "throttle_abusers"
         ]
       },
+      "DataExportArtifactResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "PROCESSING",
+              "READY",
+              "FAILED",
+              "EXPIRED"
+            ]
+          },
+          "format": {
+            "type": "string",
+            "enum": [
+              "ndjson-v1"
+            ]
+          },
+          "size_bytes": {
+            "type": "number"
+          },
+          "row_count": {
+            "type": "number"
+          },
+          "checksum_sha256": {
+            "type": "string",
+            "nullable": true
+          },
+          "expires_at": {
+            "type": "string"
+          },
+          "created_at": {
+            "type": "string"
+          },
+          "completed_at": {
+            "type": "string",
+            "nullable": true
+          },
+          "download_url": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "status",
+          "format",
+          "size_bytes",
+          "row_count",
+          "checksum_sha256",
+          "expires_at",
+          "created_at",
+          "completed_at",
+          "download_url"
+        ]
+      },
+      "DataExportDeletedResponseDto": {
+        "type": "object",
+        "properties": {
+          "deleted": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "deleted"
+        ]
+      },
       "RequestDeletionDto": {
         "type": "object",
         "properties": {
@@ -9549,15 +9731,20 @@
               "DEBT_TERMS_NOT_FOUND",
               "EVENT_NOT_FOUND",
               "USER_NOT_FOUND",
+              "EXPORT_NOT_FOUND",
               "DEVICE_NOT_FOUND",
               "TRANSACTION_NOT_REVERSIBLE",
               "PERSONAL_WORKSPACE_EXISTS",
+              "EXPORT_EXPIRED",
               "INVALID_AMOUNT",
               "AMOUNT_TOO_LARGE",
               "INVALID_TYPE",
               "INVALID_VALUE",
               "INVALID_REFERENCE",
               "INVALID_ATTACHMENT",
+              "INVALID_LOGO",
+              "INVALID_DONATION_TYPE",
+              "INVALID_PAYMENT_METHOD",
               "IMPORT_PARSE_FAILED",
               "CATEGORY_REQUIRED",
               "CATEGORY_KIND_MISMATCH",
@@ -9575,6 +9762,8 @@
               "UNKNOWN_SETTING",
               "SYNC_CURSOR_STALLED",
               "SYNC_FAILED",
+              "EXPORT_NOT_READY",
+              "EXPORT_FAILED",
               "REVERSAL_FAILED",
               "SUMMARY_FAILED",
               "AGGREGATION_FAILED",

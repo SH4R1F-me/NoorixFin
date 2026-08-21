@@ -455,6 +455,46 @@ BEGIN
     RAISE EXCEPTION 'NOTIF-HINT FAILED: payload-free hint table is absent from Realtime';
   END IF;
 
+  -- Two replicas race for the same due delivery. The second claim must not see
+  -- it until the first worker's durable lease expires; after expiry it must be
+  -- recoverable. This exercises the actual SKIP LOCKED RPC, not a mock.
+  INSERT INTO notification_deliveries
+    (id, notification_id, channel, status, next_attempt_at, created_at)
+  VALUES
+    ('e0000000-0000-0000-0000-000000000013',
+     'e0000000-0000-0000-0000-000000000012',
+     'in_app', 'PENDING', '2000-01-01T00:00:00Z', '2000-01-01T00:00:00Z');
+
+  SELECT count(*) INTO v_count
+    FROM claim_notification_deliveries(
+      'e0000000-0000-4000-8000-0000000000a1', 1, 120
+    )
+   WHERE id = 'e0000000-0000-0000-0000-000000000013';
+  IF v_count <> 1 THEN
+    RAISE EXCEPTION 'NOTIF-LEASE FAILED: first worker did not claim the due delivery';
+  END IF;
+
+  SELECT count(*) INTO v_count
+    FROM claim_notification_deliveries(
+      'e0000000-0000-4000-8000-0000000000b2', 1, 120
+    )
+   WHERE id = 'e0000000-0000-0000-0000-000000000013';
+  IF v_count <> 0 THEN
+    RAISE EXCEPTION 'NOTIF-LEASE FAILED: second worker claimed an active lease';
+  END IF;
+
+  UPDATE notification_deliveries
+     SET lease_expires_at = clock_timestamp() - INTERVAL '1 second'
+   WHERE id = 'e0000000-0000-0000-0000-000000000013';
+  SELECT count(*) INTO v_count
+    FROM claim_notification_deliveries(
+      'e0000000-0000-4000-8000-0000000000b2', 1, 120
+    )
+   WHERE id = 'e0000000-0000-0000-0000-000000000013';
+  IF v_count <> 1 THEN
+    RAISE EXCEPTION 'NOTIF-LEASE FAILED: expired lease was not recovered';
+  END IF;
+
   DELETE FROM notifications WHERE id IN
     ('e0000000-0000-0000-0000-000000000011','e0000000-0000-0000-0000-000000000012');
   DELETE FROM notification_hints WHERE created_at >= v_started;
@@ -473,6 +513,40 @@ BEGIN
       RAISE EXCEPTION 'NOTIF-DIGEST FAILED: expected one active digest schedule, found %', v_count;
     END IF;
   END IF;
+END;
+$$;
+
+-- ── Bounded export artifact lifecycle (DATA-01) ─────────────────────────────
+DO $$
+DECLARE v_count INT;
+BEGIN
+  IF has_table_privilege('authenticated', 'public.data_export_artifacts', 'SELECT')
+     OR has_table_privilege('authenticated', 'public.data_export_chunks', 'SELECT') THEN
+    RAISE EXCEPTION 'EXPORT FAILED: clients have direct access to artifact internals';
+  END IF;
+
+  INSERT INTO data_export_artifacts
+    (id, user_id, status, expires_at, checksum_sha256)
+  VALUES
+    ('e0000000-0000-0000-0000-000000000031',
+     'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb',
+     'READY', NOW() - INTERVAL '1 second', repeat('a', 64));
+  INSERT INTO data_export_chunks (artifact_id, sequence, content, byte_length)
+  VALUES ('e0000000-0000-0000-0000-000000000031', 0, '{}\n', 3);
+
+  PERFORM purge_expired_data_exports();
+  SELECT count(*) INTO v_count FROM data_export_artifacts
+   WHERE id = 'e0000000-0000-0000-0000-000000000031';
+  IF v_count <> 0 THEN
+    RAISE EXCEPTION 'EXPORT FAILED: expired artifact was not purged';
+  END IF;
+  SELECT count(*) INTO v_count FROM data_export_chunks
+   WHERE artifact_id = 'e0000000-0000-0000-0000-000000000031';
+  IF v_count <> 0 THEN
+    RAISE EXCEPTION 'EXPORT FAILED: artifact chunks did not cascade-delete';
+  END IF;
+
+  RAISE NOTICE '   export internals are private and expiry deletes every chunk';
 END;
 $$;
 

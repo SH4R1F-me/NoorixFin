@@ -17,6 +17,7 @@
  * during exactly the incident it exists to detect.
  */
 import { Controller, Get, Res, HttpStatus } from '@nestjs/common';
+import { SkipThrottle } from '@nestjs/throttler';
 import type { Response } from 'express';
 import {
   ApiTags,
@@ -31,6 +32,10 @@ const VERSION = process.env.npm_package_version || '0.1.0';
 
 @ApiTags('Health')
 @Controller('health')
+// Infrastructure probes must remain observable during request floods. Applying
+// a per-IP user budget here can make a healthy replica look dead to a cluster
+// with several concurrent probes and prevents meaningful baseline load gates.
+@SkipThrottle({ short: true, medium: true, long: true })
 export class HealthController {
   constructor(private readonly readiness: ReadinessService) {}
 

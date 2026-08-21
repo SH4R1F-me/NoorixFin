@@ -19,17 +19,18 @@ const resourceId = '00000000-0000-4000-8000-000000000002';
 // Every route invoked by apps/mobile (including the durable mutation queue).
 export const mobileGetRoutes = [
   '/workspaces',
-  `/workspaces/${workspaceId}/sync?since=2026-08-14T00%3A00%3A00.000Z`,
+  `/workspaces/${workspaceId}/sync?cursor=eyJ2IjoxLCJzb3VyY2VzIjp7fX0`,
   `/workspaces/${workspaceId}/budget`,
   `/workspaces/${workspaceId}/goals`,
   '/me',
-  '/me/export',
+  `/me/exports/${resourceId}/download`,
   '/me/devices',
   '/me/notification-preferences',
   '/notifications/unread-count',
 ] as const satisfies readonly ApiRuntimePathForMethod<'GET'>[];
 
 export const mobilePostRoutes = [
+  '/me/exports',
   '/me/devices',
   '/me/devices/pairing/consume',
   `/notifications/${resourceId}/read`,
@@ -39,12 +40,17 @@ export const mobilePostRoutes = [
 ] as const satisfies readonly ApiRuntimePathForMethod<'POST'>[];
 
 export const mobileDeleteRoutes = [
+  `/me/exports/${resourceId}`,
   `/me/devices/${resourceId}`,
   `/me/devices/current/${resourceId}`,
 ] as const satisfies readonly ApiRuntimePathForMethod<'DELETE'>[];
 
-export const mobilePatchRoutes = ['/me/preferences'] as const satisfies readonly ApiRuntimePathForMethod<'PATCH'>[];
-export const mobilePutRoutes = ['/me/notification-preferences'] as const satisfies readonly ApiRuntimePathForMethod<'PUT'>[];
+export const mobilePatchRoutes = [
+  '/me/preferences',
+] as const satisfies readonly ApiRuntimePathForMethod<'PATCH'>[];
+export const mobilePutRoutes = [
+  '/me/notification-preferences',
+] as const satisfies readonly ApiRuntimePathForMethod<'PUT'>[];
 
 // Critical web writes: ledger, planning, account security, and operator controls.
 export const criticalWebRoutes = [
@@ -80,9 +86,7 @@ export const updatePreferencesBody = {
 } satisfies ApiRuntimeRequestBody<'/me/preferences', 'PATCH'>;
 
 export const notificationPreferencesBody = {
-  preferences: [
-    { category: 'security', in_app: true, push: true, email: true, digest: 'NONE' },
-  ],
+  preferences: [{ category: 'security', in_app: true, push: true, email: true, digest: 'NONE' }],
   quiet_hours_tz: 'Asia/Riyadh',
 } satisfies ApiRuntimeRequestBody<'/me/notification-preferences', 'PUT'>;
 
@@ -135,9 +139,7 @@ export type SignedAttachmentHasUrl = Assert<
     : false
 >;
 export type UnreadCountHasCount = Assert<
-  ApiRuntimeResponse<'/notifications/unread-count', 'GET'> extends { count: number }
-    ? true
-    : false
+  ApiRuntimeResponse<'/notifications/unread-count', 'GET'> extends { count: number } ? true : false
 >;
 
 declare const generatedProfile: ApiRuntimeResponse<'/me', 'GET'>;
@@ -151,6 +153,9 @@ generatedBudget.data;
 // @ts-expect-error nonexistent routes must never reach a transport
 export const invalidRoute: ApiRuntimePath = '/billing/checkout';
 // @ts-expect-error a GET-only path cannot be sent as POST
-export const invalidMethod: ApiRuntimePathForMethod<'POST'> = '/me/export';
+export const invalidMethod: ApiRuntimePathForMethod<'POST'> = `/me/exports/${resourceId}/download`;
 // @ts-expect-error amount is a minor-unit string, never a floating-point JSON number
-export const invalidTransactionBody: ApiRuntimeRequestBody<`/workspaces/${string}/transactions`, 'POST'> = { type: 'EXPENSE', amount: 12.5, account_id: resourceId, idempotency_key: resourceId };
+export const invalidTransactionBody: ApiRuntimeRequestBody<
+  `/workspaces/${string}/transactions`,
+  'POST'
+> = { type: 'EXPENSE', amount: 12.5, account_id: resourceId, idempotency_key: resourceId };

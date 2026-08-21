@@ -35,6 +35,121 @@ const TABLES = {
 type TableName = keyof typeof TABLES;
 
 const DEFAULT_LIMIT = 500;
+const ZERO_UUID = '00000000-0000-0000-0000-000000000000';
+const UUID_PATTERN =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const ISO_TIMESTAMP_PATTERN =
+  /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,6})?Z$/;
+
+const SOURCES = [
+  { name: 'ledger_accounts', table: 'ledger_accounts', keys: ['id'] },
+  { name: 'categories', table: 'categories', keys: ['id'] },
+  { name: 'journal_entries', table: 'journal_entries', keys: ['id'] },
+  { name: 'journal_postings', table: 'journal_postings', keys: ['id'] },
+  { name: 'tags', table: 'tags', keys: ['id'] },
+  {
+    name: 'journal_entry_tags',
+    table: 'journal_entry_tags',
+    keys: ['journal_entry_id', 'tag_id'],
+  },
+  { name: 'system_categories', table: 'categories', keys: ['id'] },
+  { name: 'notifications', table: 'notifications', keys: ['id'] },
+] as const satisfies ReadonlyArray<{
+  name: string;
+  table: TableName;
+  keys: readonly string[];
+}>;
+
+type SourceName = (typeof SOURCES)[number]['name'];
+type CursorPosition = { updated_at: string; key: string[] };
+type SyncCursor = {
+  v: 1;
+  sources: Partial<Record<SourceName, CursorPosition>>;
+};
+
+type SyncQueryResult = {
+  data: unknown[] | null;
+  error: { message: string } | null;
+};
+
+interface SyncQueryBuilder {
+  select(columns: string): SyncQueryBuilder;
+  eq(column: string, value: unknown): SyncQueryBuilder;
+  is(column: string, value: null): SyncQueryBuilder;
+  or(filter: string): SyncQueryBuilder;
+  order(column: string, options: { ascending: boolean }): SyncQueryBuilder;
+  limit(count: number): PromiseLike<SyncQueryResult>;
+}
+
+function encodeCursor(cursor: SyncCursor): string {
+  return Buffer.from(JSON.stringify(cursor), 'utf8').toString('base64url');
+}
+
+function decodeCursor(raw?: string, legacySince?: string): SyncCursor {
+  const candidate = raw ?? legacySince;
+  if (!candidate) return { v: 1, sources: {} };
+
+  // A timestamp cursor was persisted by every pre-v1 mobile build. Accept it
+  // as a migration input, then always return an opaque versioned cursor.
+  if (
+    !raw &&
+    ISO_TIMESTAMP_PATTERN.test(candidate) &&
+    !Number.isNaN(Date.parse(candidate))
+  ) {
+    return {
+      v: 1,
+      sources: Object.fromEntries(
+        SOURCES.map((source) => [
+          source.name,
+          { updated_at: candidate, key: source.keys.map(() => ZERO_UUID) },
+        ]),
+      ),
+    };
+  }
+
+  try {
+    const parsed = JSON.parse(
+      Buffer.from(candidate, 'base64url').toString('utf8'),
+    ) as SyncCursor;
+    if (parsed.v !== 1 || !parsed.sources || typeof parsed.sources !== 'object')
+      throw new Error('unsupported cursor');
+    for (const source of SOURCES) {
+      const position = parsed.sources[source.name];
+      if (!position) continue;
+      if (
+        !ISO_TIMESTAMP_PATTERN.test(position.updated_at) ||
+        Number.isNaN(Date.parse(position.updated_at)) ||
+        !Array.isArray(position.key) ||
+        position.key.length !== source.keys.length ||
+        position.key.some((value) => !UUID_PATTERN.test(value))
+      )
+        throw new Error('invalid cursor position');
+    }
+    return parsed;
+  } catch {
+    throw new BadRequestException({
+      code: 'SYNC_CURSOR_STALLED',
+      message: 'The sync cursor is invalid or unsupported. Start a full pull.',
+    });
+  }
+}
+
+function afterFilter(
+  position: CursorPosition,
+  keys: readonly string[],
+): string {
+  const timestamp = position.updated_at;
+  const disjuncts = [`updated_at.gt.${timestamp}`];
+  for (let index = 0; index < keys.length; index += 1) {
+    const equalPrefix = keys
+      .slice(0, index)
+      .map((key, prefix) => `${key}.eq.${position.key[prefix] ?? ZERO_UUID}`);
+    disjuncts.push(
+      `and(updated_at.eq.${timestamp},${equalPrefix.join(',')}${equalPrefix.length ? ',' : ''}${keys[index]}.gt.${position.key[index] ?? ZERO_UUID})`,
+    );
+  }
+  return disjuncts.join(',');
+}
 
 @Injectable()
 export class SyncService {
@@ -84,124 +199,80 @@ export class SyncService {
     query: SyncQueryDto,
   ) {
     const client = this.supabaseService.getUserClient(accessToken);
+    // The generated Supabase union across eight heterogeneous tables becomes
+    // too large for TypeScript to represent when built dynamically. This
+    // narrow structural view retains the exact operations used by sync while
+    // row payloads remain explicitly treated as unknown until decoded below.
+    const sourceClient = client as unknown as {
+      from(table: TableName): SyncQueryBuilder;
+    };
     const limit = query.limit ?? DEFAULT_LIMIT;
     const serverTime = new Date().toISOString();
-
-    // Epoch on first pull: `since` omitted means "send me everything".
-    const since = query.since ?? '1970-01-01T00:00:00.000Z';
-
+    const cursor = decodeCursor(query.cursor, query.since);
+    const next: SyncCursor = { v: 1, sources: {} };
     const changes: Record<string, unknown[]> = {};
     let hasMore = false;
-    // When a table is truncated we must not advance the cursor past rows we did
-    // not send, so the next cursor is the EARLIEST watermark among truncated
-    // tables. Untruncated tables get re-scanned from there — redundant, but the
-    // alternative is skipping rows.
-    let truncatedWatermark: string | null = null;
 
-    const workspaceTables = (Object.keys(TABLES) as TableName[]).filter(
-      (table) => table !== 'notifications',
-    );
-    for (const table of workspaceTables) {
-      const { data, error } = await client
-        .from(table)
-        .select(TABLES[table])
-        .eq('workspace_id', workspaceId)
-        // `gte`, not `gt`: rows sharing the boundary timestamp would otherwise
-        // be skipped. Re-sending one row is cheap; losing one is not.
-        .gte('updated_at', since)
-        .order('updated_at', { ascending: true })
-        .limit(limit);
+    for (const source of SOURCES) {
+      const position = cursor.sources[source.name] ?? {
+        updated_at: query.since ?? '1970-01-01T00:00:00.000Z',
+        key: source.keys.map(() => ZERO_UUID),
+      };
+      let request = sourceClient
+        .from(source.table)
+        .select(TABLES[source.table]);
 
+      if (source.name === 'system_categories') {
+        request = request.is('workspace_id', null);
+      } else if (source.name === 'notifications') {
+        request = request.or(
+          `workspace_id.eq.${workspaceId},workspace_id.is.null`,
+        );
+      } else {
+        request = request.eq('workspace_id', workspaceId);
+      }
+
+      request = request
+        .or(afterFilter(position, source.keys))
+        .order('updated_at', { ascending: true });
+      for (const key of source.keys) {
+        request = request.order(key, { ascending: true });
+      }
+
+      const { data, error } = await request.limit(limit + 1);
       if (error) {
-        this.logger.error(`Sync failed for ${table}: ${error.message}`);
+        this.logger.error(`Sync failed for ${source.name}: ${error.message}`);
         throw new BadRequestException({
           code: 'SYNC_FAILED',
-          message: `Failed to read changes for ${table}`,
+          message: `Failed to read changes for ${source.name}`,
         });
       }
 
-      const rows = (data ?? []) as unknown as Array<{ updated_at: string }>;
-      changes[table] = rows;
+      const fetched = (data ?? []) as unknown as Array<
+        Record<string, unknown> & { updated_at: string }
+      >;
+      const moreForSource = fetched.length > limit;
+      const rows = fetched.slice(0, limit);
+      hasMore ||= moreForSource;
 
-      if (rows.length === limit) {
-        hasMore = true;
-        const last = rows[rows.length - 1].updated_at;
+      const outputName =
+        source.name === 'system_categories' ? 'categories' : source.name;
+      changes[outputName] = [...(changes[outputName] ?? []), ...rows];
 
-        // Pathological case: a full page whose rows all share the cursor's
-        // timestamp (e.g. a bulk import stamping identical updated_at). The
-        // cursor cannot advance, so the client would loop forever. Fail loudly
-        // instead. Fix when it bites: a composite (updated_at, id) cursor.
-        if (last === since && rows[0].updated_at === since) {
-          throw new BadRequestException({
-            code: 'SYNC_CURSOR_STALLED',
-            message:
-              `More than ${limit} rows in ${table} share updated_at=${since}; ` +
-              'cannot page past them. Raise `limit` for this pull.',
-          });
-        }
-
-        if (!truncatedWatermark || last < truncatedWatermark) {
-          truncatedWatermark = last;
-        }
-      }
-    }
-
-    // System categories are global (workspace_id IS NULL) and shared by every
-    // workspace, so the workspace-scoped query above cannot see them.
-    const { data: systemCategories, error: sysError } = await client
-      .from('categories')
-      .select(TABLES.categories)
-      .is('workspace_id', null)
-      .gte('updated_at', since)
-      .order('updated_at', { ascending: true })
-      .limit(limit);
-
-    if (sysError) {
-      this.logger.error(
-        `Sync failed for system categories: ${sysError.message}`,
-      );
-      throw new BadRequestException({
-        code: 'SYNC_FAILED',
-        message: 'Failed to read system categories',
-      });
-    }
-
-    changes.categories = [
-      ...(changes.categories ?? []),
-      ...(systemCategories ?? []),
-    ];
-
-    // Notifications are user-scoped by RLS and may either belong to this
-    // workspace or be global (security, account, system, operator). Keeping
-    // them in this delta avoids a second mobile polling loop (§5.5).
-    const { data: notifications, error: notificationError } = await client
-      .from('notifications')
-      .select(TABLES.notifications)
-      .or(`workspace_id.eq.${workspaceId},workspace_id.is.null`)
-      .gte('updated_at', since)
-      .order('updated_at', { ascending: true })
-      .limit(limit);
-
-    if (notificationError) {
-      this.logger.error(
-        `Sync failed for notifications: ${notificationError.message}`,
-      );
-      throw new BadRequestException({
-        code: 'SYNC_FAILED',
-        message: 'Failed to read notifications',
-      });
-    }
-    changes.notifications = notifications ?? [];
-    if ((notifications?.length ?? 0) === limit) {
-      hasMore = true;
-      const rows = notifications as Array<{ updated_at: string }>;
-      const last = rows[rows.length - 1].updated_at;
-      if (!truncatedWatermark || last < truncatedWatermark)
-        truncatedWatermark = last;
+      const last = rows.at(-1);
+      next.sources[source.name] = last
+        ? {
+            updated_at: last.updated_at,
+            key: source.keys.map((key) => String(last[key])),
+          }
+        : {
+            updated_at: serverTime,
+            key: source.keys.map(() => ZERO_UUID),
+          };
     }
 
     return {
-      cursor: truncatedWatermark ?? serverTime,
+      cursor: encodeCursor(next),
       has_more: hasMore,
       server_time: serverTime,
       changes,

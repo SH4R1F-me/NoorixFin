@@ -47,6 +47,14 @@ Edit `.env` before starting anything:
 6. Configure `ERROR_EXPORT_URL` only for an HTTPS endpoint you operate or trust;
    exported events are redacted but remain operational metadata.
 
+`ERROR_EXPORT_URL` is an OTLP/HTTP JSON logs endpoint (normally ending in
+`/v1/logs`). `ERROR_EXPORT_HEADERS` is a JSON object of server-side collector
+headers. The API writes every report to the persistent `api-error-queue` volume
+before attempting delivery and removes it only after a successful 2xx response.
+Browser/mobile export is separately opt-in through the public
+`NEXT_PUBLIC_ERROR_EXPORT_URL` / `EXPO_PUBLIC_ERROR_EXPORT_URL` values; those
+collectors must allow CORS and must not require a secret embedded in a bundle.
+
 Never commit `.env`. Store a sealed copy of the generated secrets in a password
 manager and restrict the file to the deployment account:
 

@@ -132,7 +132,14 @@ function installGracefulShutdown(app: INestApplication) {
   // Long enough for a typical readiness poll to observe the 503, short enough
   // not to hold up a deploy. Configurable because that interval is a property
   // of the platform, not of this process.
-  const drainMs = Number(process.env.SHUTDOWN_DRAIN_MS ?? 5_000);
+  // Nest's watch supervisor starts the replacement immediately after SIGTERM.
+  // A production-style drain during local watch leaves the old socket bound
+  // and makes the new process fail with EADDRINUSE. Development has no load
+  // balancer to notify, so close immediately unless explicitly overridden.
+  const drainMs = Number(
+    process.env.SHUTDOWN_DRAIN_MS ??
+      (process.env.NODE_ENV === 'production' ? 5_000 : 0),
+  );
   // A shutdown that hangs is worse than an abrupt one: an orchestrator waits,
   // then SIGKILLs anyway, and the deploy stalls for the full grace period.
   const forceExitMs = Number(process.env.SHUTDOWN_TIMEOUT_MS ?? 25_000);

@@ -22,6 +22,32 @@ Page when readiness fails for five minutes, disk is above 85%, the latest
 verified backup exceeds 26 hours, or notification/error-export queues remain
 stalled beyond their lease/backoff window.
 
+## Executable performance budgets
+
+The repository carries a dependency-free concurrent HTTP budget runner. Against
+the local or staging API, the liveness baseline is 500 requests at concurrency
+20 with zero errors, p95 below 100 ms, and p99 below 250 ms:
+
+```sh
+pnpm performance:budget
+```
+
+CI runs this baseline against the same API process used by the real database
+and browser acceptance suites. For an authenticated query path, supply an
+opaque test-user token and override the path and risk-based thresholds:
+
+```sh
+PERF_PATH=/v1/workspaces/WORKSPACE_ID/sync?limit=100 \
+PERF_BEARER_TOKEN=TEST_USER_ACCESS_TOKEN \
+PERF_P95_MS=750 PERF_P99_MS=1500 pnpm performance:budget
+```
+
+Never use a production user token or run an unapproved load against production.
+Record the commit, host shape, dataset scale, concurrency, and JSON output when
+changing a budget. Sync queries fetch at most `limit + 1` rows per source and
+account exports page at 500 rows into 512 KiB chunks; their unit and SQL tests
+enforce those query/memory bounds independently of host speed.
+
 ## Daily backup
 
 Create an encrypted destination outside the Docker host. From `infra/docker`,

@@ -20,16 +20,9 @@
  * const id = captureError(error, { release, context: 'POST /v1/transactions' });
  * ```
  */
-export {
-  resolveRelease,
-  type ReleaseInfo,
-} from './release';
+export { resolveRelease, type ReleaseInfo } from './release';
 
-export {
-  fingerprint,
-  normaliseMessage,
-  normaliseStack,
-} from './fingerprint';
+export { fingerprint, normaliseMessage, normaliseStack } from './fingerprint';
 
 export { redact, redactString, REDACTED } from './redact';
 
@@ -44,6 +37,14 @@ export {
   type ErrorReport,
   type ErrorReporter,
 } from './reporter';
+
+export {
+  DurableHttpErrorReporter,
+  toOtlpLogs,
+  type DurableHttpReporterOptions,
+  type ErrorExportFetch,
+  type ErrorReportStore,
+} from './durable-http-reporter';
 
 export {
   childSpan,

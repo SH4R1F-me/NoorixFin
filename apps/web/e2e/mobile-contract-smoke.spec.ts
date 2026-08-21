@@ -7,7 +7,7 @@ const API_URL = E2E_API_URL;
 async function mobileCall<T>(
   token: string,
   path: string,
-  init: { method?: string; body?: unknown } = {},
+  init: { method?: string; body?: unknown; idempotencyKey?: string } = {},
 ): Promise<T> {
   const response = await fetch(`${API_URL}/v1${path}`, {
     method: init.method ?? 'GET',
@@ -15,6 +15,7 @@ async function mobileCall<T>(
       Authorization: `Bearer ${token}`,
       'Content-Type': 'application/json',
       'X-Client-Info': 'noorixfin-mobile-e2e/1.0.0 (android; contract-smoke)',
+      ...(init.idempotencyKey ? { 'Idempotency-Key': init.idempotencyKey } : {}),
     },
     ...(init.body === undefined ? {} : { body: JSON.stringify(init.body) }),
   });
@@ -65,11 +66,29 @@ test.describe('mobile fresh-install API contract', () => {
     });
     expect(updated.display_name).toBe('Mobile User');
 
-    const exported = await mobileCall<{ format_version: number; profile: unknown }>(
-      token,
-      '/me/export',
-    );
-    expect(exported.format_version).toBeGreaterThanOrEqual(1);
-    expect(exported.profile).toBeTruthy();
+    const exported = await mobileCall<{
+      id: string;
+      status: string;
+      checksum_sha256: string;
+      download_url: string;
+    }>(token, '/me/exports', {
+      method: 'POST',
+      idempotencyKey: crypto.randomUUID(),
+    });
+    expect(exported.status).toBe('READY');
+    expect(exported.checksum_sha256).toMatch(/^[0-9a-f]{64}$/);
+
+    const download = await fetch(`${API_URL}/v1${exported.download_url}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    expect(download.ok).toBe(true);
+    expect(download.headers.get('content-digest')).toMatch(/^sha-256=:/);
+    expect(await download.text()).toContain('"type":"manifest"');
+
+    const deleted = await mobileCall<{ deleted: boolean }>(token, `/me/exports/${exported.id}`, {
+      method: 'DELETE',
+      idempotencyKey: crypto.randomUUID(),
+    });
+    expect(deleted.deleted).toBe(true);
   });
 });

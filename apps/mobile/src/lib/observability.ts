@@ -15,13 +15,54 @@
  * one up. What it does unconditionally is compute a stable fingerprint, which
  * is what makes "sync is broken for some users" answerable.
  */
-import { captureError, resolveRelease } from '@noorixfin/observability';
+import { File, Paths } from 'expo-file-system';
+import {
+  captureError,
+  DurableHttpErrorReporter,
+  resolveRelease,
+  setErrorReporter,
+  type ErrorReport,
+} from '@noorixfin/observability';
 
 export const MOBILE_RELEASE = resolveRelease('mobile', {
   APP_VERSION: process.env.EXPO_PUBLIC_APP_VERSION,
   APP_COMMIT: process.env.EXPO_PUBLIC_APP_COMMIT,
   NODE_ENV: process.env.NODE_ENV,
 });
+
+const exportEndpoint = process.env.EXPO_PUBLIC_ERROR_EXPORT_URL;
+if (exportEndpoint) {
+  const queue = new File(Paths.document, 'noorixfin-error-export-queue.v1.json');
+  const reporter = new DurableHttpErrorReporter({
+    endpoint: exportEndpoint,
+    store: {
+      load: async () => {
+        if (!queue.exists) return [];
+        try {
+          const parsed = JSON.parse(await queue.text()) as unknown;
+          return Array.isArray(parsed) ? (parsed as ErrorReport[]) : [];
+        } catch {
+          return [];
+        }
+      },
+      save: async (reports) => {
+        const temporary = new File(Paths.document, 'noorixfin-error-export-queue.v1.tmp');
+        temporary.create({ overwrite: true, intermediates: true });
+        temporary.write(JSON.stringify(reports));
+        await temporary.move(queue, { overwrite: true });
+      },
+    },
+    fetch: async (url, init) => {
+      const response = await fetch(url, {
+        ...init,
+        signal: AbortSignal.timeout(10_000),
+      });
+      return { ok: response.ok, status: response.status };
+    },
+  });
+  setErrorReporter(reporter);
+  void reporter.flush();
+}
 
 /**
  * Report a device-side failure and return its fingerprint.

@@ -18,12 +18,7 @@ import { apiFetch, ApiError } from '../lib/api';
 import { reportMobileError } from '../lib/observability';
 import { drain, type DrainResult } from './queue';
 
-export type SyncState =
-  | 'IDLE'
-  | 'SYNCING'
-  | 'OFFLINE'
-  | 'NEEDS_ATTENTION'
-  | 'ERROR';
+export type SyncState = 'IDLE' | 'SYNCING' | 'OFFLINE' | 'NEEDS_ATTENTION' | 'ERROR';
 
 interface SyncResponse {
   cursor: string;
@@ -42,6 +37,7 @@ export interface SyncOutcome {
 
 /** Guards against overlapping runs — foreground + network-regained can race. */
 const inFlight = new Map<string, Promise<SyncOutcome>>();
+const MAX_PULL_PAGES = 1000;
 
 export function sync(workspaceId: string): Promise<SyncOutcome> {
   const existing = inFlight.get(workspaceId);
@@ -92,8 +88,9 @@ async function execute(workspaceId: string): Promise<SyncOutcome> {
     // `has_more` means a table hit the server's page limit; keep going until
     // the server says it is done. Bounded so a misbehaving cursor cannot spin
     // forever (the API also guards this with SYNC_CURSOR_STALLED).
-    for (let page = 0; page < 50; page += 1) {
-      const query: '' | `?${string}` = cursor ? `?since=${encodeURIComponent(cursor)}` : '';
+    let complete = false;
+    for (let page = 0; page < MAX_PULL_PAGES; page += 1) {
+      const query: '' | `?${string}` = cursor ? `?cursor=${encodeURIComponent(cursor)}` : '';
       const response: SyncResponse = await apiFetch(`/workspaces/${workspaceId}/sync${query}`);
 
       await db.withTransactionAsync(async () => {
@@ -126,7 +123,15 @@ async function execute(workspaceId: string): Promise<SyncOutcome> {
       });
 
       cursor = response.cursor;
-      if (!response.has_more) break;
+      if (!response.has_more) {
+        complete = true;
+        break;
+      }
+    }
+    if (!complete) {
+      throw new Error(
+        `SYNC_INCOMPLETE: server still had changes after ${MAX_PULL_PAGES} bounded pages; resume with the stored cursor.`,
+      );
     }
   } catch (error) {
     const offline = error instanceof ApiError && error.status === 0;

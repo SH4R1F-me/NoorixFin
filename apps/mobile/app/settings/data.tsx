@@ -12,7 +12,8 @@ import {
   Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { apiFetch } from '../../src/lib/api';
+import { randomUUID } from 'expo-crypto';
+import { apiDownloadDescriptor, apiFetch } from '../../src/lib/api';
 import { Colors, Typography, Spacing, Radius } from '../../src/lib/theme';
 import { Download, Trash2, Shield } from 'lucide-react-native';
 import { File, Paths } from 'expo-file-system';
@@ -23,19 +24,27 @@ export default function DataPrivacyScreen() {
 
   async function handleExport() {
     setExporting(true);
+    let artifactId: string | null = null;
     try {
-      const exported = await apiFetch('/me/export');
+      const artifact = await apiFetch('/me/exports', {
+        method: 'POST',
+        idempotencyKey: randomUUID(),
+      });
+      artifactId = artifact.id;
       if (!(await Sharing.isAvailableAsync())) {
         throw new Error('The system share sheet is unavailable on this device.');
       }
       const stamp = new Date().toISOString().replaceAll(':', '-');
-      const file = new File(Paths.cache, `noorixfin-export-${stamp}.json`);
-      file.create({ overwrite: true, intermediates: true });
-      file.write(JSON.stringify(exported, null, 2));
+      const destination = new File(Paths.cache, `noorixfin-export-${stamp}.ndjson`);
+      const request = await apiDownloadDescriptor(`/me/exports/${artifact.id}/download`);
+      const file = await File.downloadFileAsync(request.url, destination, {
+        headers: request.headers,
+        idempotent: true,
+      });
       await Sharing.shareAsync(file.uri, {
         dialogTitle: 'Save or share NoorixFin export',
-        mimeType: 'application/json',
-        UTI: 'public.json',
+        mimeType: 'application/x-ndjson',
+        UTI: 'public.text',
       });
     } catch (error) {
       Alert.alert(
@@ -43,6 +52,16 @@ export default function DataPrivacyScreen() {
         error instanceof Error ? error.message : 'Failed to create your export file.',
       );
     } finally {
+      if (artifactId) {
+        try {
+          await apiFetch(`/me/exports/${artifactId}`, {
+            method: 'DELETE',
+            idempotencyKey: randomUUID(),
+          });
+        } catch {
+          // The server-side 24-hour expiry remains the final cleanup boundary.
+        }
+      }
       setExporting(false);
     }
   }
@@ -66,7 +85,9 @@ export default function DataPrivacyScreen() {
           )}
           <View style={{ flex: 1 }}>
             <Text style={styles.actionTitle}>Export My Data</Text>
-            <Text style={styles.actionSub}>Download all your transactions and data as JSON</Text>
+            <Text style={styles.actionSub}>
+              Stream a verified export that expires after 24 hours
+            </Text>
           </View>
         </TouchableOpacity>
 

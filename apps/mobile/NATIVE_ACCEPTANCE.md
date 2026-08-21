@@ -37,6 +37,6 @@ Expo export fails.
 
 On the same candidate builds, record one pass with Android TalkBack and one with
 iOS VoiceOver: unlock, create and reverse a transaction, repair a rejected
-offline change, change English/Bangla, export/share JSON, and revoke a session.
+offline change, change English/Bangla, export/share verified NDJSON, and revoke a session.
 Verify focus order, selected/disabled states, 200% system text, and that no
 financial value is communicated by colour alone.

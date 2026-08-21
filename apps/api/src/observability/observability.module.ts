@@ -9,10 +9,16 @@ import { Global, Module } from '@nestjs/common';
 import { SystemEventsService } from './system-events.service';
 import { AuditService } from './audit.service';
 import { TracingService } from './tracing.service';
+import { ExternalErrorExporterService } from './external-error-exporter.service';
 
 @Global()
 @Module({
-  providers: [SystemEventsService, AuditService, TracingService],
+  providers: [
+    SystemEventsService,
+    AuditService,
+    TracingService,
+    ExternalErrorExporterService,
+  ],
   exports: [SystemEventsService, AuditService, TracingService],
 })
 export class ObservabilityModule {}

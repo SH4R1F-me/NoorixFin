@@ -13,6 +13,7 @@ import {
   OnModuleDestroy,
   OnModuleInit,
 } from '@nestjs/common';
+import { randomUUID } from 'node:crypto';
 import { ConfigService } from '@nestjs/config';
 import type { Insertable, Json, Tables } from '@noorixfin/db-types';
 import nodemailer, { type Transporter } from 'nodemailer';
@@ -69,12 +70,19 @@ const DEFAULTS: Record<NotificationCategory, Omit<Preference, 'category'>> = {
 
 const WORKER_INTERVAL_MS = 30_000;
 const MAX_DELIVERY_ATTEMPTS = 5;
+const DELIVERY_LEASE_SECONDS = 300;
+const DELIVERY_TIMEOUT_MS = 30_000;
+
+export function deliveryBackoffSeconds(attempts: number): number {
+  return Math.min(30 * 2 ** Math.max(0, attempts - 1), 60 * 60);
+}
 
 @Injectable()
 export class NotificationsService implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(NotificationsService.name);
   private timer?: NodeJS.Timeout;
   private workerRunning = false;
+  private readonly workerId = randomUUID();
   private smtpTransport?: Transporter<
     SMTPTransport.SentMessageInfo,
     SMTPTransport.Options
@@ -849,7 +857,13 @@ export class NotificationsService implements OnModuleInit, OnModuleDestroy {
       if (!isInQuietHours(profile)) {
         await client
           .from('notification_deliveries')
-          .update({ status: 'PENDING', error: null })
+          .update({
+            status: 'PENDING',
+            error: null,
+            next_attempt_at: new Date().toISOString(),
+            lease_owner: null,
+            lease_expires_at: null,
+          })
           .eq('id', delivery.id);
       }
     }
@@ -857,13 +871,11 @@ export class NotificationsService implements OnModuleInit, OnModuleDestroy {
 
   private async processPendingDeliveries() {
     const client = this.supabase.getServiceClient();
-    const { data, error } = await client
-      .from('notification_deliveries')
-      .select('id, notification_id, device_id, channel, attempts')
-      .eq('status', 'PENDING')
-      .lt('attempts', MAX_DELIVERY_ATTEMPTS)
-      .order('created_at')
-      .limit(50);
+    const { data, error } = await client.rpc('claim_notification_deliveries', {
+      p_worker_id: this.workerId,
+      p_batch_size: 50,
+      p_lease_seconds: DELIVERY_LEASE_SECONDS,
+    });
     if (error) throw error;
     for (const delivery of data ?? []) {
       await this.deliver(delivery);
@@ -926,21 +938,34 @@ export class NotificationsService implements OnModuleInit, OnModuleDestroy {
           provider_id: providerId,
           sent_at: new Date().toISOString(),
           error: null,
+          lease_owner: null,
+          lease_expires_at: null,
         })
-        .eq('id', delivery.id);
+        .eq('id', delivery.id)
+        .eq('lease_owner', this.workerId);
     } catch (cause) {
       const attempts = delivery.attempts + 1;
+      const failed = attempts >= MAX_DELIVERY_ATTEMPTS;
+      const now = new Date();
+      const nextAttempt = new Date(
+        now.getTime() + deliveryBackoffSeconds(attempts) * 1000,
+      );
       await client
         .from('notification_deliveries')
         .update({
-          status: attempts >= MAX_DELIVERY_ATTEMPTS ? 'FAILED' : 'PENDING',
+          status: failed ? 'FAILED' : 'PENDING',
           attempts,
           error:
             cause instanceof Error
               ? cause.message.slice(0, 1000)
               : String(cause).slice(0, 1000),
+          next_attempt_at: nextAttempt.toISOString(),
+          lease_owner: null,
+          lease_expires_at: null,
+          dead_lettered_at: failed ? now.toISOString() : null,
         })
-        .eq('id', delivery.id);
+        .eq('id', delivery.id)
+        .eq('lease_owner', this.workerId);
     }
   }
 
@@ -963,6 +988,9 @@ export class NotificationsService implements OnModuleInit, OnModuleDestroy {
             },
           }
         : {}),
+      connectionTimeout: 15_000,
+      greetingTimeout: 15_000,
+      socketTimeout: DELIVERY_TIMEOUT_MS,
     });
     const baseUrl =
       this.config.get<string>('WEB_URL') ?? 'http://localhost:3000';
@@ -1011,6 +1039,7 @@ export class NotificationsService implements OnModuleInit, OnModuleDestroy {
       {
         TTL: 86_400,
         urgency: notification.category === 'security' ? 'high' : 'normal',
+        timeout: DELIVERY_TIMEOUT_MS,
       },
     );
     return response.headers.location ?? null;
@@ -1036,6 +1065,7 @@ export class NotificationsService implements OnModuleInit, OnModuleDestroy {
           Accept: 'application/json',
         },
         body: JSON.stringify({ ids: data.map((row) => row.provider_id) }),
+        signal: AbortSignal.timeout(DELIVERY_TIMEOUT_MS),
       },
     );
     if (!response.ok) return;
@@ -1135,6 +1165,7 @@ async function sendExpoPush(
       channelId: notification.category,
       sound: 'default',
     }),
+    signal: AbortSignal.timeout(DELIVERY_TIMEOUT_MS),
   });
   if (!response.ok)
     throw new Error(`Expo Push returned HTTP ${response.status}`);

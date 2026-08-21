@@ -5,7 +5,18 @@ import type { SupabaseService } from '../supabase/supabase.service';
 import type { AuditService } from '../observability/audit.service';
 import type { SystemEventsService } from '../observability/system-events.service';
 import { ComposeNotificationDto } from './dto/notification.dto';
-import { NotificationsService } from './notifications.service';
+import {
+  NotificationsService,
+  deliveryBackoffSeconds,
+} from './notifications.service';
+
+describe('notification delivery retry policy', () => {
+  it('persists bounded exponential backoff intervals', () => {
+    expect([1, 2, 3, 4, 5, 20].map(deliveryBackoffSeconds)).toEqual([
+      30, 60, 120, 240, 480, 3600,
+    ]);
+  });
+});
 
 describe('NotificationsService rules', () => {
   it('emits only the highest crossed budget and goal milestone with stable dedupe keys', async () => {

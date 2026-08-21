@@ -466,6 +466,77 @@ export type Database = {
           },
         ]
       }
+      data_export_artifacts: {
+        Row: {
+          checksum_sha256: string | null
+          completed_at: string | null
+          created_at: string
+          error: string | null
+          expires_at: string
+          format: string
+          id: string
+          row_count: number
+          size_bytes: number
+          status: string
+          user_id: string
+        }
+        Insert: {
+          checksum_sha256?: string | null
+          completed_at?: string | null
+          created_at?: string
+          error?: string | null
+          expires_at?: string
+          format?: string
+          id: string
+          row_count?: number
+          size_bytes?: number
+          status?: string
+          user_id: string
+        }
+        Update: {
+          checksum_sha256?: string | null
+          completed_at?: string | null
+          created_at?: string
+          error?: string | null
+          expires_at?: string
+          format?: string
+          id?: string
+          row_count?: number
+          size_bytes?: number
+          status?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      data_export_chunks: {
+        Row: {
+          artifact_id: string
+          byte_length: number
+          content: string
+          sequence: number
+        }
+        Insert: {
+          artifact_id: string
+          byte_length: number
+          content: string
+          sequence: number
+        }
+        Update: {
+          artifact_id?: string
+          byte_length?: number
+          content?: string
+          sequence?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "data_export_chunks_artifact_id_fkey"
+            columns: ["artifact_id"]
+            isOneToOne: false
+            referencedRelation: "data_export_artifacts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       debt_details: {
         Row: {
           annual_rate_bps: number | null
@@ -1074,9 +1145,14 @@ export type Database = {
           attempts: number
           channel: string
           created_at: string
+          dead_lettered_at: string | null
           device_id: string | null
           error: string | null
           id: string
+          last_attempt_at: string | null
+          lease_expires_at: string | null
+          lease_owner: string | null
+          next_attempt_at: string
           notification_id: string
           provider_id: string | null
           sent_at: string | null
@@ -1086,9 +1162,14 @@ export type Database = {
           attempts?: number
           channel: string
           created_at?: string
+          dead_lettered_at?: string | null
           device_id?: string | null
           error?: string | null
           id?: string
+          last_attempt_at?: string | null
+          lease_expires_at?: string | null
+          lease_owner?: string | null
+          next_attempt_at?: string
           notification_id: string
           provider_id?: string | null
           sent_at?: string | null
@@ -1098,9 +1179,14 @@ export type Database = {
           attempts?: number
           channel?: string
           created_at?: string
+          dead_lettered_at?: string | null
           device_id?: string | null
           error?: string | null
           id?: string
+          last_attempt_at?: string | null
+          lease_expires_at?: string | null
+          lease_owner?: string | null
+          next_attempt_at?: string
           notification_id?: string
           provider_id?: string | null
           sent_at?: string | null
@@ -1872,6 +1958,20 @@ export type Database = {
         Returns: Json
       }
       check_error_rate_alert: { Args: never; Returns: Json }
+      claim_notification_deliveries: {
+        Args: {
+          p_batch_size?: number
+          p_lease_seconds?: number
+          p_worker_id: string
+        }
+        Returns: {
+          attempts: number
+          channel: string
+          device_id: string
+          id: string
+          notification_id: string
+        }[]
+      }
       enqueue_notification_digests: { Args: never; Returns: undefined }
       goals_overview: { Args: { p_workspace_id: string }; Returns: Json }
       is_super_admin: { Args: never; Returns: boolean }
@@ -1886,6 +1986,7 @@ export type Database = {
       }
       prune_idempotency_records: { Args: never; Returns: number }
       prune_system_events: { Args: { p_retain_days?: number }; Returns: number }
+      purge_expired_data_exports: { Args: never; Returns: number }
       purge_expired_deletions: {
         Args: { p_limit?: number }
         Returns: {

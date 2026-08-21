@@ -26,6 +26,16 @@ export enum SecurityLevel {
 export const getEnrolledLevelAsync = jest.fn(() => Promise.resolve(SecurityLevel.BIOMETRIC_STRONG));
 export const authenticateAsync = jest.fn(() => Promise.resolve({ success: true }));
 export const WHEN_UNLOCKED_THIS_DEVICE_ONLY = 'WHEN_UNLOCKED_THIS_DEVICE_ONLY';
+
+export const Paths = { document: '/tmp' };
+export class File {
+  exists = false;
+  text = () => Promise.resolve('[]');
+  create = () => undefined;
+  write = (_value: string) => undefined;
+  move = (_destination: File, _options?: { overwrite?: boolean }) => Promise.resolve();
+}
+
 export const __resetUuid = () => {
   counter = 0;
 };

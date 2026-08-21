@@ -448,7 +448,7 @@
     "reasonOptional": "Reason (optional)",
     "emailChangeUnavailable": "Changing your email is not available yet.",
     "displayNamePlaceholder": "Your name",
-    "exportDataBody": "A single JSON file with every account, transaction, budget and goal on this account. Everything the ledger holds, and nothing belonging to anyone else.",
+    "exportDataBody": "A streamed NDJSON artifact with every account, transaction, budget and goal, plus an integrity checksum. It expires automatically after 24 hours.",
     "downloadExport": "Download my data",
     "sessions": {
       "title": "Sessions & Devices",
@@ -1046,7 +1046,7 @@
     },
     "export": {
       "title": "Export My Data",
-      "body": "Download all your transactions and data as JSON",
+      "body": "Stream all your data as a verified, expiring NDJSON file",
       "shareTitle": "Save or share NoorixFin export",
       "failed": "Failed to create your export file."
     },

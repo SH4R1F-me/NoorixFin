@@ -21,6 +21,7 @@ import {
   ApiCreatedResponse,
   ApiOkResponse,
   ApiOperation,
+  ApiProduces,
   ApiTags,
 } from '@nestjs/swagger';
 import { Request } from 'express';
@@ -34,10 +35,13 @@ import {
   BroadcastResponseDto,
   DismissedResponseDto,
   PublicSettingsResponseDto,
+  DataExportArtifactResponseDto,
+  DataExportDeletedResponseDto,
 } from './dto/account.dto';
 import { ThrottleSensitive } from '../common/throttle';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import type { AuthenticatedUser } from '../common/decorators/current-user.decorator';
+import { Idempotent } from '../common/decorators/idempotent.decorator';
 
 type AuthedRequest = Request & { accessToken: string };
 
@@ -50,45 +54,55 @@ export class AccountController {
     private readonly exportService: ExportService,
   ) {}
 
-  /**
-   * Blueprint §15.3, acceptance DATA-01.
-   *
-   * The GDPR sibling of the deletion flow below: a user who can ask to be
-   * forgotten should be able to ask what is held first. Rate-limited with the
-   * sensitive tier — an export is a full copy of someone's finances in one
-   * response, which is precisely what a stolen session would want repeatedly.
-   */
-  @Get('export')
+  @Post('exports')
   @ThrottleSensitive()
+  @Idempotent()
+  @ApiCreatedResponse({ type: DataExportArtifactResponseDto })
   @ApiOperation({
-    summary: 'Export every row this account owns (§15.3)',
-    description:
-      "Runs on the USER's client, so RLS is the scope boundary and a bug here " +
-      'cannot widen it. Operational logs are excluded: an audit trail a user ' +
-      'can export is an audit trail an attacker can read after taking an account.',
+    summary: 'Create a bounded, expiring NDJSON export artifact',
   })
-  @ApiOkResponse({
-    description: 'A single JSON document. See ExportService for the shape.',
-    schema: { type: 'object', additionalProperties: true },
-  })
-  async exportData(
+  requestExport(
     @CurrentUser() user: AuthenticatedUser,
     @Req() req: AuthedRequest,
-    @Res({ passthrough: true }) res: Response,
   ) {
-    const bundle = await this.exportService.exportEverything(
-      user.id,
-      req.accessToken,
-    );
+    return this.exportService.createArtifact(user.id, req.accessToken);
+  }
 
-    // Offered as a download rather than rendered in a tab: this is a file
-    // someone keeps, and a browser showing 4MB of a user's finances as text is
-    // both unusable and easy to leave open on a shared screen.
-    res.setHeader(
-      'Content-Disposition',
-      `attachment; filename="noorixfin-export-${new Date().toISOString().slice(0, 10)}.json"`,
-    );
-    return bundle;
+  @Get('exports/:id/download')
+  @ThrottleSensitive()
+  @ApiProduces('application/x-ndjson')
+  @ApiOkResponse({
+    description:
+      'Chunk-streamed NDJSON with Content-Digest and expiry metadata.',
+    schema: { type: 'string', format: 'binary' },
+  })
+  downloadExport(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Res() res: Response,
+  ) {
+    return this.exportService.streamArtifact(user.id, id, res);
+  }
+
+  @Get('exports/:id')
+  @ThrottleSensitive()
+  @ApiOkResponse({ type: DataExportArtifactResponseDto })
+  getExport(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('id', ParseUUIDPipe) id: string,
+  ) {
+    return this.exportService.getArtifact(user.id, id);
+  }
+
+  @Delete('exports/:id')
+  @ThrottleSensitive()
+  @Idempotent()
+  @ApiOkResponse({ type: DataExportDeletedResponseDto })
+  deleteExport(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('id', ParseUUIDPipe) id: string,
+  ) {
+    return this.exportService.deleteArtifact(user.id, id);
   }
 
   @Post('deletion-request')

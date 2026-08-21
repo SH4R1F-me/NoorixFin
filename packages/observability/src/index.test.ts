@@ -15,6 +15,8 @@ import {
   noopReporter,
   type ErrorReport,
   type ErrorReporter,
+  DurableHttpErrorReporter,
+  type ErrorReportStore,
 } from './index';
 
 const release = resolveRelease('api', { APP_VERSION: '1.2.3', APP_COMMIT: 'abcdef1234' });
@@ -33,7 +35,9 @@ describe('release', () => {
   });
 
   it('reads the commit from whichever platform provided it', () => {
-    expect(resolveRelease('web', { VERCEL_GIT_COMMIT_SHA: 'v'.repeat(40) }).commit).toBe('vvvvvvvvv');
+    expect(resolveRelease('web', { VERCEL_GIT_COMMIT_SHA: 'v'.repeat(40) }).commit).toBe(
+      'vvvvvvvvv',
+    );
     expect(resolveRelease('api', { GITHUB_SHA: 'g'.repeat(40) }).commit).toBe('ggggggggg');
   });
 });
@@ -173,7 +177,12 @@ describe('captureError', () => {
     const good: ErrorReport[] = [];
     setErrorReporter(
       compositeReporter([
-        { name: 'bad', report() { throw new Error('down'); } },
+        {
+          name: 'bad',
+          report() {
+            throw new Error('down');
+          },
+        },
         { name: 'good', report: (r) => good.push(r) },
       ]),
     );
@@ -210,6 +219,59 @@ describe('captureError', () => {
     });
 
     expect(fromReport).toBe(direct);
+  });
+});
+
+describe('durable OTLP/HTTP export', () => {
+  it('persists before send and drains the same queue after restart', async () => {
+    let disk: ErrorReport[] = [];
+    const store: ErrorReportStore = {
+      load: async () => [...disk],
+      save: async (reports) => {
+        disk = [...reports];
+      },
+    };
+    const unavailable = new DurableHttpErrorReporter({
+      endpoint: 'https://otel.example.test/v1/logs',
+      store,
+      fetch: async () => ({ ok: false, status: 503 }),
+    });
+    setErrorReporter(unavailable);
+    captureError(new Error('failed for alice@example.com'), { release });
+    await unavailable.flush();
+    expect(disk).toHaveLength(1);
+
+    let payload = '';
+    const restarted = new DurableHttpErrorReporter({
+      endpoint: 'https://otel.example.test/v1/logs',
+      store,
+      fetch: async (_url, init) => {
+        payload = init.body;
+        return { ok: true, status: 200 };
+      },
+    });
+    await restarted.flush();
+
+    expect(disk).toEqual([]);
+    expect(payload).toContain('resourceLogs');
+    expect(payload).toContain('error.fingerprint');
+    expect(payload).toContain('failed for <email>');
+    expect(payload).not.toContain('alice@example.com');
+  });
+
+  it('refuses cleartext remote collectors', () => {
+    const store: ErrorReportStore = {
+      load: async () => [],
+      save: async () => undefined,
+    };
+    expect(
+      () =>
+        new DurableHttpErrorReporter({
+          endpoint: 'http://collector.example.test/v1/logs',
+          store,
+          fetch: async () => ({ ok: true, status: 200 }),
+        }),
+    ).toThrow(/HTTPS/);
   });
 });
 

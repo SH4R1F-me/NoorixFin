@@ -1,37 +1,85 @@
 /**
- * Data export — Blueprint §15.3, acceptance item DATA-01, audit item 17.
+ * Bounded account exports — DATA-01.
  *
- * The GDPR sibling of the deletion flow that already exists: a user who can ask
- * to be forgotten should be able to ask what is held first. DATA-01 has sat at
- * "not tested" since the acceptance matrix was written, because there was
- * nothing to test.
- *
- * ── WHAT "COMPLETE AND SCOPED" MEANS HERE ────────────────────────────────────
- * DATA-01 is two requirements pulling in opposite directions and both must hold.
- *
- * COMPLETE — everything the user authored or that describes them: the profile,
- * the workspace, every account, category, journal entry AND its postings,
- * budgets, goals, debt terms, calendar events, recurring rules, tags. An export
- * missing the postings would be an export missing the ledger, since the entry
- * carries no amount (DEC-006).
- *
- * SCOPED — nothing that belongs to anyone else, and nothing operational. The
- * export runs on the USER'S client, so RLS is the boundary: a bug in this file
- * cannot widen it. That is deliberate and is why there is no service-role path
- * here even though it would be simpler. `system_events` and `audit_events` are
- * excluded on purpose: an audit trail that a user can export is an audit trail
- * an attacker can read after taking an account.
- *
- * Assembled in one pass rather than streamed. A personal ledger is thousands of
- * rows, not millions, and a streaming export that can half-fail is a worse
- * answer than a bounded one that either works or says it did not.
+ * Reads always use the caller's RLS-scoped client. Rows are fetched in fixed
+ * pages and encoded as NDJSON into <=512 KiB database chunks, so neither the
+ * API nor either client ever holds the complete financial history in memory.
+ * The artifact carries SHA-256, byte and row counts, expires after 24 hours,
+ * can be explicitly deleted, and is streamed chunk-by-chunk on download.
  */
-import { Injectable, Logger } from '@nestjs/common';
+import {
+  GoneException,
+  Injectable,
+  Logger,
+  NotFoundException,
+  ServiceUnavailableException,
+} from '@nestjs/common';
+import { createHash, randomUUID } from 'node:crypto';
+import { once } from 'node:events';
+import type { Response } from 'express';
 import { SupabaseService } from '../supabase/supabase.service';
 import { AuditService } from '../observability/audit.service';
 
-/** Bumped when the SHAPE changes, so a consumer can tell two exports apart. */
-export const EXPORT_FORMAT_VERSION = 1;
+export const EXPORT_FORMAT_VERSION = 2;
+const PAGE_SIZE = 500;
+const CHUNK_BYTES = 512 * 1024;
+
+const EXPORT_TABLES = [
+  'ledger_accounts',
+  'categories',
+  'journal_entries',
+  'journal_postings',
+  'budgets',
+  'budget_lines',
+  'savings_goals',
+  'debt_details',
+  'calendar_events',
+  'recurring_rules',
+  'tags',
+  'journal_entry_tags',
+] as const;
+
+type ExportTable = (typeof EXPORT_TABLES)[number];
+const EXPORT_ORDER_KEY: Record<ExportTable, string> = {
+  ledger_accounts: 'id',
+  categories: 'id',
+  journal_entries: 'id',
+  journal_postings: 'id',
+  budgets: 'id',
+  budget_lines: 'id',
+  savings_goals: 'id',
+  debt_details: 'ledger_account_id',
+  calendar_events: 'id',
+  recurring_rules: 'id',
+  tags: 'id',
+  journal_entry_tags: 'journal_entry_id',
+};
+
+interface PagedQuery {
+  select(columns: string): PagedQuery;
+  eq(column: string, value: unknown): PagedQuery;
+  order(column: string, options: { ascending: boolean }): PagedQuery;
+  range(
+    from: number,
+    to: number,
+  ): PromiseLike<{
+    data: Array<Record<string, unknown>> | null;
+    error: { message: string } | null;
+  }>;
+}
+
+export interface DataExportArtifact {
+  id: string;
+  status: string;
+  format: string;
+  size_bytes: number;
+  row_count: number;
+  checksum_sha256: string | null;
+  expires_at: string;
+  created_at: string;
+  completed_at: string | null;
+  download_url: string | null;
+}
 
 @Injectable()
 export class ExportService {
@@ -42,114 +90,321 @@ export class ExportService {
     private readonly audit: AuditService,
   ) {}
 
-  async exportEverything(userId: string, accessToken: string) {
-    const client = this.supabase.getUserClient(accessToken);
-
-    const { data: profile } = await client
-      .from('profiles')
-      .select('*')
-      .eq('id', userId)
-      .maybeSingle();
-
-    const { data: workspaces } = await client.from('workspaces').select('*');
-
-    // A super admin can SEE other workspaces (DEC-016's metadata aperture), so
-    // "every workspace RLS shows me" is the wrong set for an export — an
-    // operator exporting their own data would silently receive a list of every
-    // workspace on the platform. Membership is the correct filter.
-    const { data: memberships } = await client
-      .from('workspace_members')
-      .select('*')
-      .eq('user_id', userId);
-
-    const ownedIds = new Set((memberships ?? []).map((m) => m.workspace_id));
-    const ownWorkspaces = (workspaces ?? []).filter((w) => ownedIds.has(w.id));
-
-    const bundles = [];
-    for (const workspace of ownWorkspaces) {
-      const id = workspace.id;
-
-      const [
-        accounts,
-        categories,
-        entries,
-        postings,
-        budgets,
-        budgetLines,
-        goals,
-        debts,
-        events,
-        rules,
-        tags,
-        entryTags,
-        attachments,
-      ] = await Promise.all([
-        client.from('ledger_accounts').select('*').eq('workspace_id', id),
-        client.from('categories').select('*').eq('workspace_id', id),
-        client.from('journal_entries').select('*').eq('workspace_id', id),
-        // The postings ARE the ledger (DEC-006) — an entry carries no amount, so
-        // an export without these is an export of empty rows.
-        client.from('journal_postings').select('*').eq('workspace_id', id),
-        client.from('budgets').select('*').eq('workspace_id', id),
-        client.from('budget_lines').select('*').eq('workspace_id', id),
-        client.from('savings_goals').select('*').eq('workspace_id', id),
-        client.from('debt_details').select('*').eq('workspace_id', id),
-        client.from('calendar_events').select('*').eq('workspace_id', id),
-        client.from('recurring_rules').select('*').eq('workspace_id', id),
-        client.from('tags').select('*').eq('workspace_id', id),
-        client.from('journal_entry_tags').select('*').eq('workspace_id', id),
-        client
-          .from('transaction_attachments')
-          .select(
-            'id, workspace_id, journal_entry_id, original_name, content_type, size_bytes, checksum_sha256, created_at',
-          )
-          .eq('workspace_id', id),
-      ]);
-
-      bundles.push({
-        workspace,
-        ledger_accounts: accounts.data ?? [],
-        categories: categories.data ?? [],
-        journal_entries: entries.data ?? [],
-        journal_postings: postings.data ?? [],
-        budgets: budgets.data ?? [],
-        budget_lines: budgetLines.data ?? [],
-        savings_goals: goals.data ?? [],
-        debt_details: debts.data ?? [],
-        calendar_events: events.data ?? [],
-        recurring_rules: rules.data ?? [],
-        tags: tags.data ?? [],
-        journal_entry_tags: entryTags.data ?? [],
-        transaction_attachments: attachments.data ?? [],
+  async createArtifact(
+    userId: string,
+    accessToken: string,
+  ): Promise<DataExportArtifact> {
+    const artifactId = randomUUID();
+    const service = this.supabase.getServiceClient();
+    const user = this.supabase.getUserClient(accessToken);
+    const createdAt = new Date();
+    const expiresAt = new Date(createdAt.getTime() + 24 * 60 * 60 * 1000);
+    const { error: createError } = await service
+      .from('data_export_artifacts')
+      .insert({
+        id: artifactId,
+        user_id: userId,
+        status: 'PROCESSING',
+        expires_at: expiresAt.toISOString(),
       });
-    }
+    if (createError) this.fail(createError.message);
 
-    // The export itself is an auditable event. Not because the user did
-    // anything wrong, but because "someone downloaded everything" is exactly
-    // what an account holder wants to see in their history if their account is
-    // ever compromised.
+    const hash = createHash('sha256');
+    let chunk = '';
+    let chunkBytes = 0;
+    let sequence = 0;
+    let rowCount = 0;
+    let sizeBytes = 0;
+
+    const flush = async () => {
+      if (!chunkBytes) return;
+      const { error } = await service.from('data_export_chunks').insert({
+        artifact_id: artifactId,
+        sequence,
+        content: chunk,
+        byte_length: chunkBytes,
+      });
+      if (error) throw new Error(error.message);
+      sequence += 1;
+      chunk = '';
+      chunkBytes = 0;
+    };
+
+    const emit = async (type: string, data: unknown, workspaceId?: string) => {
+      const line = `${JSON.stringify({ type, workspace_id: workspaceId, data })}\n`;
+      const bytes = Buffer.byteLength(line);
+      if (bytes > 1024 * 1024)
+        throw new Error(
+          'One export row exceeded the 1 MiB artifact chunk limit.',
+        );
+      if (chunkBytes && chunkBytes + bytes > CHUNK_BYTES) await flush();
+      chunk += line;
+      chunkBytes += bytes;
+      sizeBytes += bytes;
+      rowCount += 1;
+      hash.update(line, 'utf8');
+    };
+
+    try {
+      await emit('manifest', {
+        format_version: EXPORT_FORMAT_VERSION,
+        generated_at: createdAt.toISOString(),
+        scope:
+          'Every row this account owns. Operational system and audit events are excluded.',
+      });
+
+      const { data: profile, error: profileError } = await user
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .maybeSingle();
+      if (profileError) throw new Error(profileError.message);
+      if (profile) await emit('profile', profile);
+
+      for (let offset = 0; ; offset += PAGE_SIZE) {
+        const { data: memberships, error } = await user
+          .from('workspace_members')
+          .select('*')
+          .eq('user_id', userId)
+          .order('workspace_id', { ascending: true })
+          .range(offset, offset + PAGE_SIZE - 1);
+        if (error) throw new Error(error.message);
+
+        for (const membership of memberships ?? []) {
+          await emit('workspace_member', membership, membership.workspace_id);
+          const { data: workspace, error: workspaceError } = await user
+            .from('workspaces')
+            .select('*')
+            .eq('id', membership.workspace_id)
+            .maybeSingle();
+          if (workspaceError) throw new Error(workspaceError.message);
+          if (!workspace) continue;
+          await emit('workspace', workspace, workspace.id);
+          for (const table of EXPORT_TABLES) {
+            await this.emitTable(
+              user as unknown as { from(table: ExportTable): PagedQuery },
+              table,
+              workspace.id,
+              emit,
+            );
+          }
+          await this.emitAttachments(user, workspace.id, emit);
+        }
+        if ((memberships?.length ?? 0) < PAGE_SIZE) break;
+      }
+
+      await flush();
+      const checksum = hash.digest('hex');
+      const completedAt = new Date().toISOString();
+      const { error: completeError } = await service
+        .from('data_export_artifacts')
+        .update({
+          status: 'READY',
+          size_bytes: sizeBytes,
+          row_count: rowCount,
+          checksum_sha256: checksum,
+          completed_at: completedAt,
+          error: null,
+        })
+        .eq('id', artifactId)
+        .eq('user_id', userId);
+      if (completeError) throw new Error(completeError.message);
+
+      await this.audit.write({
+        actorId: userId,
+        action: 'DATA_EXPORT_CREATED',
+        resourceType: 'data_export_artifact',
+        resourceId: artifactId,
+        metadata: { size_bytes: sizeBytes, row_count: rowCount, checksum },
+      });
+      return {
+        id: artifactId,
+        status: 'READY',
+        format: 'ndjson-v1',
+        size_bytes: sizeBytes,
+        row_count: rowCount,
+        checksum_sha256: checksum,
+        expires_at: expiresAt.toISOString(),
+        created_at: createdAt.toISOString(),
+        completed_at: completedAt,
+        download_url: `/me/exports/${artifactId}/download`,
+      };
+    } catch (cause) {
+      const message =
+        cause instanceof Error ? cause.message.slice(0, 500) : 'Export failed';
+      await service
+        .from('data_export_chunks')
+        .delete()
+        .eq('artifact_id', artifactId);
+      await service
+        .from('data_export_artifacts')
+        .update({ status: 'FAILED', error: message })
+        .eq('id', artifactId)
+        .eq('user_id', userId);
+      this.logger.error(`Export ${artifactId} failed: ${message}`);
+      this.fail(message);
+    }
+  }
+
+  async getArtifact(userId: string, id: string): Promise<DataExportArtifact> {
+    return this.toResponse(await this.ownedArtifact(userId, id));
+  }
+
+  async streamArtifact(
+    userId: string,
+    id: string,
+    response: Response,
+  ): Promise<void> {
+    const artifact = await this.ownedArtifact(userId, id);
+    if (artifact.status !== 'READY')
+      throw new ServiceUnavailableException({
+        code: 'EXPORT_NOT_READY',
+        message: 'The export artifact is not ready.',
+      });
+
+    const digest = Buffer.from(artifact.checksum_sha256!, 'hex').toString(
+      'base64',
+    );
+    response.status(200);
+    response.setHeader('Content-Type', 'application/x-ndjson; charset=utf-8');
+    response.setHeader(
+      'Content-Disposition',
+      `attachment; filename="noorixfin-export-${artifact.created_at.slice(0, 10)}.ndjson"`,
+    );
+    response.setHeader('Content-Length', String(artifact.size_bytes));
+    response.setHeader('Content-Digest', `sha-256=:${digest}:`);
+    response.setHeader('X-Checksum-SHA256', artifact.checksum_sha256!);
+    response.setHeader(
+      'Cache-Control',
+      'no-store, no-cache, must-revalidate, private',
+    );
+    response.flushHeaders();
+
+    const service = this.supabase.getServiceClient();
+    for (let offset = 0; ; offset += 32) {
+      const { data, error } = await service
+        .from('data_export_chunks')
+        .select('content')
+        .eq('artifact_id', id)
+        .order('sequence', { ascending: true })
+        .range(offset, offset + 31);
+      if (error) throw new Error(error.message);
+      for (const item of data ?? []) {
+        if (!response.write(item.content)) await once(response, 'drain');
+      }
+      if ((data?.length ?? 0) < 32) break;
+    }
+    response.end();
+  }
+
+  async deleteArtifact(
+    userId: string,
+    id: string,
+  ): Promise<{ deleted: boolean }> {
+    await this.ownedArtifact(userId, id);
+    const { error } = await this.supabase
+      .getServiceClient()
+      .from('data_export_artifacts')
+      .delete()
+      .eq('id', id)
+      .eq('user_id', userId);
+    if (error) this.fail(error.message);
     await this.audit.write({
       actorId: userId,
-      action: 'DATA_EXPORTED',
-      resourceType: 'profile',
-      resourceId: userId,
-      metadata: {
-        workspaces: bundles.length,
-        entries: bundles.reduce((n, b) => n + b.journal_entries.length, 0),
-      },
+      action: 'DATA_EXPORT_DELETED',
+      resourceType: 'data_export_artifact',
+      resourceId: id,
     });
+    return { deleted: true };
+  }
 
+  private async emitTable(
+    client: { from(table: ExportTable): PagedQuery },
+    table: ExportTable,
+    workspaceId: string,
+    emit: (type: string, data: unknown, workspaceId?: string) => Promise<void>,
+  ) {
+    for (let offset = 0; ; offset += PAGE_SIZE) {
+      const { data, error } = await client
+        .from(table)
+        .select('*')
+        .eq('workspace_id', workspaceId)
+        .order(EXPORT_ORDER_KEY[table], { ascending: true })
+        .range(offset, offset + PAGE_SIZE - 1);
+      if (error) throw new Error(error.message);
+      for (const row of data ?? []) await emit(table, row, workspaceId);
+      if ((data?.length ?? 0) < PAGE_SIZE) break;
+    }
+  }
+
+  private async emitAttachments(
+    client: ReturnType<SupabaseService['getUserClient']>,
+    workspaceId: string,
+    emit: (type: string, data: unknown, workspaceId?: string) => Promise<void>,
+  ) {
+    for (let offset = 0; ; offset += PAGE_SIZE) {
+      const { data, error } = await client
+        .from('transaction_attachments')
+        .select(
+          'id, workspace_id, journal_entry_id, original_name, content_type, size_bytes, checksum_sha256, created_at',
+        )
+        .eq('workspace_id', workspaceId)
+        .order('id', { ascending: true })
+        .range(offset, offset + PAGE_SIZE - 1);
+      if (error) throw new Error(error.message);
+      for (const row of data ?? [])
+        await emit('transaction_attachments', row, workspaceId);
+      if ((data?.length ?? 0) < PAGE_SIZE) break;
+    }
+  }
+
+  private async ownedArtifact(userId: string, id: string) {
+    const { data, error } = await this.supabase
+      .getServiceClient()
+      .from('data_export_artifacts')
+      .select(
+        'id, status, format, size_bytes, row_count, checksum_sha256, expires_at, created_at, completed_at',
+      )
+      .eq('id', id)
+      .eq('user_id', userId)
+      .maybeSingle();
+    if (error) this.fail(error.message);
+    if (!data)
+      throw new NotFoundException({
+        code: 'EXPORT_NOT_FOUND',
+        message: 'Export artifact not found.',
+      });
+    if (new Date(data.expires_at).getTime() <= Date.now()) {
+      await this.supabase
+        .getServiceClient()
+        .from('data_export_artifacts')
+        .delete()
+        .eq('id', id)
+        .eq('user_id', userId);
+      throw new GoneException({
+        code: 'EXPORT_EXPIRED',
+        message: 'The export artifact expired and was deleted.',
+      });
+    }
+    return data;
+  }
+
+  private toResponse(
+    artifact: Awaited<ReturnType<ExportService['ownedArtifact']>>,
+  ): DataExportArtifact {
     return {
-      format_version: EXPORT_FORMAT_VERSION,
-      generated_at: new Date().toISOString(),
-      // Stated in the payload rather than left implicit: someone reading this
-      // file in a year should not have to guess whether it was everything.
-      scope:
-        'Every row this account owns. Excludes operational logs (system_events, ' +
-        'audit_events), which are platform records rather than user data.',
-      profile,
-      memberships: memberships ?? [],
-      workspaces: bundles,
+      ...artifact,
+      download_url:
+        artifact.status === 'READY'
+          ? `/me/exports/${artifact.id}/download`
+          : null,
     };
+  }
+
+  private fail(message: string): never {
+    throw new ServiceUnavailableException({
+      code: 'EXPORT_FAILED',
+      message: `The export artifact could not be created: ${message}`,
+    });
   }
 }

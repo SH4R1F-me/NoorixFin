@@ -1,7 +1,7 @@
 /**
  * Sync Controller — DEC-010, DEC-011
  *
- * GET /v1/workspaces/:workspaceId/sync?since=<iso>&limit=<n>
+ * GET /v1/workspaces/:workspaceId/sync?cursor=<opaque>&limit=<n>
  *
  * One round trip returns every change across the workspace. This is the mobile
  * app's pull path; Supabase Realtime only tells the client *that* something
@@ -34,8 +34,9 @@ export class SyncController {
   @ApiOperation({
     summary: 'Delta sync — all rows changed since the given cursor',
     description:
-      'Omit `since` for a full initial pull. Delivery is at-least-once: boundary rows may repeat, ' +
-      'so the client must upsert by primary key. Advance your stored cursor only when `has_more` is false.',
+      'Omit `cursor` for a full initial pull. The versioned cursor tracks an ' +
+      'independent (updated_at, stable primary key) position for every source, ' +
+      'so arbitrarily large same-timestamp batches drain without gaps or loops.',
   })
   @ApiParam({ name: 'workspaceId', type: 'string' })
   @ApiOkResponse({ type: SyncResponseDto })
