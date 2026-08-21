@@ -53,7 +53,8 @@ jobs:
           upload-release-assets: false
 
       - name: Generate checksums
-        run: sha256sum dist/*.tar.gz dist/*.spdx.json > dist/SHA256SUMS
+        working-directory: dist
+        run: sha256sum *.tar.gz *.spdx.json > SHA256SUMS
 
       - name: Attest build provenance
         uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4
