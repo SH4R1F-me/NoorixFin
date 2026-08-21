@@ -135,7 +135,10 @@ export class AccountController {
 
   @Get('broadcasts')
   @ApiOperation({ summary: 'Live broadcasts this user has not dismissed' })
-  @ApiOkResponse({ description: 'Bilingual broadcast payloads', type: [BroadcastResponseDto] })
+  @ApiOkResponse({
+    description: 'Bilingual broadcast payloads',
+    type: [BroadcastResponseDto],
+  })
   listBroadcasts(
     @CurrentUser() user: AuthenticatedUser,
     @Req() req: AuthedRequest,

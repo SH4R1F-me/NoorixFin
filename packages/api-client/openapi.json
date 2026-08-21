@@ -3399,6 +3399,141 @@
         ]
       }
     },
+    "/v1/admin/site-settings": {
+      "get": {
+        "operationId": "AdminController_getSiteSettings_v1",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminSiteSettingsResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "supabase-auth": []
+          }
+        ],
+        "summary": "Operator-managed logo and donation settings",
+        "tags": [
+          "Admin"
+        ]
+      }
+    },
+    "/v1/admin/site-settings/logo": {
+      "put": {
+        "operationId": "AdminController_updateSiteLogo_v1",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SiteLogoUploadDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SiteLogoResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "supabase-auth": []
+          }
+        ],
+        "summary": "Upload a validated PNG, JPEG, or WebP site logo",
+        "tags": [
+          "Admin"
+        ]
+      },
+      "delete": {
+        "operationId": "AdminController_clearSiteLogo_v1",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SiteLogoResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "supabase-auth": []
+          }
+        ],
+        "summary": "Restore the default site logo",
+        "tags": [
+          "Admin"
+        ]
+      }
+    },
+    "/v1/admin/site-settings/donations/{type}": {
+      "put": {
+        "operationId": "AdminController_updateDonationOption_v1",
+        "parameters": [
+          {
+            "name": "type",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateDonationOptionDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DonationOptionResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "supabase-auth": []
+          }
+        ],
+        "summary": "Update a public donation option",
+        "tags": [
+          "Admin"
+        ]
+      }
+    },
     "/v1/admin/releases": {
       "get": {
         "operationId": "AdminController_getReleases_v1",
@@ -7919,6 +8054,226 @@
         },
         "required": [
           "settings"
+        ]
+      },
+      "SiteSettingResponseDto": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "value": {
+            "type": "string",
+            "nullable": true
+          },
+          "label": {
+            "type": "string",
+            "nullable": true
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "updated_at": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "key",
+          "value",
+          "label",
+          "description",
+          "updated_at"
+        ]
+      },
+      "DonationPaymentMethodResponseDto": {
+        "type": "object",
+        "properties": {
+          "method": {
+            "type": "string",
+            "enum": [
+              "paypal",
+              "bkash",
+              "bank",
+              "link"
+            ]
+          },
+          "label": {
+            "type": "string"
+          },
+          "account": {
+            "type": "string"
+          },
+          "url": {
+            "type": "string"
+          },
+          "note": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "method",
+          "label"
+        ]
+      },
+      "DonationOptionResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "development",
+              "palestine"
+            ]
+          },
+          "title": {
+            "type": "string"
+          },
+          "subtitle": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "icon": {
+            "type": "string"
+          },
+          "color_from": {
+            "type": "string"
+          },
+          "color_to": {
+            "type": "string"
+          },
+          "is_active": {
+            "type": "boolean"
+          },
+          "display_order": {
+            "type": "number"
+          },
+          "payment_methods": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DonationPaymentMethodResponseDto"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "type",
+          "title",
+          "subtitle",
+          "description",
+          "icon",
+          "color_from",
+          "color_to",
+          "is_active",
+          "display_order",
+          "payment_methods"
+        ]
+      },
+      "AdminSiteSettingsResponseDto": {
+        "type": "object",
+        "properties": {
+          "settings": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SiteSettingResponseDto"
+            }
+          },
+          "donation_options": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DonationOptionResponseDto"
+            }
+          }
+        },
+        "required": [
+          "settings",
+          "donation_options"
+        ]
+      },
+      "SiteLogoUploadDto": {
+        "type": "object",
+        "properties": {
+          "content_base64": {
+            "type": "string",
+            "description": "Base64-encoded PNG, JPEG, or WebP bytes"
+          }
+        },
+        "required": [
+          "content_base64"
+        ]
+      },
+      "SiteLogoResponseDto": {
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "url"
+        ]
+      },
+      "DonationPaymentMethodDto": {
+        "type": "object",
+        "properties": {
+          "method": {
+            "type": "string",
+            "enum": [
+              "paypal",
+              "bkash",
+              "bank",
+              "link"
+            ]
+          },
+          "label": {
+            "type": "string"
+          },
+          "account": {
+            "type": "string"
+          },
+          "url": {
+            "type": "string"
+          },
+          "note": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "method",
+          "label"
+        ]
+      },
+      "UpdateDonationOptionDto": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "subtitle": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "payment_methods": {
+            "maxItems": 10,
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DonationPaymentMethodDto"
+            }
+          }
+        },
+        "required": [
+          "title",
+          "subtitle",
+          "description",
+          "payment_methods"
         ]
       },
       "MobileReleaseResponseDto": {

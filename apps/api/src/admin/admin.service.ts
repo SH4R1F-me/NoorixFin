@@ -43,6 +43,7 @@ import {
   UpdateBroadcastDto,
   UpdateSettingsDto,
   UpdateMobileReleaseDto,
+  UpdateDonationOptionDto,
 } from './dto/admin.dto';
 import {
   MOBILE_RELEASE_KEYS,
@@ -658,6 +659,185 @@ export class AdminService {
     return this.listSettings(accessToken);
   }
 
+  async getSiteSettings() {
+    const client = this.supabaseService.getServiceClient();
+    const [settings, donations] = await Promise.all([
+      client
+        .from('site_settings')
+        .select('key, value, label, description, updated_at')
+        .order('key'),
+      client
+        .from('donation_options')
+        .select('*')
+        .order('display_order', { ascending: true }),
+    ]);
+    if (settings.error) throw this.translate(settings.error);
+    if (donations.error) throw this.translate(donations.error);
+    return {
+      settings: settings.data ?? [],
+      donation_options: donations.data ?? [],
+    };
+  }
+
+  async updateSiteLogo(actorId: string, encoded: string) {
+    let bytes: Buffer;
+    try {
+      bytes = Buffer.from(encoded, 'base64');
+    } catch {
+      throw new BadRequestException({
+        code: 'INVALID_LOGO',
+        message: 'Logo is not valid base64.',
+      });
+    }
+    if (bytes.length === 0 || bytes.length > 2 * 1024 * 1024) {
+      throw new BadRequestException({
+        code: 'INVALID_LOGO',
+        message: 'Logo must be under 2 MB.',
+      });
+    }
+    const image = this.detectSiteLogo(bytes);
+    if (!image) {
+      throw new BadRequestException({
+        code: 'INVALID_LOGO',
+        message: 'Unsupported image content. Use PNG, JPG, or WebP.',
+      });
+    }
+
+    const client = this.supabaseService.getServiceClient();
+    const path = `logos/site-logo.${image.extension}`;
+    const { error: uploadError } = await client.storage
+      .from('site-assets')
+      .upload(path, bytes, { contentType: image.contentType, upsert: true });
+    if (uploadError) throw this.translate(uploadError);
+    const { data } = client.storage.from('site-assets').getPublicUrl(path);
+    const { error: settingError } = await client.from('site_settings').upsert({
+      key: 'logo_url',
+      value: data.publicUrl,
+      updated_by: actorId,
+      updated_at: new Date().toISOString(),
+    });
+    if (settingError) throw this.translate(settingError);
+    await this.audit.write({
+      actorId,
+      action: 'ADMIN_SITE_LOGO_UPDATED',
+      resourceType: 'site_settings',
+      metadata: { content_type: image.contentType },
+    });
+    return { url: `${data.publicUrl}?v=${Date.now()}` };
+  }
+
+  async clearSiteLogo(actorId: string) {
+    const client = this.supabaseService.getServiceClient();
+    const { error } = await client.from('site_settings').upsert({
+      key: 'logo_url',
+      value: null,
+      updated_by: actorId,
+      updated_at: new Date().toISOString(),
+    });
+    if (error) throw this.translate(error);
+    const { error: removeError } = await client.storage
+      .from('site-assets')
+      .remove([
+        'logos/site-logo.png',
+        'logos/site-logo.jpg',
+        'logos/site-logo.webp',
+      ]);
+    if (removeError)
+      this.logger.warn(
+        `Could not remove old site logo objects: ${removeError.message}`,
+      );
+    await this.audit.write({
+      actorId,
+      action: 'ADMIN_SITE_LOGO_CLEARED',
+      resourceType: 'site_settings',
+    });
+    return { url: null };
+  }
+
+  async updateDonationOption(
+    actorId: string,
+    type: string,
+    dto: UpdateDonationOptionDto,
+  ) {
+    if (type !== 'development' && type !== 'palestine') {
+      throw new BadRequestException({
+        code: 'INVALID_DONATION_TYPE',
+        message: 'Unknown donation option.',
+      });
+    }
+    for (const method of dto.payment_methods) {
+      const destination =
+        method.method === 'link' || method.method === 'paypal'
+          ? method.url
+          : method.account;
+      if (!destination) {
+        throw new BadRequestException({
+          code: 'INVALID_PAYMENT_METHOD',
+          message: `${method.label} needs an account number or HTTPS URL.`,
+        });
+      }
+    }
+    const client = this.supabaseService.getServiceClient();
+    const { data, error } = await client
+      .from('donation_options')
+      .update({
+        title: dto.title.trim(),
+        subtitle: dto.subtitle.trim(),
+        description: dto.description.trim(),
+        payment_methods: dto.payment_methods as unknown as Json,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('type', type)
+      .select('*')
+      .single();
+    if (error) throw this.translate(error);
+    await this.audit.write({
+      actorId,
+      action: 'ADMIN_DONATION_OPTION_UPDATED',
+      resourceType: 'donation_option',
+      resourceId: data.id,
+      metadata: { type },
+    });
+    return data;
+  }
+
+  private detectSiteLogo(
+    bytes: Uint8Array,
+  ): { extension: 'png' | 'jpg' | 'webp'; contentType: string } | null {
+    if (
+      bytes.length >= 8 &&
+      bytes[0] === 0x89 &&
+      bytes[1] === 0x50 &&
+      bytes[2] === 0x4e &&
+      bytes[3] === 0x47 &&
+      bytes[4] === 0x0d &&
+      bytes[5] === 0x0a &&
+      bytes[6] === 0x1a &&
+      bytes[7] === 0x0a
+    )
+      return { extension: 'png', contentType: 'image/png' };
+    if (
+      bytes.length >= 3 &&
+      bytes[0] === 0xff &&
+      bytes[1] === 0xd8 &&
+      bytes[2] === 0xff
+    )
+      return { extension: 'jpg', contentType: 'image/jpeg' };
+    if (
+      bytes.length >= 12 &&
+      bytes[0] === 0x52 &&
+      bytes[1] === 0x49 &&
+      bytes[2] === 0x46 &&
+      bytes[3] === 0x46 &&
+      bytes[8] === 0x57 &&
+      bytes[9] === 0x45 &&
+      bytes[10] === 0x42 &&
+      bytes[11] === 0x50
+    )
+      return { extension: 'webp', contentType: 'image/webp' };
+    return null;
+  }
+
   getMobileRelease() {
     return this.releases.getMobileRelease();
   }
@@ -1253,9 +1433,8 @@ export class AdminService {
       .sort((a, b) => b.hit_count - a.hit_count);
 
     return {
-      new_devices_24h: newDevices ?? [],
-      throttle_abusers_1h: throttleAbusers,
-      computed_at: new Date().toISOString(),
+      new_devices: newDevices ?? [],
+      throttle_abusers: throttleAbusers,
     };
   }
 

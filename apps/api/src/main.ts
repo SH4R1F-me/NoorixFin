@@ -32,6 +32,12 @@ async function bootstrap() {
     // Base64 expands decoded bytes by roughly one third.
     json({ limit: '8mb' }),
   );
+  app.use(
+    '/v1/admin/site-settings/logo',
+    // A 2 MB image expands to about 2.7 MB as base64 JSON. This route remains
+    // operator-only and the service validates decoded size and magic bytes.
+    json({ limit: '3mb' }),
+  );
   app.use(json({ limit: '100kb' }));
 
   // ─── URI Versioning (§11.1: /v1) ───────────────────────

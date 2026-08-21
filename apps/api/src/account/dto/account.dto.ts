@@ -38,7 +38,8 @@ export class AccountStatusResponseDto {
 
 export class BroadcastResponseDto {
   @ApiProperty() id!: string;
-  @ApiProperty({ enum: ['INFO', 'SUCCESS', 'WARNING', 'CRITICAL'] }) severity!: string;
+  @ApiProperty({ enum: ['INFO', 'SUCCESS', 'WARNING', 'CRITICAL'] })
+  severity!: string;
   @ApiProperty() title_en!: string;
   @ApiProperty() title_bn!: string;
   @ApiProperty() body_en!: string;
@@ -68,9 +69,14 @@ export class ValueSettingResponseDto {
 }
 
 export class PublicSettingsResponseDto {
-  @ApiPropertyOptional({ type: MaintenanceSettingResponseDto }) maintenance_mode?: MaintenanceSettingResponseDto;
-  @ApiPropertyOptional({ type: EnabledSettingResponseDto }) signups_enabled?: EnabledSettingResponseDto;
-  @ApiPropertyOptional({ type: ValueSettingResponseDto }) app_version?: ValueSettingResponseDto;
-  @ApiPropertyOptional({ type: ValueSettingResponseDto }) donation_url?: ValueSettingResponseDto;
-  @ApiPropertyOptional({ type: ValueSettingResponseDto }) support_email?: ValueSettingResponseDto;
+  @ApiPropertyOptional({ type: MaintenanceSettingResponseDto })
+  maintenance_mode?: MaintenanceSettingResponseDto;
+  @ApiPropertyOptional({ type: EnabledSettingResponseDto })
+  signups_enabled?: EnabledSettingResponseDto;
+  @ApiPropertyOptional({ type: ValueSettingResponseDto })
+  app_version?: ValueSettingResponseDto;
+  @ApiPropertyOptional({ type: ValueSettingResponseDto })
+  donation_url?: ValueSettingResponseDto;
+  @ApiPropertyOptional({ type: ValueSettingResponseDto })
+  support_email?: ValueSettingResponseDto;
 }

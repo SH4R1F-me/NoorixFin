@@ -219,6 +219,21 @@ export const API_ERRORS = {
     retryable: false,
     description: 'The receipt is empty, too large, or its bytes do not match its media type.',
   },
+  INVALID_LOGO: {
+    status: 400,
+    retryable: false,
+    description: 'The logo is empty, too large, or its bytes do not match PNG, JPEG, or WebP.',
+  },
+  INVALID_DONATION_TYPE: {
+    status: 400,
+    retryable: false,
+    description: 'The requested donation method type is not supported.',
+  },
+  INVALID_PAYMENT_METHOD: {
+    status: 400,
+    retryable: false,
+    description: 'The payment method configuration is missing required safe values.',
+  },
   IMPORT_PARSE_FAILED: {
     status: 400,
     retryable: false,

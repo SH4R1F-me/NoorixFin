@@ -148,13 +148,15 @@ export class TransactionResponseDto {
   @ApiProperty() created_by!: string;
   @ApiProperty() version!: number;
   @ApiProperty() created_at!: string;
-  @ApiPropertyOptional({ type: () => [PostingResponseDto] }) postings?: PostingResponseDto[];
+  @ApiPropertyOptional({ type: () => [PostingResponseDto] })
+  postings?: PostingResponseDto[];
   @ApiPropertyOptional({ type: () => [TransactionAttachmentResponseDto] })
   attachments?: TransactionAttachmentResponseDto[];
   @ApiPropertyOptional({ type: [String] }) tags?: string[];
   @ApiPropertyOptional() reversed?: boolean;
   @ApiPropertyOptional() amount_minor?: number;
-  @ApiPropertyOptional({ type: String, nullable: true }) currency_code?: string | null;
+  @ApiPropertyOptional({ type: String, nullable: true }) currency_code?:
+    string | null;
   @ApiPropertyOptional({ type: [String] }) ledger_account_ids?: string[];
 }
 
@@ -181,7 +183,8 @@ export class TransactionListItemResponseDto {
 }
 
 export class TransactionPageResponseDto {
-  @ApiProperty({ type: [TransactionListItemResponseDto] }) items!: TransactionListItemResponseDto[];
+  @ApiProperty({ type: [TransactionListItemResponseDto] })
+  items!: TransactionListItemResponseDto[];
   @ApiProperty({ type: String, nullable: true }) next_cursor!: string | null;
   @ApiProperty() has_more!: boolean;
 }

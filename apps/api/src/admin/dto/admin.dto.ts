@@ -8,6 +8,7 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import {
   IsArray,
+  ArrayMaxSize,
   IsBoolean,
   IsIn,
   IsInt,
@@ -210,6 +211,66 @@ export class UpdateSettingsDto {
   @ValidateNested({ each: true })
   @Type(() => UpdateSettingDto)
   settings!: UpdateSettingDto[];
+}
+
+export class SiteLogoUploadDto {
+  @ApiProperty({ description: 'Base64-encoded PNG, JPEG, or WebP bytes' })
+  @IsString()
+  @Length(4, 2_800_000)
+  content_base64!: string;
+}
+
+export class DonationPaymentMethodDto {
+  @ApiProperty({ enum: ['paypal', 'bkash', 'bank', 'link'] })
+  @IsIn(['paypal', 'bkash', 'bank', 'link'])
+  method!: 'paypal' | 'bkash' | 'bank' | 'link';
+
+  @ApiProperty()
+  @IsString()
+  @Length(1, 80)
+  label!: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  @Length(1, 160)
+  account?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsUrl({ protocols: ['https'], require_protocol: true })
+  @Length(1, 2048)
+  url?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  @Length(1, 240)
+  note?: string;
+}
+
+export class UpdateDonationOptionDto {
+  @ApiProperty()
+  @IsString()
+  @Length(1, 120)
+  title!: string;
+
+  @ApiProperty()
+  @IsString()
+  @Length(0, 240)
+  subtitle!: string;
+
+  @ApiProperty()
+  @IsString()
+  @Length(0, 2000)
+  description!: string;
+
+  @ApiProperty({ type: [DonationPaymentMethodDto], maxItems: 10 })
+  @IsArray()
+  @ArrayMaxSize(10)
+  @ValidateNested({ each: true })
+  @Type(() => DonationPaymentMethodDto)
+  payment_methods!: DonationPaymentMethodDto[];
 }
 
 const SEMVER = /^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/;

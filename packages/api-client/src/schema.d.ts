@@ -1079,6 +1079,58 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/admin/site-settings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Operator-managed logo and donation settings */
+        get: operations["AdminController_getSiteSettings_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/admin/site-settings/logo": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Upload a validated PNG, JPEG, or WebP site logo */
+        put: operations["AdminController_updateSiteLogo_v1"];
+        post?: never;
+        /** Restore the default site logo */
+        delete: operations["AdminController_clearSiteLogo_v1"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/admin/site-settings/donations/{type}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Update a public donation option */
+        put: operations["AdminController_updateDonationOption_v1"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/admin/releases": {
         parameters: {
             query?: never;
@@ -2655,6 +2707,60 @@ export interface components {
         };
         UpdateSettingsDto: {
             settings: components["schemas"]["UpdateSettingDto"][];
+        };
+        SiteSettingResponseDto: {
+            key: string;
+            value: string | null;
+            label: string | null;
+            description: string | null;
+            updated_at: string;
+        };
+        DonationPaymentMethodResponseDto: {
+            /** @enum {string} */
+            method: "paypal" | "bkash" | "bank" | "link";
+            label: string;
+            account?: string;
+            url?: string;
+            note?: string;
+        };
+        DonationOptionResponseDto: {
+            id: string;
+            /** @enum {string} */
+            type: "development" | "palestine";
+            title: string;
+            subtitle: string;
+            description: string;
+            icon: string;
+            color_from: string;
+            color_to: string;
+            is_active: boolean;
+            display_order: number;
+            payment_methods: components["schemas"]["DonationPaymentMethodResponseDto"][];
+        };
+        AdminSiteSettingsResponseDto: {
+            settings: components["schemas"]["SiteSettingResponseDto"][];
+            donation_options: components["schemas"]["DonationOptionResponseDto"][];
+        };
+        SiteLogoUploadDto: {
+            /** @description Base64-encoded PNG, JPEG, or WebP bytes */
+            content_base64: string;
+        };
+        SiteLogoResponseDto: {
+            url: string | null;
+        };
+        DonationPaymentMethodDto: {
+            /** @enum {string} */
+            method: "paypal" | "bkash" | "bank" | "link";
+            label: string;
+            account?: string;
+            url?: string;
+            note?: string;
+        };
+        UpdateDonationOptionDto: {
+            title: string;
+            subtitle: string;
+            description: string;
+            payment_methods: components["schemas"]["DonationPaymentMethodDto"][];
         };
         MobileReleaseResponseDto: {
             latest_version: string;
@@ -4860,6 +4966,92 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    AdminController_getSiteSettings_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminSiteSettingsResponseDto"];
+                };
+            };
+        };
+    };
+    AdminController_updateSiteLogo_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SiteLogoUploadDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SiteLogoResponseDto"];
+                };
+            };
+        };
+    };
+    AdminController_clearSiteLogo_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SiteLogoResponseDto"];
+                };
+            };
+        };
+    };
+    AdminController_updateDonationOption_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                type: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateDonationOptionDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DonationOptionResponseDto"];
+                };
             };
         };
     };

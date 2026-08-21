@@ -18,8 +18,8 @@ function Alert({ type, msg }: { type: 'ok' | 'err'; msg: string }) {
   const color = type === 'ok' ? '#10b981' : '#f87171';
   const Icon = type === 'ok' ? CheckCircle2 : AlertTriangle;
   return (
-    <div style={{ display: 'flex', gap: '0.625rem', alignItems: 'flex-start', padding: '0.75rem 1rem', borderRadius: 8, border: `1px solid ${color}22`, background: `${color}11`, color, fontSize: '0.875rem', marginTop: '0.75rem' }}>
-      <Icon size={15} style={{ flexShrink: 0, marginTop: 1 }} />
+    <div role={type === 'err' ? 'alert' : 'status'} aria-live={type === 'err' ? 'assertive' : 'polite'} style={{ display: 'flex', gap: '0.625rem', alignItems: 'flex-start', padding: '0.75rem 1rem', borderRadius: 8, border: `1px solid ${color}22`, background: `${color}11`, color, fontSize: '0.875rem', marginTop: '0.75rem' }}>
+      <Icon aria-hidden="true" size={15} style={{ flexShrink: 0, marginTop: 1 }} />
       {msg}
     </div>
   );
@@ -72,7 +72,7 @@ function LogoSection({ currentLogoUrl }: { currentLogoUrl: string | null }) {
     <div>
       <h3 style={{ fontSize: '1rem', fontWeight: 700, color: '#fafaf9', marginBottom: '0.25rem' }}>Site Logo</h3>
       <p style={{ fontSize: '0.8125rem', color: '#a09990', marginBottom: '1.25rem' }}>
-        PNG, JPG, SVG, or WebP. Max 2 MB. Displayed in the marketing nav bar.
+        PNG, JPG, or WebP. Max 2 MB. Displayed in the marketing nav bar.
       </p>
 
       {/* Preview */}
@@ -81,7 +81,7 @@ function LogoSection({ currentLogoUrl }: { currentLogoUrl: string | null }) {
           {preview
             /* eslint-disable-next-line @next/next/no-img-element */
             ? <img src={preview} alt="Logo preview" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
-            : <span style={{ fontSize: '0.75rem', color: '#78716c' }}>No logo</span>
+            : <span style={{ fontSize: '0.75rem', color: '#a8a29e' }}>No logo</span>
           }
         </div>
         <div style={{ fontSize: '0.8125rem', color: '#a09990' }}>
@@ -90,13 +90,16 @@ function LogoSection({ currentLogoUrl }: { currentLogoUrl: string | null }) {
       </div>
 
       <form onSubmit={handleUpload} style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', alignItems: 'center' }}>
+        <label htmlFor="logo-upload" className="nx-visually-hidden">
+          Choose a PNG, JPG, or WebP site logo
+        </label>
         <input
           ref={fileRef}
           type="file"
           name="logo"
-          accept=".png,.jpg,.jpeg,.svg,.webp"
+          accept=".png,.jpg,.jpeg,.webp,image/png,image/jpeg,image/webp"
           onChange={handleFile}
-          style={{ fontSize: '0.8125rem', color: '#fafaf9' }}
+          style={{ fontSize: '0.8125rem', color: '#fafaf9', colorScheme: 'dark', background: '#0c0a09', border: '1px solid #57534e', borderRadius: 6, padding: '0.25rem', maxWidth: '100%' }}
           id="logo-upload"
         />
         <button
@@ -104,7 +107,7 @@ function LogoSection({ currentLogoUrl }: { currentLogoUrl: string | null }) {
           disabled={pending}
           style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', background: '#10b981', color: '#0c0a09', border: 'none', borderRadius: 6, fontWeight: 600, fontSize: '0.875rem', cursor: pending ? 'not-allowed' : 'pointer', opacity: pending ? 0.7 : 1 }}
         >
-          <Upload size={15} /> {pending ? 'Uploading…' : 'Upload'}
+          <Upload aria-hidden="true" size={15} /> {pending ? 'Uploading…' : 'Upload'}
         </button>
         {preview && (
           <button
@@ -113,7 +116,7 @@ function LogoSection({ currentLogoUrl }: { currentLogoUrl: string | null }) {
             disabled={pending}
             style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', background: 'rgba(239,68,68,0.1)', color: '#f87171', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 6, fontWeight: 600, fontSize: '0.875rem', cursor: 'pointer' }}
           >
-            <X size={15} /> Clear
+            <X aria-hidden="true" size={15} /> Clear
           </button>
         )}
       </form>
@@ -145,10 +148,18 @@ function PaymentMethodEditor({
 
   return (
     <div>
-      {methods.map((m, i) => (
-        <div key={i} style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid #292524', borderRadius: 8, padding: '0.875rem', marginBottom: '0.75rem' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '120px 1fr', gap: '0.5rem', marginBottom: '0.5rem' }}>
+      {methods.map((m, i) => {
+        const id = `payment-${i}`;
+        const destinationLabel = m.method === 'link' || m.method === 'paypal' ? 'Secure HTTPS URL' : 'Account number';
+        return (
+        <fieldset key={i} style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid #292524', borderRadius: 8, padding: '0.875rem', marginBottom: '0.75rem' }}>
+          <legend style={{ paddingInline: '0.25rem', color: '#fafaf9', fontSize: '0.8125rem', fontWeight: 700 }}>
+            Payment method {i + 1}
+          </legend>
+          <div className="nf-payment-grid">
+            <label htmlFor={`${id}-type`} className="nx-visually-hidden">Payment type</label>
             <select
+              id={`${id}-type`}
               value={m.method}
               onChange={(e) => update(i, 'method', e.target.value)}
               style={{ fontSize: '0.8125rem', background: '#1c1917', color: '#fafaf9', border: '1px solid #292524', borderRadius: 6, padding: '0.375rem 0.5rem' }}
@@ -158,14 +169,20 @@ function PaymentMethodEditor({
               <option value="bank">Bank</option>
               <option value="link">Link</option>
             </select>
+            <label htmlFor={`${id}-label`} className="nx-visually-hidden">Display label</label>
             <input
+              id={`${id}-label`}
+              aria-describedby={`${id}-label-hint`}
               placeholder="Label (e.g. PayPal, bKash)"
               value={m.label}
               onChange={(e) => update(i, 'label', e.target.value)}
               style={{ fontSize: '0.8125rem', background: '#1c1917', color: '#fafaf9', border: '1px solid #292524', borderRadius: 6, padding: '0.375rem 0.5rem' }}
             />
+            <span id={`${id}-label-hint`} className="nx-visually-hidden">Name shown to visitors on the support page</span>
           </div>
+          <label htmlFor={`${id}-destination`} className="nx-visually-hidden">{destinationLabel}</label>
           <input
+            id={`${id}-destination`}
             placeholder="Account number or URL"
             value={m.account || m.url || ''}
             onChange={(e) => {
@@ -175,24 +192,28 @@ function PaymentMethodEditor({
             }}
             style={{ width: '100%', fontSize: '0.8125rem', background: '#1c1917', color: '#fafaf9', border: '1px solid #292524', borderRadius: 6, padding: '0.375rem 0.5rem', marginBottom: '0.5rem' }}
           />
-          <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+          <div className="nf-payment-note-row">
+            <label htmlFor={`${id}-note`} className="nx-visually-hidden">Optional payment note</label>
             <input
+              id={`${id}-note`}
               placeholder="Note (optional)"
               value={m.note || ''}
               onChange={(e) => update(i, 'note', e.target.value)}
               style={{ flex: 1, fontSize: '0.8125rem', background: '#1c1917', color: '#fafaf9', border: '1px solid #292524', borderRadius: 6, padding: '0.375rem 0.5rem' }}
             />
-            <button onClick={() => remove(i)} style={{ background: 'rgba(239,68,68,0.1)', color: '#f87171', border: 'none', borderRadius: 6, padding: '0.375rem 0.5rem', cursor: 'pointer' }}>
-              <Trash2 size={14} />
+            <button type="button" aria-label={`Delete payment method ${i + 1}: ${m.label || m.method}`} onClick={() => remove(i)} style={{ flexShrink: 0, minWidth: 44, minHeight: 44, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(239,68,68,0.1)', color: '#f87171', border: 'none', borderRadius: 6, padding: '0.375rem 0.5rem', cursor: 'pointer' }}>
+              <Trash2 aria-hidden="true" size={14} />
             </button>
           </div>
-        </div>
-      ))}
+        </fieldset>
+        );
+      })}
       <button
+        type="button"
         onClick={add}
         style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 0.875rem', background: 'rgba(255,255,255,0.05)', color: '#a09990', border: '1px dashed #292524', borderRadius: 6, fontSize: '0.8125rem', cursor: 'pointer', marginTop: '0.25rem' }}
       >
-        <Plus size={14} /> Add payment method
+        <Plus aria-hidden="true" size={14} /> Add payment method
       </button>
     </div>
   );
@@ -234,14 +255,14 @@ function DonationSection({ option }: { option: DonationOption }) {
         Changes are reflected immediately on the public /support page.
       </p>
 
-      <label style={{ fontSize: '0.75rem', fontWeight: 600, color: '#a09990', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Title</label>
-      <input value={title} onChange={(e) => setTitle(e.target.value)} style={inputStyle} />
+      <label htmlFor={`${option.type}-title`} style={{ fontSize: '0.75rem', fontWeight: 600, color: '#a09990', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Title</label>
+      <input id={`${option.type}-title`} value={title} onChange={(e) => setTitle(e.target.value)} style={inputStyle} />
 
-      <label style={{ fontSize: '0.75rem', fontWeight: 600, color: '#a09990', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Subtitle (tag line)</label>
-      <input value={subtitle} onChange={(e) => setSubtitle(e.target.value)} style={inputStyle} />
+      <label htmlFor={`${option.type}-subtitle`} style={{ fontSize: '0.75rem', fontWeight: 600, color: '#a09990', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Subtitle (tag line)</label>
+      <input id={`${option.type}-subtitle`} value={subtitle} onChange={(e) => setSubtitle(e.target.value)} style={inputStyle} />
 
-      <label style={{ fontSize: '0.75rem', fontWeight: 600, color: '#a09990', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Description</label>
-      <textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={3} style={{ ...inputStyle, resize: 'vertical' }} />
+      <label htmlFor={`${option.type}-description`} style={{ fontSize: '0.75rem', fontWeight: 600, color: '#a09990', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Description</label>
+      <textarea id={`${option.type}-description`} value={description} onChange={(e) => setDescription(e.target.value)} rows={3} style={{ ...inputStyle, resize: 'vertical' }} />
 
       <label style={{ fontSize: '0.75rem', fontWeight: 600, color: '#a09990', letterSpacing: '0.05em', textTransform: 'uppercase', display: 'block', marginBottom: '0.75rem' }}>Payment Methods</label>
       <PaymentMethodEditor methods={methods} onChange={setMethods} />
@@ -251,7 +272,7 @@ function DonationSection({ option }: { option: DonationOption }) {
         disabled={pending}
         style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '1.25rem', padding: '0.625rem 1.125rem', background: accentColor, color: '#0c0a09', border: 'none', borderRadius: 8, fontWeight: 700, fontSize: '0.875rem', cursor: pending ? 'not-allowed' : 'pointer', opacity: pending ? 0.7 : 1 }}
       >
-        <Save size={15} /> {pending ? 'Saving…' : 'Save Changes'}
+        <Save aria-hidden="true" size={15} /> {pending ? 'Saving…' : 'Save Changes'}
       </button>
 
       {msg && <Alert type={msg.type} msg={msg.text} />}

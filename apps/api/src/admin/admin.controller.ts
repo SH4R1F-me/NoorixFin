@@ -65,6 +65,8 @@ import {
   UpdateBroadcastDto,
   UpdateSettingsDto,
   UpdateMobileReleaseDto,
+  SiteLogoUploadDto,
+  UpdateDonationOptionDto,
 } from './dto/admin.dto';
 import {
   PlatformStatsResponseDto,
@@ -84,6 +86,9 @@ import {
   RevokedBooleanResponseDto,
   RevokedCountResponseDto,
   AnomaliesResponseDto,
+  AdminSiteSettingsResponseDto,
+  DonationOptionResponseDto,
+  SiteLogoResponseDto,
 } from './dto/admin-response.dto';
 
 /**
@@ -257,7 +262,10 @@ export class AdminController {
       'a balance, amount, payee or note — operators have no access to any ' +
       "user's financial rows (DEC-002 #12, DEC-007).",
   })
-  @ApiOkResponse({ description: 'Metadata and counts; never financial data', type: AdminUserPageResponseDto })
+  @ApiOkResponse({
+    description: 'Metadata and counts; never financial data',
+    type: AdminUserPageResponseDto,
+  })
   listUsers(@Req() req: AuthedRequest, @Query() query: ListUsersQueryDto) {
     return this.adminService.listUsers(req.accessToken, query);
   }
@@ -354,6 +362,47 @@ export class AdminController {
     @Body() dto: UpdateSettingsDto,
   ) {
     return this.adminService.updateSettings(req.accessToken, user.id, dto);
+  }
+
+  @Get('site-settings')
+  @ApiOkResponse({ type: AdminSiteSettingsResponseDto })
+  @ApiOperation({ summary: 'Operator-managed logo and donation settings' })
+  getSiteSettings() {
+    return this.adminService.getSiteSettings();
+  }
+
+  @Put('site-settings/logo')
+  @ApiOkResponse({ type: SiteLogoResponseDto })
+  @ThrottleAdminWrite()
+  @Idempotent()
+  @ApiOperation({ summary: 'Upload a validated PNG, JPEG, or WebP site logo' })
+  updateSiteLogo(
+    @CurrentUser() user: AuthenticatedUser,
+    @Body() dto: SiteLogoUploadDto,
+  ) {
+    return this.adminService.updateSiteLogo(user.id, dto.content_base64);
+  }
+
+  @Delete('site-settings/logo')
+  @ApiOkResponse({ type: SiteLogoResponseDto })
+  @ThrottleAdminWrite()
+  @Idempotent()
+  @ApiOperation({ summary: 'Restore the default site logo' })
+  clearSiteLogo(@CurrentUser() user: AuthenticatedUser) {
+    return this.adminService.clearSiteLogo(user.id);
+  }
+
+  @Put('site-settings/donations/:type')
+  @ApiOkResponse({ type: DonationOptionResponseDto })
+  @ThrottleAdminWrite()
+  @Idempotent()
+  @ApiOperation({ summary: 'Update a public donation option' })
+  updateDonationOption(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('type') type: string,
+    @Body() dto: UpdateDonationOptionDto,
+  ) {
+    return this.adminService.updateDonationOption(user.id, type, dto);
   }
 
   @Get('releases')

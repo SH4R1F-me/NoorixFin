@@ -2,7 +2,7 @@
  * Admin Site Settings — server page.
  * Fetches current settings and donation options, renders client UI.
  */
-import { adminGetAllSettings, adminGetDonationOptions } from '../../../lib/site-settings';
+import { ApiError, apiFetch } from '../../../lib/api-client';
 import SiteSettingsClient from './site-settings-client';
 
 export const metadata = {
@@ -10,13 +10,19 @@ export const metadata = {
 };
 
 export default async function SiteSettingsPage() {
-  const [settingsResult, donationOptions] = await Promise.all([
-    adminGetAllSettings(),
-    adminGetDonationOptions(),
-  ]);
+  let result;
+  try {
+    result = await apiFetch('/admin/site-settings');
+  } catch (error) {
+    return (
+      <div role="alert" style={{ padding: '1rem', background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 8, color: '#f87171', fontSize: '0.875rem' }}>
+        Could not load settings: {error instanceof ApiError ? error.message : 'Unknown error'}.
+      </div>
+    );
+  }
 
   const settingsMap = Object.fromEntries(
-    (settingsResult.data ?? []).map((r: { key: string; value: string | null }) => [r.key, r.value]),
+    result.settings.map((row) => [row.key, row.value]),
   );
 
   return (
@@ -30,17 +36,10 @@ export default async function SiteSettingsPage() {
         </p>
       </div>
 
-      {settingsResult.error ? (
-        <div style={{ padding: '1rem', background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 8, color: '#f87171', fontSize: '0.875rem' }}>
-          Could not load settings: {settingsResult.error.message ?? 'Unknown error'}.<br />
-          Ensure migration 00021 has been applied to your Supabase project.
-        </div>
-      ) : (
-        <SiteSettingsClient
-          currentLogoUrl={settingsMap['logo_url'] ?? null}
-          donationOptions={donationOptions}
-        />
-      )}
+      <SiteSettingsClient
+        currentLogoUrl={settingsMap['logo_url'] ?? null}
+        donationOptions={result.donation_options}
+      />
     </div>
   );
 }
