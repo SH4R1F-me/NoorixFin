@@ -259,7 +259,12 @@ export default function AdminShell({
         </div>
       </aside>
 
-      <main className="nf-main" style={{ ...styles.main, marginLeft: collapsed ? 72 : 280 }}>
+      <main
+        id="main-content"
+        tabIndex={-1}
+        className="nf-main"
+        style={{ ...styles.main, marginLeft: collapsed ? 72 : 280 }}
+      >
         {/* The band that makes "which mode am I in?" answerable without reading
             a single word of the page. */}
         <div style={styles.operatorBand}>

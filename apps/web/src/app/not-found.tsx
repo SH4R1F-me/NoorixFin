@@ -7,5 +7,9 @@
 import { ErrorState } from '../components/error-state';
 
 export default function NotFound() {
-  return <ErrorState kind="notFound" homeHref="/dashboard" />;
+  return (
+    <main id="main-content" tabIndex={-1}>
+      <ErrorState kind="notFound" homeHref="/dashboard" />
+    </main>
+  );
 }

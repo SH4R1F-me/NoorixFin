@@ -122,7 +122,7 @@ export default function OnboardingView({
   const chosenSubtype = SUBTYPES.find((s) => s.value === subtype) ?? SUBTYPES[0];
 
   return (
-    <main style={styles.page}>
+    <main id="main-content" tabIndex={-1} style={styles.page}>
       <div style={styles.card}>
         <header style={styles.header}>
           <div style={styles.logo}>

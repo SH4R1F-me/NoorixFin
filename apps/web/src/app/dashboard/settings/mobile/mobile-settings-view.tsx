@@ -40,7 +40,7 @@ export default function MobileSettingsView({
     <div style={styles.page}>
       <header>
         <h1 style={styles.title}>Mobile app</h1>
-        <p style={styles.sub}>
+        <p style={styles.pageSub}>
           Install NoorixFin and securely pair this workspace after signing in on your phone.
         </p>
       </header>
@@ -124,7 +124,10 @@ export default function MobileSettingsView({
 const styles: Record<string, React.CSSProperties> = {
   page: { maxWidth: 860 },
   title: { fontSize: '1.65rem', color: 'var(--text-primary)', marginBottom: '.35rem' },
-  sub: { color: 'var(--text-tertiary)', fontSize: '.82rem', lineHeight: 1.6 },
+  pageSub: { color: 'var(--text-tertiary)', fontSize: '.82rem', lineHeight: 1.6 },
+  // Cards use a fixed dark surface even in light theme, so this foreground is
+  // fixed with it instead of inheriting a light-theme semantic colour.
+  sub: { color: '#cbd5e1', fontSize: '.82rem', lineHeight: 1.6 },
   card: {
     marginTop: '1.25rem',
     padding: '1.25rem',

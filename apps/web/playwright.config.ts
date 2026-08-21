@@ -40,9 +40,37 @@ export default defineConfig({
     baseURL: `http://127.0.0.1:${PORT}`,
     trace: 'retain-on-failure',
   },
-  projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
+  projects: [
+    { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
+    {
+      name: 'firefox-accessibility',
+      testMatch: /accessibility\.spec\.ts/,
+      use: { ...devices['Desktop Firefox'] },
+    },
+    {
+      name: 'webkit-accessibility',
+      testMatch: /accessibility\.spec\.ts/,
+      use: { ...devices['Desktop Safari'] },
+    },
+    {
+      name: 'mobile-chromium-accessibility',
+      testMatch: /accessibility\.spec\.ts/,
+      use: { ...devices['Pixel 7'] },
+    },
+    {
+      name: 'mobile-webkit-accessibility',
+      testMatch: /accessibility\.spec\.ts/,
+      use: { ...devices['iPhone 15'] },
+    },
+  ],
   webServer: {
-    command: `npx next start -p ${PORT}`,
+    // Playwright launches the server with NODE_ENV=test; Next intentionally
+    // skips `.env.local` in that mode. Export the same file CI writes before
+    // starting the production server so server-only Supabase reads are real.
+    command: `set -a; . ./.env.local; set +a; exec npx next start -p ${PORT}`,
+    // `pnpm --filter ... exec` retains the repository cwd. Pinning this keeps
+    // Next's `.env.local` and build output resolution correct in both forms.
+    cwd: __dirname,
     url: `http://127.0.0.1:${PORT}/auth/login`,
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,

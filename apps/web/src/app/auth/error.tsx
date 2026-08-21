@@ -22,11 +22,13 @@ export default function AuthError({
   }, [error]);
 
   return (
-    <ErrorState
-      kind="crash"
-      onRetry={unstable_retry}
-      digest={error.digest}
-      homeHref="/auth/login"
-    />
+    <main id="main-content" tabIndex={-1}>
+      <ErrorState
+        kind="crash"
+        onRetry={unstable_retry}
+        digest={error.digest}
+        homeHref="/auth/login"
+      />
+    </main>
   );
 }

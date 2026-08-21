@@ -61,7 +61,7 @@ export default async function NotificationDeliveryPage({
       </form>
       {!stats ? (
         <div
-          style={{ color: '#78716c', border: '1px dashed #44403c', borderRadius: 10, padding: 32 }}
+          style={{ color: '#a8a29e', border: '1px dashed #44403c', borderRadius: 10, padding: 32 }}
         >
           No campaigns have been sent.
         </div>

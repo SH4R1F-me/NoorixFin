@@ -37,9 +37,9 @@ export default function MarketingLayout({
   return (
     <div className="m-page">
       <MarketingNav />
-      <div className="m-body">
+      <main id="main-content" tabIndex={-1} className="m-body">
         {children}
-      </div>
+      </main>
       <MarketingFooter />
     </div>
   );

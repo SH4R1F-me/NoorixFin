@@ -141,10 +141,10 @@ export default function SecurityDashboard({
             <table style={s.table}>
               <thead>
                 <tr>
-                  <th style={s.th}>Action</th>
-                  <th style={s.th}>Platform</th>
-                  <th style={s.th}>IP</th>
-                  <th style={s.th}>Time</th>
+                  <th scope="col" style={s.th}>Action</th>
+                  <th scope="col" style={s.th}>Platform</th>
+                  <th scope="col" style={s.th}>IP</th>
+                  <th scope="col" style={s.th}>Time</th>
                 </tr>
               </thead>
               <tbody>

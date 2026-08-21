@@ -22,10 +22,10 @@ export default async function RecurringPage() {
 
   if (!workspace) {
     return (
-      <main>
+      <div>
         <h1>{t('calendar.recurringRules')}</h1>
         <p style={{ color: 'var(--text-secondary)' }}>{t('app.noneYet')}</p>
-      </main>
+      </div>
     );
   }
 
@@ -38,7 +38,7 @@ export default async function RecurringPage() {
   const paused = rules.filter((rule) => rule.status === 'PAUSED').length;
 
   return (
-    <main>
+    <div>
       <header style={styles.header}>
         <div>
           <div style={styles.eyebrow}>
@@ -80,7 +80,7 @@ export default async function RecurringPage() {
         workspaceId={workspace.id}
         currency={workspace.base_currency ?? 'BDT'}
       />
-    </main>
+    </div>
   );
 }
 

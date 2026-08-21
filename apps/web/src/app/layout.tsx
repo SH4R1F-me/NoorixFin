@@ -90,6 +90,9 @@ export default async function RootLayout({
       suppressHydrationWarning
     >
       <body>
+        <a className="nf-skip-link" href="#main-content">
+          Skip to main content
+        </a>
         <ThemeProvider initialPreference={initialTheme}>
           <LocaleProvider initialLocale={locale} isAuthenticated={profile !== null}>
             <Providers>{children}</Providers>

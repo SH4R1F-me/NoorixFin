@@ -5,7 +5,7 @@
  * These keep server components clean — only the animation shells are client.
  */
 import { useRef } from 'react';
-import { motion, useInView, type Variants } from 'framer-motion';
+import { motion, useInView, useReducedMotion, type Variants } from 'framer-motion';
 
 const FADE_UP: Variants = {
   hidden: { opacity: 0, y: 28 },
@@ -29,15 +29,16 @@ export function FadeUp({
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const inView = useInView(ref, { once: true, margin: '-60px' });
+  const reduceMotion = useReducedMotion();
 
   return (
     <motion.div
       ref={ref}
       variants={FADE_UP}
-      initial="hidden"
-      animate={inView ? 'show' : 'hidden'}
+      initial={reduceMotion ? 'show' : 'hidden'}
+      animate={reduceMotion || inView ? 'show' : 'hidden'}
       transition={{ delay }}
-      className={className}
+      className={['m-reveal', className].filter(Boolean).join(' ')}
     >
       {children}
     </motion.div>
@@ -54,13 +55,14 @@ export function StaggerGrid({
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const inView = useInView(ref, { once: true, margin: '-60px' });
+  const reduceMotion = useReducedMotion();
 
   return (
     <motion.div
       ref={ref}
       variants={STAGGER}
-      initial="hidden"
-      animate={inView ? 'show' : 'hidden'}
+      initial={reduceMotion ? 'show' : 'hidden'}
+      animate={reduceMotion || inView ? 'show' : 'hidden'}
       className={className}
     >
       {children}
@@ -77,7 +79,7 @@ export function StaggerItem({
   className?: string;
 }) {
   return (
-    <motion.div variants={FADE_UP} className={className}>
+    <motion.div variants={FADE_UP} className={['m-reveal', className].filter(Boolean).join(' ')}>
       {children}
     </motion.div>
   );
@@ -91,10 +93,11 @@ export function TiltCard({
   children: React.ReactNode;
   className?: string;
 }) {
+  const reduceMotion = useReducedMotion();
   return (
     <motion.div
       className={className}
-      whileHover={{ scale: 1.02, rotateX: -4, rotateY: 4 }}
+      whileHover={reduceMotion ? undefined : { scale: 1.02, rotateX: -4, rotateY: 4 }}
       style={{ transformStyle: 'preserve-3d', perspective: 1000 }}
       transition={{ type: 'spring', stiffness: 300, damping: 20 }}
     >
@@ -111,10 +114,11 @@ export function HoverLift({
   children: React.ReactNode;
   className?: string;
 }) {
+  const reduceMotion = useReducedMotion();
   return (
     <motion.div
       className={className}
-      whileHover={{ y: -6 }}
+      whileHover={reduceMotion ? undefined : { y: -6 }}
       transition={{ type: 'spring', stiffness: 400, damping: 20 }}
     >
       {children}

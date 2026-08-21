@@ -282,8 +282,8 @@ jobs:
         env:
           E2E_API_URL: ${{ env.API_URL }}
 
-      - name: Install Playwright browser
-        run: pnpm --filter @noorixfin/web exec playwright install --with-deps chromium
+      - name: Install Playwright browsers
+        run: pnpm --filter @noorixfin/web exec playwright install --with-deps chromium firefox webkit
 
       # E2E_LIVE=1 turns on the specs that seed their own accounts through the
       # real API. Without it they skip, and a green run would mean nothing.

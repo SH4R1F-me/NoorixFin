@@ -157,7 +157,8 @@ export const marketing = {
   green: colors.primary[500],
   greenDim: 'rgba(16,185,129,0.15)',
   text: colors.neutral[50],
-  muted: colors.neutral[400],
+  /** Readable on both the page background and translucent marketing cards. */
+  muted: colors.neutral[300],
   /** 5.22:1 on `bg`. Was `#475569` (2.66:1) — failed the axe scan on the landing page. */
   faint: '#748399',
   navHeight: '68px',

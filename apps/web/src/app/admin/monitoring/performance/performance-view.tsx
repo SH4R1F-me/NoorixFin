@@ -182,18 +182,23 @@ export default function PerformanceView({
               {metrics.slowest_routes.length === 0 ? (
                 <EmptyState text="No route data for this window." />
               ) : (
-                <div style={s.tableWrap}>
+                <div
+                  style={s.tableWrap}
+                  role="region"
+                  aria-label="Slowest routes table, horizontally scrollable"
+                  tabIndex={0}
+                >
                   <table style={s.table}>
                     <thead>
                       <tr>
-                        <th style={s.th}>Route</th>
-                        <th style={{ ...s.th, textAlign: 'right' }}>
+                        <th scope="col" style={s.th}>Route</th>
+                        <th scope="col" style={{ ...s.th, textAlign: 'right' }}>
                           {t('admin.performance.requestCount')}
                         </th>
-                        <th style={{ ...s.th, textAlign: 'right' }}>
+                        <th scope="col" style={{ ...s.th, textAlign: 'right' }}>
                           {t('admin.performance.errorCount')}
                         </th>
-                        <th style={{ ...s.th, minWidth: 180 }}>p95 latency</th>
+                        <th scope="col" style={{ ...s.th, minWidth: 180 }}>p95 latency</th>
                       </tr>
                     </thead>
                     <tbody>

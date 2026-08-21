@@ -137,12 +137,12 @@ export default function AuthEventsView({
               <table style={s.table}>
                 <thead>
                   <tr>
-                    <th style={s.th}>Action</th>
-                    <th style={s.th}>Actor</th>
-                    <th style={s.th}>{t('admin.security.platform')}</th>
-                    <th style={s.th}>IP</th>
-                    <th style={s.th}>User Agent</th>
-                    <th style={s.th}>Time</th>
+                    <th scope="col" style={s.th}>Action</th>
+                    <th scope="col" style={s.th}>Actor</th>
+                    <th scope="col" style={s.th}>{t('admin.security.platform')}</th>
+                    <th scope="col" style={s.th}>IP</th>
+                    <th scope="col" style={s.th}>User Agent</th>
+                    <th scope="col" style={s.th}>Time</th>
                   </tr>
                 </thead>
                 <tbody>

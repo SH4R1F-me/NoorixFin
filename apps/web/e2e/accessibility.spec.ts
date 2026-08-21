@@ -54,6 +54,34 @@ async function scan(page: Page) {
   return new AxeBuilder({ page }).withTags(WCAG_AA).analyze();
 }
 
+async function measureReflow(page: Page) {
+  return page.evaluate(() => ({
+    scrollWidth: document.documentElement.scrollWidth,
+    clientWidth: document.documentElement.clientWidth,
+    offenders: Array.from(document.querySelectorAll<HTMLElement>('body *'))
+      .map((element) => {
+        const rect = element.getBoundingClientRect();
+        return {
+          element: `${element.tagName.toLowerCase()}${element.id ? `#${element.id}` : ''}${
+            typeof element.className === 'string' && element.className
+              ? `.${element.className.trim().replace(/\s+/g, '.')}`
+              : ''
+          }`,
+          left: Math.round(rect.left),
+          right: Math.round(rect.right),
+          width: Math.round(rect.width),
+          style: element.getAttribute('style')?.slice(0, 180) ?? '',
+        };
+      })
+      // A translated off-canvas sidebar is intentionally left of the viewport
+      // and does not create scrollable page width. Only right-edge overflow
+      // can force the forbidden two-dimensional page scrolling.
+      .filter((entry) => entry.right > window.innerWidth + 2)
+      .sort((a, b) => b.width - a.width)
+      .slice(0, 8),
+  }));
+}
+
 /** Readable failure output — a bare object dump is unusable in CI logs. */
 function describe(violations: Awaited<ReturnType<typeof scan>>['violations']) {
   return violations
@@ -70,6 +98,20 @@ function describe(violations: Awaited<ReturnType<typeof scan>>['violations']) {
 test.describe('accessibility — signed out', () => {
   for (const [name, path] of [
     ['landing', '/'],
+    ['features', '/features'],
+    ['about', '/about'],
+    ['documentation', '/docs'],
+    ['community', '/community'],
+    ['contribute', '/contribute'],
+    ['open source', '/open-source'],
+    ['roadmap', '/roadmap'],
+    ['security', '/security'],
+    ['support', '/support'],
+    ['contact', '/contact'],
+    ['frequently asked questions', '/faq'],
+    ['changelog', '/changelog'],
+    ['download', '/download'],
+    ['bug report', '/bug-report'],
     ['login', '/auth/login'],
     ['forgot password', '/auth/forgot-password'],
     ['not found', '/this-route-does-not-exist'],
@@ -116,6 +158,16 @@ test.describe('accessibility — signed out', () => {
       ).not.toBe('infinite');
     }
   });
+
+  test('the skip link is first, visible on focus, and targets page content', async ({ page }) => {
+    await page.goto('/');
+    await page.keyboard.press('Tab');
+    const skip = page.getByRole('link', { name: 'Skip to main content' });
+    await expect(skip).toBeFocused();
+    await expect(skip).toBeVisible();
+    await skip.press('Enter');
+    await expect(page.locator('#main-content')).toBeFocused();
+  });
 });
 
 test.describe('accessibility — signed in', () => {
@@ -142,15 +194,23 @@ test.describe('accessibility — signed in', () => {
     '/dashboard/budgets',
     '/dashboard/goals',
     '/dashboard/calendar',
+    '/dashboard/import',
+    '/dashboard/recurring',
+    '/dashboard/tags',
+    '/dashboard/debts',
+    '/dashboard/notifications',
     '/dashboard/reports',
     '/dashboard/settings',
+    '/dashboard/settings/mobile',
+    '/dashboard/settings/notifications',
+    '/dashboard/settings/sessions',
   ];
 
   test('every dashboard route has no WCAG 2.2 AA violations', async ({ page }) => {
     // Nine full axe scans in one test. Raised rather than split so a failure
     // reports EVERY offending route at once — fixing contrast one route per
     // run is how a palette change takes nine iterations.
-    test.setTimeout(180_000);
+    test.setTimeout(360_000);
     await signIn(page);
     const failures: string[] = [];
     for (const route of ROUTES) {
@@ -189,20 +249,18 @@ test.describe('accessibility — signed in', () => {
    * happen is HORIZONTAL scrolling of the page — that is the specific failure
    * reflow prohibits, because it makes every line require two-axis scrolling.
    */
-  test('survives 200% zoom without forcing horizontal scrolling', async ({ page }) => {
+  test('every dashboard route reflows to 320 CSS pixels', async ({ page }) => {
+    test.setTimeout(360_000);
     await signIn(page);
-    await page.setViewportSize({ width: 640, height: 540 });
+    await page.setViewportSize({ width: 320, height: 640 });
 
-    for (const route of ['/dashboard', '/dashboard/transactions', '/dashboard/reports']) {
+    for (const route of ROUTES) {
       await page.goto(route);
-      const overflow = await page.evaluate(() => ({
-        scrollWidth: document.documentElement.scrollWidth,
-        clientWidth: document.documentElement.clientWidth,
-      }));
+      const overflow = await measureReflow(page);
       // A few pixels of rounding is not a reflow failure; a scrollbar is.
       expect(
         overflow.scrollWidth - overflow.clientWidth,
-        `${route} scrolls horizontally at 200% zoom`,
+        `${route} scrolls horizontally at 320 CSS pixels: ${JSON.stringify(overflow.offenders)}`,
       ).toBeLessThanOrEqual(2);
     }
   });
@@ -313,7 +371,19 @@ test.describe('accessibility — operator console', () => {
     '/admin/audit',
     '/admin/users',
     '/admin/broadcasts',
+    '/admin/config/releases',
+    '/admin/monitoring/alerts',
+    '/admin/monitoring/jobs',
+    '/admin/monitoring/performance',
+    '/admin/notifications',
+    '/admin/notifications/delivery',
+    '/admin/notifications/templates',
+    '/admin/security',
+    '/admin/security/anomalies',
+    '/admin/security/auth-events',
+    '/admin/security/sessions',
     '/admin/settings',
+    '/admin/site-settings',
   ];
 
   async function enterConsole(page: Page) {
@@ -346,7 +416,7 @@ test.describe('accessibility — operator console', () => {
   test('every admin route has no WCAG 2.2 AA violations', async ({ page }) => {
     // As above, plus /admin/monitoring holds an open SSE connection, so the
     // page never reaches network idle and each scan there is slower.
-    test.setTimeout(180_000);
+    test.setTimeout(360_000);
     await enterConsole(page);
     const failures: string[] = [];
     for (const route of ADMIN_ROUTES) {
@@ -369,5 +439,34 @@ test.describe('accessibility — operator console', () => {
       );
       expect(unscoped, `${route} has headers with no scope`).toEqual([]);
     }
+  });
+
+  test('every admin route reflows to 320 CSS pixels', async ({ page }) => {
+    test.setTimeout(360_000);
+    await enterConsole(page);
+    await page.setViewportSize({ width: 320, height: 640 });
+
+    for (const route of ADMIN_ROUTES) {
+      await page.goto(route);
+      const overflow = await measureReflow(page);
+      expect(
+        overflow.scrollWidth - overflow.clientWidth,
+        `${route} scrolls horizontally at 320 CSS pixels: ${JSON.stringify(overflow.offenders)}`,
+      ).toBeLessThanOrEqual(2);
+    }
+  });
+
+  test('site settings keeps labels and destructive controls at a narrow viewport', async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name !== 'chromium', 'one stable visual baseline; semantics run in every engine');
+    await enterConsole(page);
+    await page.setViewportSize({ width: 320, height: 720 });
+    await page.goto('/admin/site-settings');
+
+    await expect(page.getByLabel('Display label').first()).toBeVisible();
+    await expect(page.getByRole('button', { name: /delete payment method/i }).first()).toBeVisible();
+    await expect(page).toHaveScreenshot('site-settings-narrow.png', {
+      animations: 'disabled',
+      fullPage: true,
+    });
   });
 });

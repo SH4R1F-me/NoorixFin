@@ -67,7 +67,7 @@ export default function TagsView({ workspaceId, tags }: { workspaceId: string; t
   }
 
   return (
-    <main>
+    <div>
       <header style={styles.header}>
         <div>
           <div style={styles.eyebrow}>
@@ -187,7 +187,7 @@ export default function TagsView({ workspaceId, tags }: { workspaceId: string; t
           ))}
         </ul>
       )}
-    </main>
+    </div>
   );
 }
 

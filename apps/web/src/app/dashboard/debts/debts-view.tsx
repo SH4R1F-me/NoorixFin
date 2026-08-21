@@ -76,7 +76,7 @@ export default function DebtsView({
   }
 
   return (
-    <main>
+    <div>
       <header style={styles.header}>
         <div>
           <div style={styles.eyebrow}>
@@ -281,7 +281,7 @@ export default function DebtsView({
           })}
         </ul>
       )}
-    </main>
+    </div>
   );
 }
 

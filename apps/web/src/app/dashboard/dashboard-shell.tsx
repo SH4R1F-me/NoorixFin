@@ -135,6 +135,7 @@ export default function DashboardShell({
 
       {/* Sidebar */}
       <aside
+        id="dashboard-navigation"
         className="nf-sidebar"
         // A data attribute rather than a second class: the open state is what
         // the media query keys on, and expressing it as data keeps the class
@@ -292,6 +293,8 @@ export default function DashboardShell({
 
       {/* Main Content */}
       <main
+        id="main-content"
+        tabIndex={-1}
         className="nf-main"
         style={{
           ...styles.main,
@@ -319,8 +322,14 @@ export default function DashboardShell({
         </a>
         {/* Mobile header */}
         <div className="nf-mobile-header" style={styles.mobileHeader}>
-          <button onClick={() => setMobileOpen(true)} style={styles.menuBtn}>
-            <Menu size={22} />
+          <button
+            onClick={() => setMobileOpen(true)}
+            style={styles.menuBtn}
+            aria-label="Open navigation menu"
+            aria-expanded={mobileOpen}
+            aria-controls="dashboard-navigation"
+          >
+            <Menu size={22} aria-hidden="true" />
           </button>
           <div style={styles.mobileLogoContainer}>
             <div style={{ ...styles.logoIcon, width: 32, height: 32 }}>

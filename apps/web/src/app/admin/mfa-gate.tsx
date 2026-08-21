@@ -62,7 +62,7 @@ export default function MfaGate({
   }
 
   return (
-    <main style={s.page}>
+    <main id="main-content" tabIndex={-1} style={s.page}>
       <div style={s.card}>
         <div style={s.icon}>
           <ShieldCheck size={28} color="#f59e0b" aria-hidden="true" />

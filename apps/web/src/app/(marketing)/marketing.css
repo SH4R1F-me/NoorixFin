@@ -25,6 +25,16 @@
   font-family: var(--font-ui);
 }
 
+@media (prefers-reduced-motion: reduce) {
+  /* Framer's initial inline opacity can otherwise survive until an off-screen
+     element intersects. Reduced motion means content is in its final readable
+     state immediately, even when the preference changes after navigation. */
+  .m-reveal {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}
+
 /* Bengali locale: switch to Hind Siliguri, matching globals.css [lang="bn"] */
 [lang='bn'] .m-page,
 .m-page.bn-text,

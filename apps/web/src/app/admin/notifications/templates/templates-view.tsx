@@ -242,7 +242,7 @@ const s: Record<string, React.CSSProperties> = {
     padding: '.45rem',
   },
   empty: {
-    color: '#78716c',
+    color: '#a8a29e',
     border: '1px dashed #44403c',
     padding: '2rem',
     textAlign: 'center',

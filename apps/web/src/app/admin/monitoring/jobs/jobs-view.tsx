@@ -147,15 +147,20 @@ export default function JobsView({
         {jobs.length === 0 ? (
           <EmptyState text={t('admin.jobs.noJobs')} />
         ) : (
-          <div style={s.tableWrap}>
+          <div
+            style={s.tableWrap}
+            role="region"
+            aria-label="Scheduled jobs table, horizontally scrollable"
+            tabIndex={0}
+          >
             <table style={s.table}>
               <thead>
                 <tr>
-                  <th style={s.th}>{t('admin.jobs.jobName')}</th>
-                  <th style={s.th}>{t('admin.jobs.schedule')}</th>
-                  <th style={s.th}>{t('admin.jobs.state')}</th>
-                  <th style={s.th}>{t('admin.jobs.nextRun')}</th>
-                  <th style={s.th}>Command</th>
+                  <th scope="col" style={s.th}>{t('admin.jobs.jobName')}</th>
+                  <th scope="col" style={s.th}>{t('admin.jobs.schedule')}</th>
+                  <th scope="col" style={s.th}>{t('admin.jobs.state')}</th>
+                  <th scope="col" style={s.th}>{t('admin.jobs.nextRun')}</th>
+                  <th scope="col" style={s.th}>Command</th>
                 </tr>
               </thead>
               <tbody>

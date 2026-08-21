@@ -48,6 +48,7 @@ export function AdminTableSkeleton({ rows = 8, title = 160 }: { rows?: number; t
   return (
     <div style={panel}>
       <div
+        className="nf-admin-skeleton-row"
         style={{
           padding: '0.875rem 1.25rem',
           borderBottom: '1px solid #292524',
@@ -61,6 +62,7 @@ export function AdminTableSkeleton({ rows = 8, title = 160 }: { rows?: number; t
       {Array.from({ length: rows }).map((_, i) => (
         <div
           key={i}
+          className="nf-admin-skeleton-row"
           style={{
             display: 'flex',
             alignItems: 'center',

@@ -74,7 +74,7 @@ export default function LoginForm({ next }: { next?: string }) {
   };
 
   return (
-    <div style={styles.container}>
+    <main id="main-content" tabIndex={-1} style={styles.container}>
       {/* Background gradient mesh */}
       <div style={styles.bgMesh} />
 
@@ -287,7 +287,7 @@ export default function LoginForm({ next }: { next?: string }) {
           </div>
         </div>
       </div>
-    </div>
+    </main>
   );
 }
 

@@ -157,14 +157,14 @@ export default function SessionsView({
               <table style={s.table}>
                 <thead>
                   <tr>
-                    <th style={s.th}>{t('admin.security.platform')}</th>
-                    <th style={s.th}>User ID</th>
-                    <th style={s.th}>{t('admin.security.deviceName')}</th>
-                    <th style={s.th}>{t('admin.security.appVersion')}</th>
-                    <th style={s.th}>{t('admin.security.lastSeen')}</th>
-                    <th style={s.th}>{t('admin.security.firstSeen')}</th>
-                    <th style={s.th}>IP</th>
-                    <th style={{ ...s.th, textAlign: 'right' }}>Actions</th>
+                    <th scope="col" style={s.th}>{t('admin.security.platform')}</th>
+                    <th scope="col" style={s.th}>User ID</th>
+                    <th scope="col" style={s.th}>{t('admin.security.deviceName')}</th>
+                    <th scope="col" style={s.th}>{t('admin.security.appVersion')}</th>
+                    <th scope="col" style={s.th}>{t('admin.security.lastSeen')}</th>
+                    <th scope="col" style={s.th}>{t('admin.security.firstSeen')}</th>
+                    <th scope="col" style={s.th}>IP</th>
+                    <th scope="col" style={{ ...s.th, textAlign: 'right' }}>Actions</th>
                   </tr>
                 </thead>
                 <tbody>

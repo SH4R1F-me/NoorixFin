@@ -21,7 +21,7 @@ export default function ForgotPasswordForm() {
   };
 
   return (
-    <div style={styles.container}>
+    <main id="main-content" tabIndex={-1} style={styles.container}>
       <div style={styles.card}>
         <Link href="/auth/login" style={styles.back}>
           <ArrowLeft size={16} />
@@ -67,7 +67,7 @@ export default function ForgotPasswordForm() {
           </form>
         )}
       </div>
-    </div>
+    </main>
   );
 }
 

@@ -293,7 +293,7 @@ const s: Record<string, React.CSSProperties> = {
     alignItems: 'flex-start',
     marginBottom: '1rem',
   },
-  help: { color: '#8f867d', fontSize: '.72rem', marginTop: 3 },
+  help: { color: '#b8b0a8', fontSize: '.72rem', marginTop: 3 },
   grid: { display: 'grid', gridTemplateColumns: 'repeat(2,minmax(0,1fr))', gap: '.75rem' },
   label: { display: 'grid', gap: 5, color: '#a09990', fontSize: '.72rem' },
   input: {
@@ -335,7 +335,7 @@ const s: Record<string, React.CSSProperties> = {
     border: '1px dashed #44403c',
     borderRadius: '.8rem',
     padding: '2rem',
-    color: '#78716c',
+    color: '#a8a29e',
     textAlign: 'center',
   },
   card: {

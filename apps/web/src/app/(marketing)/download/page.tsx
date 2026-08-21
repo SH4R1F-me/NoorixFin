@@ -19,7 +19,7 @@ export default async function DownloadPage() {
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000';
   const installUrl = `${siteUrl.replace(/\/$/, '')}/download`;
   return (
-    <main>
+    <div>
       <section className="m-section m-download-hero">
         <div className="m-download-copy">
           <div className="m-eyebrow">
@@ -138,6 +138,6 @@ export default async function DownloadPage() {
           </p>
         </div>
       </section>
-    </main>
+    </div>
   );
 }

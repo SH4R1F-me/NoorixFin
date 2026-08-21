@@ -109,6 +109,7 @@ export default async function AdminOverviewPage() {
       )}
 
       <div
+        className="nf-responsive-grid"
         style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))',

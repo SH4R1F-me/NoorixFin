@@ -160,16 +160,21 @@ export default function AlertsView({
         </Panel>
       ) : (
         <Panel title={t('admin.alerts.title')} padded={false}>
-          <div style={s.tableWrap}>
+          <div
+            style={s.tableWrap}
+            role="region"
+            aria-label="Alert history table, horizontally scrollable"
+            tabIndex={0}
+          >
             <table style={s.table}>
               <thead>
                 <tr>
-                  <th style={s.th}>{t('admin.alerts.alertKey')}</th>
-                  <th style={s.th}>Status</th>
-                  <th style={s.th}>{t('admin.alerts.lastValue')}</th>
-                  <th style={s.th}>{t('admin.alerts.lastFired')}</th>
-                  <th style={s.th}>{t('admin.alerts.lastResolved')}</th>
-                  <th style={s.th}>Action</th>
+                  <th scope="col" style={s.th}>{t('admin.alerts.alertKey')}</th>
+                  <th scope="col" style={s.th}>Status</th>
+                  <th scope="col" style={s.th}>{t('admin.alerts.lastValue')}</th>
+                  <th scope="col" style={s.th}>{t('admin.alerts.lastFired')}</th>
+                  <th scope="col" style={s.th}>{t('admin.alerts.lastResolved')}</th>
+                  <th scope="col" style={s.th}>Action</th>
                 </tr>
               </thead>
               <tbody>

@@ -292,7 +292,7 @@ export default function TransactionsView({
       padding: '1.5rem',
       marginBottom: '1.5rem',
     },
-    typeSel: { display: 'flex', gap: '0.5rem', marginBottom: '1.25rem' },
+    typeSel: { display: 'flex', gap: '0.5rem', marginBottom: '1.25rem', flexWrap: 'wrap' },
     typeBtn: {
       display: 'flex',
       alignItems: 'center',
@@ -385,7 +385,7 @@ export default function TransactionsView({
       fontFamily: 'inherit',
       width: '100%',
     },
-    fgr: { display: 'flex', gap: '0.25rem' },
+    fgr: { display: 'flex', gap: '0.25rem', flexWrap: 'wrap' },
     chip: {
       padding: '0.375rem 0.75rem',
       background: 'transparent',
@@ -1100,6 +1100,7 @@ export default function TransactionsView({
           return (
             <div
               key={tx.id}
+              className="nf-transaction-row"
               style={{
                 ...s.row,
                 borderBottom:

@@ -66,10 +66,10 @@ export default function AnomaliesView({
               <table style={s.table}>
                 <thead>
                   <tr>
-                    <th style={s.th}>{t('admin.security.platform')}</th>
-                    <th style={s.th}>{t('admin.security.deviceName')}</th>
-                    <th style={s.th}>IP</th>
-                    <th style={s.th}>{t('admin.security.firstSeen')}</th>
+                    <th scope="col" style={s.th}>{t('admin.security.platform')}</th>
+                    <th scope="col" style={s.th}>{t('admin.security.deviceName')}</th>
+                    <th scope="col" style={s.th}>IP</th>
+                    <th scope="col" style={s.th}>{t('admin.security.firstSeen')}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -103,8 +103,8 @@ export default function AnomaliesView({
               <table style={s.table}>
                 <thead>
                   <tr>
-                    <th style={s.th}>Actor ID</th>
-                    <th style={{ ...s.th, textAlign: 'right' }}>{t('admin.security.hitCount')}</th>
+                    <th scope="col" style={s.th}>Actor ID</th>
+                    <th scope="col" style={{ ...s.th, textAlign: 'right' }}>{t('admin.security.hitCount')}</th>
                   </tr>
                 </thead>
                 <tbody>

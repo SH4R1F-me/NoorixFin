@@ -301,7 +301,12 @@ export default function ReportsView({
           </h2>
           <p style={{ ...field.meta, marginBottom: '0.85rem' }}>{t('reports.chartTableNote')}</p>
 
-          <div style={{ overflowX: 'auto' }}>
+          <div
+            style={{ overflowX: 'auto' }}
+            role="region"
+            aria-label={`${t('reports.categoryBreakdown')} table, horizontally scrollable`}
+            tabIndex={0}
+          >
             <table style={styles.table}>
               <caption style={styles.caption}>
                 {t('reports.categoryBreakdown')} — {report.period_from} → {report.period_to}
@@ -401,7 +406,12 @@ function TimeSeriesTable({
       <h2 id={`${heading.replace(/\s/g, '-')}-heading`} style={styles.sectionTitle}>
         {heading}
       </h2>
-      <div style={{ overflowX: 'auto' }}>
+      <div
+        style={{ overflowX: 'auto' }}
+        role="region"
+        aria-label={`${heading} table, horizontally scrollable`}
+        tabIndex={0}
+      >
         <table style={styles.table}>
           <thead>
             <tr>
