@@ -15,10 +15,10 @@ import {
   TouchableOpacity,
   ScrollView,
   TextInput,
-  SafeAreaView,
   ActivityIndicator,
   Alert,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useWorkspace } from '../src/lib/WorkspaceContext';
 import { listCategories, type CategoryRow } from '../src/repositories/categories';
@@ -36,8 +36,6 @@ const TYPE_LABELS: Record<TxnType, string> = {
   TRANSFER: 'Transfer',
 };
 
-const ENABLED_TYPES: TxnType[] = ['EXPENSE', 'INCOME'];
-
 const DIGITS = ['7', '8', '9', '4', '5', '6', '1', '2', '3', '.', '0', '⌫'];
 
 export default function AddTransactionModal() {
@@ -47,10 +45,12 @@ export default function AddTransactionModal() {
   const [amountStr, setAmountStr] = useState('0');
   const [note, setNote] = useState('');
   const [payee, setPayee] = useState('');
+  const [tags, setTags] = useState('');
   const [categories, setCategories] = useState<CategoryRow[]>([]);
   const [accounts, setAccounts] = useState<AccountRow[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedAccount, setSelectedAccount] = useState<string | null>(null);
+  const [transferToAccount, setTransferToAccount] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [step, setStep] = useState<'amount' | 'details'>('amount');
   const selectedAccountRow = accounts.find((account) => account.id === selectedAccount);
@@ -73,7 +73,27 @@ export default function AddTransactionModal() {
       setAccounts(accts);
       if (!selectedAccount && accts[0]) setSelectedAccount(accts[0].id);
     });
-  }, [workspaceId, type]);
+  }, [workspaceId, type, selectedAccount]);
+
+  useEffect(() => {
+    if (type !== 'TRANSFER' || !selectedAccountRow) return;
+    const destination = accounts.find(
+      (account) =>
+        account.id !== selectedAccountRow.id &&
+        account.currency_code === selectedAccountRow.currency_code,
+    );
+    if (
+      !transferToAccount ||
+      transferToAccount === selectedAccountRow.id ||
+      !accounts.some(
+        (account) =>
+          account.id === transferToAccount &&
+          account.currency_code === selectedAccountRow.currency_code,
+      )
+    ) {
+      setTransferToAccount(destination?.id ?? null);
+    }
+  }, [accounts, selectedAccountRow, transferToAccount, type]);
 
   const handleDigit = useCallback(
     (digit: string) => {
@@ -94,11 +114,8 @@ export default function AddTransactionModal() {
 
   const handleSave = useCallback(async () => {
     if (!workspaceId || !selectedAccount) return;
-    if (type === 'TRANSFER') {
-      Alert.alert(
-        'Transfer unavailable',
-        'Choose Expense or Income until destination-account support is enabled.',
-      );
+    if (type === 'TRANSFER' && !transferToAccount) {
+      Alert.alert('Destination required', 'Choose a different account with the same currency.');
       return;
     }
 
@@ -125,8 +142,10 @@ export default function AddTransactionModal() {
         account_id: selectedAccount,
         currency_code: currencyCode,
         category_id: selectedCategory ?? undefined,
+        transfer_to_account_id: type === 'TRANSFER' ? transferToAccount! : undefined,
         payee: payee.trim() || undefined,
         note: note.trim() || undefined,
+        tags: tags.split(',').map((tag) => tag.trim()).filter(Boolean),
       });
       router.back();
     } catch (e) {
@@ -140,8 +159,10 @@ export default function AddTransactionModal() {
     amountStr,
     type,
     selectedCategory,
+    transferToAccount,
     payee,
     note,
+    tags,
     router,
     currencyCode,
   ]);
@@ -165,26 +186,19 @@ export default function AddTransactionModal() {
       {/* Type selector */}
       <View style={styles.typeRow}>
         {(Object.keys(TYPE_LABELS) as TxnType[]).map((t) => {
-          const disabled = !ENABLED_TYPES.includes(t);
           return (
             <TouchableOpacity
               key={t}
               onPress={() => setType(t)}
-              disabled={disabled}
               accessibilityRole="button"
-              accessibilityState={{ selected: type === t, disabled }}
-              accessibilityHint={
-                disabled ? 'Destination account support is not enabled yet' : undefined
-              }
+              accessibilityState={{ selected: type === t }}
               style={[
                 styles.typeChip,
                 type === t && styles.typeChipActive,
-                disabled && styles.typeChipDisabled,
               ]}
             >
               <Text style={[styles.typeText, type === t && styles.typeTextActive]}>
                 {TYPE_LABELS[t]}
-                {disabled ? ' — unavailable' : ''}
               </Text>
             </TouchableOpacity>
           );
@@ -278,7 +292,9 @@ export default function AddTransactionModal() {
 
           {/* Account */}
           <View style={styles.fieldGroup}>
-            <Text style={styles.fieldLabel}>Account</Text>
+            <Text style={styles.fieldLabel}>
+              {type === 'TRANSFER' ? 'From account' : 'Account'}
+            </Text>
             {accounts.map((acct) => (
               <TouchableOpacity
                 key={acct.id}
@@ -294,6 +310,43 @@ export default function AddTransactionModal() {
             ))}
           </View>
 
+          {type === 'TRANSFER' && (
+            <View style={styles.fieldGroup}>
+              <Text style={styles.fieldLabel}>To account</Text>
+              {accounts
+                .filter(
+                  (account) =>
+                    account.id !== selectedAccount && account.currency_code === currencyCode,
+                )
+                .map((account) => (
+                  <TouchableOpacity
+                    key={account.id}
+                    accessibilityRole="radio"
+                    accessibilityState={{ selected: transferToAccount === account.id }}
+                    onPress={() => setTransferToAccount(account.id)}
+                    style={[
+                      styles.acctRow,
+                      transferToAccount === account.id && styles.acctRowActive,
+                    ]}
+                  >
+                    <View style={styles.acctDot} />
+                    <Text style={styles.acctName}>{account.name}</Text>
+                    {transferToAccount === account.id && (
+                      <Check size={16} color={Colors.accent} strokeWidth={2.5} />
+                    )}
+                  </TouchableOpacity>
+                ))}
+              {!accounts.some(
+                (account) =>
+                  account.id !== selectedAccount && account.currency_code === currencyCode,
+              ) && (
+                <Text style={styles.transferHint}>
+                  Create another {currencyCode} account before making a transfer.
+                </Text>
+              )}
+            </View>
+          )}
+
           {/* Note */}
           <View style={styles.fieldGroup}>
             <Text style={styles.fieldLabel}>Note (optional)</Text>
@@ -308,11 +361,28 @@ export default function AddTransactionModal() {
             />
           </View>
 
+          <View style={styles.fieldGroup}>
+            <Text style={styles.fieldLabel}>Tags (comma separated)</Text>
+            <TextInput
+              accessibilityLabel="Tags, comma separated"
+              style={styles.fieldInput}
+              placeholder="groceries, weekly"
+              placeholderTextColor={Colors.textFaint}
+              value={tags}
+              onChangeText={setTags}
+              autoCapitalize="none"
+            />
+          </View>
+
           {/* Save */}
           <TouchableOpacity
             onPress={handleSave}
-            disabled={saving || !selectedAccount}
-            style={[styles.saveBtn, (saving || !selectedAccount) && styles.saveBtnDisabled]}
+            disabled={saving || !selectedAccount || (type === 'TRANSFER' && !transferToAccount)}
+            style={[
+              styles.saveBtn,
+              (saving || !selectedAccount || (type === 'TRANSFER' && !transferToAccount)) &&
+                styles.saveBtnDisabled,
+            ]}
           >
             {saving ? (
               <ActivityIndicator color="#fff" size="small" />
@@ -362,7 +432,6 @@ const styles = StyleSheet.create({
     borderColor: Colors.border,
   },
   typeChipActive: { backgroundColor: Colors.accent, borderColor: Colors.accent },
-  typeChipDisabled: { opacity: 0.45 },
   typeText: { fontSize: 13, color: Colors.textDim, fontWeight: '600' },
   typeTextActive: { color: '#000' },
 
@@ -459,6 +528,7 @@ const styles = StyleSheet.create({
   acctRowActive: { borderColor: Colors.accent },
   acctDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: Colors.accent },
   acctName: { ...Typography.body, flex: 1 },
+  transferHint: { ...Typography.caption, color: Colors.warn, lineHeight: 18 },
 
   saveBtn: {
     backgroundColor: Colors.accent,

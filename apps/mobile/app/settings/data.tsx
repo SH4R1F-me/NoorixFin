@@ -6,15 +6,17 @@ import {
   View,
   Text,
   StyleSheet,
-  SafeAreaView,
   ScrollView,
   TouchableOpacity,
   ActivityIndicator,
   Alert,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { apiFetch } from '../../src/lib/api';
 import { Colors, Typography, Spacing, Radius } from '../../src/lib/theme';
 import { Download, Trash2, Shield } from 'lucide-react-native';
+import { File, Paths } from 'expo-file-system';
+import * as Sharing from 'expo-sharing';
 
 export default function DataPrivacyScreen() {
   const [exporting, setExporting] = useState(false);
@@ -22,13 +24,24 @@ export default function DataPrivacyScreen() {
   async function handleExport() {
     setExporting(true);
     try {
-      await apiFetch('/me/export');
+      const exported = await apiFetch('/me/export');
+      if (!(await Sharing.isAvailableAsync())) {
+        throw new Error('The system share sheet is unavailable on this device.');
+      }
+      const stamp = new Date().toISOString().replaceAll(':', '-');
+      const file = new File(Paths.cache, `noorixfin-export-${stamp}.json`);
+      file.create({ overwrite: true, intermediates: true });
+      file.write(JSON.stringify(exported, null, 2));
+      await Sharing.shareAsync(file.uri, {
+        dialogTitle: 'Save or share NoorixFin export',
+        mimeType: 'application/json',
+        UTI: 'public.json',
+      });
+    } catch (error) {
       Alert.alert(
-        'Export Ready',
-        'Your export was generated successfully. File sharing will be available from this screen in the next recovery phase.',
+        'Export failed',
+        error instanceof Error ? error.message : 'Failed to create your export file.',
       );
-    } catch (e) {
-      Alert.alert('Error', 'Failed to start export.');
     } finally {
       setExporting(false);
     }

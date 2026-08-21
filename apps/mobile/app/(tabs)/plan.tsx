@@ -10,24 +10,25 @@ import {
   StyleSheet,
   RefreshControl,
   TouchableOpacity,
-  SafeAreaView,
   ActivityIndicator,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { apiFetch } from '../../src/lib/api';
 import { useWorkspace } from '../../src/lib/WorkspaceContext';
 import { Colors, Typography, Spacing, Radius, Shadow } from '../../src/lib/theme';
 import { BarChart3, Target, Repeat2, Calendar } from 'lucide-react-native';
+import { useTranslation } from 'react-i18next';
 
 interface BudgetStatus {
   visible: boolean;
-  has_budget: boolean;
+  has_budget?: boolean;
   budget_id?: string;
-  name: string;
-  cadence: string;
-  planned_total: number;
-  spent_total: number;
-  lines: Array<{
+  name?: string;
+  cadence?: string;
+  planned_total?: number;
+  spent_total?: number;
+  lines?: Array<{
     line_id: string;
     name: string;
     planned_minor: number;
@@ -49,12 +50,8 @@ interface PlanData {
   goals: Goal[];
 }
 
-interface GoalsOverview {
-  visible: boolean;
-  goals: Goal[];
-}
-
 export default function PlanScreen() {
+  const { t } = useTranslation();
   const { workspaceId } = useWorkspace();
   const router = useRouter();
   const [data, setData] = useState<PlanData>({ budget: null, goals: [] });
@@ -72,8 +69,8 @@ export default function PlanScreen() {
       setError(null);
       try {
         const [budgetRes, goalRes] = await Promise.all([
-          apiFetch<BudgetStatus>(`/workspaces/${workspaceId}/budget`),
-          apiFetch<GoalsOverview>(`/workspaces/${workspaceId}/goals`),
+          apiFetch(`/workspaces/${workspaceId}/budget`),
+          apiFetch(`/workspaces/${workspaceId}/goals`),
         ]);
         setData({ budget: budgetRes.has_budget ? budgetRes : null, goals: goalRes.goals ?? [] });
       } catch (e) {
@@ -107,7 +104,7 @@ export default function PlanScreen() {
       >
         <View style={styles.header}>
           <BarChart3 size={22} color={Colors.accent} strokeWidth={2} />
-          <Text style={styles.title}>Plan</Text>
+          <Text style={styles.title}>{t('mobile.tabs.plan')}</Text>
         </View>
 
         {loading ? (
@@ -121,19 +118,22 @@ export default function PlanScreen() {
             {/* Budgets */}
             <View style={styles.section}>
               <View style={styles.sectionHeader}>
-                <Text style={styles.sectionTitle}>Budgets</Text>
-                <TouchableOpacity>
-                  <Text style={styles.sectionLink}>See all</Text>
+                <Text style={styles.sectionTitle}>{t('budgets.title')}</Text>
+                <TouchableOpacity
+                  accessibilityRole="link"
+                  onPress={() => router.push('/budgets')}
+                >
+                  <Text style={styles.sectionLink}>{t('dashboard.viewAll')}</Text>
                 </TouchableOpacity>
               </View>
               {!data.budget ? (
                 <View style={styles.emptyCard}>
-                  <Text style={styles.emptyText}>No budgets yet.</Text>
+                  <Text style={styles.emptyText}>{t('budgets.noBudget')}</Text>
                 </View>
               ) : (
                 [data.budget].map((budget) => {
-                  const totalBudgeted = budget.planned_total;
-                  const totalActual = budget.spent_total;
+                  const totalBudgeted = budget.planned_total ?? 0;
+                  const totalActual = budget.spent_total ?? 0;
                   const pct = totalBudgeted > 0 ? (totalActual / totalBudgeted) * 100 : 0;
                   const color = pct >= 100 ? Colors.error : pct >= 80 ? Colors.warn : Colors.ok;
 
@@ -166,14 +166,17 @@ export default function PlanScreen() {
             {/* Goals */}
             <View style={styles.section}>
               <View style={styles.sectionHeader}>
-                <Text style={styles.sectionTitle}>Goals</Text>
-                <TouchableOpacity>
-                  <Text style={styles.sectionLink}>See all</Text>
+                <Text style={styles.sectionTitle}>{t('goals.title')}</Text>
+                <TouchableOpacity
+                  accessibilityRole="link"
+                  onPress={() => router.push('/goals')}
+                >
+                  <Text style={styles.sectionLink}>{t('dashboard.viewAll')}</Text>
                 </TouchableOpacity>
               </View>
               {data.goals.length === 0 ? (
                 <View style={styles.emptyCard}>
-                  <Text style={styles.emptyText}>No savings goals yet.</Text>
+                  <Text style={styles.emptyText}>{t('goals.noGoals')}</Text>
                 </View>
               ) : (
                 data.goals.slice(0, 3).map((goal) => {
@@ -226,10 +229,15 @@ export default function PlanScreen() {
             {/* Quick nav */}
             <View style={styles.quickGrid}>
               {[
-                { icon: Repeat2, label: 'Recurring', hint: 'Rules' },
-                { icon: Calendar, label: 'Calendar', hint: 'Events' },
-              ].map(({ icon: Icon, label, hint }) => (
-                <TouchableOpacity key={label} style={styles.quickCard}>
+                { icon: Repeat2, label: t('nav.recurring'), hint: t('calendar.recurringRules'), route: '/recurring' as const },
+                { icon: Calendar, label: t('nav.calendar'), hint: t('calendar.upcoming'), route: '/calendar' as const },
+              ].map(({ icon: Icon, label, hint, route }) => (
+                <TouchableOpacity
+                  accessibilityRole="link"
+                  key={label}
+                  onPress={() => router.push(route)}
+                  style={styles.quickCard}
+                >
                   <Icon size={22} color={Colors.accent} strokeWidth={2} />
                   <Text style={styles.quickLabel}>{label}</Text>
                   <Text style={styles.quickHint}>{hint}</Text>

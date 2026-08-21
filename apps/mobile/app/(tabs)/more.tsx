@@ -8,14 +8,14 @@ import {
   ScrollView,
   StyleSheet,
   TouchableOpacity,
-  SafeAreaView,
   RefreshControl,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { formatAmount, getCurrency } from '@noorixfin/money';
 import { listAccounts, type AccountRow } from '../../src/repositories/accounts';
 import { useWorkspace } from '../../src/lib/WorkspaceContext';
-import { Colors, Typography, Spacing, Radius, Shadow } from '../../src/lib/theme';
+import { Colors, Typography, Spacing, Radius } from '../../src/lib/theme';
 import {
   Wallet,
   BarChart2,
@@ -26,7 +26,10 @@ import {
   Bell,
   LogOut,
   User,
+  AlertTriangle,
 } from 'lucide-react-native';
+import { useTranslation } from 'react-i18next';
+import { isSupportedLocale, type SupportedLanguage } from '@noorixfin/i18n';
 
 function SectionHeader({ title }: { title: string }) {
   return <Text style={styles.sectionTitle}>{title}</Text>;
@@ -60,6 +63,10 @@ function MenuItem({
 }
 
 export default function MoreScreen() {
+  const { t, i18n } = useTranslation();
+  const locale: SupportedLanguage = isSupportedLocale(i18n.resolvedLanguage)
+    ? i18n.resolvedLanguage
+    : 'bn';
   const { workspaceId, workspaceName } = useWorkspace();
   const router = useRouter();
   const [accounts, setAccounts] = useState<AccountRow[]>([]);
@@ -110,18 +117,28 @@ export default function MoreScreen() {
             <Text style={styles.wsIconText}>{(workspaceName || 'W').charAt(0)}</Text>
           </View>
           <View>
-            <Text style={styles.wsLabel}>Workspace</Text>
+            <Text style={styles.wsLabel}>{t('workspace.personal')}</Text>
             <Text style={styles.wsName}>{workspaceName || 'My Workspace'}</Text>
           </View>
         </View>
 
         {/* Accounts */}
-        <SectionHeader title="Accounts" />
+        <View style={styles.sectionHeadingRow}>
+          <SectionHeader title={t('accounts.title')} />
+          <TouchableOpacity
+            accessibilityRole="link"
+            accessibilityLabel="Manage accounts"
+            onPress={() => router.push('/accounts')}
+            style={styles.manageLink}
+          >
+            <Text style={styles.manageLinkText}>{t('mobile.management.manage')}</Text>
+          </TouchableOpacity>
+        </View>
         {loading ? (
           [1, 2, 3].map((i) => <View key={i} style={styles.accountSkeleton} />)
         ) : accounts.length === 0 ? (
           <View style={styles.emptyCard}>
-            <Text style={styles.emptyText}>No accounts found.</Text>
+            <Text style={styles.emptyText}>{t('accounts.noAccounts')}</Text>
           </View>
         ) : (
           Object.entries(accountsByClass).map(([cls, accts]) => (
@@ -129,7 +146,7 @@ export default function MoreScreen() {
               <Text style={styles.accountClass}>{cls}</Text>
               {accts.map((acct) => {
                 const sym = getCurrency(acct.currency_code).symbol;
-                const bal = `${sym}${formatAmount(Math.abs(acct.balance_minor), acct.currency_code, 'en')}`;
+                const bal = `${sym}${formatAmount(Math.abs(acct.balance_minor), acct.currency_code, locale)}`;
                 const isNeg = acct.balance_minor < 0;
                 return (
                   <View key={acct.id} style={styles.accountRow}>
@@ -152,39 +169,51 @@ export default function MoreScreen() {
         )}
 
         {/* Reports */}
-        <SectionHeader title="Reports" />
+        <SectionHeader title={t('reports.title')} />
         <View style={styles.menuGroup}>
           <MenuItem
             icon={BarChart2}
-            label="Category Report"
-            subtitle="Spending by category"
-            onPress={() => {}}
+            label={t('reports.categoryBreakdown')}
+            subtitle={t('reports.subtitle')}
+            onPress={() => router.push('/reports')}
+          />
+          <MenuItem
+            icon={Wallet}
+            label={t('debts.title')}
+            subtitle={t('debts.subtitle')}
+            onPress={() => router.push('/debts')}
           />
         </View>
 
         {/* Settings */}
-        <SectionHeader title="Settings" />
+        <SectionHeader title={t('settings.title')} />
         <View style={styles.menuGroup}>
-          <MenuItem icon={User} label="Profile" onPress={() => router.push('/settings/profile')} />
+          <MenuItem
+            icon={AlertTriangle}
+            label={t('mobile.sync.issues')}
+            subtitle={t('mobile.sync.reviewRejected')}
+            onPress={() => router.push('/sync-issues')}
+          />
+          <MenuItem icon={User} label={t('settings.profile')} onPress={() => router.push('/settings/profile')} />
           <MenuItem
             icon={Bell}
-            label="Notifications"
+            label={t('settings.notifications')}
             subtitle="Inbox and delivery settings"
             onPress={() => router.push('/notifications')}
           />
           <MenuItem
             icon={ShieldCheck}
-            label="Security"
+            label={t('settings.security')}
             onPress={() => router.push('/settings/security')}
           />
           <MenuItem
             icon={Database}
-            label="Data & Privacy"
+            label={`${t('settings.exportData')} / ${t('settings.privacy')}`}
             onPress={() => router.push('/settings/data')}
           />
           <MenuItem
             icon={Settings}
-            label="Preferences"
+            label={t('settings.preferences')}
             onPress={() => router.push('/settings/preferences')}
           />
         </View>
@@ -192,7 +221,7 @@ export default function MoreScreen() {
         <View style={[styles.menuGroup, { marginTop: Spacing.sm }]}>
           <MenuItem
             icon={LogOut}
-            label="Sign Out"
+            label={t('auth.signOut')}
             color={Colors.error}
             onPress={() => router.push('/settings/sign-out')}
           />
@@ -230,6 +259,9 @@ const styles = StyleSheet.create({
   wsName: { ...Typography.body, fontWeight: '700', marginTop: 2 },
 
   sectionTitle: { ...Typography.label, marginBottom: Spacing.sm, marginTop: Spacing.md },
+  sectionHeadingRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  manageLink: { minHeight: 44, justifyContent: 'center', paddingHorizontal: Spacing.sm, marginTop: Spacing.sm },
+  manageLinkText: { ...Typography.caption, color: Colors.accent, fontWeight: '700' },
 
   accountGroup: { marginBottom: Spacing.xs },
   accountClass: {

@@ -7,6 +7,7 @@ import {
   IsOptional,
   IsIn,
   IsArray,
+  ArrayMaxSize,
   IsUUID,
   Length,
   MaxLength,
@@ -95,6 +96,15 @@ export class TagNameDto {
   name!: string;
 }
 
+export class UpdateTransactionTagsDto {
+  @ApiProperty({ type: [String], example: ['groceries', 'weekly'] })
+  @IsArray()
+  @ArrayMaxSize(20)
+  @IsString({ each: true })
+  @MaxLength(40, { each: true })
+  tags!: string[];
+}
+
 export class CreateAttachmentDto {
   @ApiProperty({
     description:
@@ -131,16 +141,49 @@ export class TransactionResponseDto {
   @ApiProperty() entry_type!: string;
   @ApiProperty() occurred_at!: string;
   @ApiProperty() local_date!: string;
-  @ApiPropertyOptional() payee?: string;
-  @ApiPropertyOptional() note?: string;
+  @ApiPropertyOptional({ type: String, nullable: true }) payee?: string | null;
+  @ApiPropertyOptional({ type: String, nullable: true }) note?: string | null;
   @ApiProperty() status!: string;
   @ApiProperty() source!: string;
   @ApiProperty() created_by!: string;
   @ApiProperty() version!: number;
   @ApiProperty() created_at!: string;
-  @ApiPropertyOptional() postings?: PostingResponseDto[];
+  @ApiPropertyOptional({ type: () => [PostingResponseDto] }) postings?: PostingResponseDto[];
   @ApiPropertyOptional({ type: () => [TransactionAttachmentResponseDto] })
   attachments?: TransactionAttachmentResponseDto[];
+  @ApiPropertyOptional({ type: [String] }) tags?: string[];
+  @ApiPropertyOptional() reversed?: boolean;
+  @ApiPropertyOptional() amount_minor?: number;
+  @ApiPropertyOptional({ type: String, nullable: true }) currency_code?: string | null;
+  @ApiPropertyOptional({ type: [String] }) ledger_account_ids?: string[];
+}
+
+export class TransactionListItemResponseDto {
+  @ApiProperty() id!: string;
+  @ApiProperty() workspace_id!: string;
+  @ApiProperty() entry_type!: string;
+  @ApiProperty() occurred_at!: string;
+  @ApiProperty() local_date!: string;
+  @ApiProperty({ type: String, nullable: true }) payee!: string | null;
+  @ApiProperty({ type: String, nullable: true }) note!: string | null;
+  @ApiProperty() status!: string;
+  @ApiProperty() source!: string;
+  @ApiProperty() created_by!: string;
+  @ApiProperty() version!: number;
+  @ApiProperty() created_at!: string;
+  @ApiProperty() amount_minor!: number;
+  @ApiProperty({ type: String, nullable: true }) currency_code!: string | null;
+  @ApiProperty({ type: [String] }) ledger_account_ids!: string[];
+  @ApiProperty({ type: [String] }) tags!: string[];
+  @ApiProperty({ type: () => [TransactionAttachmentResponseDto] })
+  attachments!: TransactionAttachmentResponseDto[];
+  @ApiProperty() reversed!: boolean;
+}
+
+export class TransactionPageResponseDto {
+  @ApiProperty({ type: [TransactionListItemResponseDto] }) items!: TransactionListItemResponseDto[];
+  @ApiProperty({ type: String, nullable: true }) next_cursor!: string | null;
+  @ApiProperty() has_more!: boolean;
 }
 
 export class TransactionAttachmentResponseDto {
@@ -157,4 +200,23 @@ export class PostingResponseDto {
   @ApiProperty() debit_minor!: string;
   @ApiProperty() credit_minor!: string;
   @ApiProperty() currency_code!: string;
+}
+
+export class TagResponseDto {
+  @ApiProperty() id!: string;
+  @ApiProperty() name!: string;
+  @ApiProperty() usage_count!: number;
+}
+
+export class SignedAttachmentUrlResponseDto {
+  @ApiProperty() url!: string;
+  @ApiProperty() expires_in!: number;
+}
+
+export class DeletedAttachmentResponseDto {
+  @ApiProperty() deleted!: boolean;
+}
+
+export class DeletedTagResponseDto {
+  @ApiProperty() id!: string;
 }

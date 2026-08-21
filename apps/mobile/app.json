@@ -26,17 +26,34 @@
     },
     "plugins": [
       "expo-router",
-      "expo-sqlite",
-      "expo-secure-store",
+      [
+        "expo-sqlite",
+        {
+          "useSQLCipher": true
+        }
+      ],
+      [
+        "expo-secure-store",
+        {
+          "configureAndroidBackup": true,
+          "faceIDPermission": "Allow NoorixFin to unlock your encrypted financial data."
+        }
+      ],
       "expo-localization",
-      "expo-local-authentication",
+      [
+        "expo-local-authentication",
+        {
+          "faceIDPermission": "Allow NoorixFin to unlock your encrypted financial data."
+        }
+      ],
       [
         "expo-notifications",
         {
           "color": "#10b981",
           "defaultChannel": "system"
         }
-      ]
+      ],
+      "expo-sharing"
     ]
   }
 }

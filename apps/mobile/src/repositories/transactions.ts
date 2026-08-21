@@ -69,6 +69,7 @@ export interface CreateTransactionInput {
   transfer_to_account_id?: string;
   payee?: string;
   note?: string;
+  tags?: string[];
   occurred_at?: string;
 }
 
@@ -124,6 +125,7 @@ export async function createTransaction(
     transfer_to_account_id: input.transfer_to_account_id,
     payee: input.payee,
     note: input.note,
+    tags: input.tags,
     occurred_at: occurredAt,
   });
 

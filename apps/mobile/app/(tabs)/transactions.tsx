@@ -5,9 +5,10 @@
 import { useCallback, useState } from 'react';
 import {
   View, Text, FlatList, StyleSheet, RefreshControl,
-  TouchableOpacity, TextInput, SafeAreaView,
+  TouchableOpacity, TextInput,
 } from 'react-native';
-import { useFocusEffect } from 'expo-router';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useFocusEffect, useRouter } from 'expo-router';
 import { formatAmount, getCurrency } from '@noorixfin/money';
 import { listRecent, type TransactionRow } from '../../src/repositories/transactions';
 import { useSyncTriggers } from '../../src/sync/useSyncTriggers';
@@ -15,14 +16,16 @@ import { useWorkspace } from '../../src/lib/WorkspaceContext';
 import { TransactionListSkeleton } from '../../src/components/Skeleton';
 import { Colors, Typography, Spacing, Radius } from '../../src/lib/theme';
 import { Search, ArrowLeftRight } from 'lucide-react-native';
+import { useTranslation } from 'react-i18next';
+import { intlLocale, isSupportedLocale, type SupportedLanguage } from '@noorixfin/i18n';
 
 type FilterType = '' | 'INCOME' | 'EXPENSE' | 'TRANSFER';
 
-const FILTERS: { label: string; value: FilterType }[] = [
-  { label: 'All', value: '' },
-  { label: 'Income', value: 'INCOME' },
-  { label: 'Expense', value: 'EXPENSE' },
-  { label: 'Transfer', value: 'TRANSFER' },
+const FILTERS: { key: string; value: FilterType }[] = [
+  { key: 'mobile.common.all', value: '' },
+  { key: 'transactions.income', value: 'INCOME' },
+  { key: 'transactions.expense', value: 'EXPENSE' },
+  { key: 'transactions.transfer', value: 'TRANSFER' },
 ];
 
 const STATUS_COLOR: Record<string, string> = {
@@ -31,6 +34,11 @@ const STATUS_COLOR: Record<string, string> = {
 };
 
 export default function TransactionsScreen() {
+  const { t, i18n } = useTranslation();
+  const router = useRouter();
+  const locale: SupportedLanguage = isSupportedLocale(i18n.resolvedLanguage)
+    ? i18n.resolvedLanguage
+    : 'bn';
   const { workspaceId } = useWorkspace();
   const [rows, setRows] = useState<TransactionRow[]>([]);
   const [filtered, setFiltered] = useState<TransactionRow[]>([]);
@@ -40,9 +48,11 @@ export default function TransactionsScreen() {
   const { state, pending, syncNow } = useSyncTriggers(workspaceId || null);
 
   const load = useCallback(async () => {
-    if (!workspaceId) { setLoading(false); return; }
-    setRows(await listRecent(workspaceId, 200));
+    if (!workspaceId) { setLoading(false); return []; }
+    const fresh = await listRecent(workspaceId, 200);
+    setRows(fresh);
     setLoading(false);
+    return fresh;
   }, [workspaceId]);
 
   useFocusEffect(useCallback(() => { void load(); }, [load]));
@@ -69,19 +79,26 @@ export default function TransactionsScreen() {
   const onRefresh = useCallback(async () => {
     if (!workspaceId) return;
     await syncNow();
-    await load();
-    applyFilters(rows, search, filterType);
-  }, [syncNow, load, rows, search, filterType, workspaceId, applyFilters]);
+    const fresh = await load();
+    applyFilters(fresh, search, filterType);
+  }, [syncNow, load, search, filterType, workspaceId, applyFilters]);
 
   const displayRows = search || filterType ? filtered : rows;
 
   const renderItem = useCallback(({ item }: { item: TransactionRow }) => {
     const sym = getCurrency(item.currency_code).symbol;
-    const amount = `${sym}${formatAmount(item.amount_minor, item.currency_code, 'en')}`;
+    const amount = `${sym}${formatAmount(item.amount_minor, item.currency_code, locale)}`;
     const isIncome = item.entry_type === 'INCOME';
 
     return (
-      <View style={styles.row}>
+      <TouchableOpacity
+        accessibilityRole="button"
+        accessibilityLabel={`${item.payee ?? item.entry_type}, ${amount}`}
+        accessibilityHint={item.is_pending === 1 ? 'This transaction is waiting to sync' : 'Opens transaction details'}
+        disabled={item.is_pending === 1}
+        onPress={() => router.push(`/transactions/${item.id}`)}
+        style={styles.row}
+      >
         <View style={[styles.rowIcon, { backgroundColor: isIncome ? 'rgba(16,185,129,0.15)' : 'rgba(248,250,252,0.06)' }]}>
           <Text style={{ fontSize: 14, color: isIncome ? Colors.income : Colors.textDim }}>
             {isIncome ? '↑' : item.entry_type === 'TRANSFER' ? '⇄' : '↓'}
@@ -90,17 +107,21 @@ export default function TransactionsScreen() {
         <View style={{ flex: 1 }}>
           <Text style={styles.payee} numberOfLines={1}>{item.payee ?? item.entry_type}</Text>
           {item.note ? <Text style={styles.note} numberOfLines={1}>{item.note}</Text> : null}
-          <Text style={styles.date}>{item.local_date}</Text>
+          <Text style={styles.date}>
+            {new Date(item.occurred_at).toLocaleDateString(intlLocale[locale])}
+          </Text>
         </View>
         <View style={{ alignItems: 'flex-end' }}>
           <Text style={[styles.amount, { color: isIncome ? Colors.income : Colors.text }]}>
             {isIncome ? '+' : ''}{amount}
           </Text>
-          {item.is_pending === 1 && <Text style={styles.pending}>pending</Text>}
+          {item.is_pending === 1 && (
+            <Text style={styles.pending}>{t('mobile.transactions.pendingLabel')}</Text>
+          )}
         </View>
-      </View>
+      </TouchableOpacity>
     );
-  }, []);
+  }, [locale, router, t]);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -108,14 +129,20 @@ export default function TransactionsScreen() {
       <View style={styles.header}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: Spacing.sm }}>
           <ArrowLeftRight size={20} color={Colors.accent} strokeWidth={2} />
-          <Text style={styles.title}>Transactions</Text>
+          <Text style={styles.title}>{t('transactions.title')}</Text>
         </View>
         {/* Sync status */}
         <View style={styles.syncRow}>
           <View style={[styles.dot, { backgroundColor: STATUS_COLOR[state] ?? Colors.textFaint }]} />
           <Text style={styles.syncText}>
-            {state === 'IDLE' ? 'Synced' : state === 'SYNCING' ? 'Syncing…' : state === 'OFFLINE' ? 'Offline' : state}
-            {pending > 0 ? ` · ${pending} pending` : ''}
+            {state === 'IDLE'
+              ? t('mobile.sync.synced')
+              : state === 'SYNCING'
+                ? t('mobile.sync.syncing')
+                : state === 'OFFLINE'
+                  ? t('mobile.sync.offline')
+                  : state}
+            {pending > 0 ? ` · ${t('mobile.sync.pending', { count: pending })}` : ''}
           </Text>
         </View>
       </View>
@@ -125,7 +152,8 @@ export default function TransactionsScreen() {
         <Search size={16} color={Colors.textFaint} style={{ marginLeft: Spacing.sm }} />
         <TextInput
           style={styles.searchInput}
-          placeholder="Search by payee or note…"
+          placeholder={t('mobile.transactions.search')}
+          accessibilityLabel={t('mobile.transactions.search')}
           placeholderTextColor={Colors.textFaint}
           value={search}
           onChangeText={handleSearch}
@@ -135,14 +163,16 @@ export default function TransactionsScreen() {
 
       {/* Filter chips */}
       <View style={styles.filterRow}>
-        {FILTERS.map(({ label, value }) => (
+        {FILTERS.map(({ key, value }) => (
           <TouchableOpacity
             key={value}
+            accessibilityRole="button"
+            accessibilityState={{ selected: filterType === value }}
             onPress={() => handleFilter(value)}
             style={[styles.chip, filterType === value && styles.chipActive]}
           >
             <Text style={[styles.chipText, filterType === value && styles.chipTextActive]}>
-              {label}
+              {t(key)}
             </Text>
           </TouchableOpacity>
         ))}
@@ -168,7 +198,9 @@ export default function TransactionsScreen() {
           ListEmptyComponent={
             <View style={styles.emptyBox}>
               <Text style={styles.emptyText}>
-                {search || filterType ? 'No matching transactions.' : 'No transactions yet. Tap + to add one.'}
+                {search || filterType
+                  ? t('mobile.transactions.noMatching')
+                  : t('mobile.transactions.empty')}
               </Text>
             </View>
           }

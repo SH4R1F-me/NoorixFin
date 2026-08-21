@@ -12,7 +12,7 @@
 import type { SQLiteDatabase } from 'expo-sqlite';
 import { getDb } from '../db';
 import { apiFetch, ApiError } from '../lib/api';
-import type { ApiRuntimePathForMethod } from '@noorixfin/api-client';
+import type { ApiRuntimeRequestBody } from '@noorixfin/api-client';
 
 export type MutationKind =
   'CREATE_TRANSACTION' | 'REVERSE_TRANSACTION' | 'READ_NOTIFICATION' | 'READ_ALL_NOTIFICATIONS';
@@ -77,10 +77,44 @@ export async function listNeedingAttention(workspaceId: string): Promise<QueuedM
   );
 }
 
-/** Discard a parked mutation the user has chosen to abandon. */
+/**
+ * Discard a parked mutation and roll back its optimistic local projection.
+ * Deleting only the queue row would leave a rejected transaction visible
+ * forever even though it can never reach the server.
+ */
 export async function discard(id: string): Promise<void> {
   const db = await getDb();
-  await db.runAsync(`DELETE FROM _mutation_queue WHERE id = ?`, [id]);
+  await db.withTransactionAsync(async () => {
+    const mutation = await db.getFirstAsync<Pick<QueuedMutation, 'kind'>>(
+      `SELECT kind FROM _mutation_queue WHERE id = ? AND status = 'NEEDS_ATTENTION'`,
+      [id],
+    );
+    if (!mutation) return;
+
+    if (mutation.kind === 'CREATE_TRANSACTION') {
+      await db.runAsync(`DELETE FROM journal_entry_tags WHERE journal_entry_id = ?`, [id]);
+      await db.runAsync(
+        `DELETE FROM journal_entries
+          WHERE id = ? AND is_pending = 1
+            AND NOT EXISTS (
+              SELECT 1 FROM journal_postings WHERE journal_entry_id = journal_entries.id
+            )`,
+        [id],
+      );
+    }
+    await db.runAsync(`DELETE FROM _mutation_queue WHERE id = ?`, [id]);
+  });
+}
+
+/** Put a user-reviewed parked mutation back at the front of the retry queue. */
+export async function retry(id: string): Promise<void> {
+  const db = await getDb();
+  await db.runAsync(
+    `UPDATE _mutation_queue
+        SET status = 'PENDING', next_attempt_at = NULL, last_error = NULL
+      WHERE id = ? AND status = 'NEEDS_ATTENTION'`,
+    [id],
+  );
 }
 
 /**
@@ -121,28 +155,41 @@ async function claimNext(db: SQLiteDatabase, workspaceId: string): Promise<Queue
   );
 }
 
-function endpointFor(m: QueuedMutation): {
-  path: ApiRuntimePathForMethod<'POST'>;
-  body: unknown;
-} {
+async function sendMutation(m: QueuedMutation): Promise<void> {
   const payload = JSON.parse(m.payload) as Record<string, unknown>;
   switch (m.kind) {
-    case 'CREATE_TRANSACTION':
-      return {
-        path: `/workspaces/${m.workspace_id}/transactions`,
-        // The server dedupes on idempotency_key; it must match the queue id so
-        // a replay after an ambiguous failure cannot double-post (FIN-02).
-        body: { ...payload, idempotency_key: m.id },
-      };
+    case 'CREATE_TRANSACTION': {
+      // The queue accepts an already validated form payload. Preserve the
+      // generated request shape here so additions/removals in OpenAPI still
+      // fail this transport at compile time.
+      const body = {
+        ...payload,
+        idempotency_key: m.id,
+      } as ApiRuntimeRequestBody<`/workspaces/${string}/transactions`, 'POST'>;
+      await apiFetch(`/workspaces/${m.workspace_id}/transactions`, {
+        method: 'POST',
+        body,
+        idempotencyKey: m.id,
+      });
+      return;
+    }
     case 'REVERSE_TRANSACTION':
-      return {
-        path: `/workspaces/${m.workspace_id}/transactions/${String(payload.transaction_id)}/reverse`,
-        body: {},
-      };
+      await apiFetch(
+        `/workspaces/${m.workspace_id}/transactions/${String(payload.transaction_id)}/reverse`,
+        { method: 'POST', idempotencyKey: m.id },
+      );
+      return;
     case 'READ_NOTIFICATION':
-      return { path: `/notifications/${String(payload.notification_id)}/read`, body: {} };
+      await apiFetch(`/notifications/${String(payload.notification_id)}/read`, {
+        method: 'POST',
+        idempotencyKey: m.id,
+      });
+      return;
     case 'READ_ALL_NOTIFICATIONS':
-      return { path: '/notifications/read-all', body: {} };
+      await apiFetch('/notifications/read-all', {
+        method: 'POST',
+        idempotencyKey: m.id,
+      });
   }
 }
 
@@ -176,14 +223,8 @@ export async function drain(workspaceId: string): Promise<DrainResult> {
       mutation.id,
     ]);
 
-    const { path, body } = endpointFor(mutation);
-
     try {
-      await apiFetch<unknown>(path, {
-        method: 'POST',
-        body,
-        idempotencyKey: mutation.id,
-      });
+      await sendMutation(mutation);
 
       // Confirmed by the server. The authoritative row arrives on the next
       // pull and overwrites the optimistic local copy.

@@ -14,14 +14,16 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   StyleSheet,
-  SafeAreaView,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import { useWorkspace } from '../src/lib/WorkspaceContext';
 import { fetchWorkspaces, type WorkspaceSummary } from '../src/lib/workspace';
 import { Colors, Typography, Spacing, Radius } from '../src/lib/theme';
 
 export default function WorkspaceSelectScreen() {
+  const { t } = useTranslation();
   const { selectWorkspace } = useWorkspace();
   const [workspaces, setWorkspaces] = useState<WorkspaceSummary[]>([]);
   const [loading, setLoading] = useState(true);
@@ -63,9 +65,9 @@ export default function WorkspaceSelectScreen() {
           <View style={styles.logoMark}>
             <Text style={styles.logoText}>N</Text>
           </View>
-          <Text style={styles.title}>Choose a Workspace</Text>
+          <Text style={styles.title}>{t('mobile.workspace.choose')}</Text>
           <Text style={styles.subtitle}>
-            Select the workspace you want to manage
+            {t('mobile.workspace.chooseBody')}
           </Text>
         </View>
 
@@ -81,10 +83,12 @@ export default function WorkspaceSelectScreen() {
             keyExtractor={(item) => item.id}
             contentContainerStyle={{ gap: Spacing.sm }}
             ListEmptyComponent={
-              <Text style={styles.empty}>No workspaces found.</Text>
+              <Text style={styles.empty}>{t('mobile.workspace.none')}</Text>
             }
             renderItem={({ item }) => (
               <TouchableOpacity
+                accessibilityRole="button"
+                accessibilityLabel={`${item.name}, ${item.base_currency}`}
                 onPress={() => handleSelect(item)}
                 disabled={selecting !== null}
                 style={[styles.card, selecting === item.id && styles.cardActive]}

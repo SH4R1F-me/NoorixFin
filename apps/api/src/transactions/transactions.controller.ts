@@ -12,6 +12,7 @@ import {
   Get,
   Patch,
   Post,
+  Put,
   Body,
   Param,
   ParseUUIDPipe,
@@ -35,6 +36,13 @@ import {
   TransactionResponseDto,
   CreateAttachmentDto,
   TagNameDto,
+  UpdateTransactionTagsDto,
+  TransactionPageResponseDto,
+  TransactionAttachmentResponseDto,
+  TagResponseDto,
+  SignedAttachmentUrlResponseDto,
+  DeletedAttachmentResponseDto,
+  DeletedTagResponseDto,
 } from './dto/transaction.dto';
 import { AttachmentsService } from './attachments.service';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
@@ -91,7 +99,7 @@ export class TransactionsController {
       'Drill-down filter (§5.3) — only entries posting against this category. ' +
       'This is what turns a budget line or a report slice into the transactions behind it.',
   })
-  @ApiOkResponse({ type: TransactionResponseDto })
+  @ApiOkResponse({ type: TransactionPageResponseDto })
   async list(
     @Param('workspaceId') workspaceId: string,
     @Req() req: Request & { accessToken: string },
@@ -132,6 +140,7 @@ export class TransactionsController {
       'typo — which is the decision this list exists to support.',
   })
   @ApiParam({ name: 'workspaceId', type: 'string' })
+  @ApiOkResponse({ type: [TagResponseDto] })
   async listTags(
     @Param('workspaceId') workspaceId: string,
     @Req() req: Request & { accessToken: string },
@@ -143,6 +152,7 @@ export class TransactionsController {
   @ThrottleLedgerWrite()
   @UseGuards(WorkspaceMemberGuard)
   @ApiOperation({ summary: 'Create a workspace tag' })
+  @ApiCreatedResponse({ type: TagResponseDto })
   async createTag(
     @Param('workspaceId') workspaceId: string,
     @Req() req: Request & { accessToken: string },
@@ -159,6 +169,7 @@ export class TransactionsController {
   @ThrottleLedgerWrite()
   @UseGuards(WorkspaceMemberGuard)
   @ApiOperation({ summary: 'Rename a workspace tag everywhere it is used' })
+  @ApiOkResponse({ type: TagResponseDto })
   async renameTag(
     @Param('workspaceId') workspaceId: string,
     @Param('tagId', ParseUUIDPipe) tagId: string,
@@ -184,6 +195,7 @@ export class TransactionsController {
   })
   @ApiParam({ name: 'workspaceId', type: 'string' })
   @ApiParam({ name: 'tagId', type: 'string' })
+  @ApiOkResponse({ type: DeletedTagResponseDto })
   async deleteTag(
     @Param('workspaceId') workspaceId: string,
     @Param('tagId', ParseUUIDPipe) tagId: string,
@@ -214,12 +226,37 @@ export class TransactionsController {
     );
   }
 
+  @Put('workspaces/:workspaceId/transactions/:id/tags')
+  @ThrottleLedgerWrite()
+  @UseGuards(WorkspaceMemberGuard)
+  @ApiOperation({ summary: 'Replace every tag on a transaction' })
+  @ApiOkResponse({ type: TransactionResponseDto })
+  async replaceTransactionTags(
+    @Param('workspaceId') workspaceId: string,
+    @Param('id', ParseUUIDPipe) transactionId: string,
+    @Req() req: Request & { accessToken: string },
+    @Body() dto: UpdateTransactionTagsDto,
+  ) {
+    await this.transactionsService.replaceTransactionTags(
+      transactionId,
+      workspaceId,
+      req.accessToken,
+      dto.tags,
+    );
+    return this.transactionsService.getTransaction(
+      transactionId,
+      workspaceId,
+      req.accessToken,
+    );
+  }
+
   @Post('workspaces/:workspaceId/transactions/:id/attachments')
   @ThrottleLedgerWrite()
   @UseGuards(WorkspaceMemberGuard)
   @ApiOperation({
     summary: 'Upload a private receipt image or PDF (maximum 5 MB)',
   })
+  @ApiCreatedResponse({ type: TransactionAttachmentResponseDto })
   attach(
     @Param('workspaceId') workspaceId: string,
     @Param('id', ParseUUIDPipe) transactionId: string,
@@ -239,6 +276,7 @@ export class TransactionsController {
   @Get('workspaces/:workspaceId/transactions/:id/attachments/:attachmentId')
   @UseGuards(WorkspaceMemberGuard)
   @ApiOperation({ summary: 'Create a one-minute signed receipt download URL' })
+  @ApiOkResponse({ type: SignedAttachmentUrlResponseDto })
   attachmentUrl(
     @Param('workspaceId') workspaceId: string,
     @Param('id', ParseUUIDPipe) transactionId: string,
@@ -257,6 +295,7 @@ export class TransactionsController {
   @ThrottleLedgerWrite()
   @UseGuards(WorkspaceMemberGuard)
   @ApiOperation({ summary: 'Permanently delete a receipt owned by the caller' })
+  @ApiOkResponse({ type: DeletedAttachmentResponseDto })
   deleteAttachment(
     @Param('workspaceId') workspaceId: string,
     @Param('id', ParseUUIDPipe) transactionId: string,

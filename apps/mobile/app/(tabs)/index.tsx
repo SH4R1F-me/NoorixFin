@@ -3,8 +3,9 @@
  */
 import { useCallback, useState } from 'react';
 import {
-  View, Text, ScrollView, StyleSheet, RefreshControl, SafeAreaView,
+  View, Text, ScrollView, StyleSheet, RefreshControl,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from 'expo-router';
 import { formatAmount, getCurrency } from '@noorixfin/money';
 import { listRecent } from '../../src/repositories/transactions';

@@ -1,0 +1,33 @@
+appId: com.noorixfin.app
+name: Authenticated offline kill and relaunch
+env:
+  TEST_EMAIL: ${MAESTRO_TEST_EMAIL}
+  TEST_PASSWORD: ${MAESTRO_TEST_PASSWORD}
+---
+- launchApp:
+    clearState: true
+    clearKeychain: true
+    permissions:
+      all: allow
+- tapOn: Email
+- inputText: ${TEST_EMAIL}
+- tapOn: Password
+- inputText: ${TEST_PASSWORD}
+- tapOn: Sign in
+- extendedWaitUntil:
+    visible: Home
+    timeout: 30000
+- setAirplaneMode: enabled
+- killApp
+- launchApp:
+    clearState: false
+    clearKeychain: false
+- extendedWaitUntil:
+    visible: Home
+    timeout: 30000
+- assertVisible: Offline.*
+- setAirplaneMode: disabled
+- openLink: noorixfin://notifications
+- extendedWaitUntil:
+    visible: Notifications
+    timeout: 10000

@@ -11,8 +11,8 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Alert,
-  SafeAreaView,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from 'expo-router';
 import { apiFetch } from '../../src/lib/api';
 import { Colors, Typography, Spacing, Radius } from '../../src/lib/theme';
@@ -35,7 +35,7 @@ export default function ProfileScreen() {
       const data = await apiFetch('/me');
       setProfile(data);
       setDisplayName(data.display_name);
-    } catch (e) {
+    } catch {
       Alert.alert('Error', 'Failed to load profile');
     } finally {
       setLoading(false);
@@ -59,7 +59,7 @@ export default function ProfileScreen() {
       setProfile(updated);
       setDisplayName(updated.display_name);
       Alert.alert('Saved', 'Profile updated.');
-    } catch (e) {
+    } catch {
       Alert.alert('Error', 'Failed to save profile.');
     } finally {
       setSaving(false);

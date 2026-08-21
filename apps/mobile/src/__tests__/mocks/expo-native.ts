@@ -13,6 +13,19 @@ export const deleteItemAsync = (k: string) => {
 
 let counter = 0;
 export const randomUUID = () => `00000000-0000-4000-8000-${String(++counter).padStart(12, '0')}`;
+export const getRandomBytesAsync = (length: number) =>
+  Promise.resolve(Uint8Array.from({ length }, (_, index) => (index * 17 + 29) % 256));
+
+export enum SecurityLevel {
+  NONE = 0,
+  SECRET = 1,
+  BIOMETRIC_WEAK = 2,
+  BIOMETRIC_STRONG = 3,
+}
+
+export const getEnrolledLevelAsync = jest.fn(() => Promise.resolve(SecurityLevel.BIOMETRIC_STRONG));
+export const authenticateAsync = jest.fn(() => Promise.resolve({ success: true }));
+export const WHEN_UNLOCKED_THIS_DEVICE_ONLY = 'WHEN_UNLOCKED_THIS_DEVICE_ONLY';
 export const __resetUuid = () => {
   counter = 0;
 };

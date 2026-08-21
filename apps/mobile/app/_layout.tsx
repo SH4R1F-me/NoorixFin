@@ -12,6 +12,7 @@
  * the first frame — they log in once and the token refreshes in the foreground.
  */
 import { useEffect, useState } from 'react';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import type { Session } from '@supabase/supabase-js';
@@ -25,6 +26,10 @@ import {
 } from '../src/lib/notifications';
 import ForcedUpgradeGate from '../src/components/ForcedUpgradeGate';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
+import AppLockGate from '../src/components/AppLockGate';
+import { restoreMobileLocale } from '../src/lib/i18n';
+import { Colors, Radius, Spacing, Typography } from '../src/lib/theme';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -86,19 +91,30 @@ function NotificationBridge({ session }: { session: Session | null }) {
   return null;
 }
 
-export default function RootLayout() {
+function SecureApplication() {
   const [ready, setReady] = useState(false);
   const [session, setSession] = useState<Session | null>(null);
+  const [initializationError, setInitializationError] = useState<string | null>(null);
+  const [attempt, setAttempt] = useState(0);
 
   useEffect(() => {
     let active = true;
 
+    setInitializationError(null);
     void (async () => {
-      await getDb();
-      const { data } = await supabase.auth.getSession();
-      if (!active) return;
-      setSession(data.session);
-      setReady(true);
+      try {
+        await restoreMobileLocale();
+        await getDb();
+        const { data } = await supabase.auth.getSession();
+        if (!active) return;
+        setSession(data.session);
+        setReady(true);
+      } catch (error) {
+        if (!active) return;
+        setInitializationError(
+          error instanceof Error ? error.message : 'Secure storage could not be opened.',
+        );
+      }
     })();
 
     const {
@@ -112,30 +128,60 @@ export default function RootLayout() {
       subscription.unsubscribe();
       stopRefresh();
     };
-  }, []);
+  }, [attempt]);
 
-  if (!ready) return null;
+  if (initializationError) {
+    return (
+      <View style={startupStyles.center}>
+        <Text accessibilityRole="header" style={startupStyles.title}>Secure storage unavailable</Text>
+        <Text accessibilityRole="alert" style={startupStyles.body}>{initializationError}</Text>
+        <Pressable accessibilityRole="button" onPress={() => setAttempt((value) => value + 1)} style={startupStyles.button}>
+          <Text style={startupStyles.buttonText}>Retry</Text>
+        </Pressable>
+      </View>
+    );
+  }
+  if (!ready) return <View style={startupStyles.center} accessibilityLabel="Opening secure storage" />;
 
   return (
+    <QueryClientProvider client={queryClient}>
+      <WorkspaceProvider>
+        <NavigationGuard session={session} />
+        <NotificationBridge session={session} />
+        <Stack screenOptions={{ headerShown: false }}>
+          <Stack.Screen name="(tabs)" />
+          <Stack.Screen name="sign-in" />
+          <Stack.Screen name="workspace-select" />
+          <Stack.Screen name="pair" />
+          <Stack.Screen
+            name="notifications"
+            options={{ headerShown: true, title: 'Notifications' }}
+          />
+          <Stack.Screen name="add-transaction" options={{ presentation: 'modal' }} />
+          <Stack.Screen name="sync-issues" />
+        </Stack>
+        <ForcedUpgradeGate />
+      </WorkspaceProvider>
+    </QueryClientProvider>
+  );
+}
+
+const startupStyles = StyleSheet.create({
+  center: { flex: 1, backgroundColor: Colors.bg, alignItems: 'center', justifyContent: 'center', gap: Spacing.md, padding: Spacing.lg },
+  title: { ...Typography.h2, textAlign: 'center' },
+  body: { ...Typography.bodyDim, textAlign: 'center' },
+  button: { minHeight: 48, minWidth: 160, alignItems: 'center', justifyContent: 'center', borderRadius: Radius.md, backgroundColor: Colors.accent },
+  buttonText: { ...Typography.body, color: '#fff', fontWeight: '700' },
+});
+
+export default function RootLayout() {
+  return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <QueryClientProvider client={queryClient}>
-        <WorkspaceProvider>
-          <NavigationGuard session={session} />
-          <NotificationBridge session={session} />
-          <Stack screenOptions={{ headerShown: false }}>
-            <Stack.Screen name="(tabs)" />
-            <Stack.Screen name="sign-in" />
-            <Stack.Screen name="workspace-select" />
-            <Stack.Screen name="pair" />
-            <Stack.Screen
-              name="notifications"
-              options={{ headerShown: true, title: 'Notifications' }}
-            />
-            <Stack.Screen name="add-transaction" options={{ presentation: 'modal' }} />
-          </Stack>
-          <ForcedUpgradeGate />
-        </WorkspaceProvider>
-      </QueryClientProvider>
+      <SafeAreaProvider>
+        <AppLockGate>
+          <SecureApplication />
+        </AppLockGate>
+      </SafeAreaProvider>
     </GestureHandlerRootView>
   );
 }

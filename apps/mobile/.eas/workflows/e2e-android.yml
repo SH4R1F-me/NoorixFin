@@ -1,0 +1,20 @@
+name: mobile-e2e-android
+on:
+  pull_request:
+    branches: ['main']
+jobs:
+  build_android:
+    type: build
+    params:
+      platform: android
+      profile: e2e-test
+  maestro_android:
+    needs: [build_android]
+    type: maestro
+    environment: preview
+    runs_on: linux-medium-nested-virtualization
+    params:
+      build_id: ${{ needs.build_android.outputs.build_id }}
+      flow_path:
+        - .maestro/launch.yaml
+        - .maestro/offline-relaunch.yaml

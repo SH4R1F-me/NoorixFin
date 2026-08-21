@@ -10,12 +10,18 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Alert,
-  SafeAreaView,
+  Switch,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from 'expo-router';
 import { apiFetch } from '../../src/lib/api';
 import { Colors, Typography, Spacing, Radius } from '../../src/lib/theme';
 import { Smartphone, ShieldOff, Shield } from 'lucide-react-native';
+import { useAppLock } from '../../src/components/AppLockGate';
+import {
+  authenticateAppLock,
+  getAppLockAvailability,
+} from '../../src/security/appLock';
 
 interface Device {
   id: string;
@@ -37,12 +43,34 @@ export default function SecurityScreen() {
   const [devices, setDevices] = useState<Device[]>([]);
   const [loading, setLoading] = useState(true);
   const [revoking, setRevoking] = useState<string | null>(null);
+  const [changingLock, setChangingLock] = useState(false);
+  const appLock = useAppLock();
+
+  async function changeAppLock(next: boolean) {
+    if (changingLock) return;
+    setChangingLock(true);
+    try {
+      const availability = await getAppLockAvailability();
+      if (!availability.available) {
+        Alert.alert(
+          'Device security required',
+          'Set a device passcode or biometric in system settings before using app lock.',
+        );
+        return;
+      }
+      const result = await authenticateAppLock();
+      if (!result.success) return;
+      await appLock.setEnabled(next);
+    } finally {
+      setChangingLock(false);
+    }
+  }
 
   const load = useCallback(async () => {
     try {
       const data = await apiFetch('/me/devices');
       setDevices(data);
-    } catch (e) {
+    } catch {
       Alert.alert('Error', 'Failed to load sessions.');
     } finally {
       setLoading(false);
@@ -87,10 +115,29 @@ export default function SecurityScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.content}>
+        <View style={styles.lockCard}>
+          <View style={styles.lockCopy}>
+            <Text style={styles.lockTitle}>App lock</Text>
+            <Text style={styles.lockDescription}>
+              Require your device biometric or passcode after NoorixFin leaves the foreground. The
+              financial database remains SQLCipher encrypted either way.
+            </Text>
+          </View>
+          <Switch
+            accessibilityLabel="Require device authentication to unlock NoorixFin"
+            accessibilityHint="Protects access whenever the app resumes"
+            value={appLock.enabled}
+            disabled={changingLock}
+            onValueChange={(next) => void changeAppLock(next)}
+            trackColor={{ false: Colors.border, true: Colors.accent }}
+            thumbColor={Colors.text}
+          />
+        </View>
+
         <View style={styles.infoBox}>
           <Shield size={18} color={Colors.accent} strokeWidth={2} />
           <Text style={styles.infoText}>
-            These are all devices that have an active session. Revoke any you don't recognise.
+            These are all devices that have an active session. Revoke any you do not recognise.
           </Text>
         </View>
 
@@ -153,6 +200,20 @@ export default function SecurityScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.bg },
   content: { padding: Spacing.lg, paddingBottom: Spacing.xxl, gap: Spacing.md },
+  lockCard: {
+    minHeight: 72,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.md,
+    borderRadius: Radius.lg,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    backgroundColor: Colors.bgCard,
+    padding: Spacing.md,
+  },
+  lockCopy: { flex: 1, gap: 4 },
+  lockTitle: { ...Typography.body, fontWeight: '700' },
+  lockDescription: { ...Typography.caption, lineHeight: 18 },
   infoBox: {
     flexDirection: 'row',
     alignItems: 'flex-start',

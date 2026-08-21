@@ -65,8 +65,6 @@ export function apiFetch<P extends ApiRuntimePath, M extends Exclude<ApiRuntimeM
   path: P,
   options: TypedOptions<P, M>,
 ): Promise<ApiRuntimeResponse<P, M>>;
-/** Temporary response override for operations whose Nest Swagger response DTO is still being migrated. */
-export function apiFetch<T>(path: ApiRuntimePath, options?: TransportOptions): Promise<T>;
 export async function apiFetch(
   path: ApiRuntimePath,
   options: TransportOptions = {},

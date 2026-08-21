@@ -13,10 +13,17 @@ import {
   Home, ArrowLeftRight, Plus, BarChart3, MoreHorizontal,
 } from 'lucide-react-native';
 import { Colors } from '../../src/lib/theme';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useTranslation } from 'react-i18next';
 
-function AddButton({ onPress }: { onPress: () => void }) {
+function AddButton({ onPress, label }: { onPress: () => void; label: string }) {
   return (
-    <TouchableOpacity onPress={onPress} style={styles.addButton}>
+    <TouchableOpacity
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      onPress={onPress}
+      style={styles.addButton}
+    >
       <View style={styles.addInner}>
         <Plus size={24} color="#fff" strokeWidth={2.5} />
       </View>
@@ -26,12 +33,17 @@ function AddButton({ onPress }: { onPress: () => void }) {
 
 export default function TabLayout() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
+  const { t } = useTranslation();
 
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarStyle: styles.tabBar,
+        tabBarStyle: [
+          styles.tabBar,
+          { height: 58 + insets.bottom, paddingBottom: Math.max(6, insets.bottom) },
+        ],
         tabBarActiveTintColor: Colors.accent,
         tabBarInactiveTintColor: Colors.textFaint,
         tabBarLabelStyle: styles.tabLabel,
@@ -41,7 +53,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Home',
+          title: t('mobile.tabs.home'),
           tabBarIcon: ({ color, size }) => (
             <Home size={size} color={color} strokeWidth={1.8} />
           ),
@@ -51,7 +63,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="transactions"
         options={{
-          title: 'Transactions',
+          title: t('mobile.tabs.transactions'),
           tabBarIcon: ({ color, size }) => (
             <ArrowLeftRight size={size} color={color} strokeWidth={1.8} />
           ),
@@ -64,7 +76,10 @@ export default function TabLayout() {
         options={{
           title: '',
           tabBarButton: () => (
-            <AddButton onPress={() => router.push('/add-transaction')} />
+            <AddButton
+              label={t('mobile.tabs.add')}
+              onPress={() => router.push('/add-transaction')}
+            />
           ),
         }}
         listeners={{ tabPress: (e) => e.preventDefault() }}
@@ -73,7 +88,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="plan"
         options={{
-          title: 'Plan',
+          title: t('mobile.tabs.plan'),
           tabBarIcon: ({ color, size }) => (
             <BarChart3 size={size} color={color} strokeWidth={1.8} />
           ),
@@ -83,7 +98,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="more"
         options={{
-          title: 'More',
+          title: t('mobile.tabs.more'),
           tabBarIcon: ({ color, size }) => (
             <MoreHorizontal size={size} color={color} strokeWidth={1.8} />
           ),
@@ -99,8 +114,6 @@ const styles = StyleSheet.create({
     borderTopColor: Colors.border,
     borderTopWidth: 1,
     paddingTop: 4,
-    paddingBottom: 6,
-    height: 64,
   },
   tabLabel: {
     fontSize: 11,

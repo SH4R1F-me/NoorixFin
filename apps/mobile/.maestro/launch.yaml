@@ -1,0 +1,18 @@
+appId: com.noorixfin.app
+name: Encrypted native launch and deep-link boundary
+---
+- launchApp:
+    clearState: true
+    clearKeychain: true
+    permissions:
+      all: allow
+- extendedWaitUntil:
+    visible: NoorixFin
+    timeout: 30000
+- assertVisible: Email
+- assertVisible: Password
+- openLink: noorixfin://pair?token=invalid-device-acceptance-token
+- extendedWaitUntil:
+    visible: NoorixFin
+    timeout: 10000
+- assertNotVisible: Secure storage unavailable

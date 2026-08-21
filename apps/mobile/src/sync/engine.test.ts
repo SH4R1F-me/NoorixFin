@@ -20,8 +20,9 @@ jest.mock('../lib/api', () => {
 
 import { apiFetch, ApiError } from '../lib/api';
 import { getDb } from '../db';
-import { enqueue, drain, countPending, listNeedingAttention } from './queue';
+import { enqueue, drain, countPending, discard, listNeedingAttention, retry } from './queue';
 import { sync } from './engine';
+import { createTransaction } from '../repositories/transactions';
 
 const mockFetch = apiFetch as jest.MockedFunction<typeof apiFetch>;
 const WS = '11111111-1111-1111-1111-111111111111';
@@ -216,6 +217,36 @@ describe('W4-4: rejected push surfaces, never silently merges (SYNC-02)', () => 
     expect(result.parked).toBe(1);
     expect(result.sent).toBe(1);
     expect(serverEntries.has('good')).toBe(true);
+  });
+
+  it('discarding a rejected create removes its optimistic row as one transaction', async () => {
+    mockFetch.mockRejectedValue(new ApiError(400, 'INVALID_TRANSACTION', 'Fix the account'));
+    const id = await createTransaction(WS, {
+      type: 'EXPENSE',
+      amount: '275',
+      account_id: '22222222-2222-2222-2222-222222222222',
+      currency_code: 'BDT',
+    });
+    await drain(WS);
+
+    await discard(id);
+
+    const db = await getDb();
+    expect(await db.getFirstAsync('SELECT id FROM journal_entries WHERE id = ?', [id])).toBeNull();
+    expect(await listNeedingAttention(WS)).toHaveLength(0);
+  });
+
+  it('a reviewed rejected mutation can be returned to the retry queue', async () => {
+    mockFetch.mockRejectedValueOnce(new ApiError(409, 'VERSION_CONFLICT', 'Review required'));
+    await enqueue('reviewed', WS, 'CREATE_TRANSACTION', { amount: '100' });
+    await drain(WS);
+
+    await retry('reviewed');
+    online();
+    const result = await drain(WS);
+
+    expect(result.sent).toBe(1);
+    expect(serverEntries.has('reviewed')).toBe(true);
   });
 
   it('a retryable failure stops the drain rather than hammering a dead network', async () => {

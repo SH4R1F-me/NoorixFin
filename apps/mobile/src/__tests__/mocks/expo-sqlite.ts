@@ -42,6 +42,9 @@ export class SQLiteDatabase {
   }
 
   getFirstAsync<T>(source: string, params: unknown[] = []): Promise<T | null> {
+    if (source.trim().toLowerCase() === 'pragma cipher_version') {
+      return Promise.resolve({ cipher_version: 'test-sqlcipher' } as T);
+    }
     const row = this.db.prepare(source).get(...coerce(params));
     return Promise.resolve((row ?? null) as T | null);
   }
@@ -59,6 +62,11 @@ export class SQLiteDatabase {
 
   closeSync(): void {
     this.db.close();
+  }
+
+  closeAsync(): Promise<void> {
+    this.closeSync();
+    return Promise.resolve();
   }
 
   /** Test-only: empty every user table without touching the schema. */
@@ -81,6 +89,8 @@ export function openDatabaseAsync(name: string): Promise<SQLiteDatabase> {
   }
   return Promise.resolve(db);
 }
+
+export const defaultDatabaseDirectory = '/tmp/noorixfin-test-sqlite';
 
 /**
  * Test helper: clear all rows, keeping schema and connection.

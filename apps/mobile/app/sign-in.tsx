@@ -8,8 +8,10 @@
 import { useState } from 'react';
 import { View, Text, TextInput, Pressable, StyleSheet, ActivityIndicator } from 'react-native';
 import { supabase } from '../src/lib/supabase';
+import { useTranslation } from 'react-i18next';
 
 export default function SignIn() {
+  const { t } = useTranslation();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -22,7 +24,7 @@ export default function SignIn() {
     setLoading(false);
     // Generic message on purpose — distinguishing "no such user" from "wrong
     // password" is a user-enumeration oracle.
-    if (authError) setError('Incorrect email or password');
+    if (authError) setError(t('auth.invalidCredentials'));
   };
 
   return (
@@ -30,7 +32,8 @@ export default function SignIn() {
       <Text style={styles.title}>NoorixFin</Text>
       <TextInput
         style={styles.input}
-        placeholder="Email"
+        placeholder={t('auth.email')}
+        accessibilityLabel={t('auth.email')}
         autoCapitalize="none"
         keyboardType="email-address"
         value={email}
@@ -38,14 +41,21 @@ export default function SignIn() {
       />
       <TextInput
         style={styles.input}
-        placeholder="Password"
+        placeholder={t('auth.password')}
+        accessibilityLabel={t('auth.password')}
         secureTextEntry
         value={password}
         onChangeText={setPassword}
       />
-      {error ? <Text style={styles.error}>{error}</Text> : null}
-      <Pressable style={styles.button} onPress={submit} disabled={loading}>
-        {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Sign In</Text>}
+      {error ? <Text accessibilityLiveRegion="assertive" style={styles.error}>{error}</Text> : null}
+      <Pressable
+        accessibilityRole="button"
+        accessibilityState={{ disabled: loading, busy: loading }}
+        style={styles.button}
+        onPress={submit}
+        disabled={loading}
+      >
+        {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>{t('auth.signIn')}</Text>}
       </Pressable>
     </View>
   );

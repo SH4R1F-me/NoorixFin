@@ -506,8 +506,106 @@ export class TransactionsService {
       .from('journal_postings')
       .select('*')
       .eq('journal_entry_id', transactionId);
+    const [{ data: attachments }, { data: links }, { data: reversal }] =
+      await Promise.all([
+        client
+          .from('transaction_attachments')
+          .select('id, original_name, content_type, size_bytes, created_at')
+          .eq('workspace_id', workspaceId)
+          .eq('journal_entry_id', transactionId)
+          .order('created_at'),
+        client
+          .from('journal_entry_tags')
+          .select('tags(name)')
+          .eq('workspace_id', workspaceId)
+          .eq('journal_entry_id', transactionId),
+        client
+          .from('journal_entries')
+          .select('id')
+          .eq('workspace_id', workspaceId)
+          .eq('reverses_entry_id', transactionId)
+          .maybeSingle(),
+      ]);
+    const tags = (links ?? []).flatMap((link) => {
+      const name = (link as { tags?: { name?: string } | null }).tags?.name;
+      return name ? [name] : [];
+    });
 
-    return { ...entry, postings: postings || [] };
+    return {
+      ...entry,
+      postings: postings || [],
+      attachments: attachments || [],
+      tags: tags.sort((a, b) => a.localeCompare(b)),
+      reversed: Boolean(reversal),
+    };
+  }
+
+  async replaceTransactionTags(
+    transactionId: string,
+    workspaceId: string,
+    accessToken: string,
+    names: string[],
+  ) {
+    const client = this.supabaseService.getUserClient(accessToken);
+    const { data: entry } = await client
+      .from('journal_entries')
+      .select('id')
+      .eq('id', transactionId)
+      .eq('workspace_id', workspaceId)
+      .maybeSingle();
+    if (!entry) {
+      throw new NotFoundException({
+        code: 'TRANSACTION_NOT_FOUND',
+        message: 'Transaction not found',
+      });
+    }
+
+    const canonical = [
+      ...new Set(
+        names.map((name) => this.canonicalTagName(name)).filter(Boolean),
+      ),
+    ];
+    if (canonical.length > 0) {
+      const { error } = await client.from('tags').upsert(
+        canonical.map((name) => ({
+          id: randomUUID(),
+          workspace_id: workspaceId,
+          name,
+        })),
+        { onConflict: 'workspace_id,name', ignoreDuplicates: true },
+      );
+      if (error)
+        throw new BadRequestException('Failed to create transaction tags');
+    }
+    const { data: tagRows } = canonical.length
+      ? await client
+          .from('tags')
+          .select('id')
+          .eq('workspace_id', workspaceId)
+          .in('name', canonical)
+      : { data: [] as Array<{ id: string }> };
+
+    const { error: deleteError } = await client
+      .from('journal_entry_tags')
+      .delete()
+      .eq('workspace_id', workspaceId)
+      .eq('journal_entry_id', transactionId);
+    if (deleteError)
+      throw new BadRequestException('Failed to replace transaction tags');
+    if (tagRows?.length) {
+      const { error: insertError } = await client
+        .from('journal_entry_tags')
+        .insert(
+          tagRows.map((tag) => ({
+            journal_entry_id: transactionId,
+            workspace_id: workspaceId,
+            tag_id: tag.id,
+          })),
+        );
+      if (insertError)
+        throw new BadRequestException('Failed to replace transaction tags');
+    }
+    return { tags: canonical };
   }
 
   /**
