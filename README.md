@@ -13,7 +13,7 @@ commercial SSO, or shared-tenant administration.
 - Accounts, categorized transactions, reversals, tags, attachments, import and
   export.
 - Budgets, goals, debts, recurring items, calendar, and financial reports.
-- English and Bangla web experiences with currency-safe minor-unit arithmetic.
+- English and Bangla web/mobile experiences with currency-safe minor-unit arithmetic.
 - Offline-first mobile repositories and a durable mutation queue.
 - Admin health, security, audit, notification, release, and observability tools.
 - A pinned Docker self-host deployment with migration and recovery runbooks.
@@ -44,6 +44,8 @@ pnpm typecheck
 pnpm lint
 pnpm test
 pnpm build
+pnpm security:audit
+pnpm performance:budget
 pnpm db:check-drift:strict
 pnpm db:restore-drill
 ```
@@ -60,6 +62,8 @@ is for development only and must not be exposed publicly.
 - [Contributing](CONTRIBUTING.md)
 - [Security policy](SECURITY.md)
 - [Support policy](SUPPORT.md)
+- [Release artifact verification](docs/security/RELEASE_VERIFICATION.md)
+- [Coverage policy](docs/testing/COVERAGE_POLICY.md)
 - [Code of Conduct](CODE_OF_CONDUCT.md)
 - [MIT licence](LICENSE)
 

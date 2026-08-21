@@ -36,3 +36,8 @@ Until the acceptance expires:
 This acceptance does not downgrade the advisory. It documents why the affected
 parser is not reachable from a NoorixFin production request and places a short,
 explicit deadline on the exception.
+
+`pnpm security:audit` and the required `Dependency risk policy` workflow permit
+only these exact two advisory IDs and fail closed on 2026-09-15 UTC. Dependabot
+checks the pnpm workspace, workflow actions, and containers every week. A new
+moderate/high/critical advisory is never covered by this acceptance.

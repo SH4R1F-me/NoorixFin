@@ -154,8 +154,13 @@ generatedBudget.data;
 export const invalidRoute: ApiRuntimePath = '/billing/checkout';
 // @ts-expect-error a GET-only path cannot be sent as POST
 export const invalidMethod: ApiRuntimePathForMethod<'POST'> = `/me/exports/${resourceId}/download`;
-// @ts-expect-error amount is a minor-unit string, never a floating-point JSON number
 export const invalidTransactionBody: ApiRuntimeRequestBody<
   `/workspaces/${string}/transactions`,
   'POST'
-> = { type: 'EXPENSE', amount: 12.5, account_id: resourceId, idempotency_key: resourceId };
+> = {
+  type: 'EXPENSE',
+  // @ts-expect-error amount is a minor-unit string, never a floating-point JSON number
+  amount: 12.5,
+  account_id: resourceId,
+  idempotency_key: resourceId,
+};

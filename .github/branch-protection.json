@@ -5,7 +5,10 @@
       "Typecheck, lint and unit tests",
       "Migrations from scratch, types and SQL acceptance",
       "End-to-end (real API, real database, production build)",
-      "Mobile bundle gate"
+      "Mobile bundle gate",
+      "CodeQL analysis",
+      "Dependency risk policy",
+      "Dependency review"
     ]
   },
   "enforce_admins": true,

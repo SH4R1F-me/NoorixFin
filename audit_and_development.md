@@ -899,7 +899,7 @@ PUT    /v1/admin/releases/mobile
 
 # Part 7 — Master Roadmap
 
-## 7.0 Execution status — updated 2026-08-14
+## 7.0 Execution status — updated 2026-08-21
 
 **The Reading A roadmap is complete.** Phases 0–5 are implemented; Phase 6 is
 excluded by DEC-025 and no commercial, billing, SSO, or shared-tenant scope was
@@ -907,31 +907,33 @@ started.
 
 | Item | Status | Evidence |
 |---|---|---|
-| P0.1 Port drift | ✅ | Converged on **3001**, not 8080 as this document originally proposed — see the note below |
+| P0.1 Port drift | ✅ | Runtime, examples, clients, containers, health checks, and CI converge on **8080** |
 | P0.2 Stale audit table | ✅ | `memory/MASTER_PLAN.md` refreshed against the live tree |
 | P0.3 Migration drift | ✅ | `pnpm db:check-drift`, in CI; proven to fail on an unapplied migration *and* a mis-named file |
 | P0.4 Scope decision | ✅ ratified | `DEC-025` — Reading A; free, open-source, self-hostable personal/household finance |
 | P1.1 Security headers | ✅ | Nonce CSP + 7 headers; 6 e2e assertions |
-| P1.2 Error tracking / APM | ✅ | `@noorixfin/observability` — release tagging, stable fingerprints, redaction, W3C trace context; 23 tests; verified live against `system_events` |
-| P1.3 Generated API client | ✅ | `openapi.json` (51 paths) → `schema.d.ts`; `check:fresh` in CI, proven to fail on a new route |
+| P1.2 Error tracking / APM | ✅ | Internal `system_events` plus opt-in durable OTLP export for API, web, and mobile; persist-before-send queues, redaction, release identity, and trace correlation |
+| P1.3 Generated API client | ✅ | `openapi.json` (96 paths) → `schema.d.ts`; strict request/response/path authority in both clients; `check:fresh` in CI |
 | P1.4 Design system | ✅ | `@noorixfin/design-tokens` is now the single palette (74 generated CSS vars, `check:fresh` in CI); `@noorixfin/ui` — 8 components, Storybook, 17 component tests |
 | P1.5 Backup restore drill | ✅ | `pnpm db:restore-drill`, in CI; **executed and passed** |
 | P1.6 Shutdown / health | ✅ | `/health/live`, `/health/ready`, SIGTERM drain; 7 unit tests |
 | P1.7 Error catalogue + paging | ✅ | 62 codes in `@noorixfin/domain`, published to Swagger; drift test |
 
-**Final gate:** 19/19 typecheck · 14/14 test tasks · 10/10 build · 105 browser
-scenarios (101 passed, 4 environment-dependent scenarios skipped) · lint at
-zero warnings · locale parity · all 32 migrations from scratch · SQL invariants
-· migration drift · API-client freshness · design-token freshness · full
-backup/restore drill with row-count and ledger-balance comparison — all green.
+**Final gate:** full-workspace typecheck, lint, unit/native coverage, production
+build, API boundary and live browser acceptance; 34 migrations from scratch;
+SQL/RLS/lease/export invariants; API/DB/token/locale freshness; restore drill;
+load budget; dependency policy; and multi-engine accessibility/reflow gates —
+all executable in CI. GitHub additionally enforces CodeQL, dependency review,
+secret scanning/push protection, signed provenance/SBOM artifacts, and protected
+pull-request-only changes to `main`.
 
-### Continuation status — updated 2026-08-14
+### Continuation status — updated 2026-08-21
 
 | Phase | Status | Evidence |
 |---|---|---|
-| Phase 2 — observability & telemetry | ✅ complete | `7d771cb` |
-| Phase 3 — mobile product foundation | ✅ complete | `e76546d`, `850a8a2` |
-| Phase 4 — global notifications | ✅ complete | `1690601` |
+| Phase 2 — observability & telemetry | ✅ complete | Internal feed plus durable OTLP exporter and executable performance budget (`ee9decd`) |
+| Phase 3 — mobile product foundation | ✅ complete | Encrypted database, app lock, complete Reading A operations, bilingual UI, native acceptance (`c07de9b`) |
+| Phase 4 — global notifications | ✅ complete | Durable multi-replica delivery leases, persisted backoff, expiry recovery, and dead-letter state (`ee9decd`) |
 | Phase 5 — distribution | ✅ complete | `49aab53` |
 | Phase 5 — search & reports | ✅ complete | `a46b5ed` |
 | Phase 5 — imports, CSV/PDF export & receipts | ✅ complete | Migration `00026_imports_attachments`; staged CSV/OFX/QIF jobs, private idempotent receipt storage, and live browser coverage |
@@ -954,11 +956,9 @@ palettes — was invisible to the compiler, the tests and the build.
 
 ### Three places this document was wrong, corrected in the doing
 
-1. **§0.4 #1 said converge on 8080.** Wrong trade. The repository said `3001`
-   in four places (`main.ts`'s fallback, `.env.example`, `ARCHITECTURE.md`, the
-   mobile client's default) and only the two gitignored `.env.local` files said
-   8080. Aligning those two files was one edit; the alternative was changing
-   code, docs and the mobile default to chase a local override.
+1. **§0.4 #1 recorded a 3001/8080 split.** That historical baseline was later
+   superseded: runtime defaults, examples, clients, Docker, docs, health checks,
+   and CI now intentionally use 8080 as one contract.
 
 2. **§6.2 A2 proposed `{ data, cursor, has_more }`.** The API already returns
    `{ items, next_cursor, has_more }` from transactions and sync. Adopting the

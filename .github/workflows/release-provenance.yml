@@ -1,0 +1,78 @@
+name: Release provenance
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+  attestations: write
+
+env:
+  NODE_VERSION: '24'
+  PNPM_VERSION: '11.18.0'
+
+jobs:
+  release-artifacts:
+    name: Attested release archive and SBOM
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          fetch-depth: 0
+
+      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+
+      - name: Build immutable source release archive
+        run: |
+          mkdir -p dist
+          git archive --format=tar.gz \
+            --prefix="noorixfin-${GITHUB_SHA}/" \
+            --output="dist/noorixfin-${GITHUB_SHA}.tar.gz" \
+            "${GITHUB_SHA}"
+
+      - name: Generate SPDX SBOM
+        uses: anchore/sbom-action@e22c389904149dbc22b58101806040fa8d37a610 # v0
+        with:
+          path: .
+          format: spdx-json
+          output-file: dist/noorixfin-${{ github.sha }}.spdx.json
+          upload-artifact: false
+          upload-release-assets: false
+
+      - name: Generate checksums
+        run: sha256sum dist/*.tar.gz dist/*.spdx.json > dist/SHA256SUMS
+
+      - name: Attest build provenance
+        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4
+        with:
+          subject-path: dist/noorixfin-${{ github.sha }}.tar.gz
+
+      - name: Attest SPDX SBOM
+        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4
+        with:
+          subject-path: dist/noorixfin-${{ github.sha }}.tar.gz
+          sbom-path: dist/noorixfin-${{ github.sha }}.spdx.json
+
+      - name: Upload checksummed release bundle
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: noorixfin-${{ github.sha }}
+          path: |
+            dist/noorixfin-${{ github.sha }}.tar.gz
+            dist/noorixfin-${{ github.sha }}.spdx.json
+            dist/SHA256SUMS
+          if-no-files-found: error
+          retention-days: 90
