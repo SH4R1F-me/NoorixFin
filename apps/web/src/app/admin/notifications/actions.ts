@@ -43,7 +43,16 @@ export async function composeNotification(payload: ComposePayload) {
 
 export interface TemplatePayload {
   key: string;
-  category: string;
+  category:
+    | 'security'
+    | 'budget'
+    | 'goal'
+    | 'recurring'
+    | 'transaction'
+    | 'sync'
+    | 'account'
+    | 'system'
+    | 'operator';
   title_en: string;
   title_bn?: string;
   body_en: string;

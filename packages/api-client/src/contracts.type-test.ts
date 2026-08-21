@@ -126,6 +126,26 @@ export type SyncHasCompositePayload = Assert<
     ? true
     : false
 >;
+export type SignedAttachmentHasUrl = Assert<
+  ApiRuntimeResponse<
+    `/workspaces/${string}/transactions/${string}/attachments/${string}`,
+    'GET'
+  > extends { url: string; expires_in: number }
+    ? true
+    : false
+>;
+export type UnreadCountHasCount = Assert<
+  ApiRuntimeResponse<'/notifications/unread-count', 'GET'> extends { count: number }
+    ? true
+    : false
+>;
+
+declare const generatedProfile: ApiRuntimeResponse<'/me', 'GET'>;
+declare const generatedBudget: ApiRuntimeResponse<`/workspaces/${string}/budget`, 'GET'>;
+// @ts-expect-error callers cannot invent fields absent from the published profile response
+generatedProfile.operator_role;
+// @ts-expect-error callers cannot invent a response envelope around the published budget payload
+generatedBudget.data;
 
 // Negative compilation checks are intentional acceptance criteria.
 // @ts-expect-error nonexistent routes must never reach a transport

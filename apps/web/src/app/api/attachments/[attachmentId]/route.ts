@@ -17,7 +17,7 @@ export async function GET(
     return NextResponse.json({ error: 'Invalid receipt link' }, { status: 400 });
   }
   try {
-    const result = await apiFetch<{ url: string }>(
+    const result = await apiFetch(
       `/workspaces/${workspaceId}/transactions/${transactionId}/attachments/${attachmentId}`,
     );
     const receipt = await fetch(result.url, {

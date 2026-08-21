@@ -1,7 +1,7 @@
 /**
  * Account lifecycle DTOs — DEC-017
  */
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { IsEmail, IsString, Length } from 'class-validator';
 
 export class RequestDeletionDto {
@@ -24,4 +24,53 @@ export class RequestDeletionDto {
   @IsString()
   @Length(0, 500)
   reason: string = '';
+}
+
+export class DeletionScheduledResponseDto {
+  @ApiProperty({ enum: ['PENDING_DELETION'] }) status!: string;
+  @ApiProperty() deletion_scheduled_for!: string;
+  @ApiProperty() grace_days!: number;
+}
+
+export class AccountStatusResponseDto {
+  @ApiProperty({ enum: ['ACTIVE'] }) status!: string;
+}
+
+export class BroadcastResponseDto {
+  @ApiProperty() id!: string;
+  @ApiProperty({ enum: ['INFO', 'SUCCESS', 'WARNING', 'CRITICAL'] }) severity!: string;
+  @ApiProperty() title_en!: string;
+  @ApiProperty() title_bn!: string;
+  @ApiProperty() body_en!: string;
+  @ApiProperty() body_bn!: string;
+  @ApiProperty({ type: String, nullable: true }) link_url!: string | null;
+  @ApiProperty() dismissible!: boolean;
+  @ApiProperty({ type: String, nullable: true }) publish_at!: string | null;
+  @ApiProperty({ type: String, nullable: true }) expires_at!: string | null;
+}
+
+export class DismissedResponseDto {
+  @ApiProperty() dismissed!: boolean;
+}
+
+export class MaintenanceSettingResponseDto {
+  @ApiProperty() enabled!: boolean;
+  @ApiProperty() message_en!: string;
+  @ApiProperty() message_bn!: string;
+}
+
+export class EnabledSettingResponseDto {
+  @ApiProperty() enabled!: boolean;
+}
+
+export class ValueSettingResponseDto {
+  @ApiProperty() value!: string;
+}
+
+export class PublicSettingsResponseDto {
+  @ApiPropertyOptional({ type: MaintenanceSettingResponseDto }) maintenance_mode?: MaintenanceSettingResponseDto;
+  @ApiPropertyOptional({ type: EnabledSettingResponseDto }) signups_enabled?: EnabledSettingResponseDto;
+  @ApiPropertyOptional({ type: ValueSettingResponseDto }) app_version?: ValueSettingResponseDto;
+  @ApiPropertyOptional({ type: ValueSettingResponseDto }) donation_url?: ValueSettingResponseDto;
+  @ApiPropertyOptional({ type: ValueSettingResponseDto }) support_email?: ValueSettingResponseDto;
 }

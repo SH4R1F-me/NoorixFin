@@ -18,6 +18,7 @@ import {
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
+  ApiCreatedResponse,
   ApiOkResponse,
   ApiOperation,
   ApiTags,
@@ -26,7 +27,14 @@ import { Request } from 'express';
 import type { Response } from 'express';
 import { AccountService } from './account.service';
 import { ExportService } from './export.service';
-import { RequestDeletionDto } from './dto/account.dto';
+import {
+  RequestDeletionDto,
+  DeletionScheduledResponseDto,
+  AccountStatusResponseDto,
+  BroadcastResponseDto,
+  DismissedResponseDto,
+  PublicSettingsResponseDto,
+} from './dto/account.dto';
 import { ThrottleSensitive } from '../common/throttle';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import type { AuthenticatedUser } from '../common/decorators/current-user.decorator';
@@ -61,6 +69,7 @@ export class AccountController {
   })
   @ApiOkResponse({
     description: 'A single JSON document. See ExportService for the shape.',
+    schema: { type: 'object', additionalProperties: true },
   })
   async exportData(
     @CurrentUser() user: AuthenticatedUser,
@@ -83,6 +92,7 @@ export class AccountController {
   }
 
   @Post('deletion-request')
+  @ApiCreatedResponse({ type: DeletionScheduledResponseDto })
   @ThrottleSensitive()
   @ApiOperation({
     summary: 'Schedule this account for deletion after a 30-day grace period',
@@ -106,6 +116,7 @@ export class AccountController {
   }
 
   @Delete('deletion-request')
+  @ApiOkResponse({ type: AccountStatusResponseDto })
   @ThrottleSensitive()
   @ApiOperation({
     summary: 'Cancel a pending deletion',
@@ -124,7 +135,7 @@ export class AccountController {
 
   @Get('broadcasts')
   @ApiOperation({ summary: 'Live broadcasts this user has not dismissed' })
-  @ApiOkResponse({ description: 'Bilingual broadcast payloads' })
+  @ApiOkResponse({ description: 'Bilingual broadcast payloads', type: [BroadcastResponseDto] })
   listBroadcasts(
     @CurrentUser() user: AuthenticatedUser,
     @Req() req: AuthedRequest,
@@ -133,6 +144,7 @@ export class AccountController {
   }
 
   @Post('broadcasts/:broadcastId/dismiss')
+  @ApiCreatedResponse({ type: DismissedResponseDto })
   @ApiOperation({ summary: 'Dismiss a broadcast for this user' })
   dismissBroadcast(
     @CurrentUser() user: AuthenticatedUser,
@@ -154,6 +166,7 @@ export class PublicSettingsController {
   constructor(private readonly accountService: AccountService) {}
 
   @Get('public')
+  @ApiOkResponse({ type: PublicSettingsResponseDto })
   @ApiOperation({
     summary: 'Global settings any signed-in user may read',
     description:

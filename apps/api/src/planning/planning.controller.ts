@@ -27,6 +27,7 @@ import {
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
+  ApiCreatedResponse,
   ApiOkResponse,
   ApiOperation,
   ApiParam,
@@ -46,7 +47,17 @@ import {
   UpsertDebtDto,
   ReportRangeDto,
   BudgetStatusResponseDto,
+  GoalProgressResponseDto,
   GoalsOverviewResponseDto,
+  DeletedResponseDto,
+  DebtResponseDto,
+  DebtOverviewResponseDto,
+  CalendarEventResponseDto,
+  CalendarOverviewResponseDto,
+  RecurringRuleResponseDto,
+  CategoryReportResponseDto,
+  CashFlowReportResponseDto,
+  NetWorthReportResponseDto,
 } from './dto/planning.dto';
 import { ThrottleLedgerWrite, ThrottleReport } from '../common/throttle';
 import { WorkspaceMemberGuard } from '../auth/guards/workspace-member.guard';
@@ -102,6 +113,7 @@ export class PlanningController {
     summary: 'Create or replace the budget and all of its lines',
   })
   @ApiParam({ name: 'workspaceId', type: 'string' })
+  @ApiOkResponse({ type: BudgetStatusResponseDto })
   upsertBudget(
     @Param('workspaceId') workspaceId: string,
     @CurrentUser() user: AuthenticatedUser,
@@ -117,6 +129,7 @@ export class PlanningController {
   }
 
   @Delete('budget/:id')
+  @ApiOkResponse({ type: DeletedResponseDto })
   @ApiOperation({ summary: 'Delete a budget' })
   deleteBudget(
     @Param('workspaceId') workspaceId: string,
@@ -141,6 +154,7 @@ export class PlanningController {
   }
 
   @Post('goals')
+  @ApiCreatedResponse({ type: GoalProgressResponseDto })
   @ApiOperation({ summary: 'Create a savings goal' })
   createGoal(
     @Param('workspaceId') workspaceId: string,
@@ -152,6 +166,7 @@ export class PlanningController {
   }
 
   @Patch('goals/:id')
+  @ApiOkResponse({ type: GoalProgressResponseDto })
   @ApiOperation({ summary: 'Update a savings goal (progress is not writable)' })
   updateGoal(
     @Param('workspaceId') workspaceId: string,
@@ -163,6 +178,7 @@ export class PlanningController {
   }
 
   @Delete('goals/:id')
+  @ApiOkResponse({ type: DeletedResponseDto })
   @ApiOperation({ summary: 'Delete a savings goal' })
   deleteGoal(
     @Param('workspaceId') workspaceId: string,
@@ -173,6 +189,7 @@ export class PlanningController {
   }
 
   @Put('debts')
+  @ApiOkResponse({ type: DebtResponseDto })
   @ApiOperation({
     summary: 'Attach or replace repayment terms on a liability account',
   })
@@ -185,6 +202,7 @@ export class PlanningController {
   }
 
   @Get('debts')
+  @ApiOkResponse({ type: DebtOverviewResponseDto })
   @ApiOperation({
     summary:
       'List debt terms with outstanding balances derived from the ledger',
@@ -197,6 +215,7 @@ export class PlanningController {
   }
 
   @Delete('debts/:accountId')
+  @ApiOkResponse({ type: DeletedResponseDto })
   @ApiOperation({
     summary:
       'Remove debt terms without deleting the liability account or balance',
@@ -212,6 +231,7 @@ export class PlanningController {
   // ── Calendar ───────────────────────────────────────────────────────────────
 
   @Get('calendar')
+  @ApiOkResponse({ type: CalendarOverviewResponseDto })
   @ApiOperation({ summary: 'Upcoming, due and overdue events' })
   @ApiQuery({ name: 'days', required: false, type: Number })
   getCalendar(
@@ -234,6 +254,7 @@ export class PlanningController {
   }
 
   @Post('calendar')
+  @ApiCreatedResponse({ type: CalendarEventResponseDto })
   @ApiOperation({ summary: 'Create a bill, expected income or reminder' })
   createEvent(
     @Param('workspaceId') workspaceId: string,
@@ -250,6 +271,7 @@ export class PlanningController {
   }
 
   @Patch('calendar/:id')
+  @ApiOkResponse({ type: CalendarEventResponseDto })
   @ApiOperation({ summary: 'Mark paid or skipped, or edit an event' })
   updateEvent(
     @Param('workspaceId') workspaceId: string,
@@ -266,6 +288,7 @@ export class PlanningController {
   }
 
   @Delete('calendar/:id')
+  @ApiOkResponse({ type: DeletedResponseDto })
   @ApiOperation({ summary: 'Delete a calendar event' })
   deleteEvent(
     @Param('workspaceId') workspaceId: string,
@@ -282,6 +305,7 @@ export class PlanningController {
   // ── Recurring rules ────────────────────────────────────────────────────────
 
   @Get('recurring')
+  @ApiOkResponse({ type: [RecurringRuleResponseDto] })
   @ApiOperation({ summary: 'List recurring rules' })
   listRules(
     @Param('workspaceId') workspaceId: string,
@@ -291,6 +315,7 @@ export class PlanningController {
   }
 
   @Post('recurring')
+  @ApiCreatedResponse({ type: RecurringRuleResponseDto })
   @ApiOperation({
     summary: 'Create a recurring rule (never auto-posts — §9.4)',
   })
@@ -309,6 +334,7 @@ export class PlanningController {
   }
 
   @Patch('recurring/:id')
+  @ApiOkResponse({ type: RecurringRuleResponseDto })
   @ApiOperation({ summary: 'Pause or resume a recurring rule' })
   updateRule(
     @Param('workspaceId') workspaceId: string,
@@ -325,6 +351,7 @@ export class PlanningController {
   }
 
   @Delete('recurring/:id')
+  @ApiOkResponse({ type: DeletedResponseDto })
   @ApiOperation({ summary: 'Delete a recurring rule' })
   deleteRule(
     @Param('workspaceId') workspaceId: string,
@@ -341,6 +368,7 @@ export class PlanningController {
   // ── Reports ────────────────────────────────────────────────────────────────
 
   @Get('reports/categories')
+  @ApiOkResponse({ type: CategoryReportResponseDto })
   @ThrottleReport()
   @ApiOperation({
     summary: 'Category breakdown and 6-month trend (§11.3 contract)',
@@ -362,6 +390,7 @@ export class PlanningController {
   }
 
   @Get('reports/cash-flow')
+  @ApiOkResponse({ type: CashFlowReportResponseDto })
   @ThrottleReport()
   @ApiOperation({
     summary: 'Cash-flow time series for a custom local-date range',
@@ -379,6 +408,7 @@ export class PlanningController {
   }
 
   @Get('reports/income-expense')
+  @ApiOkResponse({ type: CashFlowReportResponseDto })
   @ThrottleReport()
   @ApiOperation({
     summary: 'Income versus expense time series for a custom range',
@@ -396,6 +426,7 @@ export class PlanningController {
   }
 
   @Get('reports/net-worth')
+  @ApiOkResponse({ type: NetWorthReportResponseDto })
   @ThrottleReport()
   @ApiOperation({ summary: 'Historical assets, liabilities and net worth' })
   getNetWorth(

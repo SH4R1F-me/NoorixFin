@@ -287,7 +287,7 @@ export default function CalendarView({
                       <p style={styles.title}>{event.title}</p>
                       <p style={field.meta}>
                         {event.local_date}
-                        {!settled && ` · ${whenLabel(event.days_away)}`}
+                        {!settled && ` · ${whenLabel(event.days_away ?? 0)}`}
                       </p>
                     </div>
 

@@ -59,6 +59,7 @@ export class DevicesController {
   @ApiOperation({
     summary: 'Register or update a device (upsert on device_id)',
   })
+  @ApiCreatedResponse({ type: DeviceResponseDto })
   register(
     @Req() req: AuthedRequest & ClientContextRequest,
     @CurrentUser() user: AuthenticatedUser,

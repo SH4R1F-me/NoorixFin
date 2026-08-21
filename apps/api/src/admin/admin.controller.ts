@@ -40,6 +40,7 @@ import {
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
+  ApiCreatedResponse,
   ApiOkResponse,
   ApiOperation,
   ApiTags,
@@ -65,6 +66,25 @@ import {
   UpdateSettingsDto,
   UpdateMobileReleaseDto,
 } from './dto/admin.dto';
+import {
+  PlatformStatsResponseDto,
+  AdminHealthResponseDto,
+  SystemEventPageResponseDto,
+  ScheduledJobsResponseDto,
+  AuditEventPageResponseDto,
+  AdminUserPageResponseDto,
+  AdminUserResponseDto,
+  AppSettingResponseDto,
+  MobileReleaseResponseDto,
+  AdminBroadcastResponseDto,
+  PerformanceMetricsResponseDto,
+  AlertStateResponseDto,
+  AuthAuditPageResponseDto,
+  DeviceSessionPageResponseDto,
+  RevokedBooleanResponseDto,
+  RevokedCountResponseDto,
+  AnomaliesResponseDto,
+} from './dto/admin-response.dto';
 
 /**
  * Live-tail poll cadence.
@@ -94,12 +114,14 @@ export class AdminController {
   // ─── Overview ─────────────────────────────────────────────
 
   @Get('overview')
+  @ApiOkResponse({ type: PlatformStatsResponseDto })
   @ApiOperation({ summary: 'Platform-wide counts, uptime and DB latency' })
   overview(@Req() req: AuthedRequest) {
     return this.adminService.getOverview(req.accessToken);
   }
 
   @Get('health')
+  @ApiOkResponse({ type: AdminHealthResponseDto })
   @ApiOperation({
     summary: 'Deep health check — probes Postgres, Auth and Storage',
     description:
@@ -113,6 +135,7 @@ export class AdminController {
   // ─── System events ────────────────────────────────────────
 
   @Get('events')
+  @ApiOkResponse({ type: SystemEventPageResponseDto })
   @ApiOperation({ summary: 'Paginated operational event log' })
   listEvents(@Req() req: AuthedRequest, @Query() query: ListEventsQueryDto) {
     return this.adminService.listEvents(req.accessToken, query);
@@ -157,6 +180,7 @@ export class AdminController {
   // ─── Operations (audit items 8, 15) ───────────────────────
 
   @Get('jobs')
+  @ApiOkResponse({ type: ScheduledJobsResponseDto })
   @ApiOperation({
     summary: 'Scheduled jobs and their last run outcome',
     description:
@@ -216,6 +240,7 @@ export class AdminController {
   // ─── Audit trail ──────────────────────────────────────────
 
   @Get('audit')
+  @ApiOkResponse({ type: AuditEventPageResponseDto })
   @ApiOperation({ summary: 'Global audit trail' })
   listAudit(@Req() req: AuthedRequest, @Query() query: ListAuditQueryDto) {
     return this.adminService.listAudit(req.accessToken, query);
@@ -224,6 +249,7 @@ export class AdminController {
   // ─── Users ────────────────────────────────────────────────
 
   @Get('users')
+  @ApiOkResponse({ type: AdminUserPageResponseDto })
   @ApiOperation({
     summary: 'User metadata list',
     description:
@@ -231,12 +257,13 @@ export class AdminController {
       'a balance, amount, payee or note — operators have no access to any ' +
       "user's financial rows (DEC-002 #12, DEC-007).",
   })
-  @ApiOkResponse({ description: 'Metadata and counts; never financial data' })
+  @ApiOkResponse({ description: 'Metadata and counts; never financial data', type: AdminUserPageResponseDto })
   listUsers(@Req() req: AuthedRequest, @Query() query: ListUsersQueryDto) {
     return this.adminService.listUsers(req.accessToken, query);
   }
 
   @Get('users/:userId')
+  @ApiOkResponse({ type: AdminUserResponseDto })
   @ApiOperation({ summary: 'Single user metadata' })
   getUser(
     @Req() req: AuthedRequest,
@@ -311,6 +338,7 @@ export class AdminController {
   // ─── Settings ─────────────────────────────────────────────
 
   @Get('settings')
+  @ApiOkResponse({ type: [AppSettingResponseDto] })
   @ApiOperation({ summary: 'All global settings, public and private' })
   listSettings(@Req() req: AuthedRequest) {
     return this.adminService.listSettings(req.accessToken);
@@ -329,6 +357,7 @@ export class AdminController {
   }
 
   @Get('releases')
+  @ApiOkResponse({ type: MobileReleaseResponseDto })
   @ApiOperation({ summary: 'Current operator-managed mobile release' })
   getReleases() {
     return this.adminService.getMobileRelease();
@@ -350,6 +379,7 @@ export class AdminController {
   // ─── Broadcasts ───────────────────────────────────────────
 
   @Get('broadcasts')
+  @ApiOkResponse({ type: [AdminBroadcastResponseDto] })
   @ApiOperation({ summary: 'All broadcasts with aggregate delivery stats' })
   listBroadcasts(@Req() req: AuthedRequest) {
     return this.adminService.listBroadcasts(req.accessToken);
@@ -411,6 +441,7 @@ export class AdminController {
   // ─── Phase 2: Performance ──────────────────────────────────
 
   @Get('metrics/performance')
+  @ApiOkResponse({ type: PerformanceMetricsResponseDto })
   @ApiOperation({
     summary:
       'p50/p95/p99 latency, error rate, request volume from system_events',
@@ -428,12 +459,14 @@ export class AdminController {
   // ─── Phase 2: Alerts ──────────────────────────────────────
 
   @Get('alerts')
+  @ApiOkResponse({ type: [AlertStateResponseDto] })
   @ApiOperation({ summary: 'Current state of all alert rules' })
   getAlerts(@Req() req: AuthedRequest) {
     return this.adminService.getAlerts(req.accessToken);
   }
 
   @Post('alerts/:alertKey/acknowledge')
+  @ApiCreatedResponse({ type: AlertStateResponseDto })
   @ThrottleAdminWrite()
   @Idempotent()
   @ApiOperation({ summary: 'Acknowledge (resolve) a firing alert' })
@@ -447,6 +480,7 @@ export class AdminController {
   // ─── Phase 2: Security ────────────────────────────────────
 
   @Get('security/auth-events')
+  @ApiOkResponse({ type: AuthAuditPageResponseDto })
   @ApiOperation({
     summary: 'Auth-related audit events (logins, MFA, suspensions)',
   })
@@ -464,6 +498,7 @@ export class AdminController {
   }
 
   @Get('security/sessions')
+  @ApiOkResponse({ type: DeviceSessionPageResponseDto })
   @ApiOperation({
     summary: 'All active (non-revoked) device sessions platform-wide',
   })
@@ -481,6 +516,7 @@ export class AdminController {
   }
 
   @Post('security/sessions/:deviceId/revoke')
+  @ApiCreatedResponse({ type: RevokedBooleanResponseDto })
   @ThrottleAdminWrite()
   @Idempotent()
   @ApiOperation({ summary: 'Force-revoke a single device session' })
@@ -492,6 +528,7 @@ export class AdminController {
   }
 
   @Post('security/sessions/revoke-all/:userId')
+  @ApiCreatedResponse({ type: RevokedCountResponseDto })
   @ThrottleAdminWrite()
   @Idempotent()
   @ApiOperation({ summary: 'Force-revoke all sessions for a given user' })
@@ -503,6 +540,7 @@ export class AdminController {
   }
 
   @Get('security/anomalies')
+  @ApiOkResponse({ type: AnomaliesResponseDto })
   @ApiOperation({
     summary: 'Heuristic security signals: new devices, throttle abusers',
   })

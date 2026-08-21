@@ -28,7 +28,7 @@ export async function GET() {
   }
 
   try {
-    const bundle = await apiFetch<unknown>('/me/export');
+    const bundle = await apiFetch('/me/export');
     const filename = `noorixfin-export-${new Date().toISOString().slice(0, 10)}.json`;
 
     return new NextResponse(JSON.stringify(bundle, null, 2), {

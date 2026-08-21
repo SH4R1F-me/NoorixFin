@@ -94,7 +94,15 @@ export async function savePersona(
 export async function createFirstAccount(input: {
   workspaceId: string;
   name: string;
-  subtype: string;
+  subtype:
+    | 'SYSTEM'
+    | 'CASH'
+    | 'BANK'
+    | 'MOBILE_WALLET'
+    | 'CREDIT_CARD'
+    | 'LOAN'
+    | 'SAVINGS'
+    | 'CATEGORY';
   accountClass: 'ASSET' | 'LIABILITY';
   currency: string;
   openingBalance: string;

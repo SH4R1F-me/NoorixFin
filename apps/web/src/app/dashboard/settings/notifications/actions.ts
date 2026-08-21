@@ -31,7 +31,7 @@ export interface PreferencesPayload {
 
 export async function getNotificationPreferences(): Promise<PreferencesPayload | null> {
   try {
-    return await apiFetch<PreferencesPayload>('/me/notification-preferences');
+    return await apiFetch('/me/notification-preferences');
   } catch {
     return null;
   }
@@ -53,7 +53,7 @@ export async function saveNotificationPreferences(payload: PreferencesPayload) {
 
 export async function registerWebPushDevice(input: { deviceId: string; subscription: string }) {
   try {
-    const device = await apiFetch<{ id: string }>('/me/devices', {
+    const device = await apiFetch('/me/devices', {
       method: 'POST',
       body: {
         deviceId: input.deviceId,

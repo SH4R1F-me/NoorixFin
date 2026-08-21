@@ -469,6 +469,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/workspaces/{workspaceId}/transactions/{id}/tags": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Replace every tag on a transaction */
+        put: operations["TransactionsController_replaceTransactionTags_v1"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/workspaces/{workspaceId}/transactions/{id}/attachments": {
         parameters: {
             query?: never;
@@ -1625,17 +1642,17 @@ export interface components {
             /** @enum {string} */
             severity: "INFO" | "SUCCESS" | "WARNING" | "CRITICAL";
             title_en: string;
-            title_bn?: string | null;
+            title_bn: string | null;
             body_en: string;
-            body_bn?: string | null;
-            action_url?: string | null;
-            read_at?: string | null;
-            archived_at?: string | null;
+            body_bn: string | null;
+            action_url: string | null;
+            read_at: string | null;
+            archived_at: string | null;
             created_at: string;
         };
         NotificationPageResponseDto: {
             items: components["schemas"]["NotificationResponseDto"][];
-            next_cursor?: string | null;
+            next_cursor: string | null;
             has_more: boolean;
         };
         UnreadCountResponseDto: {
@@ -1665,6 +1682,27 @@ export interface components {
             /** @example Asia/Riyadh */
             quiet_hours_tz?: string | null;
         };
+        NotificationCampaignResponseDto: {
+            id: string;
+            /** @enum {string} */
+            audience: "ALL" | "OPERATORS";
+            /** @enum {string} */
+            category: "security" | "budget" | "goal" | "recurring" | "transaction" | "sync" | "account" | "system" | "operator";
+            /** @enum {string} */
+            severity: "INFO" | "SUCCESS" | "WARNING" | "CRITICAL";
+            title_en: string;
+            title_bn: string | null;
+            body_en: string;
+            body_bn: string | null;
+            action_url: string | null;
+            scheduled_for: string;
+            expires_at: string | null;
+            /** @enum {string} */
+            status: "DRAFT" | "SCHEDULED" | "PROCESSING" | "SENT" | "FAILED" | "CANCELLED";
+            recipient_count: number;
+            error: string | null;
+            created_at: string;
+        };
         ComposeNotificationDto: {
             /** @enum {string} */
             audience: "ALL" | "OPERATORS";
@@ -1681,6 +1719,17 @@ export interface components {
             scheduled_for?: string;
             expires_at?: string;
         };
+        NotificationTemplateResponseDto: {
+            id: string;
+            key: string;
+            category: string;
+            title_en: string;
+            title_bn: string | null;
+            body_en: string;
+            body_bn: string | null;
+            action_url: string | null;
+            updated_at: string;
+        };
         NotificationTemplateDto: {
             /** @example planned-maintenance */
             key: string;
@@ -1692,15 +1741,27 @@ export interface components {
             body_bn?: string;
             action_url?: string;
         };
+        NotificationDeliveryStatsResponseDto: {
+            campaign_id: string;
+            total: number;
+            by_channel: {
+                [key: string]: {
+                    [key: string]: number;
+                };
+            };
+        };
         ProfileResponseDto: {
             /** @example 550e8400-e29b-41d4-a716-446655440000 */
             id: string;
             /** @example Sharif */
             display_name: string;
             /** @example null */
-            avatar_path?: Record<string, never>;
-            /** @example bn */
-            locale: string;
+            avatar_path: string | null;
+            /**
+             * @example bn
+             * @enum {string}
+             */
+            locale: "bn" | "en";
             /** @example Asia/Dhaka */
             timezone: string;
             /** @example BDT */
@@ -1719,9 +1780,9 @@ export interface components {
             /**
              * @description Null until the user reaches §5.2 step 4.
              * @example INDIVIDUAL
-             * @enum {string}
+             * @enum {string|null}
              */
-            persona?: "INDIVIDUAL" | "STUDENT" | "FREELANCER";
+            persona: "INDIVIDUAL" | "STUDENT" | "FREELANCER" | null;
             /**
              * @description Platform operator flag (DEC-007). The web shell uses this to decide whether to render the System Admin switch. It grants METADATA access only — never access to another user's financial rows.
              * @example false
@@ -1734,7 +1795,7 @@ export interface components {
              */
             status: "ACTIVE" | "SUSPENDED" | "PENDING_DELETION";
             /** @description Set when status is PENDING_DELETION — when the purge runs. */
-            deletion_scheduled_for?: Record<string, never>;
+            deletion_scheduled_for: string | null;
             email: string;
             created_at: string;
             updated_at: string;
@@ -1811,6 +1872,19 @@ export interface components {
             /** @description Current user role (always OWNER) */
             role?: string;
         };
+        WorkspaceSummaryResponseDto: {
+            visible: boolean;
+            net_worth: number;
+            income: number;
+            expense: number;
+            net: number;
+            prev_income: number;
+            prev_expense: number;
+            prev_net: number;
+            account_count: number;
+            timezone?: string;
+            month_start?: string;
+        };
         CreateAccountDto: {
             /** @example Cash in Hand */
             name: string;
@@ -1853,8 +1927,9 @@ export interface components {
             normal_balance: string;
             include_in_budget: boolean;
             include_in_net_worth: boolean;
-            opening_date?: string;
-            archived_at?: Record<string, never>;
+            opening_date: string | null;
+            archived_at: string | null;
+            balance_minor?: number;
             created_by: string;
             version: number;
             created_at: string;
@@ -1912,6 +1987,13 @@ export interface components {
              */
             idempotency_key: string;
         };
+        PostingResponseDto: {
+            id: string;
+            ledger_account_id: string;
+            debit_minor: string;
+            credit_minor: string;
+            currency_code: string;
+        };
         TransactionAttachmentResponseDto: {
             id: string;
             original_name: string;
@@ -1925,15 +2007,50 @@ export interface components {
             entry_type: string;
             occurred_at: string;
             local_date: string;
-            payee?: string;
-            note?: string;
+            payee?: string | null;
+            note?: string | null;
             status: string;
             source: string;
             created_by: string;
             version: number;
             created_at: string;
-            postings?: string[];
+            postings?: components["schemas"]["PostingResponseDto"][];
             attachments?: components["schemas"]["TransactionAttachmentResponseDto"][];
+            tags?: string[];
+            reversed?: boolean;
+            amount_minor?: number;
+            currency_code?: string | null;
+            ledger_account_ids?: string[];
+        };
+        TransactionListItemResponseDto: {
+            id: string;
+            workspace_id: string;
+            entry_type: string;
+            occurred_at: string;
+            local_date: string;
+            payee: string | null;
+            note: string | null;
+            status: string;
+            source: string;
+            created_by: string;
+            version: number;
+            created_at: string;
+            amount_minor: number;
+            currency_code: string | null;
+            ledger_account_ids: string[];
+            tags: string[];
+            attachments: components["schemas"]["TransactionAttachmentResponseDto"][];
+            reversed: boolean;
+        };
+        TransactionPageResponseDto: {
+            items: components["schemas"]["TransactionListItemResponseDto"][];
+            next_cursor: string | null;
+            has_more: boolean;
+        };
+        TagResponseDto: {
+            id: string;
+            name: string;
+            usage_count: number;
         };
         TagNameDto: {
             /**
@@ -1941,6 +2058,18 @@ export interface components {
              * @example travel
              */
             name: string;
+        };
+        DeletedTagResponseDto: {
+            id: string;
+        };
+        UpdateTransactionTagsDto: {
+            /**
+             * @example [
+             *       "groceries",
+             *       "weekly"
+             *     ]
+             */
+            tags: string[];
         };
         CreateAttachmentDto: {
             /** @description A retry of the same receipt upload returns the original attachment */
@@ -1951,6 +2080,13 @@ export interface components {
             content_type: "image/jpeg" | "image/png" | "image/webp" | "application/pdf";
             /** @description Base64 bytes without a data-URL prefix; maximum decoded size 5 MB */
             data_base64: string;
+        };
+        SignedAttachmentUrlResponseDto: {
+            url: string;
+            expires_in: number;
+        };
+        DeletedAttachmentResponseDto: {
+            deleted: boolean;
         };
         CategoryResponseDto: {
             id: string;
@@ -1963,15 +2099,15 @@ export interface components {
              * @description Set for system categories. Translate it for display; also marks the row as system-provided.
              * @example cat.food_dining
              */
-            translation_key?: Record<string, never>;
+            translation_key: string | null;
             /** @description User-supplied name. Overrides translation_key when present. */
-            custom_name?: Record<string, never>;
-            parent_id?: Record<string, never>;
+            custom_name: string | null;
+            parent_id: string | null;
             icon: string;
             color: string;
             sort_order: number;
-            archived_at?: Record<string, never>;
-            deleted_at?: Record<string, never>;
+            archived_at: string | null;
+            deleted_at: string | null;
             created_at: string;
             updated_at: string;
         };
@@ -1995,7 +2131,7 @@ export interface components {
              * @description Hex color for the category
              * @example #10b981
              */
-            color?: string;
+            color: string | null;
             /** @description Parent category ID for hierarchy */
             parent_id?: string;
             /**
@@ -2017,8 +2153,8 @@ export interface components {
             line_id: string;
             category_id: string;
             name: string;
-            translation_key?: string | null;
-            custom_name?: string | null;
+            translation_key: string | null;
+            custom_name: string | null;
             icon: string;
             color: string;
             planned_minor: number;
@@ -2033,6 +2169,9 @@ export interface components {
             name?: string;
             /** @enum {string} */
             cadence?: "MONTHLY" | "WEEKLY";
+            rollover?: boolean;
+            period_start?: string;
+            period_end?: string;
             planned_total?: number;
             spent_total?: number;
             lines?: components["schemas"]["BudgetLineResponseDto"][];
@@ -2062,20 +2201,35 @@ export interface components {
             rollover?: boolean;
             lines: components["schemas"]["BudgetLineInputDto"][];
         };
+        DeletedResponseDto: {
+            deleted: boolean;
+        };
         GoalProgressResponseDto: {
             id: string;
             name: string;
             target_minor: number;
-            current_minor?: number | null;
+            current_minor: number | null;
             currency_code: string;
-            target_date?: string | null;
+            target_date: string | null;
             status: string;
             priority: number;
+            linked_account_id: string | null;
+            days_left: number | null;
+        };
+        DebtResponseDto: {
+            ledger_account_id: string;
+            name: string;
+            currency_code: string;
+            principal_minor: number;
+            outstanding_minor: number;
+            annual_rate_bps: number | null;
+            minimum_payment_minor: number | null;
+            due_day: number | null;
         };
         GoalsOverviewResponseDto: {
             visible: boolean;
             goals?: components["schemas"]["GoalProgressResponseDto"][];
-            debts?: Record<string, never>[];
+            debts?: components["schemas"]["DebtResponseDto"][];
             total_debt_minor?: number;
             timezone?: string;
             generated_at?: string;
@@ -2127,6 +2281,38 @@ export interface components {
              */
             due_day?: number;
         };
+        DebtOverviewResponseDto: {
+            debts: components["schemas"]["DebtResponseDto"][];
+            total_debt_minor: number;
+        };
+        CalendarEventResponseDto: {
+            id: string;
+            workspace_id: string;
+            /** @enum {string} */
+            type: "BILL" | "INCOME" | "GOAL" | "CUSTOM";
+            title: string;
+            amount_minor: number | null;
+            currency_code: string;
+            due_at: string;
+            timezone: string;
+            local_date: string;
+            reminder_offsets: number[];
+            /** @enum {string} */
+            status: "UPCOMING" | "DUE" | "OVERDUE" | "PAID" | "SKIPPED";
+            journal_entry_id: string | null;
+            recurring_rule_id: string | null;
+            days_away?: number;
+        };
+        CalendarOverviewResponseDto: {
+            visible: boolean;
+            timezone: string;
+            today: string;
+            horizon_days: number;
+            generated_at: string;
+            events: components["schemas"]["CalendarEventResponseDto"][];
+            overdue_count: number;
+            due_soon_total_minor: number;
+        };
         CreateCalendarEventDto: {
             /** @enum {string} */
             type: "BILL" | "INCOME" | "GOAL" | "CUSTOM";
@@ -2159,6 +2345,29 @@ export interface components {
             /** @description The transaction that settled this event */
             journal_entry_id?: string;
         };
+        RecurringRuleResponseDto: {
+            id: string;
+            workspace_id: string;
+            name: string;
+            /** @enum {string} */
+            entry_type: "EXPENSE" | "INCOME";
+            amount_minor: number;
+            currency_code: string;
+            account_id: string | null;
+            category_id: string | null;
+            payee: string | null;
+            /** @enum {string} */
+            frequency: "DAILY" | "WEEKLY" | "MONTHLY" | "YEARLY";
+            interval_count: number;
+            timezone: string;
+            next_occurrence: string;
+            ends_at: string | null;
+            /** @enum {string} */
+            behavior: "REMIND_ONLY" | "AUTO_CREATE_DRAFT";
+            /** @enum {string} */
+            status: "ACTIVE" | "PAUSED" | "ENDED";
+            created_at: string;
+        };
         CreateRecurringRuleDto: {
             /** @example Rent */
             name: string;
@@ -2189,12 +2398,225 @@ export interface components {
              */
             status: "ACTIVE" | "PAUSED";
         };
+        CategoryReportLineResponseDto: {
+            category_id: string;
+            custom_name: string | null;
+            translation_key: string | null;
+            icon: string;
+            color: string;
+            /** @enum {string} */
+            kind: "INCOME" | "EXPENSE";
+            amount_minor: number;
+            entry_count: number;
+        };
+        CategoryTrendResponseDto: {
+            month: string;
+            income_minor: number;
+            expense_minor: number;
+        };
+        CategoryReportResponseDto: {
+            visible: boolean;
+            period_from: string;
+            period_to: string;
+            timezone: string;
+            currency_basis: string;
+            generated_at: string;
+            categories: components["schemas"]["CategoryReportLineResponseDto"][];
+            trend: components["schemas"]["CategoryTrendResponseDto"][];
+        };
+        CashFlowPeriodResponseDto: {
+            period_start: string;
+            period_end: string;
+            income_minor: number;
+            expense_minor: number;
+            net_minor: number;
+        };
+        CashFlowReportResponseDto: {
+            visible: boolean;
+            period_from?: string;
+            period_to?: string;
+            /** @enum {string} */
+            granularity?: "day" | "week" | "month";
+            timezone?: string;
+            currency_basis?: string;
+            generated_at?: string;
+            periods?: components["schemas"]["CashFlowPeriodResponseDto"][];
+        };
+        NetWorthPeriodResponseDto: {
+            period_start: string;
+            period_end: string;
+            assets_minor: number;
+            liabilities_minor: number;
+            net_worth_minor: number;
+        };
+        NetWorthReportResponseDto: {
+            visible: boolean;
+            period_from?: string;
+            period_to?: string;
+            /** @enum {string} */
+            granularity?: "day" | "week" | "month";
+            timezone?: string;
+            currency_basis?: string;
+            generated_at?: string;
+            periods?: components["schemas"]["NetWorthPeriodResponseDto"][];
+        };
+        AdminUsersStatsResponseDto: {
+            total: number;
+            active: number;
+            suspended: number;
+            pending_deletion: number;
+            super_admins: number;
+            new_24h: number;
+            new_7d: number;
+            active_7d: number;
+        };
+        AdminWorkspaceStatsResponseDto: {
+            total: number;
+            active: number;
+        };
+        AdminLedgerStatsResponseDto: {
+            accounts: number;
+            entries: number;
+            entries_24h: number;
+        };
+        AdminEventStatsResponseDto: {
+            total: number;
+            errors_1h: number;
+            errors_24h: number;
+            warns_24h: number;
+            oldest?: string | null;
+        };
+        AdminBroadcastStatsResponseDto: {
+            published: number;
+            draft: number;
+        };
+        AdminAuditStatsResponseDto: {
+            total: number;
+            last_24h: number;
+        };
+        AdminApiStatsResponseDto: {
+            uptime_seconds: number;
+            db_latency_ms: number;
+            version: string;
+            node_env: string;
+            telemetry_pending: number;
+        };
+        PlatformStatsResponseDto: {
+            users: components["schemas"]["AdminUsersStatsResponseDto"];
+            workspaces: components["schemas"]["AdminWorkspaceStatsResponseDto"];
+            ledger: components["schemas"]["AdminLedgerStatsResponseDto"];
+            events: components["schemas"]["AdminEventStatsResponseDto"];
+            broadcasts: components["schemas"]["AdminBroadcastStatsResponseDto"];
+            audit: components["schemas"]["AdminAuditStatsResponseDto"];
+            generated_at: string;
+            api: components["schemas"]["AdminApiStatsResponseDto"];
+        };
+        HealthCheckResponseDto: {
+            name: string;
+            ok: boolean;
+            latency_ms: number;
+            error?: string | null;
+        };
+        AdminHealthResponseDto: {
+            /** @enum {string} */
+            status: "healthy" | "degraded";
+            checks: components["schemas"]["HealthCheckResponseDto"][];
+            checked_at: string;
+        };
+        SystemEventResponseDto: {
+            id: number;
+            /** @enum {string} */
+            level: "DEBUG" | "INFO" | "WARN" | "ERROR" | "FATAL";
+            source: string;
+            event_code: string;
+            message: string;
+            request_id: string | null;
+            actor_id: string | null;
+            route: string | null;
+            method: string | null;
+            status_code: number | null;
+            latency_ms: number | null;
+            metadata: {
+                [key: string]: unknown;
+            };
+            created_at: string;
+        };
+        SystemEventPageResponseDto: {
+            items: components["schemas"]["SystemEventResponseDto"][];
+            total: number;
+            limit: number;
+            offset: number;
+        };
+        ScheduledJobResponseDto: {
+            jobid: number;
+            jobname: string;
+            schedule: string;
+            command: string;
+            nodename: string;
+            nodeport: number;
+            database: string;
+            username: string;
+            active: boolean;
+            next_run: string | null;
+        };
+        ScheduledJobsResponseDto: {
+            jobs: components["schemas"]["ScheduledJobResponseDto"][];
+            run_at: string;
+        };
         EnableTracingDto: {
             /**
              * @description How long to trace for. Clamped server-side to at most 60 minutes.
              * @example 15
              */
             minutes?: number;
+        };
+        AuditEventResponseDto: {
+            id: string;
+            workspace_id: string | null;
+            actor_id: string | null;
+            action: string;
+            resource_type: string;
+            resource_id: string | null;
+            metadata: {
+                [key: string]: unknown;
+            };
+            created_at: string;
+        };
+        AuditEventPageResponseDto: {
+            items: components["schemas"]["AuditEventResponseDto"][];
+            total: number;
+            limit: number;
+            offset: number;
+        };
+        AdminUserResponseDto: {
+            user_id: string;
+            email: string;
+            display_name: string;
+            locale: string;
+            timezone: string;
+            base_currency: string;
+            /** @enum {string} */
+            status: "ACTIVE" | "SUSPENDED" | "PENDING_DELETION";
+            is_super_admin: boolean;
+            onboarding_status: string;
+            created_at: string;
+            last_sign_in_at: string | null;
+            email_confirmed_at: string | null;
+            banned_until: string | null;
+            suspended_at: string | null;
+            suspended_reason: string | null;
+            deletion_scheduled_for: string | null;
+            provider_count: number;
+            workspace_count: number;
+            account_count: number;
+            entry_count: number;
+            last_entry_at: string | null;
+        };
+        AdminUserPageResponseDto: {
+            items: components["schemas"]["AdminUserResponseDto"][];
+            total: number;
+            limit: number;
+            offset: number;
         };
         AdminUpdateUserDto: {
             /** @example Sharif */
@@ -2208,6 +2630,16 @@ export interface components {
             /** @example Terms of service violation — ticket #412 */
             reason: string;
         };
+        AppSettingResponseDto: {
+            key: string;
+            value: {
+                [key: string]: unknown;
+            };
+            is_public: boolean;
+            description: string;
+            updated_by: string | null;
+            updated_at: string;
+        };
         UpdateSettingDto: {
             /** @example maintenance_mode */
             key: string;
@@ -2217,10 +2649,29 @@ export interface components {
              *       "enabled": false
              *     }
              */
-            value: Record<string, never>;
+            value: {
+                [key: string]: unknown;
+            };
         };
         UpdateSettingsDto: {
             settings: components["schemas"]["UpdateSettingDto"][];
+        };
+        MobileReleaseResponseDto: {
+            latest_version: string;
+            min_version: string;
+            ios_url: string | null;
+            android_url: string | null;
+            apk_url: string | null;
+            apk_sha256: string | null;
+            release_notes_url: string | null;
+            /** @enum {string} */
+            ios_status: "COMING_SOON" | "LIVE";
+            /** @enum {string} */
+            android_status: "COMING_SOON" | "LIVE";
+            apk_size_bytes: number | null;
+            released_at: string | null;
+            ios_minimum: string;
+            android_minimum: string;
         };
         UpdateMobileReleaseDto: {
             /** @example 1.4.2 */
@@ -2242,6 +2693,29 @@ export interface components {
             ios_minimum: string;
             /** @example 8.0 */
             android_minimum: string;
+        };
+        BroadcastDeliveryStatsResponseDto: {
+            seen: number;
+            dismissed: number;
+        };
+        AdminBroadcastResponseDto: {
+            id: string;
+            /** @enum {string} */
+            severity: "INFO" | "SUCCESS" | "WARNING" | "CRITICAL";
+            /** @enum {string} */
+            audience: "ALL" | "SUPER_ADMINS";
+            /** @enum {string} */
+            status: "DRAFT" | "PUBLISHED" | "ARCHIVED";
+            title_en: string;
+            title_bn: string;
+            body_en: string;
+            body_bn: string;
+            link_url: string | null;
+            dismissible: boolean;
+            publish_at: string | null;
+            expires_at: string | null;
+            created_at: string;
+            stats: components["schemas"]["BroadcastDeliveryStatsResponseDto"];
         };
         CreateBroadcastDto: {
             /** @example Scheduled maintenance */
@@ -2281,6 +2755,100 @@ export interface components {
             /** @description ISO timestamp; null means no expiry */
             expires_at?: string;
         };
+        RoutePerformanceResponseDto: {
+            route: string;
+            count: number;
+            p50: number;
+            p95: number;
+            p99: number;
+            error_count: number;
+        };
+        PerformanceMetricsResponseDto: {
+            window_hours: number;
+            total_requests: number;
+            error_count: number;
+            client_error_count: number;
+            error_rate: number;
+            p50: number;
+            p95: number;
+            p99: number;
+            slowest_routes: components["schemas"]["RoutePerformanceResponseDto"][];
+            by_platform: {
+                [key: string]: number;
+            };
+            computed_at: string;
+        };
+        AlertStateResponseDto: {
+            alert_key: string;
+            is_firing: boolean;
+            last_fired_at: string | null;
+            last_resolved_at: string | null;
+            last_value: number | null;
+            updated_at: string;
+        };
+        AuthAuditEventResponseDto: {
+            id: string;
+            workspace_id: string | null;
+            actor_id: string | null;
+            action: string;
+            resource_type: string;
+            resource_id: string | null;
+            metadata: {
+                [key: string]: unknown;
+            };
+            created_at: string;
+            ip_address: string | null;
+            user_agent: string | null;
+            platform: string | null;
+            device_id: string | null;
+        };
+        AuthAuditPageResponseDto: {
+            items: components["schemas"]["AuthAuditEventResponseDto"][];
+            total: number;
+            limit: number;
+            offset: number;
+        };
+        DeviceSessionResponseDto: {
+            id: string;
+            user_id: string;
+            device_id: string;
+            /** @enum {string} */
+            platform: "web" | "ios" | "android";
+            device_name: string | null;
+            os_version: string | null;
+            app_version: string | null;
+            last_seen_at: string;
+            last_ip: string | null;
+            first_seen_at: string;
+        };
+        DeviceSessionPageResponseDto: {
+            items: components["schemas"]["DeviceSessionResponseDto"][];
+            total: number;
+            limit: number;
+            offset: number;
+        };
+        RevokedBooleanResponseDto: {
+            revoked: boolean;
+        };
+        RevokedCountResponseDto: {
+            revoked: number;
+        };
+        NewDeviceAnomalyResponseDto: {
+            id: string;
+            user_id: string;
+            platform: string;
+            device_name: string | null;
+            first_seen_at: string;
+            last_ip: string | null;
+        };
+        ThrottleAnomalyResponseDto: {
+            actor_id: string;
+            hit_count: number;
+        };
+        AnomaliesResponseDto: {
+            new_devices: components["schemas"]["NewDeviceAnomalyResponseDto"][];
+            throttle_abusers: components["schemas"]["ThrottleAnomalyResponseDto"][];
+        };
         RequestDeletionDto: {
             /**
              * @description Must exactly equal the signed-in account's email address. A typed confirmation, so an accidental or CSRF-driven POST cannot schedule the deletion of an entire ledger.
@@ -2292,6 +2860,50 @@ export interface components {
              * @example No longer needed
              */
             reason?: string;
+        };
+        DeletionScheduledResponseDto: {
+            /** @enum {string} */
+            status: "PENDING_DELETION";
+            deletion_scheduled_for: string;
+            grace_days: number;
+        };
+        AccountStatusResponseDto: {
+            /** @enum {string} */
+            status: "ACTIVE";
+        };
+        BroadcastResponseDto: {
+            id: string;
+            /** @enum {string} */
+            severity: "INFO" | "SUCCESS" | "WARNING" | "CRITICAL";
+            title_en: string;
+            title_bn: string;
+            body_en: string;
+            body_bn: string;
+            link_url: string | null;
+            dismissible: boolean;
+            publish_at: string | null;
+            expires_at: string | null;
+        };
+        DismissedResponseDto: {
+            dismissed: boolean;
+        };
+        MaintenanceSettingResponseDto: {
+            enabled: boolean;
+            message_en: string;
+            message_bn: string;
+        };
+        EnabledSettingResponseDto: {
+            enabled: boolean;
+        };
+        ValueSettingResponseDto: {
+            value: string;
+        };
+        PublicSettingsResponseDto: {
+            maintenance_mode?: components["schemas"]["MaintenanceSettingResponseDto"];
+            signups_enabled?: components["schemas"]["EnabledSettingResponseDto"];
+            app_version?: components["schemas"]["ValueSettingResponseDto"];
+            donation_url?: components["schemas"]["ValueSettingResponseDto"];
+            support_email?: components["schemas"]["ValueSettingResponseDto"];
         };
         DeviceResponseDto: {
             id: string;
@@ -2338,6 +2950,32 @@ export interface components {
         RevokeAllDto: {
             /** @description Keep this device_id active (the caller's own device) */
             currentDeviceId?: string;
+        };
+        ImportRowResponseDto: {
+            id: string;
+            row_number: number;
+            normalized_payload: {
+                [key: string]: unknown;
+            };
+            /** @enum {string} */
+            status: "PENDING" | "PROCESSING" | "COMPLETED" | "COMPLETED_WITH_ERRORS" | "FAILED";
+            error_message: string | null;
+            journal_entry_id?: string | null;
+        };
+        ImportJobResponseDto: {
+            id: string;
+            /** @enum {string} */
+            format: "CSV" | "OFX" | "QIF";
+            filename: string;
+            /** @enum {string} */
+            status: "PENDING" | "PROCESSING" | "COMPLETED" | "COMPLETED_WITH_ERRORS" | "FAILED";
+            total_rows: number;
+            imported_rows: number;
+            failed_rows: number;
+            error_message: string | null;
+            created_at: string;
+            completed_at: string | null;
+            rows?: components["schemas"]["ImportRowResponseDto"][];
         };
         CreateImportDto: {
             /** @enum {string} */
@@ -2581,7 +3219,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["NotificationCampaignResponseDto"][];
+                };
             };
         };
     };
@@ -2602,7 +3242,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["NotificationCampaignResponseDto"];
+                };
             };
         };
     };
@@ -2619,7 +3261,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["NotificationTemplateResponseDto"][];
+                };
             };
         };
     };
@@ -2640,7 +3284,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["NotificationTemplateResponseDto"];
+                };
             };
         };
     };
@@ -2678,7 +3324,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["NotificationDeliveryStatsResponseDto"];
+                };
             };
         };
     };
@@ -2873,7 +3521,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["WorkspaceSummaryResponseDto"];
+                };
             };
         };
     };
@@ -2972,7 +3622,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["TransactionResponseDto"];
+                    "application/json": components["schemas"]["TransactionPageResponseDto"];
                 };
             };
         };
@@ -3017,7 +3667,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["TagResponseDto"][];
+                };
             };
         };
     };
@@ -3040,7 +3692,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["TagResponseDto"];
+                };
             };
         };
     };
@@ -3060,7 +3714,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["DeletedTagResponseDto"];
+                };
             };
         };
     };
@@ -3084,7 +3740,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["TagResponseDto"];
+                };
             };
         };
     };
@@ -3099,6 +3757,32 @@ export interface operations {
             cookie?: never;
         };
         requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TransactionResponseDto"];
+                };
+            };
+        };
+    };
+    TransactionsController_replaceTransactionTags_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                workspaceId: string;
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateTransactionTagsDto"];
+            };
+        };
         responses: {
             200: {
                 headers: {
@@ -3130,7 +3814,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["TransactionAttachmentResponseDto"];
+                };
             };
         };
     };
@@ -3151,7 +3837,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["SignedAttachmentUrlResponseDto"];
+                };
             };
         };
     };
@@ -3172,7 +3860,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["DeletedAttachmentResponseDto"];
+                };
             };
         };
     };
@@ -3313,7 +4003,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["BudgetStatusResponseDto"];
+                };
             };
         };
     };
@@ -3333,7 +4025,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["DeletedResponseDto"];
+                };
             };
         };
     };
@@ -3377,7 +4071,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["GoalProgressResponseDto"];
+                };
             };
         };
     };
@@ -3397,7 +4093,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["DeletedResponseDto"];
+                };
             };
         };
     };
@@ -3421,7 +4119,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["GoalProgressResponseDto"];
+                };
             };
         };
     };
@@ -3440,7 +4140,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["DebtOverviewResponseDto"];
+                };
             };
         };
     };
@@ -3463,7 +4165,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["DebtResponseDto"];
+                };
             };
         };
     };
@@ -3483,7 +4187,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["DeletedResponseDto"];
+                };
             };
         };
     };
@@ -3504,7 +4210,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["CalendarOverviewResponseDto"];
+                };
             };
         };
     };
@@ -3527,7 +4235,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["CalendarEventResponseDto"];
+                };
             };
         };
     };
@@ -3547,7 +4257,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["DeletedResponseDto"];
+                };
             };
         };
     };
@@ -3571,7 +4283,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["CalendarEventResponseDto"];
+                };
             };
         };
     };
@@ -3590,7 +4304,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["RecurringRuleResponseDto"][];
+                };
             };
         };
     };
@@ -3613,7 +4329,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["RecurringRuleResponseDto"];
+                };
             };
         };
     };
@@ -3633,7 +4351,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["DeletedResponseDto"];
+                };
             };
         };
     };
@@ -3657,7 +4377,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["RecurringRuleResponseDto"];
+                };
             };
         };
     };
@@ -3682,7 +4404,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["CategoryReportResponseDto"];
+                };
             };
         };
     };
@@ -3707,7 +4431,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["CashFlowReportResponseDto"];
+                };
             };
         };
     };
@@ -3732,7 +4458,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["CashFlowReportResponseDto"];
+                };
             };
         };
     };
@@ -3757,7 +4485,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["NetWorthReportResponseDto"];
+                };
             };
         };
     };
@@ -3774,7 +4504,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["PlatformStatsResponseDto"];
+                };
             };
         };
     };
@@ -3791,7 +4523,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["AdminHealthResponseDto"];
+                };
             };
         };
     };
@@ -3819,7 +4553,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["SystemEventPageResponseDto"];
+                };
             };
         };
     };
@@ -3855,7 +4591,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["ScheduledJobsResponseDto"];
+                };
             };
         };
     };
@@ -3950,7 +4688,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["AuditEventPageResponseDto"];
+                };
             };
         };
     };
@@ -3974,7 +4714,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["AdminUserPageResponseDto"];
+                };
             };
         };
     };
@@ -3993,7 +4735,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["AdminUserResponseDto"];
+                };
             };
         };
     };
@@ -4092,7 +4836,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["AppSettingResponseDto"][];
+                };
             };
         };
     };
@@ -4130,7 +4876,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["MobileReleaseResponseDto"];
+                };
             };
         };
     };
@@ -4168,7 +4916,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["AdminBroadcastResponseDto"][];
+                };
             };
         };
     };
@@ -4269,7 +5019,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["PerformanceMetricsResponseDto"];
+                };
             };
         };
     };
@@ -4286,7 +5038,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["AlertStateResponseDto"][];
+                };
             };
         };
     };
@@ -4305,7 +5059,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["AlertStateResponseDto"];
+                };
             };
         };
     };
@@ -4326,7 +5082,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["AuthAuditPageResponseDto"];
+                };
             };
         };
     };
@@ -4347,7 +5105,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["DeviceSessionPageResponseDto"];
+                };
             };
         };
     };
@@ -4366,7 +5126,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["RevokedBooleanResponseDto"];
+                };
             };
         };
     };
@@ -4385,7 +5147,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["RevokedCountResponseDto"];
+                };
             };
         };
     };
@@ -4402,7 +5166,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["AnomaliesResponseDto"];
+                };
             };
         };
     };
@@ -4457,7 +5223,11 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
             };
         };
     };
@@ -4478,7 +5248,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["DeletionScheduledResponseDto"];
+                };
             };
         };
     };
@@ -4495,7 +5267,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["AccountStatusResponseDto"];
+                };
             };
         };
     };
@@ -4513,7 +5287,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["BroadcastResponseDto"][];
+                };
             };
         };
     };
@@ -4532,7 +5308,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["DismissedResponseDto"];
+                };
             };
         };
     };
@@ -4549,7 +5327,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["PublicSettingsResponseDto"];
+                };
             };
         };
     };
@@ -4590,7 +5370,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["DeviceResponseDto"];
+                };
             };
         };
     };
@@ -4741,7 +5523,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["ImportJobResponseDto"][];
+                };
             };
         };
     };
@@ -4764,7 +5548,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["ImportJobResponseDto"];
+                };
             };
         };
     };
@@ -4784,7 +5570,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["ImportJobResponseDto"];
+                };
             };
         };
     };

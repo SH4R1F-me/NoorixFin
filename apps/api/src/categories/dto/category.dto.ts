@@ -38,7 +38,9 @@ export class CreateCategoryDto {
   @IsString()
   icon?: string;
 
-  @ApiPropertyOptional({
+  @ApiProperty({
+    type: String,
+    nullable: true,
     description: 'Hex color for the category',
     example: '#10b981',
   })
@@ -111,24 +113,28 @@ export class CategoryResponseDto {
 
   @ApiProperty({ enum: ['INCOME', 'EXPENSE'] }) kind!: string;
 
-  @ApiPropertyOptional({
+  @ApiProperty({
+    type: String,
+    nullable: true,
     description:
       'Set for system categories. Translate it for display; also marks the row as system-provided.',
     example: 'cat.food_dining',
   })
-  translation_key?: string | null;
+  translation_key!: string | null;
 
-  @ApiPropertyOptional({
+  @ApiProperty({
+    type: String,
+    nullable: true,
     description: 'User-supplied name. Overrides translation_key when present.',
   })
-  custom_name?: string | null;
+  custom_name!: string | null;
 
-  @ApiPropertyOptional() parent_id?: string | null;
+  @ApiProperty({ type: String, nullable: true }) parent_id!: string | null;
   @ApiProperty() icon!: string;
   @ApiProperty() color!: string;
   @ApiProperty() sort_order!: number;
-  @ApiPropertyOptional() archived_at?: string | null;
-  @ApiPropertyOptional() deleted_at?: string | null;
+  @ApiProperty({ type: String, nullable: true }) archived_at!: string | null;
+  @ApiProperty({ type: String, nullable: true }) deleted_at!: string | null;
   @ApiProperty() created_at!: string;
   @ApiProperty() updated_at!: string;
 }

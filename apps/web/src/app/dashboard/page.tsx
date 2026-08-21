@@ -210,8 +210,11 @@ export default async function DashboardPage() {
       name: event.title,
       amount: event.amount_minor ?? 0,
       date: event.local_date,
-      daysAway: event.days_away,
-      status: event.status,
+        daysAway: event.days_away ?? 0,
+      status:
+        event.status === 'DUE' || event.status === 'OVERDUE'
+          ? event.status
+          : 'UPCOMING',
       isIncome: event.type === 'INCOME',
     }));
 

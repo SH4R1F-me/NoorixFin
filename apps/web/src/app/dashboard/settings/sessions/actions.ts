@@ -26,7 +26,7 @@ export interface UserDevice {
 
 export async function listMyDevices(): Promise<UserDevice[]> {
   try {
-    return await apiFetch<UserDevice[]>('/me/devices');
+    return await apiFetch('/me/devices');
   } catch {
     return [];
   }
@@ -47,7 +47,7 @@ export async function revokeAllMyDevices(currentDeviceId?: string): Promise<Sess
   try {
     await apiFetch('/me/devices/revoke-all', {
       method: 'POST',
-      body: JSON.stringify({ currentDeviceId: currentDeviceId ?? null }),
+      body: { ...(currentDeviceId ? { currentDeviceId } : {}) },
     });
     revalidatePath('/dashboard/settings/sessions');
     return { ok: true };

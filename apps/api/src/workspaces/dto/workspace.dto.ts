@@ -57,3 +57,17 @@ export class WorkspaceResponseDto {
   @ApiPropertyOptional({ description: 'Current user role (always OWNER)' })
   role?: string;
 }
+
+export class WorkspaceSummaryResponseDto {
+  @ApiProperty() visible!: boolean;
+  @ApiProperty() net_worth!: number;
+  @ApiProperty() income!: number;
+  @ApiProperty() expense!: number;
+  @ApiProperty() net!: number;
+  @ApiProperty() prev_income!: number;
+  @ApiProperty() prev_expense!: number;
+  @ApiProperty() prev_net!: number;
+  @ApiProperty() account_count!: number;
+  @ApiPropertyOptional() timezone?: string;
+  @ApiPropertyOptional() month_start?: string;
+}

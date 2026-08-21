@@ -123,10 +123,10 @@ export class ProfileResponseDto {
   @ApiProperty({ example: 'Sharif' })
   display_name!: string;
 
-  @ApiPropertyOptional({ example: null })
-  avatar_path?: string | null;
+  @ApiProperty({ type: String, nullable: true, example: null })
+  avatar_path!: string | null;
 
-  @ApiProperty({ example: 'bn' })
+  @ApiProperty({ example: 'bn', enum: ['bn', 'en'] })
   locale!: string;
 
   @ApiProperty({ example: 'Asia/Dhaka' })
@@ -147,12 +147,13 @@ export class ProfileResponseDto {
   @ApiProperty({ example: 'COMPLETED' })
   onboarding_status!: string;
 
-  @ApiPropertyOptional({
+  @ApiProperty({
     example: 'INDIVIDUAL',
     enum: ['INDIVIDUAL', 'STUDENT', 'FREELANCER'],
+    nullable: true,
     description: 'Null until the user reaches §5.2 step 4.',
   })
-  persona?: string | null;
+  persona!: string | null;
 
   @ApiProperty({
     example: false,
@@ -170,10 +171,12 @@ export class ProfileResponseDto {
   })
   status!: string;
 
-  @ApiPropertyOptional({
+  @ApiProperty({
+    type: String,
+    nullable: true,
     description: 'Set when status is PENDING_DELETION — when the purge runs.',
   })
-  deletion_scheduled_for?: string | null;
+  deletion_scheduled_for!: string | null;
 
   @ApiProperty()
   email!: string;

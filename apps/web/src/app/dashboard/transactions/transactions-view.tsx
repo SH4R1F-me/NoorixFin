@@ -64,6 +64,12 @@ export interface TxItem {
   attachments?: TransactionAttachment[];
 }
 
+type AttachmentContentType = 'image/jpeg' | 'image/png' | 'image/webp' | 'application/pdf';
+
+function isAttachmentContentType(value: string): value is AttachmentContentType {
+  return ['image/jpeg', 'image/png', 'image/webp', 'application/pdf'].includes(value);
+}
+
 export default function TransactionsView({
   transactions,
   categories,
@@ -144,6 +150,11 @@ export default function TransactionsView({
 
   function attachReceipt(transactionId: string, file?: File) {
     if (!file) return;
+    if (!isAttachmentContentType(file.type)) {
+      setAttachmentMessage(tr('transactions.receiptInvalidType'));
+      return;
+    }
+    const contentType = file.type;
     if (file.size > 5 * 1024 * 1024) {
       setAttachmentMessage(tr('transactions.receiptTooLarge'));
       return;
@@ -156,7 +167,7 @@ export default function TransactionsView({
           workspaceId,
           transactionId,
           filename: file.name,
-          contentType: file.type,
+          contentType,
           dataBase64,
         });
         setAttachmentMessage(result.ok ? tr('transactions.receiptAttached') : result.message);

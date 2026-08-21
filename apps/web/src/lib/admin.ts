@@ -16,7 +16,10 @@ import 'server-only';
  * pulling in this server-only file.
  */
 import { apiFetch, ApiError } from './api-client';
-import type { ApiRuntimePath } from '@noorixfin/api-client';
+import type {
+  ApiRuntimePathForMethod,
+  ApiRuntimeResponse,
+} from '@noorixfin/api-client';
 
 // Re-export everything from admin-types.ts so existing imports from 'lib/admin'
 // still work for server components.
@@ -46,25 +49,8 @@ export type {
 } from './admin-types';
 
 import type {
-  PlatformStats,
-  HealthReport,
-  SystemEvent,
-  AuditEvent,
-  AdminUser,
-  AppSetting,
-  AdminBroadcast,
-  Page,
   Result,
-  PerformanceMetrics,
-  ScheduledJob,
   AlertState,
-  AuthAuditEvent,
-  DeviceSession,
-  Anomalies,
-  NotificationCampaign,
-  NotificationDeliveryStats,
-  NotificationTemplate,
-  MobileRelease,
 } from './admin-types';
 
 // ─── Fetchers ───────────────────────────────────────────────────────────────
@@ -81,9 +67,11 @@ import type {
  * that happened to be the empty string would not narrow, and TypeScript is right
  * to refuse. `ok` makes every call site's null-check provable.
  */
-async function get<T>(path: ApiRuntimePath): Promise<Result<T>> {
+async function get<P extends ApiRuntimePathForMethod<'GET'>>(
+  path: P,
+): Promise<Result<ApiRuntimeResponse<P, 'GET'>>> {
   try {
-    return { ok: true, data: await apiFetch<T>(path) };
+    return { ok: true, data: await apiFetch(path) };
   } catch (error) {
     if (error instanceof ApiError) {
       return { ok: false, error: `${error.code}: ${error.message}` };
@@ -92,16 +80,16 @@ async function get<T>(path: ApiRuntimePath): Promise<Result<T>> {
   }
 }
 
-export const getPlatformStats = () => get<PlatformStats>('/admin/overview');
-export const getHealthReport = () => get<HealthReport>('/admin/health');
-export const getSettings = () => get<AppSetting[]>('/admin/settings');
-export const getBroadcasts = () => get<AdminBroadcast[]>('/admin/broadcasts');
-export const getNotificationCampaigns = () => get<NotificationCampaign[]>('/admin/notifications');
+export const getPlatformStats = () => get('/admin/overview');
+export const getHealthReport = () => get('/admin/health');
+export const getSettings = () => get('/admin/settings');
+export const getBroadcasts = () => get('/admin/broadcasts');
+export const getNotificationCampaigns = () => get('/admin/notifications');
 export const getNotificationTemplates = () =>
-  get<NotificationTemplate[]>('/admin/notifications/templates');
+  get('/admin/notifications/templates');
 export const getNotificationDeliveryStats = (id: string) =>
-  get<NotificationDeliveryStats>(`/admin/notifications/${id}/deliveries`);
-export const getMobileRelease = () => get<MobileRelease>('/admin/releases');
+  get(`/admin/notifications/${id}/deliveries`);
+export const getMobileRelease = () => get('/admin/releases');
 
 export function getEvents(params: { level?: string; q?: string; limit?: number; offset?: number }) {
   const search = new URLSearchParams();
@@ -109,7 +97,7 @@ export function getEvents(params: { level?: string; q?: string; limit?: number; 
   if (params.q) search.set('q', params.q);
   search.set('limit', String(params.limit ?? 50));
   search.set('offset', String(params.offset ?? 0));
-  return get<Page<SystemEvent>>(`/admin/events?${search.toString()}`);
+  return get(`/admin/events?${search.toString()}`);
 }
 
 export function getAudit(params: {
@@ -123,7 +111,7 @@ export function getAudit(params: {
   if (params.resourceType) search.set('resourceType', params.resourceType);
   search.set('limit', String(params.limit ?? 50));
   search.set('offset', String(params.offset ?? 0));
-  return get<Page<AuditEvent>>(`/admin/audit?${search.toString()}`);
+  return get(`/admin/audit?${search.toString()}`);
 }
 
 export function getUsers(params: {
@@ -137,25 +125,25 @@ export function getUsers(params: {
   if (params.status) query.set('status', params.status);
   query.set('limit', String(params.limit ?? 50));
   query.set('offset', String(params.offset ?? 0));
-  return get<Page<AdminUser>>(`/admin/users?${query.toString()}`);
+  return get(`/admin/users?${query.toString()}`);
 }
 
 // ─── Phase 2: Performance metrics ───────────────────────────────────────────
 
 export const getPerformanceMetrics = (windowHours = 1) =>
-  get<PerformanceMetrics>(`/admin/metrics/performance?window=${windowHours}`);
+  get(`/admin/metrics/performance?window=${windowHours}`);
 
 // ─── Phase 2: Scheduled jobs ─────────────────────────────────────────────────
 
-export const getScheduledJobs = () => get<{ jobs: ScheduledJob[]; run_at: string }>('/admin/jobs');
+export const getScheduledJobs = () => get('/admin/jobs');
 
 // ─── Phase 2: Alerts ─────────────────────────────────────────────────────────
 
-export const getAlerts = () => get<AlertState[]>('/admin/alerts');
+export const getAlerts = () => get('/admin/alerts');
 
 export async function acknowledgeAlert(alertKey: string): Promise<Result<AlertState>> {
   try {
-    const data = await apiFetch<AlertState>(
+    const data = await apiFetch(
       `/admin/alerts/${encodeURIComponent(alertKey)}/acknowledge`,
       {
         method: 'POST',
@@ -175,7 +163,7 @@ export function getAuthEvents(params: { platform?: string; limit?: number; offse
   if (params.platform) q.set('platform', params.platform);
   q.set('limit', String(params.limit ?? 50));
   q.set('offset', String(params.offset ?? 0));
-  return get<Page<AuthAuditEvent>>(`/admin/security/auth-events?${q.toString()}`);
+  return get(`/admin/security/auth-events?${q.toString()}`);
 }
 
 // ─── Phase 2: Security — Active sessions ─────────────────────────────────────
@@ -185,12 +173,12 @@ export function getActiveSessions(params: { platform?: string; limit?: number; o
   if (params.platform) q.set('platform', params.platform);
   q.set('limit', String(params.limit ?? 50));
   q.set('offset', String(params.offset ?? 0));
-  return get<Page<DeviceSession>>(`/admin/security/sessions?${q.toString()}`);
+  return get(`/admin/security/sessions?${q.toString()}`);
 }
 
 export async function revokeSession(deviceId: string): Promise<Result<{ revoked: boolean }>> {
   try {
-    const data = await apiFetch<{ revoked: boolean }>(
+    const data = await apiFetch(
       `/admin/security/sessions/${deviceId}/revoke`,
       {
         method: 'POST',
@@ -205,7 +193,7 @@ export async function revokeSession(deviceId: string): Promise<Result<{ revoked:
 
 export async function revokeAllSessions(userId: string): Promise<Result<{ revoked: number }>> {
   try {
-    const data = await apiFetch<{ revoked: number }>(
+    const data = await apiFetch(
       `/admin/security/sessions/revoke-all/${userId}`,
       {
         method: 'POST',
@@ -220,4 +208,4 @@ export async function revokeAllSessions(userId: string): Promise<Result<{ revoke
 
 // ─── Phase 2: Security — Anomalies ───────────────────────────────────────────
 
-export const getAnomalies = () => get<Anomalies>('/admin/security/anomalies');
+export const getAnomalies = () => get('/admin/security/anomalies');

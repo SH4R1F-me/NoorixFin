@@ -34,9 +34,9 @@ export class BudgetLineResponseDto {
   @ApiProperty() line_id!: string;
   @ApiProperty() category_id!: string;
   @ApiProperty() name!: string;
-  @ApiPropertyOptional({ type: String, nullable: true }) translation_key!:
+  @ApiProperty({ type: String, nullable: true }) translation_key!:
     string | null;
-  @ApiPropertyOptional({ type: String, nullable: true }) custom_name!:
+  @ApiProperty({ type: String, nullable: true }) custom_name!:
     string | null;
   @ApiProperty() icon!: string;
   @ApiProperty() color!: string;
@@ -52,6 +52,9 @@ export class BudgetStatusResponseDto {
   @ApiPropertyOptional() budget_id?: string;
   @ApiPropertyOptional() name?: string;
   @ApiPropertyOptional({ enum: ['MONTHLY', 'WEEKLY'] }) cadence?: string;
+  @ApiPropertyOptional() rollover?: boolean;
+  @ApiPropertyOptional() period_start?: string;
+  @ApiPropertyOptional() period_end?: string;
   @ApiPropertyOptional() planned_total?: number;
   @ApiPropertyOptional() spent_total?: number;
   @ApiPropertyOptional({ type: [BudgetLineResponseDto] })
@@ -64,24 +67,147 @@ export class GoalProgressResponseDto {
   @ApiProperty() id!: string;
   @ApiProperty() name!: string;
   @ApiProperty() target_minor!: number;
-  @ApiPropertyOptional({ type: Number, nullable: true }) current_minor!:
+  @ApiProperty({ type: Number, nullable: true }) current_minor!:
     number | null;
   @ApiProperty() currency_code!: string;
-  @ApiPropertyOptional({ type: String, nullable: true }) target_date!:
+  @ApiProperty({ type: String, nullable: true }) target_date!:
     string | null;
   @ApiProperty() status!: string;
   @ApiProperty() priority!: number;
+  @ApiProperty({ type: String, nullable: true }) linked_account_id!: string | null;
+  @ApiProperty({ type: Number, nullable: true }) days_left!: number | null;
 }
 
 export class GoalsOverviewResponseDto {
   @ApiProperty() visible!: boolean;
   @ApiPropertyOptional({ type: [GoalProgressResponseDto] })
   goals?: GoalProgressResponseDto[];
-  @ApiPropertyOptional({ type: 'array', items: { type: 'object' } })
-  debts?: unknown[];
+  @ApiPropertyOptional({ type: () => [DebtResponseDto] })
+  debts?: DebtResponseDto[];
   @ApiPropertyOptional() total_debt_minor?: number;
   @ApiPropertyOptional() timezone?: string;
   @ApiPropertyOptional() generated_at?: string;
+}
+
+export class DeletedResponseDto {
+  @ApiProperty() deleted!: boolean;
+}
+
+export class DebtResponseDto {
+  @ApiProperty() ledger_account_id!: string;
+  @ApiProperty() name!: string;
+  @ApiProperty() currency_code!: string;
+  @ApiProperty() principal_minor!: number;
+  @ApiProperty() outstanding_minor!: number;
+  @ApiProperty({ type: Number, nullable: true }) annual_rate_bps!: number | null;
+  @ApiProperty({ type: Number, nullable: true }) minimum_payment_minor!: number | null;
+  @ApiProperty({ type: Number, nullable: true }) due_day!: number | null;
+}
+
+export class DebtOverviewResponseDto {
+  @ApiProperty({ type: [DebtResponseDto] }) debts!: DebtResponseDto[];
+  @ApiProperty() total_debt_minor!: number;
+}
+
+export class CalendarEventResponseDto {
+  @ApiProperty() id!: string;
+  @ApiProperty() workspace_id!: string;
+  @ApiProperty({ enum: ['BILL', 'INCOME', 'GOAL', 'CUSTOM'] }) type!: string;
+  @ApiProperty() title!: string;
+  @ApiProperty({ type: Number, nullable: true }) amount_minor!: number | null;
+  @ApiProperty() currency_code!: string;
+  @ApiProperty() due_at!: string;
+  @ApiProperty() timezone!: string;
+  @ApiProperty() local_date!: string;
+  @ApiProperty({ type: [Number] }) reminder_offsets!: number[];
+  @ApiProperty({ enum: ['UPCOMING', 'DUE', 'OVERDUE', 'PAID', 'SKIPPED'] }) status!: string;
+  @ApiProperty({ type: String, nullable: true }) journal_entry_id!: string | null;
+  @ApiProperty({ type: String, nullable: true }) recurring_rule_id!: string | null;
+  @ApiPropertyOptional() days_away?: number;
+}
+
+export class CalendarOverviewResponseDto {
+  @ApiProperty() visible!: boolean;
+  @ApiProperty() timezone!: string;
+  @ApiProperty() today!: string;
+  @ApiProperty() horizon_days!: number;
+  @ApiProperty() generated_at!: string;
+  @ApiProperty({ type: [CalendarEventResponseDto] }) events!: CalendarEventResponseDto[];
+  @ApiProperty() overdue_count!: number;
+  @ApiProperty() due_soon_total_minor!: number;
+}
+
+export class RecurringRuleResponseDto {
+  @ApiProperty() id!: string;
+  @ApiProperty() workspace_id!: string;
+  @ApiProperty() name!: string;
+  @ApiProperty({ enum: ['EXPENSE', 'INCOME'] }) entry_type!: string;
+  @ApiProperty() amount_minor!: number;
+  @ApiProperty() currency_code!: string;
+  @ApiProperty({ type: String, nullable: true }) account_id!: string | null;
+  @ApiProperty({ type: String, nullable: true }) category_id!: string | null;
+  @ApiProperty({ type: String, nullable: true }) payee!: string | null;
+  @ApiProperty({ enum: ['DAILY', 'WEEKLY', 'MONTHLY', 'YEARLY'] }) frequency!: string;
+  @ApiProperty() interval_count!: number;
+  @ApiProperty() timezone!: string;
+  @ApiProperty() next_occurrence!: string;
+  @ApiProperty({ type: String, nullable: true }) ends_at!: string | null;
+  @ApiProperty({ enum: ['REMIND_ONLY', 'AUTO_CREATE_DRAFT'] }) behavior!: string;
+  @ApiProperty({ enum: ['ACTIVE', 'PAUSED', 'ENDED'] }) status!: string;
+  @ApiProperty() created_at!: string;
+}
+
+export class CategoryReportLineResponseDto {
+  @ApiProperty() category_id!: string;
+  @ApiProperty({ type: String, nullable: true }) custom_name!: string | null;
+  @ApiProperty({ type: String, nullable: true }) translation_key!: string | null;
+  @ApiProperty() icon!: string;
+  @ApiProperty() color!: string;
+  @ApiProperty({ enum: ['INCOME', 'EXPENSE'] }) kind!: string;
+  @ApiProperty() amount_minor!: number;
+  @ApiProperty() entry_count!: number;
+}
+
+export class CategoryTrendResponseDto {
+  @ApiProperty() month!: string;
+  @ApiProperty() income_minor!: number;
+  @ApiProperty() expense_minor!: number;
+}
+
+export class CategoryReportResponseDto {
+  @ApiProperty() visible!: boolean;
+  @ApiProperty() period_from!: string;
+  @ApiProperty() period_to!: string;
+  @ApiProperty() timezone!: string;
+  @ApiProperty() currency_basis!: string;
+  @ApiProperty() generated_at!: string;
+  @ApiProperty({ type: [CategoryReportLineResponseDto] }) categories!: CategoryReportLineResponseDto[];
+  @ApiProperty({ type: [CategoryTrendResponseDto] }) trend!: CategoryTrendResponseDto[];
+}
+
+export class CashFlowPeriodResponseDto {
+  @ApiProperty() period_start!: string; @ApiProperty() period_end!: string;
+  @ApiProperty() income_minor!: number; @ApiProperty() expense_minor!: number;
+  @ApiProperty() net_minor!: number;
+}
+export class NetWorthPeriodResponseDto {
+  @ApiProperty() period_start!: string; @ApiProperty() period_end!: string;
+  @ApiProperty() assets_minor!: number; @ApiProperty() liabilities_minor!: number;
+  @ApiProperty() net_worth_minor!: number;
+}
+export class CashFlowReportResponseDto {
+  @ApiProperty() visible!: boolean; @ApiPropertyOptional() period_from?: string;
+  @ApiPropertyOptional() period_to?: string; @ApiPropertyOptional({ enum: ['day', 'week', 'month'] }) granularity?: string;
+  @ApiPropertyOptional() timezone?: string; @ApiPropertyOptional() currency_basis?: string;
+  @ApiPropertyOptional() generated_at?: string;
+  @ApiPropertyOptional({ type: [CashFlowPeriodResponseDto] }) periods?: CashFlowPeriodResponseDto[];
+}
+export class NetWorthReportResponseDto {
+  @ApiProperty() visible!: boolean; @ApiPropertyOptional() period_from?: string;
+  @ApiPropertyOptional() period_to?: string; @ApiPropertyOptional({ enum: ['day', 'week', 'month'] }) granularity?: string;
+  @ApiPropertyOptional() timezone?: string; @ApiPropertyOptional() currency_basis?: string;
+  @ApiPropertyOptional() generated_at?: string;
+  @ApiPropertyOptional({ type: [NetWorthPeriodResponseDto] }) periods?: NetWorthPeriodResponseDto[];
 }
 
 // ─── Budgets ─────────────────────────────────────────────────────────────────

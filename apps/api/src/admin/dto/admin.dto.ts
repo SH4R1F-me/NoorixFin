@@ -196,6 +196,8 @@ export class UpdateSettingDto {
   key!: string;
 
   @ApiProperty({
+    type: 'object',
+    additionalProperties: true,
     description: 'JSON value for the setting. Shape is per-key.',
     example: { enabled: false },
   })

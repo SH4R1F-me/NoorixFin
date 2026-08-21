@@ -146,7 +146,7 @@ export async function verifyMfaCode(
  */
 export async function disableMfa(factorId: string): Promise<MfaResult> {
   try {
-    const me = await apiFetch<{ is_super_admin: boolean }>('/me');
+    const me = await apiFetch('/me');
     if (me.is_super_admin) {
       return {
         ok: false,

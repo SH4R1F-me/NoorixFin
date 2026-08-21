@@ -24,7 +24,7 @@ export async function startImport(input: {
     return { ok: false, message: 'Choose a non-empty statement no larger than 5 MB.' };
   }
   try {
-    const job = await apiFetch<{ imported_rows: number; failed_rows: number }>(
+    const job = await apiFetch(
       `/workspaces/${input.workspaceId}/import`,
       {
         method: 'POST',

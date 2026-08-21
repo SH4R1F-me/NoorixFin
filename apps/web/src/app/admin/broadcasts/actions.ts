@@ -17,8 +17,8 @@ export interface BroadcastInput {
   title_bn: string;
   body_en: string;
   body_bn: string;
-  severity: string;
-  audience: string;
+  severity: 'INFO' | 'SUCCESS' | 'WARNING' | 'CRITICAL';
+  audience: 'ALL' | 'SUPER_ADMINS';
   link_url?: string;
   expires_at?: string;
 }
@@ -69,6 +69,7 @@ export async function createBroadcast(
         body_bn: input.body_bn.trim(),
         severity: input.severity,
         audience: input.audience,
+        dismissible: true,
         ...(input.link_url?.trim() ? { link_url: input.link_url.trim() } : {}),
         ...(input.expires_at ? { expires_at: new Date(input.expires_at).toISOString() } : {}),
       },

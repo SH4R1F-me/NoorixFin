@@ -1,7 +1,6 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import type { ApiRuntimePath } from '@noorixfin/api-client';
 import { apiFetch, ApiError } from '../../../lib/api-client';
 
 export type NotificationCategory =
@@ -44,18 +43,15 @@ export async function listNotifications(
   const query = new URLSearchParams({ status, limit: '100' });
   if (category) query.set('category', category);
   try {
-    return await apiFetch<NotificationPage>(`/notifications?${query}`);
+    return await apiFetch(`/notifications?${query}`);
   } catch {
     return { items: [], next_cursor: null, has_more: false };
   }
 }
 
-async function mutate(
-  path: ApiRuntimePath,
-  method: 'POST' | 'DELETE' = 'POST',
-): Promise<ActionResult> {
+async function mutate(operation: () => Promise<unknown>): Promise<ActionResult> {
   try {
-    await apiFetch<unknown>(path, { method });
+    await operation();
     revalidatePath('/dashboard', 'layout');
     revalidatePath('/dashboard/notifications');
     return { ok: true };
@@ -68,14 +64,14 @@ async function mutate(
 }
 
 export async function markNotificationRead(id: string) {
-  return mutate(`/notifications/${id}/read`);
+  return mutate(() => apiFetch(`/notifications/${id}/read`, { method: 'POST' }));
 }
 export async function archiveNotification(id: string) {
-  return mutate(`/notifications/${id}/archive`);
+  return mutate(() => apiFetch(`/notifications/${id}/archive`, { method: 'POST' }));
 }
 export async function deleteNotification(id: string) {
-  return mutate(`/notifications/${id}`, 'DELETE');
+  return mutate(() => apiFetch(`/notifications/${id}`, { method: 'DELETE' }));
 }
 export async function markAllNotificationsRead() {
-  return mutate('/notifications/read-all');
+  return mutate(() => apiFetch('/notifications/read-all', { method: 'POST' }));
 }

@@ -79,7 +79,9 @@ export default function NotificationTemplatesView({
           Category
           <select
             value={form.category}
-            onChange={(e) => setForm({ ...form, category: e.target.value })}
+            onChange={(e) =>
+              setForm({ ...form, category: e.target.value as TemplatePayload['category'] })
+            }
             style={s.input}
           >
             {[

@@ -15,6 +15,7 @@ import {
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
+  ApiCreatedResponse,
   ApiOkResponse,
   ApiOperation,
   ApiTags,
@@ -29,6 +30,9 @@ import {
   NotificationPreferencesResponseDto,
   UnreadCountResponseDto,
   UpdateNotificationPreferencesDto,
+  NotificationCampaignResponseDto,
+  NotificationTemplateResponseDto,
+  NotificationDeliveryStatsResponseDto,
 } from './dto/notification.dto';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import type { AuthenticatedUser } from '../common/decorators/current-user.decorator';
@@ -129,12 +133,14 @@ export class AdminNotificationsController {
   constructor(private readonly notifications: NotificationsService) {}
 
   @Get()
+  @ApiOkResponse({ type: [NotificationCampaignResponseDto] })
   @ApiOperation({ summary: 'List operator-authored notification campaigns' })
   listCampaigns() {
     return this.notifications.listCampaigns();
   }
 
   @Post()
+  @ApiCreatedResponse({ type: NotificationCampaignResponseDto })
   @ThrottleAdminWrite()
   @Idempotent({ required: true })
   @ApiOperation({
@@ -148,12 +154,14 @@ export class AdminNotificationsController {
   }
 
   @Get('templates')
+  @ApiOkResponse({ type: [NotificationTemplateResponseDto] })
   @ApiOperation({ summary: 'List reusable notification templates' })
   templates() {
     return this.notifications.listTemplates();
   }
 
   @Post('templates')
+  @ApiCreatedResponse({ type: NotificationTemplateResponseDto })
   @ThrottleAdminWrite()
   @Idempotent({ required: true })
   @ApiOperation({ summary: 'Create or update a notification template by key' })
@@ -177,6 +185,7 @@ export class AdminNotificationsController {
   }
 
   @Get(':id/deliveries')
+  @ApiOkResponse({ type: NotificationDeliveryStatsResponseDto })
   @ApiOperation({ summary: 'Aggregate per-channel delivery outcomes' })
   deliveries(@Param('id', ParseUUIDPipe) id: string) {
     return this.notifications.getCampaignDeliveries(id);

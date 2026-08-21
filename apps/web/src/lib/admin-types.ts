@@ -130,7 +130,16 @@ export interface AdminBroadcast {
 export interface NotificationCampaign {
   id: string;
   audience: 'ALL' | 'OPERATORS';
-  category: 'system' | 'operator';
+  category:
+    | 'security'
+    | 'budget'
+    | 'goal'
+    | 'recurring'
+    | 'transaction'
+    | 'sync'
+    | 'account'
+    | 'system'
+    | 'operator';
   severity: 'INFO' | 'SUCCESS' | 'WARNING' | 'CRITICAL';
   title_en: string;
   title_bn: string | null;

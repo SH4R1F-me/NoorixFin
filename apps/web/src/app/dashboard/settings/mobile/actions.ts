@@ -4,7 +4,7 @@ import { apiFetch, ApiError } from '../../../../lib/api-client';
 
 export async function createMobilePairing(workspaceId: string) {
   try {
-    const data = await apiFetch<{ token: string; expires_at: string }>('/me/devices/pairing', {
+    const data = await apiFetch('/me/devices/pairing', {
       method: 'POST',
       body: { workspaceId },
     });

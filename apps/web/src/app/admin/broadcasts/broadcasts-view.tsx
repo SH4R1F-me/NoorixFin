@@ -13,7 +13,12 @@ import { useRouter } from 'next/navigation';
 import { Archive, Loader2, Megaphone, Send } from 'lucide-react';
 import type { AdminBroadcast } from '../../../lib/admin-types';
 import { Badge, EmptyState, Panel, T, formatTime, s } from '../ui';
-import { archiveBroadcast, createBroadcast, publishBroadcast } from './actions';
+import {
+  archiveBroadcast,
+  createBroadcast,
+  publishBroadcast,
+  type BroadcastInput,
+} from './actions';
 
 const SEVERITIES = ['INFO', 'SUCCESS', 'WARNING', 'CRITICAL'] as const;
 
@@ -30,7 +35,7 @@ const STATUS_COLOR: Record<string, string> = {
   ARCHIVED: T.textDim,
 };
 
-const EMPTY = {
+const EMPTY: BroadcastInput = {
   title_en: '',
   title_bn: '',
   body_en: '',
@@ -141,7 +146,12 @@ export default function BroadcastsView({ broadcasts }: { broadcasts: AdminBroadc
             Severity
             <select
               value={form.severity}
-              onChange={(event) => setForm({ ...form, severity: event.target.value })}
+              onChange={(event) =>
+                setForm({
+                  ...form,
+                  severity: event.target.value as BroadcastInput['severity'],
+                })
+              }
               style={{ ...s.input, width: '100%' }}
             >
               {SEVERITIES.map((severity) => (
@@ -155,7 +165,12 @@ export default function BroadcastsView({ broadcasts }: { broadcasts: AdminBroadc
             Audience
             <select
               value={form.audience}
-              onChange={(event) => setForm({ ...form, audience: event.target.value })}
+              onChange={(event) =>
+                setForm({
+                  ...form,
+                  audience: event.target.value as BroadcastInput['audience'],
+                })
+              }
               style={{ ...s.input, width: '100%' }}
             >
               <option value="ALL">All users</option>

@@ -65,7 +65,7 @@ export async function uploadAttachment(input: {
   workspaceId: string;
   transactionId: string;
   filename: string;
-  contentType: string;
+  contentType: 'image/jpeg' | 'image/png' | 'image/webp' | 'application/pdf';
   dataBase64: string;
 }): Promise<LedgerResult> {
   if (!['image/jpeg', 'image/png', 'image/webp', 'application/pdf'].includes(input.contentType)) {
@@ -188,7 +188,15 @@ export interface NewAccountInput {
   workspaceId: string;
   name: string;
   accountClass: 'ASSET' | 'LIABILITY';
-  subtype: string;
+  subtype:
+    | 'SYSTEM'
+    | 'CASH'
+    | 'BANK'
+    | 'MOBILE_WALLET'
+    | 'CREDIT_CARD'
+    | 'LOAN'
+    | 'SAVINGS'
+    | 'CATEGORY';
   currency: string;
 }
 

@@ -24,7 +24,11 @@ import {
 } from '@nestjs/swagger';
 import { Request } from 'express';
 import { WorkspacesService } from './workspaces.service';
-import { CreateWorkspaceDto, WorkspaceResponseDto } from './dto/workspace.dto';
+import {
+  CreateWorkspaceDto,
+  WorkspaceResponseDto,
+  WorkspaceSummaryResponseDto,
+} from './dto/workspace.dto';
 import { WorkspaceMemberGuard } from '../auth/guards/workspace-member.guard';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import type { AuthenticatedUser } from '../common/decorators/current-user.decorator';
@@ -61,6 +65,7 @@ export class WorkspacesController {
   }
 
   @Get(':workspaceId/summary')
+  @ApiOkResponse({ type: WorkspaceSummaryResponseDto })
   @UseGuards(WorkspaceMemberGuard)
   @ApiOperation({
     summary:

@@ -223,16 +223,16 @@ export class NotificationResponseDto {
   @ApiProperty({ enum: NOTIFICATION_SEVERITIES })
   severity!: NotificationSeverity;
   @ApiProperty() title_en!: string;
-  @ApiPropertyOptional({ type: String, nullable: true }) title_bn!:
+  @ApiProperty({ type: String, nullable: true }) title_bn!:
     string | null;
   @ApiProperty() body_en!: string;
-  @ApiPropertyOptional({ type: String, nullable: true }) body_bn!:
+  @ApiProperty({ type: String, nullable: true }) body_bn!:
     string | null;
-  @ApiPropertyOptional({ type: String, nullable: true }) action_url!:
+  @ApiProperty({ type: String, nullable: true }) action_url!:
     string | null;
-  @ApiPropertyOptional({ type: String, nullable: true }) read_at!:
+  @ApiProperty({ type: String, nullable: true }) read_at!:
     string | null;
-  @ApiPropertyOptional({ type: String, nullable: true }) archived_at!:
+  @ApiProperty({ type: String, nullable: true }) archived_at!:
     string | null;
   @ApiProperty() created_at!: string;
 }
@@ -240,7 +240,7 @@ export class NotificationResponseDto {
 export class NotificationPageResponseDto {
   @ApiProperty({ type: [NotificationResponseDto] })
   items!: NotificationResponseDto[];
-  @ApiPropertyOptional({ type: String, nullable: true }) next_cursor!:
+  @ApiProperty({ type: String, nullable: true }) next_cursor!:
     string | null;
   @ApiProperty() has_more!: boolean;
 }
@@ -257,4 +257,44 @@ export class NotificationPreferencesResponseDto {
   @ApiProperty({ type: String, nullable: true }) quiet_hours_end!:
     string | null;
   @ApiProperty({ type: String, nullable: true }) quiet_hours_tz!: string | null;
+}
+
+export class NotificationCampaignResponseDto {
+  @ApiProperty() id!: string;
+  @ApiProperty({ enum: ['ALL', 'OPERATORS'] }) audience!: string;
+  @ApiProperty({ enum: NOTIFICATION_CATEGORIES }) category!: NotificationCategory;
+  @ApiProperty({ enum: NOTIFICATION_SEVERITIES }) severity!: NotificationSeverity;
+  @ApiProperty() title_en!: string;
+  @ApiProperty({ type: String, nullable: true }) title_bn!: string | null;
+  @ApiProperty() body_en!: string;
+  @ApiProperty({ type: String, nullable: true }) body_bn!: string | null;
+  @ApiProperty({ type: String, nullable: true }) action_url!: string | null;
+  @ApiProperty() scheduled_for!: string;
+  @ApiProperty({ type: String, nullable: true }) expires_at!: string | null;
+  @ApiProperty({ enum: ['DRAFT', 'SCHEDULED', 'PROCESSING', 'SENT', 'FAILED', 'CANCELLED'] }) status!: string;
+  @ApiProperty() recipient_count!: number;
+  @ApiProperty({ type: String, nullable: true }) error!: string | null;
+  @ApiProperty() created_at!: string;
+}
+
+export class NotificationTemplateResponseDto {
+  @ApiProperty() id!: string;
+  @ApiProperty() key!: string;
+  @ApiProperty() category!: string;
+  @ApiProperty() title_en!: string;
+  @ApiProperty({ type: String, nullable: true }) title_bn!: string | null;
+  @ApiProperty() body_en!: string;
+  @ApiProperty({ type: String, nullable: true }) body_bn!: string | null;
+  @ApiProperty({ type: String, nullable: true }) action_url!: string | null;
+  @ApiProperty() updated_at!: string;
+}
+
+export class NotificationDeliveryStatsResponseDto {
+  @ApiProperty() campaign_id!: string;
+  @ApiProperty() total!: number;
+  @ApiProperty({
+    type: 'object',
+    additionalProperties: { type: 'object', additionalProperties: { type: 'number' } },
+  })
+  by_channel!: Record<string, Record<string, number>>;
 }

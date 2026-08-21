@@ -124,8 +124,9 @@ export class AccountResponseDto {
   @ApiProperty() normal_balance!: string;
   @ApiProperty() include_in_budget!: boolean;
   @ApiProperty() include_in_net_worth!: boolean;
-  @ApiPropertyOptional() opening_date?: string;
-  @ApiPropertyOptional() archived_at?: string | null;
+  @ApiProperty({ type: String, nullable: true }) opening_date!: string | null;
+  @ApiProperty({ type: String, nullable: true }) archived_at!: string | null;
+  @ApiPropertyOptional() balance_minor?: number;
   @ApiProperty() created_by!: string;
   @ApiProperty() version!: number;
   @ApiProperty() created_at!: string;

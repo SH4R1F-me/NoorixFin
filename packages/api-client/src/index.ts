@@ -66,9 +66,31 @@ export type ApiRuntimePath = {
 }[ApiPath];
 
 type WithoutQuery<P extends string> = P extends `${infer Route}?${string}` ? Route : P;
-type ContractPathFor<P extends ApiRuntimePath> = {
-  [K in ApiPath]: WithoutQuery<P> extends ExpandParameters<StripVersion<K>> ? K : never;
+type SegmentMatches<Runtime extends string, Contract extends string> =
+  Contract extends `{${string}}` ? true : Runtime extends Contract ? true : false;
+type RouteMatches<Runtime extends string, Contract extends string> =
+  Runtime extends `${infer RuntimeHead}/${infer RuntimeTail}`
+    ? Contract extends `${infer ContractHead}/${infer ContractTail}`
+      ? SegmentMatches<RuntimeHead, ContractHead> extends true
+        ? RouteMatches<RuntimeTail, ContractTail>
+        : false
+      : false
+    : Contract extends `${string}/${string}`
+      ? false
+      : SegmentMatches<Runtime, Contract>;
+type ExactContractPathFor<P extends ApiRuntimePath> = {
+  [K in ApiPath]: WithoutQuery<P> extends StripVersion<K>
+    ? StripVersion<K> extends WithoutQuery<P>
+      ? K
+      : never
+    : never;
 }[ApiPath];
+type PatternContractPathFor<P extends ApiRuntimePath> = {
+  [K in ApiPath]: RouteMatches<WithoutQuery<P>, StripVersion<K>> extends true ? K : never;
+}[ApiPath];
+type ContractPathFor<P extends ApiRuntimePath> = [ExactContractPathFor<P>] extends [never]
+  ? PatternContractPathFor<P>
+  : ExactContractPathFor<P>;
 
 /** HTTP methods actually published for a runtime route. */
 export type ApiRuntimeMethod<P extends ApiRuntimePath> = Uppercase<

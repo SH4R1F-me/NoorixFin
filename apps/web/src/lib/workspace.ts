@@ -14,7 +14,10 @@ import 'server-only';
  * unique index on one active personal workspace per user.
  */
 import { apiFetch, ApiError } from './api-client';
-import type { ApiRuntimePath } from '@noorixfin/api-client';
+import type {
+  ApiRuntimePathForMethod,
+  ApiRuntimeResponse,
+} from '@noorixfin/api-client';
 
 export interface Workspace {
   id: string;
@@ -27,7 +30,7 @@ export interface Workspace {
 export async function getActiveWorkspace(): Promise<Workspace | null> {
   let workspaces: Workspace[];
   try {
-    workspaces = await apiFetch<Workspace[]>('/workspaces');
+    workspaces = await apiFetch('/workspaces');
   } catch (error) {
     // Not authenticated, or the API is down. The caller renders an empty state
     // rather than crashing the whole dashboard.
@@ -39,14 +42,14 @@ export async function getActiveWorkspace(): Promise<Workspace | null> {
   if (active) return active;
 
   try {
-    return await apiFetch<Workspace>('/workspaces', {
+    return await apiFetch('/workspaces', {
       method: 'POST',
       body: { name: 'Personal', base_currency: 'BDT', timezone: 'Asia/Dhaka' },
     });
   } catch (error) {
     // A concurrent first load won the race; re-read rather than surfacing 409.
     if (error instanceof ApiError && error.status === 409) {
-      const retry = await apiFetch<Workspace[]>('/workspaces');
+      const retry = await apiFetch('/workspaces');
       return retry.find((w) => w.status === 'ACTIVE') ?? null;
     }
     return null;
@@ -122,20 +125,23 @@ export interface CategoryRow {
 }
 
 /** Never throws — a dashboard panel degrades to empty rather than 500ing. */
-async function safeFetch<T>(path: ApiRuntimePath, fallback: T): Promise<T> {
+async function safeFetch<P extends ApiRuntimePathForMethod<'GET'>, F>(
+  path: P,
+  fallback: F,
+): Promise<ApiRuntimeResponse<P, 'GET'> | F> {
   try {
-    return await apiFetch<T>(path);
+    return await apiFetch(path);
   } catch {
     return fallback;
   }
 }
 
 export function getAccounts(workspaceId: string) {
-  return safeFetch<AccountRow[]>(`/workspaces/${workspaceId}/accounts`, []);
+  return safeFetch(`/workspaces/${workspaceId}/accounts`, []);
 }
 
 export function getCategories(workspaceId: string) {
-  return safeFetch<CategoryRow[]>(`/workspaces/${workspaceId}/categories`, []);
+  return safeFetch(`/workspaces/${workspaceId}/categories`, []);
 }
 
 /**
@@ -153,7 +159,7 @@ export interface TagRow {
 
 /** Every tag in the workspace, alphabetical, with usage counts (§6.3). */
 export async function getTags(workspaceId: string) {
-  return safeFetch<TagRow[]>(`/workspaces/${workspaceId}/tags`, []);
+  return safeFetch(`/workspaces/${workspaceId}/tags`, []);
 }
 
 export interface ImportJob {
@@ -170,7 +176,7 @@ export interface ImportJob {
 }
 
 export function getImportJobs(workspaceId: string) {
-  return safeFetch<ImportJob[]>(`/workspaces/${workspaceId}/import`, []);
+  return safeFetch(`/workspaces/${workspaceId}/import`, []);
 }
 
 export async function getTransactions(
@@ -183,7 +189,7 @@ export async function getTransactions(
   if (categoryId) query.set('category', categoryId);
   if (tagId) query.set('tag', tagId);
 
-  const result = await safeFetch<{ items: TransactionRow[] }>(
+  const result = await safeFetch(
     `/workspaces/${workspaceId}/transactions?${query.toString()}`,
     { items: [] },
   );
@@ -214,7 +220,7 @@ export interface RecurringRuleRow {
 
 /** Recurring rules for a workspace (§2.3). */
 export async function getRecurringRules(workspaceId: string) {
-  return safeFetch<RecurringRuleRow[]>(`/workspaces/${workspaceId}/recurring`, []);
+  return safeFetch(`/workspaces/${workspaceId}/recurring`, []);
 }
 
 export interface WorkspaceSummary {
@@ -238,7 +244,7 @@ export interface WorkspaceSummary {
  * the API should render zeros and its empty states, not a 500.
  */
 export function apiSummary(workspaceId: string) {
-  return safeFetch<WorkspaceSummary | null>(`/workspaces/${workspaceId}/summary`, null);
+  return safeFetch(`/workspaces/${workspaceId}/summary`, null);
 }
 
 // ─── Planning (§9.4) ────────────────────────────────────────────────────────
@@ -322,7 +328,7 @@ export interface DebtsOverview {
 }
 
 export function getDebts(workspaceId: string) {
-  return safeFetch<DebtsOverview>(`/workspaces/${workspaceId}/debts`, {
+  return safeFetch(`/workspaces/${workspaceId}/debts`, {
     debts: [],
     total_debt_minor: 0,
   });
@@ -338,7 +344,7 @@ export interface CalendarEvent {
   local_date: string;
   /** OVERDUE and DUE are computed from today; only the other three are stored. */
   status: 'UPCOMING' | 'DUE' | 'OVERDUE' | 'PAID' | 'SKIPPED';
-  days_away: number;
+  days_away?: number;
   journal_entry_id: string | null;
   recurring_rule_id: string | null;
 }
@@ -407,19 +413,41 @@ export type CashFlowReport = TimeSeriesReport<CashFlowPeriod>;
 export type NetWorthReport = TimeSeriesReport<NetWorthPeriod>;
 
 const NOT_VISIBLE = { visible: false } as const;
+const EMPTY_BUDGET = { visible: false, lines: [], planned_total: 0, spent_total: 0 };
+const EMPTY_GOALS = { visible: false, goals: [], debts: [], total_debt_minor: 0 };
+const EMPTY_CALENDAR = {
+  visible: false,
+  timezone: '',
+  today: '',
+  horizon_days: 0,
+  generated_at: '',
+  events: [],
+  overdue_count: 0,
+  due_soon_total_minor: 0,
+};
+const EMPTY_CATEGORY_REPORT = {
+  visible: false,
+  period_from: '',
+  period_to: '',
+  timezone: '',
+  currency_basis: '',
+  generated_at: '',
+  categories: [],
+  trend: [],
+};
 
 export function getBudgetStatus(workspaceId: string) {
-  return safeFetch<BudgetStatus>(`/workspaces/${workspaceId}/budget`, NOT_VISIBLE);
+  return safeFetch(`/workspaces/${workspaceId}/budget`, EMPTY_BUDGET);
 }
 
 export function getGoalsOverview(workspaceId: string) {
-  return safeFetch<GoalsOverview>(`/workspaces/${workspaceId}/goals`, NOT_VISIBLE);
+  return safeFetch(`/workspaces/${workspaceId}/goals`, EMPTY_GOALS);
 }
 
 export function getCalendarOverview(workspaceId: string, days = 30) {
-  return safeFetch<CalendarOverview>(
+  return safeFetch(
     `/workspaces/${workspaceId}/calendar?days=${days}`,
-    NOT_VISIBLE,
+    EMPTY_CALENDAR,
   );
 }
 
@@ -428,9 +456,9 @@ export function getCategoryReport(workspaceId: string, from?: string, to?: strin
   if (from) query.set('from', from);
   if (to) query.set('to', to);
   const suffix: '' | `?${string}` = query.size > 0 ? `?${query.toString()}` : '';
-  return safeFetch<CategoryReport>(
+  return safeFetch(
     `/workspaces/${workspaceId}/reports/categories${suffix}`,
-    NOT_VISIBLE,
+    EMPTY_CATEGORY_REPORT,
   );
 }
 
@@ -448,7 +476,7 @@ export function getCashFlowReport(
   to?: string,
   granularity?: string,
 ) {
-  return safeFetch<CashFlowReport>(
+  return safeFetch(
     `/workspaces/${workspaceId}/reports/cash-flow${reportQuery(from, to, granularity)}`,
     NOT_VISIBLE,
   );
@@ -460,7 +488,7 @@ export function getIncomeExpenseReport(
   to?: string,
   granularity?: string,
 ) {
-  return safeFetch<CashFlowReport>(
+  return safeFetch(
     `/workspaces/${workspaceId}/reports/income-expense${reportQuery(from, to, granularity)}`,
     NOT_VISIBLE,
   );
@@ -472,7 +500,7 @@ export function getNetWorthReport(
   to?: string,
   granularity?: string,
 ) {
-  return safeFetch<NetWorthReport>(
+  return safeFetch(
     `/workspaces/${workspaceId}/reports/net-worth${reportQuery(from, to, granularity)}`,
     NOT_VISIBLE,
   );

@@ -13,6 +13,8 @@ import {
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
+  ApiCreatedResponse,
+  ApiOkResponse,
   ApiOperation,
   ApiProduces,
   ApiTags,
@@ -22,7 +24,7 @@ import { WorkspaceMemberGuard } from '../auth/guards/workspace-member.guard';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import type { AuthenticatedUser } from '../common/decorators/current-user.decorator';
 import { ThrottleSensitive } from '../common/throttle';
-import { CreateImportDto } from './dto/import.dto';
+import { CreateImportDto, ImportJobResponseDto } from './dto/import.dto';
 import { ImportsService } from './imports.service';
 import { WorkspaceExportService } from './workspace-export.service';
 
@@ -39,6 +41,7 @@ export class ImportsController {
   ) {}
 
   @Get('import')
+  @ApiOkResponse({ type: [ImportJobResponseDto] })
   @ApiOperation({ summary: 'List recent staged import jobs' })
   list(
     @Param('workspaceId') workspaceId: string,
@@ -49,6 +52,7 @@ export class ImportsController {
   }
 
   @Post('import')
+  @ApiCreatedResponse({ type: ImportJobResponseDto })
   @ThrottleSensitive()
   @ApiOperation({
     summary: 'Parse, stage, and post a CSV, OFX, or QIF statement',
@@ -63,6 +67,7 @@ export class ImportsController {
   }
 
   @Get('import/:jobId')
+  @ApiOkResponse({ type: ImportJobResponseDto })
   get(
     @Param('workspaceId') workspaceId: string,
     @Param('jobId', ParseUUIDPipe) jobId: string,

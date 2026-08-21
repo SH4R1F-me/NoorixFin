@@ -46,3 +46,26 @@ export class CreateImportDto {
   @IsUUID()
   idempotency_key!: string;
 }
+
+export class ImportRowResponseDto {
+  @ApiProperty() id!: string;
+  @ApiProperty() row_number!: number;
+  @ApiProperty({ type: 'object', additionalProperties: true }) normalized_payload!: Record<string, unknown>;
+  @ApiProperty({ enum: ['PENDING', 'PROCESSING', 'COMPLETED', 'COMPLETED_WITH_ERRORS', 'FAILED'] }) status!: string;
+  @ApiProperty({ type: String, nullable: true }) error_message!: string | null;
+  @ApiPropertyOptional({ type: String, nullable: true }) journal_entry_id!: string | null;
+}
+
+export class ImportJobResponseDto {
+  @ApiProperty() id!: string;
+  @ApiProperty({ enum: ['CSV', 'OFX', 'QIF'] }) format!: string;
+  @ApiProperty() filename!: string;
+  @ApiProperty({ enum: ['PENDING', 'PROCESSING', 'COMPLETED', 'COMPLETED_WITH_ERRORS', 'FAILED'] }) status!: string;
+  @ApiProperty() total_rows!: number;
+  @ApiProperty() imported_rows!: number;
+  @ApiProperty() failed_rows!: number;
+  @ApiProperty({ type: String, nullable: true }) error_message!: string | null;
+  @ApiProperty() created_at!: string;
+  @ApiProperty({ type: String, nullable: true }) completed_at!: string | null;
+  @ApiPropertyOptional({ type: [ImportRowResponseDto] }) rows?: ImportRowResponseDto[];
+}

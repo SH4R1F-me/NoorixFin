@@ -59,7 +59,7 @@ export async function requestAccountDeletion(
   reason: string,
 ): Promise<SettingsResult> {
   try {
-    const result = await apiFetch<{ deletion_scheduled_for: string; grace_days: number }>(
+    const result = await apiFetch(
       '/me/deletion-request',
       { method: 'POST', body: { confirm_email: confirmEmail, reason } },
     );

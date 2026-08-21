@@ -335,7 +335,17 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": ""
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/NotificationCampaignResponseDto"
+                  }
+                }
+              }
+            }
           }
         },
         "security": [
@@ -363,7 +373,14 @@
         },
         "responses": {
           "201": {
-            "description": ""
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotificationCampaignResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -383,7 +400,17 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": ""
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/NotificationTemplateResponseDto"
+                  }
+                }
+              }
+            }
           }
         },
         "security": [
@@ -411,7 +438,14 @@
         },
         "responses": {
           "201": {
-            "description": ""
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotificationTemplateResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -469,7 +503,14 @@
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotificationDeliveryStatsResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -735,7 +776,14 @@
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkspaceSummaryResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -983,7 +1031,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/TransactionResponseDto"
+                  "$ref": "#/components/schemas/TransactionPageResponseDto"
                 }
               }
             }
@@ -1016,7 +1064,17 @@
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TagResponseDto"
+                  }
+                }
+              }
+            }
           }
         },
         "security": [
@@ -1053,7 +1111,14 @@
         },
         "responses": {
           "201": {
-            "description": ""
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TagResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -1100,7 +1165,14 @@
         },
         "responses": {
           "200": {
-            "description": ""
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TagResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -1136,7 +1208,14 @@
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeletedTagResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -1194,6 +1273,60 @@
         ]
       }
     },
+    "/v1/workspaces/{workspaceId}/transactions/{id}/tags": {
+      "put": {
+        "operationId": "TransactionsController_replaceTransactionTags_v1",
+        "parameters": [
+          {
+            "name": "workspaceId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateTransactionTagsDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TransactionResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "supabase-auth": []
+          }
+        ],
+        "summary": "Replace every tag on a transaction",
+        "tags": [
+          "Transactions"
+        ]
+      }
+    },
     "/v1/workspaces/{workspaceId}/transactions/{id}/attachments": {
       "post": {
         "operationId": "TransactionsController_attach_v1",
@@ -1227,7 +1360,14 @@
         },
         "responses": {
           "201": {
-            "description": ""
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TransactionAttachmentResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -1272,7 +1412,14 @@
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SignedAttachmentUrlResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -1315,7 +1462,14 @@
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeletedAttachmentResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -1581,7 +1735,14 @@
         },
         "responses": {
           "200": {
-            "description": ""
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BudgetStatusResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -1618,7 +1779,14 @@
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeletedResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -1691,7 +1859,14 @@
         },
         "responses": {
           "201": {
-            "description": ""
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GoalProgressResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -1738,7 +1913,14 @@
         },
         "responses": {
           "200": {
-            "description": ""
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GoalProgressResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -1773,7 +1955,14 @@
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeletedResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -1812,7 +2001,14 @@
         },
         "responses": {
           "200": {
-            "description": ""
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DebtResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -1839,7 +2035,14 @@
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DebtOverviewResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -1876,7 +2079,14 @@
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeletedResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -1913,7 +2123,14 @@
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CalendarOverviewResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -1950,7 +2167,14 @@
         },
         "responses": {
           "201": {
-            "description": ""
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CalendarEventResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -1997,7 +2221,14 @@
         },
         "responses": {
           "200": {
-            "description": ""
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CalendarEventResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -2032,7 +2263,14 @@
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeletedResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -2061,7 +2299,17 @@
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/RecurringRuleResponseDto"
+                  }
+                }
+              }
+            }
           }
         },
         "security": [
@@ -2098,7 +2346,14 @@
         },
         "responses": {
           "201": {
-            "description": ""
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecurringRuleResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -2145,7 +2400,14 @@
         },
         "responses": {
           "200": {
-            "description": ""
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecurringRuleResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -2180,7 +2442,14 @@
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeletedResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -2243,7 +2512,14 @@
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CategoryReportResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -2306,7 +2582,14 @@
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CashFlowReportResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -2369,7 +2652,14 @@
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CashFlowReportResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -2432,7 +2722,14 @@
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NetWorthReportResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -2452,7 +2749,14 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": ""
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlatformStatsResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -2473,7 +2777,14 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": ""
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminHealthResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -2563,7 +2874,14 @@
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SystemEventPageResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -2613,7 +2931,14 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": ""
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScheduledJobsResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -2763,7 +3088,14 @@
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuditEventPageResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -2825,7 +3157,14 @@
         ],
         "responses": {
           "200": {
-            "description": "Metadata and counts; never financial data"
+            "description": "Metadata and counts; never financial data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminUserPageResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -2854,7 +3193,14 @@
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminUserResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -3001,7 +3347,17 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": ""
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AppSettingResponseDto"
+                  }
+                }
+              }
+            }
           }
         },
         "security": [
@@ -3049,7 +3405,14 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": ""
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MobileReleaseResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -3099,7 +3462,17 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": ""
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AdminBroadcastResponseDto"
+                  }
+                }
+              }
+            }
           }
         },
         "security": [
@@ -3253,7 +3626,14 @@
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PerformanceMetricsResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -3273,7 +3653,17 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": ""
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AlertStateResponseDto"
+                  }
+                }
+              }
+            }
           }
         },
         "security": [
@@ -3302,7 +3692,14 @@
         ],
         "responses": {
           "201": {
-            "description": ""
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AlertStateResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -3347,7 +3744,14 @@
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthAuditPageResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -3392,7 +3796,14 @@
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeviceSessionPageResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -3421,7 +3832,14 @@
         ],
         "responses": {
           "201": {
-            "description": ""
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RevokedBooleanResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -3450,7 +3868,14 @@
         ],
         "responses": {
           "201": {
-            "description": ""
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RevokedCountResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -3470,7 +3895,14 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": ""
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnomaliesResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -3535,7 +3967,15 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": "A single JSON document. See ExportService for the shape."
+            "description": "A single JSON document. See ExportService for the shape.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true
+                }
+              }
+            }
           }
         },
         "security": [
@@ -3566,7 +4006,14 @@
         },
         "responses": {
           "201": {
-            "description": ""
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeletionScheduledResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -3585,7 +4032,14 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": ""
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountStatusResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -3605,7 +4059,17 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": "Bilingual broadcast payloads"
+            "description": "Bilingual broadcast payloads",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/BroadcastResponseDto"
+                  }
+                }
+              }
+            }
           }
         },
         "security": [
@@ -3634,7 +4098,14 @@
         ],
         "responses": {
           "201": {
-            "description": ""
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DismissedResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -3655,7 +4126,14 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": ""
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicSettingsResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -3713,7 +4191,14 @@
         },
         "responses": {
           "201": {
-            "description": ""
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeviceResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -3965,7 +4450,17 @@
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ImportJobResponseDto"
+                  }
+                }
+              }
+            }
           }
         },
         "security": [
@@ -4002,7 +4497,14 @@
         },
         "responses": {
           "201": {
-            "description": ""
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImportJobResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -4039,7 +4541,14 @@
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImportJobResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -4191,7 +4700,12 @@
           "category",
           "severity",
           "title_en",
+          "title_bn",
           "body_en",
+          "body_bn",
+          "action_url",
+          "read_at",
+          "archived_at",
           "created_at"
         ]
       },
@@ -4214,6 +4728,7 @@
         },
         "required": [
           "items",
+          "next_cursor",
           "has_more"
         ]
       },
@@ -4330,6 +4845,107 @@
           "preferences"
         ]
       },
+      "NotificationCampaignResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "audience": {
+            "type": "string",
+            "enum": [
+              "ALL",
+              "OPERATORS"
+            ]
+          },
+          "category": {
+            "type": "string",
+            "enum": [
+              "security",
+              "budget",
+              "goal",
+              "recurring",
+              "transaction",
+              "sync",
+              "account",
+              "system",
+              "operator"
+            ]
+          },
+          "severity": {
+            "type": "string",
+            "enum": [
+              "INFO",
+              "SUCCESS",
+              "WARNING",
+              "CRITICAL"
+            ]
+          },
+          "title_en": {
+            "type": "string"
+          },
+          "title_bn": {
+            "type": "string",
+            "nullable": true
+          },
+          "body_en": {
+            "type": "string"
+          },
+          "body_bn": {
+            "type": "string",
+            "nullable": true
+          },
+          "action_url": {
+            "type": "string",
+            "nullable": true
+          },
+          "scheduled_for": {
+            "type": "string"
+          },
+          "expires_at": {
+            "type": "string",
+            "nullable": true
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "DRAFT",
+              "SCHEDULED",
+              "PROCESSING",
+              "SENT",
+              "FAILED",
+              "CANCELLED"
+            ]
+          },
+          "recipient_count": {
+            "type": "number"
+          },
+          "error": {
+            "type": "string",
+            "nullable": true
+          },
+          "created_at": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "audience",
+          "category",
+          "severity",
+          "title_en",
+          "title_bn",
+          "body_en",
+          "body_bn",
+          "action_url",
+          "scheduled_for",
+          "expires_at",
+          "status",
+          "recipient_count",
+          "error",
+          "created_at"
+        ]
+      },
       "ComposeNotificationDto": {
         "type": "object",
         "properties": {
@@ -4387,6 +5003,52 @@
           "body_en"
         ]
       },
+      "NotificationTemplateResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "key": {
+            "type": "string"
+          },
+          "category": {
+            "type": "string"
+          },
+          "title_en": {
+            "type": "string"
+          },
+          "title_bn": {
+            "type": "string",
+            "nullable": true
+          },
+          "body_en": {
+            "type": "string"
+          },
+          "body_bn": {
+            "type": "string",
+            "nullable": true
+          },
+          "action_url": {
+            "type": "string",
+            "nullable": true
+          },
+          "updated_at": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "key",
+          "category",
+          "title_en",
+          "title_bn",
+          "body_en",
+          "body_bn",
+          "action_url",
+          "updated_at"
+        ]
+      },
       "NotificationTemplateDto": {
         "type": "object",
         "properties": {
@@ -4431,6 +5093,31 @@
           "body_en"
         ]
       },
+      "NotificationDeliveryStatsResponseDto": {
+        "type": "object",
+        "properties": {
+          "campaign_id": {
+            "type": "string"
+          },
+          "total": {
+            "type": "number"
+          },
+          "by_channel": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "number"
+              }
+            }
+          }
+        },
+        "required": [
+          "campaign_id",
+          "total",
+          "by_channel"
+        ]
+      },
       "ProfileResponseDto": {
         "type": "object",
         "properties": {
@@ -4443,12 +5130,17 @@
             "example": "Sharif"
           },
           "avatar_path": {
-            "type": "object",
+            "type": "string",
+            "nullable": true,
             "example": null
           },
           "locale": {
             "type": "string",
-            "example": "bn"
+            "example": "bn",
+            "enum": [
+              "bn",
+              "en"
+            ]
           },
           "timezone": {
             "type": "string",
@@ -4487,6 +5179,7 @@
               "STUDENT",
               "FREELANCER"
             ],
+            "nullable": true,
             "description": "Null until the user reaches §5.2 step 4."
           },
           "is_super_admin": {
@@ -4505,7 +5198,8 @@
             "description": "Account lifecycle state (DEC-017)."
           },
           "deletion_scheduled_for": {
-            "type": "object",
+            "type": "string",
+            "nullable": true,
             "description": "Set when status is PENDING_DELETION — when the purge runs."
           },
           "email": {
@@ -4521,6 +5215,7 @@
         "required": [
           "id",
           "display_name",
+          "avatar_path",
           "locale",
           "timezone",
           "base_currency",
@@ -4528,8 +5223,10 @@
           "amount_privacy_default",
           "theme_preference",
           "onboarding_status",
+          "persona",
           "is_super_admin",
           "status",
+          "deletion_scheduled_for",
           "email",
           "created_at",
           "updated_at"
@@ -4682,6 +5379,55 @@
           "updated_at"
         ]
       },
+      "WorkspaceSummaryResponseDto": {
+        "type": "object",
+        "properties": {
+          "visible": {
+            "type": "boolean"
+          },
+          "net_worth": {
+            "type": "number"
+          },
+          "income": {
+            "type": "number"
+          },
+          "expense": {
+            "type": "number"
+          },
+          "net": {
+            "type": "number"
+          },
+          "prev_income": {
+            "type": "number"
+          },
+          "prev_expense": {
+            "type": "number"
+          },
+          "prev_net": {
+            "type": "number"
+          },
+          "account_count": {
+            "type": "number"
+          },
+          "timezone": {
+            "type": "string"
+          },
+          "month_start": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "visible",
+          "net_worth",
+          "income",
+          "expense",
+          "net",
+          "prev_income",
+          "prev_expense",
+          "prev_net",
+          "account_count"
+        ]
+      },
       "CreateAccountDto": {
         "type": "object",
         "properties": {
@@ -4781,10 +5527,15 @@
             "type": "boolean"
           },
           "opening_date": {
-            "type": "string"
+            "type": "string",
+            "nullable": true
           },
           "archived_at": {
-            "type": "object"
+            "type": "string",
+            "nullable": true
+          },
+          "balance_minor": {
+            "type": "number"
           },
           "created_by": {
             "type": "string"
@@ -4809,6 +5560,8 @@
           "normal_balance",
           "include_in_budget",
           "include_in_net_worth",
+          "opening_date",
+          "archived_at",
           "created_by",
           "version",
           "created_at",
@@ -4902,6 +5655,33 @@
           "idempotency_key"
         ]
       },
+      "PostingResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "ledger_account_id": {
+            "type": "string"
+          },
+          "debit_minor": {
+            "type": "string"
+          },
+          "credit_minor": {
+            "type": "string"
+          },
+          "currency_code": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "ledger_account_id",
+          "debit_minor",
+          "credit_minor",
+          "currency_code"
+        ]
+      },
       "TransactionAttachmentResponseDto": {
         "type": "object",
         "properties": {
@@ -4948,10 +5728,12 @@
             "type": "string"
           },
           "payee": {
-            "type": "string"
+            "type": "string",
+            "nullable": true
           },
           "note": {
-            "type": "string"
+            "type": "string",
+            "nullable": true
           },
           "status": {
             "type": "string"
@@ -4971,13 +5753,35 @@
           "postings": {
             "type": "array",
             "items": {
-              "type": "string"
+              "$ref": "#/components/schemas/PostingResponseDto"
             }
           },
           "attachments": {
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/TransactionAttachmentResponseDto"
+            }
+          },
+          "tags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "reversed": {
+            "type": "boolean"
+          },
+          "amount_minor": {
+            "type": "number"
+          },
+          "currency_code": {
+            "type": "string",
+            "nullable": true
+          },
+          "ledger_account_ids": {
+            "type": "array",
+            "items": {
+              "type": "string"
             }
           }
         },
@@ -4994,6 +5798,139 @@
           "created_at"
         ]
       },
+      "TransactionListItemResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "workspace_id": {
+            "type": "string"
+          },
+          "entry_type": {
+            "type": "string"
+          },
+          "occurred_at": {
+            "type": "string"
+          },
+          "local_date": {
+            "type": "string"
+          },
+          "payee": {
+            "type": "string",
+            "nullable": true
+          },
+          "note": {
+            "type": "string",
+            "nullable": true
+          },
+          "status": {
+            "type": "string"
+          },
+          "source": {
+            "type": "string"
+          },
+          "created_by": {
+            "type": "string"
+          },
+          "version": {
+            "type": "number"
+          },
+          "created_at": {
+            "type": "string"
+          },
+          "amount_minor": {
+            "type": "number"
+          },
+          "currency_code": {
+            "type": "string",
+            "nullable": true
+          },
+          "ledger_account_ids": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "tags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "attachments": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TransactionAttachmentResponseDto"
+            }
+          },
+          "reversed": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "workspace_id",
+          "entry_type",
+          "occurred_at",
+          "local_date",
+          "payee",
+          "note",
+          "status",
+          "source",
+          "created_by",
+          "version",
+          "created_at",
+          "amount_minor",
+          "currency_code",
+          "ledger_account_ids",
+          "tags",
+          "attachments",
+          "reversed"
+        ]
+      },
+      "TransactionPageResponseDto": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TransactionListItemResponseDto"
+            }
+          },
+          "next_cursor": {
+            "type": "string",
+            "nullable": true
+          },
+          "has_more": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "items",
+          "next_cursor",
+          "has_more"
+        ]
+      },
+      "TagResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "usage_count": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "usage_count"
+        ]
+      },
       "TagNameDto": {
         "type": "object",
         "properties": {
@@ -5005,6 +5942,35 @@
         },
         "required": [
           "name"
+        ]
+      },
+      "DeletedTagResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id"
+        ]
+      },
+      "UpdateTransactionTagsDto": {
+        "type": "object",
+        "properties": {
+          "tags": {
+            "example": [
+              "groceries",
+              "weekly"
+            ],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "tags"
         ]
       },
       "CreateAttachmentDto": {
@@ -5039,6 +6005,32 @@
           "data_base64"
         ]
       },
+      "SignedAttachmentUrlResponseDto": {
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string"
+          },
+          "expires_in": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "url",
+          "expires_in"
+        ]
+      },
+      "DeletedAttachmentResponseDto": {
+        "type": "object",
+        "properties": {
+          "deleted": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "deleted"
+        ]
+      },
       "CategoryResponseDto": {
         "type": "object",
         "properties": {
@@ -5060,16 +6052,19 @@
             ]
           },
           "translation_key": {
-            "type": "object",
+            "type": "string",
+            "nullable": true,
             "description": "Set for system categories. Translate it for display; also marks the row as system-provided.",
             "example": "cat.food_dining"
           },
           "custom_name": {
-            "type": "object",
+            "type": "string",
+            "nullable": true,
             "description": "User-supplied name. Overrides translation_key when present."
           },
           "parent_id": {
-            "type": "object"
+            "type": "string",
+            "nullable": true
           },
           "icon": {
             "type": "string"
@@ -5081,10 +6076,12 @@
             "type": "number"
           },
           "archived_at": {
-            "type": "object"
+            "type": "string",
+            "nullable": true
           },
           "deleted_at": {
-            "type": "object"
+            "type": "string",
+            "nullable": true
           },
           "created_at": {
             "type": "string"
@@ -5098,9 +6095,14 @@
           "workspace_id",
           "ledger_account_id",
           "kind",
+          "translation_key",
+          "custom_name",
+          "parent_id",
           "icon",
           "color",
           "sort_order",
+          "archived_at",
+          "deleted_at",
           "created_at",
           "updated_at"
         ]
@@ -5128,6 +6130,7 @@
           },
           "color": {
             "type": "string",
+            "nullable": true,
             "description": "Hex color for the category",
             "example": "#10b981"
           },
@@ -5143,7 +6146,8 @@
         },
         "required": [
           "name",
-          "kind"
+          "kind",
+          "color"
         ]
       },
       "UpdateCategoryDto": {
@@ -5213,6 +6217,8 @@
           "line_id",
           "category_id",
           "name",
+          "translation_key",
+          "custom_name",
           "icon",
           "color",
           "planned_minor",
@@ -5242,6 +6248,15 @@
               "MONTHLY",
               "WEEKLY"
             ]
+          },
+          "rollover": {
+            "type": "boolean"
+          },
+          "period_start": {
+            "type": "string"
+          },
+          "period_end": {
+            "type": "string"
           },
           "planned_total": {
             "type": "number"
@@ -5318,6 +6333,17 @@
           "lines"
         ]
       },
+      "DeletedResponseDto": {
+        "type": "object",
+        "properties": {
+          "deleted": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "deleted"
+        ]
+      },
       "GoalProgressResponseDto": {
         "type": "object",
         "properties": {
@@ -5346,15 +6372,69 @@
           },
           "priority": {
             "type": "number"
+          },
+          "linked_account_id": {
+            "type": "string",
+            "nullable": true
+          },
+          "days_left": {
+            "type": "number",
+            "nullable": true
           }
         },
         "required": [
           "id",
           "name",
           "target_minor",
+          "current_minor",
           "currency_code",
+          "target_date",
           "status",
-          "priority"
+          "priority",
+          "linked_account_id",
+          "days_left"
+        ]
+      },
+      "DebtResponseDto": {
+        "type": "object",
+        "properties": {
+          "ledger_account_id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "currency_code": {
+            "type": "string"
+          },
+          "principal_minor": {
+            "type": "number"
+          },
+          "outstanding_minor": {
+            "type": "number"
+          },
+          "annual_rate_bps": {
+            "type": "number",
+            "nullable": true
+          },
+          "minimum_payment_minor": {
+            "type": "number",
+            "nullable": true
+          },
+          "due_day": {
+            "type": "number",
+            "nullable": true
+          }
+        },
+        "required": [
+          "ledger_account_id",
+          "name",
+          "currency_code",
+          "principal_minor",
+          "outstanding_minor",
+          "annual_rate_bps",
+          "minimum_payment_minor",
+          "due_day"
         ]
       },
       "GoalsOverviewResponseDto": {
@@ -5372,7 +6452,7 @@
           "debts": {
             "type": "array",
             "items": {
-              "type": "object"
+              "$ref": "#/components/schemas/DebtResponseDto"
             }
           },
           "total_debt_minor": {
@@ -5483,6 +6563,147 @@
           "principal_minor"
         ]
       },
+      "DebtOverviewResponseDto": {
+        "type": "object",
+        "properties": {
+          "debts": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DebtResponseDto"
+            }
+          },
+          "total_debt_minor": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "debts",
+          "total_debt_minor"
+        ]
+      },
+      "CalendarEventResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "workspace_id": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "BILL",
+              "INCOME",
+              "GOAL",
+              "CUSTOM"
+            ]
+          },
+          "title": {
+            "type": "string"
+          },
+          "amount_minor": {
+            "type": "number",
+            "nullable": true
+          },
+          "currency_code": {
+            "type": "string"
+          },
+          "due_at": {
+            "type": "string"
+          },
+          "timezone": {
+            "type": "string"
+          },
+          "local_date": {
+            "type": "string"
+          },
+          "reminder_offsets": {
+            "type": "array",
+            "items": {
+              "type": "number"
+            }
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "UPCOMING",
+              "DUE",
+              "OVERDUE",
+              "PAID",
+              "SKIPPED"
+            ]
+          },
+          "journal_entry_id": {
+            "type": "string",
+            "nullable": true
+          },
+          "recurring_rule_id": {
+            "type": "string",
+            "nullable": true
+          },
+          "days_away": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "id",
+          "workspace_id",
+          "type",
+          "title",
+          "amount_minor",
+          "currency_code",
+          "due_at",
+          "timezone",
+          "local_date",
+          "reminder_offsets",
+          "status",
+          "journal_entry_id",
+          "recurring_rule_id"
+        ]
+      },
+      "CalendarOverviewResponseDto": {
+        "type": "object",
+        "properties": {
+          "visible": {
+            "type": "boolean"
+          },
+          "timezone": {
+            "type": "string"
+          },
+          "today": {
+            "type": "string"
+          },
+          "horizon_days": {
+            "type": "number"
+          },
+          "generated_at": {
+            "type": "string"
+          },
+          "events": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CalendarEventResponseDto"
+            }
+          },
+          "overdue_count": {
+            "type": "number"
+          },
+          "due_soon_total_minor": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "visible",
+          "timezone",
+          "today",
+          "horizon_days",
+          "generated_at",
+          "events",
+          "overdue_count",
+          "due_soon_total_minor"
+        ]
+      },
       "CreateCalendarEventDto": {
         "type": "object",
         "properties": {
@@ -5555,6 +6776,104 @@
             "description": "The transaction that settled this event"
           }
         }
+      },
+      "RecurringRuleResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "workspace_id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "entry_type": {
+            "type": "string",
+            "enum": [
+              "EXPENSE",
+              "INCOME"
+            ]
+          },
+          "amount_minor": {
+            "type": "number"
+          },
+          "currency_code": {
+            "type": "string"
+          },
+          "account_id": {
+            "type": "string",
+            "nullable": true
+          },
+          "category_id": {
+            "type": "string",
+            "nullable": true
+          },
+          "payee": {
+            "type": "string",
+            "nullable": true
+          },
+          "frequency": {
+            "type": "string",
+            "enum": [
+              "DAILY",
+              "WEEKLY",
+              "MONTHLY",
+              "YEARLY"
+            ]
+          },
+          "interval_count": {
+            "type": "number"
+          },
+          "timezone": {
+            "type": "string"
+          },
+          "next_occurrence": {
+            "type": "string"
+          },
+          "ends_at": {
+            "type": "string",
+            "nullable": true
+          },
+          "behavior": {
+            "type": "string",
+            "enum": [
+              "REMIND_ONLY",
+              "AUTO_CREATE_DRAFT"
+            ]
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "ACTIVE",
+              "PAUSED",
+              "ENDED"
+            ]
+          },
+          "created_at": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "workspace_id",
+          "name",
+          "entry_type",
+          "amount_minor",
+          "currency_code",
+          "account_id",
+          "category_id",
+          "payee",
+          "frequency",
+          "interval_count",
+          "timezone",
+          "next_occurrence",
+          "ends_at",
+          "behavior",
+          "status",
+          "created_at"
+        ]
       },
       "CreateRecurringRuleDto": {
         "type": "object",
@@ -5641,6 +6960,659 @@
           "status"
         ]
       },
+      "CategoryReportLineResponseDto": {
+        "type": "object",
+        "properties": {
+          "category_id": {
+            "type": "string"
+          },
+          "custom_name": {
+            "type": "string",
+            "nullable": true
+          },
+          "translation_key": {
+            "type": "string",
+            "nullable": true
+          },
+          "icon": {
+            "type": "string"
+          },
+          "color": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "INCOME",
+              "EXPENSE"
+            ]
+          },
+          "amount_minor": {
+            "type": "number"
+          },
+          "entry_count": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "category_id",
+          "custom_name",
+          "translation_key",
+          "icon",
+          "color",
+          "kind",
+          "amount_minor",
+          "entry_count"
+        ]
+      },
+      "CategoryTrendResponseDto": {
+        "type": "object",
+        "properties": {
+          "month": {
+            "type": "string"
+          },
+          "income_minor": {
+            "type": "number"
+          },
+          "expense_minor": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "month",
+          "income_minor",
+          "expense_minor"
+        ]
+      },
+      "CategoryReportResponseDto": {
+        "type": "object",
+        "properties": {
+          "visible": {
+            "type": "boolean"
+          },
+          "period_from": {
+            "type": "string"
+          },
+          "period_to": {
+            "type": "string"
+          },
+          "timezone": {
+            "type": "string"
+          },
+          "currency_basis": {
+            "type": "string"
+          },
+          "generated_at": {
+            "type": "string"
+          },
+          "categories": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CategoryReportLineResponseDto"
+            }
+          },
+          "trend": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CategoryTrendResponseDto"
+            }
+          }
+        },
+        "required": [
+          "visible",
+          "period_from",
+          "period_to",
+          "timezone",
+          "currency_basis",
+          "generated_at",
+          "categories",
+          "trend"
+        ]
+      },
+      "CashFlowPeriodResponseDto": {
+        "type": "object",
+        "properties": {
+          "period_start": {
+            "type": "string"
+          },
+          "period_end": {
+            "type": "string"
+          },
+          "income_minor": {
+            "type": "number"
+          },
+          "expense_minor": {
+            "type": "number"
+          },
+          "net_minor": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "period_start",
+          "period_end",
+          "income_minor",
+          "expense_minor",
+          "net_minor"
+        ]
+      },
+      "CashFlowReportResponseDto": {
+        "type": "object",
+        "properties": {
+          "visible": {
+            "type": "boolean"
+          },
+          "period_from": {
+            "type": "string"
+          },
+          "period_to": {
+            "type": "string"
+          },
+          "granularity": {
+            "type": "string",
+            "enum": [
+              "day",
+              "week",
+              "month"
+            ]
+          },
+          "timezone": {
+            "type": "string"
+          },
+          "currency_basis": {
+            "type": "string"
+          },
+          "generated_at": {
+            "type": "string"
+          },
+          "periods": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CashFlowPeriodResponseDto"
+            }
+          }
+        },
+        "required": [
+          "visible"
+        ]
+      },
+      "NetWorthPeriodResponseDto": {
+        "type": "object",
+        "properties": {
+          "period_start": {
+            "type": "string"
+          },
+          "period_end": {
+            "type": "string"
+          },
+          "assets_minor": {
+            "type": "number"
+          },
+          "liabilities_minor": {
+            "type": "number"
+          },
+          "net_worth_minor": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "period_start",
+          "period_end",
+          "assets_minor",
+          "liabilities_minor",
+          "net_worth_minor"
+        ]
+      },
+      "NetWorthReportResponseDto": {
+        "type": "object",
+        "properties": {
+          "visible": {
+            "type": "boolean"
+          },
+          "period_from": {
+            "type": "string"
+          },
+          "period_to": {
+            "type": "string"
+          },
+          "granularity": {
+            "type": "string",
+            "enum": [
+              "day",
+              "week",
+              "month"
+            ]
+          },
+          "timezone": {
+            "type": "string"
+          },
+          "currency_basis": {
+            "type": "string"
+          },
+          "generated_at": {
+            "type": "string"
+          },
+          "periods": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/NetWorthPeriodResponseDto"
+            }
+          }
+        },
+        "required": [
+          "visible"
+        ]
+      },
+      "AdminUsersStatsResponseDto": {
+        "type": "object",
+        "properties": {
+          "total": {
+            "type": "number"
+          },
+          "active": {
+            "type": "number"
+          },
+          "suspended": {
+            "type": "number"
+          },
+          "pending_deletion": {
+            "type": "number"
+          },
+          "super_admins": {
+            "type": "number"
+          },
+          "new_24h": {
+            "type": "number"
+          },
+          "new_7d": {
+            "type": "number"
+          },
+          "active_7d": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "total",
+          "active",
+          "suspended",
+          "pending_deletion",
+          "super_admins",
+          "new_24h",
+          "new_7d",
+          "active_7d"
+        ]
+      },
+      "AdminWorkspaceStatsResponseDto": {
+        "type": "object",
+        "properties": {
+          "total": {
+            "type": "number"
+          },
+          "active": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "total",
+          "active"
+        ]
+      },
+      "AdminLedgerStatsResponseDto": {
+        "type": "object",
+        "properties": {
+          "accounts": {
+            "type": "number"
+          },
+          "entries": {
+            "type": "number"
+          },
+          "entries_24h": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "accounts",
+          "entries",
+          "entries_24h"
+        ]
+      },
+      "AdminEventStatsResponseDto": {
+        "type": "object",
+        "properties": {
+          "total": {
+            "type": "number"
+          },
+          "errors_1h": {
+            "type": "number"
+          },
+          "errors_24h": {
+            "type": "number"
+          },
+          "warns_24h": {
+            "type": "number"
+          },
+          "oldest": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "total",
+          "errors_1h",
+          "errors_24h",
+          "warns_24h"
+        ]
+      },
+      "AdminBroadcastStatsResponseDto": {
+        "type": "object",
+        "properties": {
+          "published": {
+            "type": "number"
+          },
+          "draft": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "published",
+          "draft"
+        ]
+      },
+      "AdminAuditStatsResponseDto": {
+        "type": "object",
+        "properties": {
+          "total": {
+            "type": "number"
+          },
+          "last_24h": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "total",
+          "last_24h"
+        ]
+      },
+      "AdminApiStatsResponseDto": {
+        "type": "object",
+        "properties": {
+          "uptime_seconds": {
+            "type": "number"
+          },
+          "db_latency_ms": {
+            "type": "number"
+          },
+          "version": {
+            "type": "string"
+          },
+          "node_env": {
+            "type": "string"
+          },
+          "telemetry_pending": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "uptime_seconds",
+          "db_latency_ms",
+          "version",
+          "node_env",
+          "telemetry_pending"
+        ]
+      },
+      "PlatformStatsResponseDto": {
+        "type": "object",
+        "properties": {
+          "users": {
+            "$ref": "#/components/schemas/AdminUsersStatsResponseDto"
+          },
+          "workspaces": {
+            "$ref": "#/components/schemas/AdminWorkspaceStatsResponseDto"
+          },
+          "ledger": {
+            "$ref": "#/components/schemas/AdminLedgerStatsResponseDto"
+          },
+          "events": {
+            "$ref": "#/components/schemas/AdminEventStatsResponseDto"
+          },
+          "broadcasts": {
+            "$ref": "#/components/schemas/AdminBroadcastStatsResponseDto"
+          },
+          "audit": {
+            "$ref": "#/components/schemas/AdminAuditStatsResponseDto"
+          },
+          "generated_at": {
+            "type": "string"
+          },
+          "api": {
+            "$ref": "#/components/schemas/AdminApiStatsResponseDto"
+          }
+        },
+        "required": [
+          "users",
+          "workspaces",
+          "ledger",
+          "events",
+          "broadcasts",
+          "audit",
+          "generated_at",
+          "api"
+        ]
+      },
+      "HealthCheckResponseDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "ok": {
+            "type": "boolean"
+          },
+          "latency_ms": {
+            "type": "number"
+          },
+          "error": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "name",
+          "ok",
+          "latency_ms"
+        ]
+      },
+      "AdminHealthResponseDto": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "healthy",
+              "degraded"
+            ]
+          },
+          "checks": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/HealthCheckResponseDto"
+            }
+          },
+          "checked_at": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "status",
+          "checks",
+          "checked_at"
+        ]
+      },
+      "SystemEventResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "number"
+          },
+          "level": {
+            "type": "string",
+            "enum": [
+              "DEBUG",
+              "INFO",
+              "WARN",
+              "ERROR",
+              "FATAL"
+            ]
+          },
+          "source": {
+            "type": "string"
+          },
+          "event_code": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "request_id": {
+            "type": "string",
+            "nullable": true
+          },
+          "actor_id": {
+            "type": "string",
+            "nullable": true
+          },
+          "route": {
+            "type": "string",
+            "nullable": true
+          },
+          "method": {
+            "type": "string",
+            "nullable": true
+          },
+          "status_code": {
+            "type": "number",
+            "nullable": true
+          },
+          "latency_ms": {
+            "type": "number",
+            "nullable": true
+          },
+          "metadata": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "created_at": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "level",
+          "source",
+          "event_code",
+          "message",
+          "request_id",
+          "actor_id",
+          "route",
+          "method",
+          "status_code",
+          "latency_ms",
+          "metadata",
+          "created_at"
+        ]
+      },
+      "SystemEventPageResponseDto": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SystemEventResponseDto"
+            }
+          },
+          "total": {
+            "type": "number"
+          },
+          "limit": {
+            "type": "number"
+          },
+          "offset": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "items",
+          "total",
+          "limit",
+          "offset"
+        ]
+      },
+      "ScheduledJobResponseDto": {
+        "type": "object",
+        "properties": {
+          "jobid": {
+            "type": "number"
+          },
+          "jobname": {
+            "type": "string"
+          },
+          "schedule": {
+            "type": "string"
+          },
+          "command": {
+            "type": "string"
+          },
+          "nodename": {
+            "type": "string"
+          },
+          "nodeport": {
+            "type": "number"
+          },
+          "database": {
+            "type": "string"
+          },
+          "username": {
+            "type": "string"
+          },
+          "active": {
+            "type": "boolean"
+          },
+          "next_run": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "jobid",
+          "jobname",
+          "schedule",
+          "command",
+          "nodename",
+          "nodeport",
+          "database",
+          "username",
+          "active",
+          "next_run"
+        ]
+      },
+      "ScheduledJobsResponseDto": {
+        "type": "object",
+        "properties": {
+          "jobs": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ScheduledJobResponseDto"
+            }
+          },
+          "run_at": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "jobs",
+          "run_at"
+        ]
+      },
       "EnableTracingDto": {
         "type": "object",
         "properties": {
@@ -5650,6 +7622,204 @@
             "description": "How long to trace for. Clamped server-side to at most 60 minutes."
           }
         }
+      },
+      "AuditEventResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "workspace_id": {
+            "type": "string",
+            "nullable": true
+          },
+          "actor_id": {
+            "type": "string",
+            "nullable": true
+          },
+          "action": {
+            "type": "string"
+          },
+          "resource_type": {
+            "type": "string"
+          },
+          "resource_id": {
+            "type": "string",
+            "nullable": true
+          },
+          "metadata": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "created_at": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "workspace_id",
+          "actor_id",
+          "action",
+          "resource_type",
+          "resource_id",
+          "metadata",
+          "created_at"
+        ]
+      },
+      "AuditEventPageResponseDto": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AuditEventResponseDto"
+            }
+          },
+          "total": {
+            "type": "number"
+          },
+          "limit": {
+            "type": "number"
+          },
+          "offset": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "items",
+          "total",
+          "limit",
+          "offset"
+        ]
+      },
+      "AdminUserResponseDto": {
+        "type": "object",
+        "properties": {
+          "user_id": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "display_name": {
+            "type": "string"
+          },
+          "locale": {
+            "type": "string"
+          },
+          "timezone": {
+            "type": "string"
+          },
+          "base_currency": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "ACTIVE",
+              "SUSPENDED",
+              "PENDING_DELETION"
+            ]
+          },
+          "is_super_admin": {
+            "type": "boolean"
+          },
+          "onboarding_status": {
+            "type": "string"
+          },
+          "created_at": {
+            "type": "string"
+          },
+          "last_sign_in_at": {
+            "type": "string",
+            "nullable": true
+          },
+          "email_confirmed_at": {
+            "type": "string",
+            "nullable": true
+          },
+          "banned_until": {
+            "type": "string",
+            "nullable": true
+          },
+          "suspended_at": {
+            "type": "string",
+            "nullable": true
+          },
+          "suspended_reason": {
+            "type": "string",
+            "nullable": true
+          },
+          "deletion_scheduled_for": {
+            "type": "string",
+            "nullable": true
+          },
+          "provider_count": {
+            "type": "number"
+          },
+          "workspace_count": {
+            "type": "number"
+          },
+          "account_count": {
+            "type": "number"
+          },
+          "entry_count": {
+            "type": "number"
+          },
+          "last_entry_at": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "user_id",
+          "email",
+          "display_name",
+          "locale",
+          "timezone",
+          "base_currency",
+          "status",
+          "is_super_admin",
+          "onboarding_status",
+          "created_at",
+          "last_sign_in_at",
+          "email_confirmed_at",
+          "banned_until",
+          "suspended_at",
+          "suspended_reason",
+          "deletion_scheduled_for",
+          "provider_count",
+          "workspace_count",
+          "account_count",
+          "entry_count",
+          "last_entry_at"
+        ]
+      },
+      "AdminUserPageResponseDto": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AdminUserResponseDto"
+            }
+          },
+          "total": {
+            "type": "number"
+          },
+          "limit": {
+            "type": "number"
+          },
+          "offset": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "items",
+          "total",
+          "limit",
+          "offset"
+        ]
       },
       "AdminUpdateUserDto": {
         "type": "object",
@@ -5683,6 +7853,39 @@
           "reason"
         ]
       },
+      "AppSettingResponseDto": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "value": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "is_public": {
+            "type": "boolean"
+          },
+          "description": {
+            "type": "string"
+          },
+          "updated_by": {
+            "type": "string",
+            "nullable": true
+          },
+          "updated_at": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "key",
+          "value",
+          "is_public",
+          "description",
+          "updated_by",
+          "updated_at"
+        ]
+      },
       "UpdateSettingDto": {
         "type": "object",
         "properties": {
@@ -5692,6 +7895,7 @@
           },
           "value": {
             "type": "object",
+            "additionalProperties": true,
             "description": "JSON value for the setting. Shape is per-key.",
             "example": {
               "enabled": false
@@ -5715,6 +7919,80 @@
         },
         "required": [
           "settings"
+        ]
+      },
+      "MobileReleaseResponseDto": {
+        "type": "object",
+        "properties": {
+          "latest_version": {
+            "type": "string"
+          },
+          "min_version": {
+            "type": "string"
+          },
+          "ios_url": {
+            "type": "string",
+            "nullable": true
+          },
+          "android_url": {
+            "type": "string",
+            "nullable": true
+          },
+          "apk_url": {
+            "type": "string",
+            "nullable": true
+          },
+          "apk_sha256": {
+            "type": "string",
+            "nullable": true
+          },
+          "release_notes_url": {
+            "type": "string",
+            "nullable": true
+          },
+          "ios_status": {
+            "type": "string",
+            "enum": [
+              "COMING_SOON",
+              "LIVE"
+            ]
+          },
+          "android_status": {
+            "type": "string",
+            "enum": [
+              "COMING_SOON",
+              "LIVE"
+            ]
+          },
+          "apk_size_bytes": {
+            "type": "number",
+            "nullable": true
+          },
+          "released_at": {
+            "type": "string",
+            "nullable": true
+          },
+          "ios_minimum": {
+            "type": "string"
+          },
+          "android_minimum": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "latest_version",
+          "min_version",
+          "ios_url",
+          "android_url",
+          "apk_url",
+          "apk_sha256",
+          "release_notes_url",
+          "ios_status",
+          "android_status",
+          "apk_size_bytes",
+          "released_at",
+          "ios_minimum",
+          "android_minimum"
         ]
       },
       "UpdateMobileReleaseDto": {
@@ -5779,6 +8057,102 @@
           "android_status",
           "ios_minimum",
           "android_minimum"
+        ]
+      },
+      "BroadcastDeliveryStatsResponseDto": {
+        "type": "object",
+        "properties": {
+          "seen": {
+            "type": "number"
+          },
+          "dismissed": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "seen",
+          "dismissed"
+        ]
+      },
+      "AdminBroadcastResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "severity": {
+            "type": "string",
+            "enum": [
+              "INFO",
+              "SUCCESS",
+              "WARNING",
+              "CRITICAL"
+            ]
+          },
+          "audience": {
+            "type": "string",
+            "enum": [
+              "ALL",
+              "SUPER_ADMINS"
+            ]
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "DRAFT",
+              "PUBLISHED",
+              "ARCHIVED"
+            ]
+          },
+          "title_en": {
+            "type": "string"
+          },
+          "title_bn": {
+            "type": "string"
+          },
+          "body_en": {
+            "type": "string"
+          },
+          "body_bn": {
+            "type": "string"
+          },
+          "link_url": {
+            "type": "string",
+            "nullable": true
+          },
+          "dismissible": {
+            "type": "boolean"
+          },
+          "publish_at": {
+            "type": "string",
+            "nullable": true
+          },
+          "expires_at": {
+            "type": "string",
+            "nullable": true
+          },
+          "created_at": {
+            "type": "string"
+          },
+          "stats": {
+            "$ref": "#/components/schemas/BroadcastDeliveryStatsResponseDto"
+          }
+        },
+        "required": [
+          "id",
+          "severity",
+          "audience",
+          "status",
+          "title_en",
+          "title_bn",
+          "body_en",
+          "body_bn",
+          "link_url",
+          "dismissible",
+          "publish_at",
+          "expires_at",
+          "created_at",
+          "stats"
         ]
       },
       "CreateBroadcastDto": {
@@ -5885,6 +8259,390 @@
           }
         }
       },
+      "RoutePerformanceResponseDto": {
+        "type": "object",
+        "properties": {
+          "route": {
+            "type": "string"
+          },
+          "count": {
+            "type": "number"
+          },
+          "p50": {
+            "type": "number"
+          },
+          "p95": {
+            "type": "number"
+          },
+          "p99": {
+            "type": "number"
+          },
+          "error_count": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "route",
+          "count",
+          "p50",
+          "p95",
+          "p99",
+          "error_count"
+        ]
+      },
+      "PerformanceMetricsResponseDto": {
+        "type": "object",
+        "properties": {
+          "window_hours": {
+            "type": "number"
+          },
+          "total_requests": {
+            "type": "number"
+          },
+          "error_count": {
+            "type": "number"
+          },
+          "client_error_count": {
+            "type": "number"
+          },
+          "error_rate": {
+            "type": "number"
+          },
+          "p50": {
+            "type": "number"
+          },
+          "p95": {
+            "type": "number"
+          },
+          "p99": {
+            "type": "number"
+          },
+          "slowest_routes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RoutePerformanceResponseDto"
+            }
+          },
+          "by_platform": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "number"
+            }
+          },
+          "computed_at": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "window_hours",
+          "total_requests",
+          "error_count",
+          "client_error_count",
+          "error_rate",
+          "p50",
+          "p95",
+          "p99",
+          "slowest_routes",
+          "by_platform",
+          "computed_at"
+        ]
+      },
+      "AlertStateResponseDto": {
+        "type": "object",
+        "properties": {
+          "alert_key": {
+            "type": "string"
+          },
+          "is_firing": {
+            "type": "boolean"
+          },
+          "last_fired_at": {
+            "type": "string",
+            "nullable": true
+          },
+          "last_resolved_at": {
+            "type": "string",
+            "nullable": true
+          },
+          "last_value": {
+            "type": "number",
+            "nullable": true
+          },
+          "updated_at": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "alert_key",
+          "is_firing",
+          "last_fired_at",
+          "last_resolved_at",
+          "last_value",
+          "updated_at"
+        ]
+      },
+      "AuthAuditEventResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "workspace_id": {
+            "type": "string",
+            "nullable": true
+          },
+          "actor_id": {
+            "type": "string",
+            "nullable": true
+          },
+          "action": {
+            "type": "string"
+          },
+          "resource_type": {
+            "type": "string"
+          },
+          "resource_id": {
+            "type": "string",
+            "nullable": true
+          },
+          "metadata": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "created_at": {
+            "type": "string"
+          },
+          "ip_address": {
+            "type": "string",
+            "nullable": true
+          },
+          "user_agent": {
+            "type": "string",
+            "nullable": true
+          },
+          "platform": {
+            "type": "string",
+            "nullable": true
+          },
+          "device_id": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "workspace_id",
+          "actor_id",
+          "action",
+          "resource_type",
+          "resource_id",
+          "metadata",
+          "created_at",
+          "ip_address",
+          "user_agent",
+          "platform",
+          "device_id"
+        ]
+      },
+      "AuthAuditPageResponseDto": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AuthAuditEventResponseDto"
+            }
+          },
+          "total": {
+            "type": "number"
+          },
+          "limit": {
+            "type": "number"
+          },
+          "offset": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "items",
+          "total",
+          "limit",
+          "offset"
+        ]
+      },
+      "DeviceSessionResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "user_id": {
+            "type": "string"
+          },
+          "device_id": {
+            "type": "string"
+          },
+          "platform": {
+            "type": "string",
+            "enum": [
+              "web",
+              "ios",
+              "android"
+            ]
+          },
+          "device_name": {
+            "type": "string",
+            "nullable": true
+          },
+          "os_version": {
+            "type": "string",
+            "nullable": true
+          },
+          "app_version": {
+            "type": "string",
+            "nullable": true
+          },
+          "last_seen_at": {
+            "type": "string"
+          },
+          "last_ip": {
+            "type": "string",
+            "nullable": true
+          },
+          "first_seen_at": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "user_id",
+          "device_id",
+          "platform",
+          "device_name",
+          "os_version",
+          "app_version",
+          "last_seen_at",
+          "last_ip",
+          "first_seen_at"
+        ]
+      },
+      "DeviceSessionPageResponseDto": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DeviceSessionResponseDto"
+            }
+          },
+          "total": {
+            "type": "number"
+          },
+          "limit": {
+            "type": "number"
+          },
+          "offset": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "items",
+          "total",
+          "limit",
+          "offset"
+        ]
+      },
+      "RevokedBooleanResponseDto": {
+        "type": "object",
+        "properties": {
+          "revoked": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "revoked"
+        ]
+      },
+      "RevokedCountResponseDto": {
+        "type": "object",
+        "properties": {
+          "revoked": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "revoked"
+        ]
+      },
+      "NewDeviceAnomalyResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "user_id": {
+            "type": "string"
+          },
+          "platform": {
+            "type": "string"
+          },
+          "device_name": {
+            "type": "string",
+            "nullable": true
+          },
+          "first_seen_at": {
+            "type": "string"
+          },
+          "last_ip": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "user_id",
+          "platform",
+          "device_name",
+          "first_seen_at",
+          "last_ip"
+        ]
+      },
+      "ThrottleAnomalyResponseDto": {
+        "type": "object",
+        "properties": {
+          "actor_id": {
+            "type": "string"
+          },
+          "hit_count": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "actor_id",
+          "hit_count"
+        ]
+      },
+      "AnomaliesResponseDto": {
+        "type": "object",
+        "properties": {
+          "new_devices": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/NewDeviceAnomalyResponseDto"
+            }
+          },
+          "throttle_abusers": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ThrottleAnomalyResponseDto"
+            }
+          }
+        },
+        "required": [
+          "new_devices",
+          "throttle_abusers"
+        ]
+      },
       "RequestDeletionDto": {
         "type": "object",
         "properties": {
@@ -5902,6 +8660,170 @@
         "required": [
           "confirm_email"
         ]
+      },
+      "DeletionScheduledResponseDto": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "PENDING_DELETION"
+            ]
+          },
+          "deletion_scheduled_for": {
+            "type": "string"
+          },
+          "grace_days": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "status",
+          "deletion_scheduled_for",
+          "grace_days"
+        ]
+      },
+      "AccountStatusResponseDto": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "ACTIVE"
+            ]
+          }
+        },
+        "required": [
+          "status"
+        ]
+      },
+      "BroadcastResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "severity": {
+            "type": "string",
+            "enum": [
+              "INFO",
+              "SUCCESS",
+              "WARNING",
+              "CRITICAL"
+            ]
+          },
+          "title_en": {
+            "type": "string"
+          },
+          "title_bn": {
+            "type": "string"
+          },
+          "body_en": {
+            "type": "string"
+          },
+          "body_bn": {
+            "type": "string"
+          },
+          "link_url": {
+            "type": "string",
+            "nullable": true
+          },
+          "dismissible": {
+            "type": "boolean"
+          },
+          "publish_at": {
+            "type": "string",
+            "nullable": true
+          },
+          "expires_at": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "severity",
+          "title_en",
+          "title_bn",
+          "body_en",
+          "body_bn",
+          "link_url",
+          "dismissible",
+          "publish_at",
+          "expires_at"
+        ]
+      },
+      "DismissedResponseDto": {
+        "type": "object",
+        "properties": {
+          "dismissed": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "dismissed"
+        ]
+      },
+      "MaintenanceSettingResponseDto": {
+        "type": "object",
+        "properties": {
+          "enabled": {
+            "type": "boolean"
+          },
+          "message_en": {
+            "type": "string"
+          },
+          "message_bn": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "enabled",
+          "message_en",
+          "message_bn"
+        ]
+      },
+      "EnabledSettingResponseDto": {
+        "type": "object",
+        "properties": {
+          "enabled": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "enabled"
+        ]
+      },
+      "ValueSettingResponseDto": {
+        "type": "object",
+        "properties": {
+          "value": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "value"
+        ]
+      },
+      "PublicSettingsResponseDto": {
+        "type": "object",
+        "properties": {
+          "maintenance_mode": {
+            "$ref": "#/components/schemas/MaintenanceSettingResponseDto"
+          },
+          "signups_enabled": {
+            "$ref": "#/components/schemas/EnabledSettingResponseDto"
+          },
+          "app_version": {
+            "$ref": "#/components/schemas/ValueSettingResponseDto"
+          },
+          "donation_url": {
+            "$ref": "#/components/schemas/ValueSettingResponseDto"
+          },
+          "support_email": {
+            "$ref": "#/components/schemas/ValueSettingResponseDto"
+          }
+        }
       },
       "DeviceResponseDto": {
         "type": "object",
@@ -6067,6 +8989,113 @@
             "description": "Keep this device_id active (the caller's own device)"
           }
         }
+      },
+      "ImportRowResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "row_number": {
+            "type": "number"
+          },
+          "normalized_payload": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "PENDING",
+              "PROCESSING",
+              "COMPLETED",
+              "COMPLETED_WITH_ERRORS",
+              "FAILED"
+            ]
+          },
+          "error_message": {
+            "type": "string",
+            "nullable": true
+          },
+          "journal_entry_id": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "row_number",
+          "normalized_payload",
+          "status",
+          "error_message"
+        ]
+      },
+      "ImportJobResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "format": {
+            "type": "string",
+            "enum": [
+              "CSV",
+              "OFX",
+              "QIF"
+            ]
+          },
+          "filename": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "PENDING",
+              "PROCESSING",
+              "COMPLETED",
+              "COMPLETED_WITH_ERRORS",
+              "FAILED"
+            ]
+          },
+          "total_rows": {
+            "type": "number"
+          },
+          "imported_rows": {
+            "type": "number"
+          },
+          "failed_rows": {
+            "type": "number"
+          },
+          "error_message": {
+            "type": "string",
+            "nullable": true
+          },
+          "created_at": {
+            "type": "string"
+          },
+          "completed_at": {
+            "type": "string",
+            "nullable": true
+          },
+          "rows": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ImportRowResponseDto"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "format",
+          "filename",
+          "status",
+          "total_rows",
+          "imported_rows",
+          "failed_rows",
+          "error_message",
+          "created_at",
+          "completed_at"
+        ]
       },
       "CreateImportDto": {
         "type": "object",

@@ -54,7 +54,7 @@ export interface SessionContext {
 
 export const getSessionContext = cache(async (): Promise<SessionContext> => {
   try {
-    const profile = await apiFetch<SessionProfile>('/me');
+    const profile = await apiFetch('/me');
     return {
       profile,
       // Defensive coercion: an API that ever returned a truthy string here must
@@ -90,7 +90,7 @@ export interface PublicSettings {
 
 export const getPublicSettings = cache(async (): Promise<PublicSettings> => {
   try {
-    return await apiFetch<PublicSettings>('/settings/public');
+    return await apiFetch('/settings/public');
   } catch {
     // Settings are decoration on the shell. A failure here must never be the
     // reason a user cannot see their own finances.
@@ -113,7 +113,7 @@ export interface Broadcast {
 
 export const getMyBroadcasts = cache(async (): Promise<Broadcast[]> => {
   try {
-    return await apiFetch<Broadcast[]>('/me/broadcasts');
+    return await apiFetch('/me/broadcasts');
   } catch {
     return [];
   }
@@ -121,7 +121,7 @@ export const getMyBroadcasts = cache(async (): Promise<Broadcast[]> => {
 
 export const getUnreadNotificationCount = cache(async (): Promise<number> => {
   try {
-    const result = await apiFetch<{ count: number }>('/notifications/unread-count');
+    const result = await apiFetch('/notifications/unread-count');
     return Number.isFinite(result.count) ? result.count : 0;
   } catch {
     return 0;
