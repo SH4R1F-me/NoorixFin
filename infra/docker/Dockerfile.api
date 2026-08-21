@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1.7
-FROM node:24.7.0-bookworm-slim AS build
+FROM node:26.7.0-bookworm-slim AS build
 
 ENV PNPM_HOME=/pnpm
 ENV PATH=/pnpm:$PATH
@@ -27,7 +27,7 @@ ENV APP_VERSION=$APP_VERSION
 ENV APP_COMMIT=$APP_COMMIT
 RUN pnpm exec turbo build --filter=@noorixfin/api...
 
-FROM node:24.7.0-bookworm-slim AS runtime
+FROM node:26.7.0-bookworm-slim AS runtime
 ENV NODE_ENV=production
 ENV API_PORT=8080
 WORKDIR /app
